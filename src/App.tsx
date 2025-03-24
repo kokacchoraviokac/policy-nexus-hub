@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Policies from "./pages/Policies";
@@ -14,6 +16,8 @@ import Codebook from "./pages/Codebook";
 import Agent from "./pages/Agent";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
+import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,58 +25,81 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={
-            <AppLayout>
-              <Dashboard />
-            </AppLayout>
-          } />
-          <Route path="/policies" element={
-            <AppLayout>
-              <Policies />
-            </AppLayout>
-          } />
-          <Route path="/sales" element={
-            <AppLayout>
-              <Sales />
-            </AppLayout>
-          } />
-          <Route path="/claims" element={
-            <AppLayout>
-              <Claims />
-            </AppLayout>
-          } />
-          <Route path="/finances" element={
-            <AppLayout>
-              <Finances />
-            </AppLayout>
-          } />
-          <Route path="/codebook" element={
-            <AppLayout>
-              <Codebook />
-            </AppLayout>
-          } />
-          <Route path="/agent" element={
-            <AppLayout>
-              <Agent />
-            </AppLayout>
-          } />
-          <Route path="/reports" element={
-            <AppLayout>
-              <Reports />
-            </AppLayout>
-          } />
-          <Route path="/settings" element={
-            <AppLayout>
-              <Settings />
-            </AppLayout>
-          } />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            
+            <Route path="/" element={
+              <ProtectedRoute requiredPrivilege="dashboard:view">
+                <AppLayout>
+                  <Dashboard />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/policies" element={
+              <ProtectedRoute requiredPrivilege="policies:view">
+                <AppLayout>
+                  <Policies />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/sales" element={
+              <ProtectedRoute requiredPrivilege="sales:view">
+                <AppLayout>
+                  <Sales />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/claims" element={
+              <ProtectedRoute requiredPrivilege="claims:view">
+                <AppLayout>
+                  <Claims />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/finances" element={
+              <ProtectedRoute requiredPrivilege="finances:view">
+                <AppLayout>
+                  <Finances />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/codebook" element={
+              <ProtectedRoute requiredPrivilege="codebook:view">
+                <AppLayout>
+                  <Codebook />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/agent" element={
+              <ProtectedRoute requiredPrivilege="agent:view">
+                <AppLayout>
+                  <Agent />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/reports" element={
+              <ProtectedRoute requiredPrivilege="reports:view">
+                <AppLayout>
+                  <Reports />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute requiredPrivilege="settings:view">
+                <AppLayout>
+                  <Settings />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

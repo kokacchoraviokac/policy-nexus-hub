@@ -2,6 +2,7 @@
 import React from "react";
 import { Bell, Search, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import UserProfileMenu from "@/components/auth/UserProfileMenu";
 
 interface TopBarProps {
   sidebarCollapsed: boolean;
@@ -40,6 +41,8 @@ const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary"></span>
         </button>
+        
+        <UserProfileMenu />
       </div>
     </header>
   );
