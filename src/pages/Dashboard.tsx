@@ -8,20 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 const Dashboard = () => {
   // Mock data for the dashboard
   const upcomingPolicies = [
-    { id: "1", primary: "Auto Insurance - John Doe", secondary: "Policy #A123456", tertiary: "Jul 15", status: "warning" },
-    { id: "2", primary: "Home Insurance - Jane Smith", secondary: "Policy #H789012", tertiary: "Jul 18", status: "warning" },
-    { id: "3", primary: "Life Insurance - Mike Johnson", secondary: "Policy #L345678", tertiary: "Jul 22", status: "info" },
+    { id: "1", primary: "Auto Insurance - John Doe", secondary: "Policy #A123456", tertiary: "Jul 15", status: "warning" as const },
+    { id: "2", primary: "Home Insurance - Jane Smith", secondary: "Policy #H789012", tertiary: "Jul 18", status: "warning" as const },
+    { id: "3", primary: "Life Insurance - Mike Johnson", secondary: "Policy #L345678", tertiary: "Jul 22", status: "info" as const },
   ];
   
   const incompletePolicies = [
-    { id: "4", primary: "Travel Insurance - Sarah Williams", secondary: "Missing commission details", tertiary: "3 days", status: "error" },
-    { id: "5", primary: "Business Insurance - Tech Solutions", secondary: "Missing documentation", tertiary: "1 day", status: "error" },
+    { id: "4", primary: "Travel Insurance - Sarah Williams", secondary: "Missing commission details", tertiary: "3 days", status: "error" as const },
+    { id: "5", primary: "Business Insurance - Tech Solutions", secondary: "Missing documentation", tertiary: "1 day", status: "error" as const },
   ];
   
   const openClaims = [
-    { id: "6", primary: "Car Accident - Robert Brown", secondary: "Claim #C987654", tertiary: "$12,500", status: "warning" },
-    { id: "7", primary: "Property Damage - Lisa Garcia", secondary: "Claim #C654321", tertiary: "$8,200", status: "error" },
-    { id: "8", primary: "Medical Claim - David Wilson", secondary: "Claim #C234567", tertiary: "$5,750", status: "success" },
+    { id: "6", primary: "Car Accident - Robert Brown", secondary: "Claim #C987654", tertiary: "$12,500", status: "warning" as const },
+    { id: "7", primary: "Property Damage - Lisa Garcia", secondary: "Claim #C654321", tertiary: "$8,200", status: "error" as const },
+    { id: "8", primary: "Medical Claim - David Wilson", secondary: "Claim #C234567", tertiary: "$5,750", status: "success" as const },
   ];
 
   return (
