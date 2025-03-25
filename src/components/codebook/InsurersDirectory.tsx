@@ -10,12 +10,15 @@ import { useInsurers } from "@/hooks/useInsurers";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import InsurerFormDialog from "./dialogs/InsurerFormDialog";
 
 const InsurersDirectory = () => {
   const { authState } = useAuthSession();
   const { insurers, isLoading, searchTerm, setSearchTerm, deleteInsurer } = useInsurers();
   const { toast } = useToast();
   const [insurerToDelete, setInsurerToDelete] = useState<string | null>(null);
+  const [isInsurerFormOpen, setIsInsurerFormOpen] = useState(false);
+  const [selectedInsurerId, setSelectedInsurerId] = useState<string | undefined>(undefined);
 
   const handleDelete = async () => {
     if (!insurerToDelete) return;
@@ -29,11 +32,13 @@ const InsurersDirectory = () => {
   };
 
   const handleAddInsurer = () => {
-    // This will be implemented later with a form dialog
-    toast({
-      title: "Add Insurer",
-      description: "Insurer creation functionality will be implemented soon.",
-    });
+    setSelectedInsurerId(undefined);
+    setIsInsurerFormOpen(true);
+  };
+
+  const handleEditInsurer = (insurerId: string) => {
+    setSelectedInsurerId(insurerId);
+    setIsInsurerFormOpen(true);
   };
 
   const columns = [
@@ -69,7 +74,12 @@ const InsurersDirectory = () => {
       header: "Actions",
       accessorKey: (row) => (
         <div className="flex gap-2 justify-end">
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            onClick={() => handleEditInsurer(row.id)}
+          >
             <Edit className="h-4 w-4" />
           </Button>
           <AlertDialog>
@@ -135,6 +145,12 @@ const InsurersDirectory = () => {
           }}
         />
       </CardContent>
+
+      <InsurerFormDialog 
+        open={isInsurerFormOpen}
+        onOpenChange={setIsInsurerFormOpen}
+        insurerId={selectedInsurerId}
+      />
     </Card>
   );
 };

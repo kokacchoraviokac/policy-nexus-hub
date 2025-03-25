@@ -10,12 +10,15 @@ import { useClients } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import ClientFormDialog from "./dialogs/ClientFormDialog";
 
 const ClientsDirectory = () => {
   const { authState } = useAuthSession();
   const { clients, isLoading, searchTerm, setSearchTerm, deleteClient } = useClients();
   const { toast } = useToast();
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
+  const [isClientFormOpen, setIsClientFormOpen] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
 
   const handleDelete = async () => {
     if (!clientToDelete) return;
@@ -29,11 +32,13 @@ const ClientsDirectory = () => {
   };
 
   const handleAddClient = () => {
-    // This will be implemented later with a form dialog
-    toast({
-      title: "Add Client",
-      description: "Client creation functionality will be implemented soon.",
-    });
+    setSelectedClientId(undefined);
+    setIsClientFormOpen(true);
+  };
+
+  const handleEditClient = (clientId: string) => {
+    setSelectedClientId(clientId);
+    setIsClientFormOpen(true);
   };
 
   const columns = [
@@ -69,7 +74,12 @@ const ClientsDirectory = () => {
       header: "Actions",
       accessorKey: (row) => (
         <div className="flex gap-2 justify-end">
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            onClick={() => handleEditClient(row.id)}
+          >
             <Edit className="h-4 w-4" />
           </Button>
           <AlertDialog>
@@ -135,6 +145,12 @@ const ClientsDirectory = () => {
           }}
         />
       </CardContent>
+
+      <ClientFormDialog 
+        open={isClientFormOpen}
+        onOpenChange={setIsClientFormOpen}
+        clientId={selectedClientId}
+      />
     </Card>
   );
 };

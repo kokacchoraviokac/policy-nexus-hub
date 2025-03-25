@@ -10,12 +10,15 @@ import { useInsuranceProducts } from "@/hooks/useInsuranceProducts";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuthSession } from "@/hooks/useAuthSession";
+import ProductFormDialog from "./dialogs/ProductFormDialog";
 
 const ProductCodesDirectory = () => {
   const { authState } = useAuthSession();
   const { products, isLoading, searchTerm, setSearchTerm, deleteProduct } = useInsuranceProducts();
   const { toast } = useToast();
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [isProductFormOpen, setIsProductFormOpen] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
 
   const handleDelete = async () => {
     if (!productToDelete) return;
@@ -29,11 +32,13 @@ const ProductCodesDirectory = () => {
   };
 
   const handleAddProduct = () => {
-    // This will be implemented later with a form dialog
-    toast({
-      title: "Add Product",
-      description: "Product creation functionality will be implemented soon.",
-    });
+    setSelectedProductId(undefined);
+    setIsProductFormOpen(true);
+  };
+
+  const handleEditProduct = (productId: string) => {
+    setSelectedProductId(productId);
+    setIsProductFormOpen(true);
   };
 
   const columns = [
@@ -67,7 +72,12 @@ const ProductCodesDirectory = () => {
       header: "Actions",
       accessorKey: (row) => (
         <div className="flex gap-2 justify-end">
-          <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            onClick={() => handleEditProduct(row.id)}
+          >
             <Edit className="h-4 w-4" />
           </Button>
           <AlertDialog>
@@ -133,6 +143,12 @@ const ProductCodesDirectory = () => {
           }}
         />
       </CardContent>
+
+      <ProductFormDialog 
+        open={isProductFormOpen}
+        onOpenChange={setIsProductFormOpen}
+        productId={selectedProductId}
+      />
     </Card>
   );
 };
