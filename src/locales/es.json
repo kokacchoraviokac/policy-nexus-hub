@@ -16,5 +16,15 @@
   "employee": "Empleado",
   "invalidEmail": "Por favor ingrese una dirección de correo electrónico válida",
   "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
-  "loginSuccessful": "Inicio de sesión exitoso"
+  "loginSuccessful": "Inicio de sesión exitoso",
+  "name": "Nombre",
+  "company": "Empresa",
+  "selectCompany": "Seleccionar Empresa",
+  "newCompany": "Nueva Empresa",
+  "existingCompany": "Empresa Existente",
+  "companyName": "Nombre de la Empresa",
+  "createAccount": "Crear cuenta",
+  "creatingAccount": "Creando cuenta...",
+  "companyRequired": "La empresa es requerida",
+  "nameRequired": "El nombre es requerido"
 }

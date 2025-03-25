@@ -16,5 +16,15 @@
   "employee": "Вработен",
   "invalidEmail": "Внесете валидна е-маил адреса",
   "passwordMinLength": "Лозинката мора да има најмалку 6 карактери",
-  "loginSuccessful": "Најавата е успешна"
+  "loginSuccessful": "Најавата е успешна",
+  "name": "Име",
+  "company": "Компанија",
+  "selectCompany": "Изберете компанија",
+  "newCompany": "Нова компанија",
+  "existingCompany": "Постоечка компанија",
+  "companyName": "Име на компанија",
+  "createAccount": "Создај сметка",
+  "creatingAccount": "Создавање сметка...",
+  "companyRequired": "Компанијата е задолжителна",
+  "nameRequired": "Името е задолжително"
 }

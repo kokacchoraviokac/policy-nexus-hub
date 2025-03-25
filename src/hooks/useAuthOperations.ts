@@ -96,6 +96,8 @@ export const useAuthOperations = (
       console.error("Sign up failed:", error);
       setAuthState({ ...authState, isLoading: false });
       throw error;
+    } finally {
+      setAuthState({ ...authState, isLoading: false });
     }
   };
 

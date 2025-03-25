@@ -16,5 +16,15 @@
   "employee": "Employee",
   "invalidEmail": "Please enter a valid email address",
   "passwordMinLength": "Password must be at least 6 characters",
-  "loginSuccessful": "Login successful"
+  "loginSuccessful": "Login successful",
+  "name": "Name",
+  "company": "Company",
+  "selectCompany": "Select Company",
+  "newCompany": "New Company",
+  "existingCompany": "Existing Company",
+  "companyName": "Company Name",
+  "createAccount": "Create account",
+  "creatingAccount": "Creating account...",
+  "companyRequired": "Company is required",
+  "nameRequired": "Name is required"
 }
