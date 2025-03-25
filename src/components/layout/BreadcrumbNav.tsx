@@ -39,8 +39,10 @@ const BreadcrumbNav: React.FC = () => {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink as={Link} to="/">
-              <Home className="h-4 w-4" />
+            <BreadcrumbLink asChild>
+              <Link to="/">
+                <Home className="h-4 w-4" />
+              </Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -58,8 +60,8 @@ const BreadcrumbNav: React.FC = () => {
                   {isLast ? (
                     <BreadcrumbPage>{displayName}</BreadcrumbPage>
                   ) : (
-                    <BreadcrumbLink as={Link} to={url}>
-                      {displayName}
+                    <BreadcrumbLink asChild>
+                      <Link to={url}>{displayName}</Link>
                     </BreadcrumbLink>
                   )}
                 </BreadcrumbItem>
