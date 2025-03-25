@@ -25,6 +25,9 @@ import ResetPassword from "./pages/ResetPassword";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
 import PrivilegeTestPage from "./pages/PrivilegeTestPage";
+import ClientsPage from "./pages/codebook/ClientsPage";
+import InsurersPage from "./pages/codebook/InsurersPage";
+import ProductsPage from "./pages/codebook/ProductsPage";
 
 const queryClient = new QueryClient();
 
@@ -107,11 +110,35 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 
-                {/* Codebook Module */}
+                {/* Codebook Module and sub-routes */}
                 <Route path="/codebook" element={
                   <ProtectedRoute requiredPrivilege="codebook:view">
                     <AppLayout>
                       <Codebook />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/codebook/clients" element={
+                  <ProtectedRoute requiredPrivilege="codebook.clients:view">
+                    <AppLayout>
+                      <ClientsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/codebook/companies" element={
+                  <ProtectedRoute requiredPrivilege="codebook.companies:view">
+                    <AppLayout>
+                      <InsurersPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/codebook/products" element={
+                  <ProtectedRoute requiredPrivilege="codebook.codes:view">
+                    <AppLayout>
+                      <ProductsPage />
                     </AppLayout>
                   </ProtectedRoute>
                 } />

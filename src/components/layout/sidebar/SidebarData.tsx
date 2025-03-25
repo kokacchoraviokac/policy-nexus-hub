@@ -9,7 +9,9 @@ import {
   Book, 
   Users, 
   FileBarChart, 
-  Settings
+  Settings,
+  Building2,
+  Tag
 } from "lucide-react";
 
 interface SubItem {
@@ -83,7 +85,7 @@ export const sidebarItems: SidebarItemData[] = [
     subItems: [
       { label: "Clients", path: "/codebook/clients", requiredPrivilege: "codebook.clients:view" },
       { label: "Insurance Companies", path: "/codebook/companies", requiredPrivilege: "codebook.companies:view" },
-      { label: "Insurance Codes", path: "/codebook/codes", requiredPrivilege: "codebook.codes:view" },
+      { label: "Insurance Products", path: "/codebook/products", requiredPrivilege: "codebook.codes:view" },
     ]
   },
   {
