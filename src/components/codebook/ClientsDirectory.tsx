@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuthSession } from "@/hooks/useAuthSession";
 
 const ClientsDirectory = () => {
-  const { user } = useAuthSession();
+  const { authState } = useAuthSession();
   const { clients, isLoading, searchTerm, setSearchTerm, deleteClient } = useClients();
   const { toast } = useToast();
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);

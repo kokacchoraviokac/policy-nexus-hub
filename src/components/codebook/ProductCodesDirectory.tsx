@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuthSession } from "@/hooks/useAuthSession";
 
 const ProductCodesDirectory = () => {
-  const { user } = useAuthSession();
+  const { authState } = useAuthSession();
   const { products, isLoading, searchTerm, setSearchTerm, deleteProduct } = useInsuranceProducts();
   const { toast } = useToast();
   const [productToDelete, setProductToDelete] = useState<string | null>(null);

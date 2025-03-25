@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuthSession } from "@/hooks/useAuthSession";
 
 const InsurersDirectory = () => {
-  const { user } = useAuthSession();
+  const { authState } = useAuthSession();
   const { insurers, isLoading, searchTerm, setSearchTerm, deleteInsurer } = useInsurers();
   const { toast } = useToast();
   const [insurerToDelete, setInsurerToDelete] = useState<string | null>(null);
