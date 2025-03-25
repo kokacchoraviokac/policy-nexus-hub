@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -23,6 +22,7 @@ import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
+import PrivilegeTestPage from "./pages/PrivilegeTestPage";
 
 const queryClient = new QueryClient();
 
@@ -146,6 +146,13 @@ const App = () => (
                     <AppLayout>
                       <UserManagement />
                     </AppLayout>
+                  </ProtectedRoute>
+                } />
+                
+                {/* Privilege Test Page */}
+                <Route path="/settings/privileges/test" element={
+                  <ProtectedRoute requiredPrivilege="settings:view">
+                    <PrivilegeTestPage />
                   </ProtectedRoute>
                 } />
                 

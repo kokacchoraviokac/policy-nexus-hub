@@ -1,10 +1,9 @@
-
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Users, Building, FileText, Mail } from "lucide-react";
+import { Users, Building, FileText, Mail, Shield } from "lucide-react";
 import CompanyManagement from "@/components/settings/CompanyManagement";
 import InvitationManagement from "@/components/settings/InvitationManagement";
 
@@ -113,6 +112,26 @@ const Settings = () => {
             </p>
             <Button variant="outline" className="w-full" disabled>
               Configure Email
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center space-x-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <CardTitle>Privilege Testing</CardTitle>
+            </div>
+            <CardDescription>
+              Test and verify permissions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Validate that role-based permissions are working as expected for different user roles.
+            </p>
+            <Button variant="outline" className="w-full" asChild>
+              <Link to="/settings/privileges/test">Test Privileges</Link>
             </Button>
           </CardContent>
         </Card>
