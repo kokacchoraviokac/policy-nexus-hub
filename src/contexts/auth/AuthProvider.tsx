@@ -68,6 +68,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const profile = await fetchUserProfile(session.user.id);
             
             if (profile) {
+              // Log successful profile load (only in dev)
+              if (process.env.NODE_ENV === 'development') {
+                console.log("Profile loaded:", profile);
+              }
+              
               setAuthState({
                 user: profile,
                 isAuthenticated: true,
@@ -75,12 +80,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
             } else {
               // Fall back to session user data
+              const defaultRole = session.user.user_metadata?.role || 'employee';
+              console.warn("Profile not found, using session data with role:", defaultRole);
+              
               setAuthState({
                 user: {
                   id: session.user.id,
                   name: session.user.email?.split('@')[0] || 'User',
                   email: session.user.email || '',
-                  role: 'employee' as UserRole, // Default role
+                  role: defaultRole as UserRole,
                   avatar: session.user.user_metadata?.avatar_url,
                   companyId: session.user.user_metadata?.company_id,
                 },
@@ -123,13 +131,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isLoading: false,
             });
           } else {
-            // Fall back to session user data
+            // Fall back to session user data with better default role handling
+            const defaultRole = session.user.user_metadata?.role || 'employee';
+            console.warn("Profile not found, using session data with role:", defaultRole);
+            
             setAuthState({
               user: {
                 id: session.user.id,
                 name: session.user.email?.split('@')[0] || 'User',
                 email: session.user.email || '',
-                role: 'employee' as UserRole, // Default role
+                role: defaultRole as UserRole,
                 avatar: session.user.user_metadata?.avatar_url,
                 companyId: session.user.user_metadata?.company_id,
               },

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -152,7 +153,9 @@ const App = () => (
                 {/* Privilege Test Page */}
                 <Route path="/settings/privileges/test" element={
                   <ProtectedRoute requiredPrivilege="settings:view">
-                    <PrivilegeTestPage />
+                    <AppLayout>
+                      <PrivilegeTestPage />
+                    </AppLayout>
                   </ProtectedRoute>
                 } />
                 

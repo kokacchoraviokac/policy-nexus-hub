@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, AuthState } from "@/types/auth";
 import { toast } from "sonner";
 import { MOCK_USERS } from "@/data/mockUsers";
-import { fetchUserProfile, updateUserProfile } from "@/utils/authUtils";
+import { fetchUserProfile, updateUserProfile, ensureUserProfile } from "@/utils/authUtils";
 
 export const useAuthOperations = (
   authState: AuthState,
@@ -71,15 +71,25 @@ export const useAuthOperations = (
     setAuthState({ ...authState, isLoading: true });
     
     try {
+      // Ensure userData has required fields with defaults
+      const enrichedUserData = {
+        name: userData.name || email.split('@')[0],
+        role: userData.role || 'employee',
+        companyId: userData.companyId,
+        avatar: userData.avatar,
+        ...userData
+      };
+      
+      // Register user with Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            name: userData.name,
-            role: userData.role || 'employee',
-            company_id: userData.companyId,
-            avatar_url: userData.avatar
+            name: enrichedUserData.name,
+            role: enrichedUserData.role,
+            company_id: enrichedUserData.companyId,
+            avatar_url: enrichedUserData.avatar
           },
         },
       });
@@ -89,9 +99,18 @@ export const useAuthOperations = (
         throw error;
       }
       
+      // Manually ensure profile creation in case trigger fails
+      if (data.user) {
+        await ensureUserProfile(data.user.id, {
+          ...enrichedUserData,
+          email,
+        });
+      }
+      
       toast.success('Sign up successful! Verification email sent.');
       
       // NOTE: User profile is created automatically via the database trigger
+      // but we've added a backup ensureUserProfile call above
     } catch (error) {
       console.error("Sign up failed:", error);
       setAuthState({ ...authState, isLoading: false });
