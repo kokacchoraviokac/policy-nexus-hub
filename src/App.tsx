@@ -17,6 +17,7 @@ import Agent from "./pages/Agent";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
@@ -101,6 +102,13 @@ const App = () => (
               <ProtectedRoute requiredPrivilege="settings:view">
                 <AppLayout>
                   <Settings />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings/users" element={
+              <ProtectedRoute requiredPrivilege="users:manage">
+                <AppLayout>
+                  <UserManagement />
                 </AppLayout>
               </ProtectedRoute>
             } />
