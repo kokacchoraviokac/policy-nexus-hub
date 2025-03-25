@@ -16,10 +16,12 @@ const Settings = () => {
   
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-      <p className="text-muted-foreground">
-        Configure system settings, manage user accounts, and set privileges.
-      </p>
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground">
+          Configure system settings, manage user accounts, and set privileges.
+        </p>
+      </div>
       
       {isSuperAdmin && (
         <div className="mt-8">

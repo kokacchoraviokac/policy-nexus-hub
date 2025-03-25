@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -96,10 +95,12 @@ const UserManagement = () => {
   
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
-      <p className="text-muted-foreground">
-        Manage user accounts and their roles.
-      </p>
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
+        <p className="text-muted-foreground">
+          Manage user accounts and their roles.
+        </p>
+      </div>
       
       <Card>
         <CardHeader>

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FileText, TrendingUp, ClipboardCheck, DollarSign, Calendar, AlertTriangle, CheckCircle } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
@@ -26,11 +25,8 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <div className="text-sm text-muted-foreground">
-          Last updated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
-        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

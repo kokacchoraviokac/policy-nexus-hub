@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -83,7 +82,9 @@ const Profile = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold tracking-tight mb-6">My Profile</h1>
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight mb-6">My Profile</h1>
+      </div>
       
       <div className="mb-8 flex flex-col items-center sm:flex-row sm:items-start sm:space-x-6">
         <Avatar className="h-24 w-24 mb-4 sm:mb-0">
