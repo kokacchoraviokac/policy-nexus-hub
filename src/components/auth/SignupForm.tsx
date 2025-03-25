@@ -1,76 +1,28 @@
 
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { UserRole } from "@/types/auth";
-import { useCompanies, Company } from "@/hooks/useCompanies";
-import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { useInvitations } from "@/hooks/useInvitations";
-import { useLocation, useNavigate } from "react-router-dom";
-
-const createSignupSchema = (t: (key: string) => string) => z.object({
-  name: z.string().min(2, t("nameRequired")),
-  email: z.string().email(t("invalidEmail")),
-  password: z.string().min(6, t("passwordMinLength")),
-  role: z.enum(["superAdmin", "admin", "employee"] as const),
-  companyOption: z.enum(["existing", "new", "invitation"]),
-  companyId: z.string().optional(),
-  companyName: z.string().optional(),
-  invitationToken: z.string().optional(),
-}).refine((data) => {
-  if (data.companyOption === "existing") {
-    return !!data.companyId;
-  }
-  return true;
-}, {
-  message: "companyRequired",
-  path: ["companyId"]
-}).refine((data) => {
-  if (data.companyOption === "new") {
-    return !!data.companyName && data.companyName.length >= 2;
-  }
-  return true;
-}, {
-  message: "companyRequired",
-  path: ["companyName"]
-});
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useCompanies } from "@/hooks/useCompanies";
+import { useSignup } from "@/hooks/useSignup";
+import { useInvitationVerification } from "@/hooks/useInvitationVerification";
+import { useCompanySeats } from "@/hooks/useCompanySeats";
+import { createSignupSchema, SignupFormValues } from "@/types/auth/signup";
+import UserInformation from "./signup/UserInformation";
+import CompanySelection from "./signup/CompanySelection";
+import InvitationSection from "./signup/InvitationSection";
 
 interface SignupFormProps {
   onSuccess: () => void;
 }
 
-interface CompanySeatsInfo {
-  id: string;
-  hasAvailableSeats: boolean;
-  usedSeats: number;
-  seatsLimit: number;
-}
-
 const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
-  const { signUp } = useAuth();
   const { t } = useLanguage();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { companies, loading: loadingCompanies, createCompany } = useCompanies();
-  const [companySeatsInfo, setCompanySeatsInfo] = useState<Record<string, CompanySeatsInfo>>({});
-  const { checkInvitation, acceptInvitation } = useInvitations();
-  const [invitation, setInvitation] = useState<any>(null);
-  const [verifyingInvitation, setVerifyingInvitation] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { companies, loading: loadingCompanies } = useCompanies();
   
   const signupSchema = createSignupSchema(t);
-  type SignupFormValues = z.infer<typeof signupSchema>;
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -88,330 +40,38 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
 
   const companyOption = form.watch("companyOption");
   const selectedCompanyId = form.watch("companyId");
-  const email = form.watch("email");
-
-  // Check for invitation token in URL
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const token = queryParams.get('token');
-    
-    if (token) {
-      setVerifyingInvitation(true);
-      form.setValue('invitationToken', token);
-      form.setValue('companyOption', 'invitation');
-      
-      checkInvitation(token).then(invitationData => {
-        if (invitationData) {
-          setInvitation(invitationData);
-          form.setValue('email', invitationData.email);
-          form.setValue('role', invitationData.role as UserRole);
-          form.setValue('companyId', invitationData.company_id);
-          
-          // Remove token from URL without refreshing
-          const url = new URL(window.location.href);
-          url.searchParams.delete('token');
-          window.history.replaceState({}, '', url.toString());
-        } else {
-          toast.error('Invalid or expired invitation token');
-        }
-        setVerifyingInvitation(false);
-      });
-    }
-  }, [location.search]);
-
-  // Fetch company seats information when companies are loaded
-  useEffect(() => {
-    const fetchCompanySeatsInfo = async () => {
-      const seatsInfo: Record<string, CompanySeatsInfo> = {};
-      
-      for (const company of companies) {
-        const { data } = await supabase.rpc('company_has_available_seats', { 
-          company_id: company.id 
-        });
-        
-        seatsInfo[company.id] = {
-          id: company.id,
-          hasAvailableSeats: !!data,
-          usedSeats: company.usedSeats || 0,
-          seatsLimit: company.seatsLimit || 0
-        };
-      }
-      
-      setCompanySeatsInfo(seatsInfo);
-    };
-    
-    if (companies.length > 0) {
-      fetchCompanySeatsInfo();
-    }
-  }, [companies]);
-
-  const handleSignup = async (values: SignupFormValues) => {
-    setIsSubmitting(true);
-    
-    try {
-      // Check if this is an invitation-based signup
-      if (values.companyOption === 'invitation' && invitation) {
-        // Additional verification that the email matches the invitation
-        if (values.email !== invitation.email) {
-          toast.error('The email address does not match the invitation');
-          setIsSubmitting(false);
-          return;
-        }
-        
-        // Sign up the user
-        await signUp(values.email, values.password, {
-          name: values.name,
-          role: values.role as UserRole,
-          companyId: invitation.company_id,
-        });
-        
-        // Accept the invitation
-        await acceptInvitation(invitation.token);
-        
-        toast.success("Sign up successful! Check your email to confirm your account.");
-        onSuccess();
-        return;
-      }
-      
-      // Check if selected company has available seats for regular signup
-      if (values.companyOption === "existing" && values.companyId) {
-        const companyInfo = companySeatsInfo[values.companyId];
-        
-        if (companyInfo && !companyInfo.hasAvailableSeats) {
-          toast.error(`This company has reached its seat limit (${companyInfo.seatsLimit}). Please contact a SuperAdmin to increase the limit.`);
-          setIsSubmitting(false);
-          return;
-        }
-      }
-      
-      let companyId = values.companyId;
-      
-      // If creating a new company, create it first
-      if (values.companyOption === "new" && values.companyName) {
-        const newCompanyId = await createCompany(values.companyName);
-        if (!newCompanyId) {
-          throw new Error("Failed to create company");
-        }
-        companyId = newCompanyId;
-      }
-      
-      // Now sign up the user with the company ID
-      await signUp(values.email, values.password, {
-        name: values.name,
-        role: values.role as UserRole,
-        companyId: companyId,
-      });
-      
-      toast.success("Sign up successful! Check your email to confirm your account.");
-      onSuccess();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create account");
-      console.error("Signup error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  
+  const { invitation, verifyingInvitation } = useInvitationVerification(form);
+  const companySeatsInfo = useCompanySeats(companies);
+  const { isSubmitting, handleSignup } = useSignup(onSuccess);
 
   // Only show the invitation section if we have a valid invitation
   const showInvitationSection = companyOption === 'invitation' && invitation;
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSignup)} className="space-y-4">
+      <form onSubmit={form.handleSubmit((values) => handleSignup(values, invitation, companySeatsInfo))} className="space-y-4">
         {verifyingInvitation ? (
           <div className="flex items-center justify-center py-6">
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
             <span className="ml-2">Verifying invitation...</span>
           </div>
         ) : showInvitationSection ? (
-          <Alert className="mb-4 bg-green-50 border-green-200">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-600">
-              You've been invited to join as a{' '}
-              <strong>{invitation.role === 'admin' ? 'Company Admin' : 'Employee'}</strong>.
-              Complete your registration below.
-            </AlertDescription>
-          </Alert>
+          <InvitationSection invitation={invitation} />
         ) : null}
 
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("name")}</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <UserInformation form={form} t={t} invitation={invitation} />
+        
+        <CompanySelection 
+          form={form}
+          t={t}
+          companyOption={companyOption}
+          selectedCompanyId={selectedCompanyId}
+          companies={companies}
+          loadingCompanies={loadingCompanies}
+          companySeatsInfo={companySeatsInfo}
+          invitation={invitation}
         />
-        
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("email")}</FormLabel>
-              <FormControl>
-                <Input 
-                  placeholder="name@example.com" 
-                  {...field} 
-                  disabled={!!invitation}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("password")}</FormLabel>
-              <FormControl>
-                <Input type="password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {!invitation && (
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Role</FormLabel>
-                <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="employee">{t("employee")}</SelectItem>
-                      <SelectItem value="admin">{t("brokerAdmin")}</SelectItem>
-                      <SelectItem value="superAdmin">{t("superAdmin")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        
-        {!invitation && (
-          <FormField
-            control={form.control}
-            name="companyOption"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>{t("company")}</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex flex-col space-y-1"
-                  >
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="existing" />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        {t("existingCompany")}
-                      </FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="new" />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        {t("newCompany")}
-                      </FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        
-        {companyOption === "existing" && !invitation && (
-          <FormField
-            control={form.control}
-            name="companyId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("selectCompany")}</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("selectCompany")} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {loadingCompanies ? (
-                      <SelectItem value="loading" disabled>
-                        Loading...
-                      </SelectItem>
-                    ) : companies.length === 0 ? (
-                      <SelectItem value="none" disabled>
-                        No companies found
-                      </SelectItem>
-                    ) : (
-                      companies.map((company) => {
-                        const info = companySeatsInfo[company.id];
-                        const hasSeats = info?.hasAvailableSeats !== false;
-                        return (
-                          <SelectItem 
-                            key={company.id} 
-                            value={company.id}
-                            disabled={!hasSeats}
-                          >
-                            {company.name} 
-                            {info ? ` (${info.usedSeats}/${info.seatsLimit} seats)` : ''}
-                            {!hasSeats ? ' - No seats available' : ''}
-                          </SelectItem>
-                        );
-                      })
-                    )}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-                {selectedCompanyId && companySeatsInfo[selectedCompanyId] && !companySeatsInfo[selectedCompanyId].hasAvailableSeats && (
-                  <Alert variant="destructive" className="mt-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      This company has reached its seat limit. Please contact a SuperAdmin to increase the limit.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </FormItem>
-            )}
-          />
-        )}
-        
-        {companyOption === "new" && !invitation && (
-          <FormField
-            control={form.control}
-            name="companyName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("companyName")}</FormLabel>
-                <FormControl>
-                  <Input placeholder="Acme Inc." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
         
         <Button 
           type="submit" 
