@@ -26,5 +26,11 @@
   "createAccount": "Create account",
   "creatingAccount": "Creating account...",
   "companyRequired": "Company is required",
-  "nameRequired": "Name is required"
+  "nameRequired": "Name is required",
+  "seatsManagement": "Seats Management",
+  "editSeats": "Edit Seats",
+  "seatsLimit": "Seats Limit",
+  "currentUsage": "Current Usage",
+  "noSeatsAvailable": "No seats available",
+  "seatsLimitReached": "This company has reached its seat limit. Please contact a SuperAdmin to increase the limit."
 }

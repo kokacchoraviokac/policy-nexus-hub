@@ -5,11 +5,13 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, Building, FileText, Mail } from "lucide-react";
+import CompanyManagement from "@/components/settings/CompanyManagement";
 
 const Settings = () => {
   const { hasPrivilege } = useAuth();
   
   const canManageUsers = hasPrivilege("users:manage");
+  const isSuperAdmin = hasPrivilege("company:manage");
   
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -17,6 +19,12 @@ const Settings = () => {
       <p className="text-muted-foreground">
         Configure system settings, manage user accounts, and set privileges.
       </p>
+      
+      {isSuperAdmin && (
+        <div className="mt-8">
+          <CompanyManagement />
+        </div>
+      )}
       
       <div className="grid gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
         {canManageUsers && (

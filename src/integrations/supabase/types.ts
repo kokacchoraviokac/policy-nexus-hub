@@ -20,8 +20,10 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           registration_number: string | null
+          seats_limit: number
           tax_id: string | null
           updated_at: string
+          used_seats: number
         }
         Insert: {
           address?: string | null
@@ -33,8 +35,10 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           registration_number?: string | null
+          seats_limit?: number
           tax_id?: string | null
           updated_at?: string
+          used_seats?: number
         }
         Update: {
           address?: string | null
@@ -46,8 +50,10 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           registration_number?: string | null
+          seats_limit?: number
           tax_id?: string | null
           updated_at?: string
+          used_seats?: number
         }
         Relationships: []
       }
@@ -89,7 +95,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      company_has_available_seats: {
+        Args: {
+          company_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

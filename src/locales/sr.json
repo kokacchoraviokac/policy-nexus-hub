@@ -26,5 +26,11 @@
   "createAccount": "Kreirajte nalog",
   "creatingAccount": "Kreiranje naloga...",
   "companyRequired": "Kompanija je obavezna",
-  "nameRequired": "Ime je obavezno"
+  "nameRequired": "Ime je obavezno",
+  "seatsManagement": "Upravljanje sedištima",
+  "editSeats": "Izmeni sedišta",
+  "seatsLimit": "Limit sedišta",
+  "currentUsage": "Trenutna upotreba",
+  "noSeatsAvailable": "Nema dostupnih sedišta",
+  "seatsLimitReached": "Ova kompanija je dostigla svoj limit sedišta. Obratite se Super Adminu da poveća limit."
 }

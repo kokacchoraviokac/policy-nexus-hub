@@ -26,5 +26,11 @@
   "createAccount": "Crear cuenta",
   "creatingAccount": "Creando cuenta...",
   "companyRequired": "La empresa es requerida",
-  "nameRequired": "El nombre es requerido"
+  "nameRequired": "El nombre es requerido",
+  "seatsManagement": "Gestión de Asientos",
+  "editSeats": "Editar Asientos",
+  "seatsLimit": "Límite de Asientos",
+  "currentUsage": "Uso Actual",
+  "noSeatsAvailable": "No hay asientos disponibles",
+  "seatsLimitReached": "Esta empresa ha alcanzado su límite de asientos. Por favor, contacte a un Superadministrador para aumentar el límite."
 }

@@ -6,6 +6,8 @@ import { toast } from "sonner";
 export interface Company {
   id: string;
   name: string;
+  seatsLimit?: number;
+  usedSeats?: number;
 }
 
 export const useCompanies = () => {
@@ -17,14 +19,19 @@ export const useCompanies = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('companies')
-        .select('id, name')
+        .select('id, name, seats_limit, used_seats')
         .order('name', { ascending: true });
 
       if (error) {
         throw error;
       }
 
-      setCompanies(data || []);
+      setCompanies(data?.map(company => ({
+        id: company.id,
+        name: company.name,
+        seatsLimit: company.seats_limit,
+        usedSeats: company.used_seats
+      })) || []);
     } catch (error) {
       console.error("Error fetching companies:", error);
       toast.error("Failed to load companies");
@@ -55,9 +62,37 @@ export const useCompanies = () => {
     }
   };
 
+  const updateCompanySeats = async (companyId: string, seatsLimit: number): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({ seats_limit: seatsLimit })
+        .eq('id', companyId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Refresh the companies list
+      fetchCompanies();
+      toast.success("Company seats updated successfully");
+      return true;
+    } catch (error) {
+      console.error("Error updating company seats:", error);
+      toast.error("Failed to update company seats");
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchCompanies();
   }, []);
 
-  return { companies, loading, createCompany, refreshCompanies: fetchCompanies };
+  return { 
+    companies, 
+    loading, 
+    createCompany, 
+    updateCompanySeats, 
+    refreshCompanies: fetchCompanies 
+  };
 };
