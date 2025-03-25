@@ -28,8 +28,14 @@ export const useInvitations = () => {
         throw error;
       }
       
-      setInvitations(data || []);
-      return data;
+      // Cast the status field to ensure it matches our type definition
+      const typedInvitations = data?.map(invitation => ({
+        ...invitation,
+        status: invitation.status as 'pending' | 'accepted' | 'expired'
+      })) || [];
+      
+      setInvitations(typedInvitations);
+      return typedInvitations;
     } catch (error: any) {
       toast.error(`Failed to fetch invitations: ${error.message}`);
       return [];
@@ -146,7 +152,11 @@ export const useInvitations = () => {
         return null;
       }
       
-      return data as Invitation;
+      // Cast the status field to ensure it matches our type definition
+      return {
+        ...data,
+        status: data.status as 'pending' | 'accepted' | 'expired'
+      } as Invitation;
     } catch (error) {
       console.error("Error checking invitation:", error);
       return null;
