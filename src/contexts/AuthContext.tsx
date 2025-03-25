@@ -1,8 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, AuthState, rolePrivileges } from "@/types/auth";
+import { toast } from "sonner";
 
-// Mock user data for development purposes
+// Mock user data for development when not connected to Supabase
 const MOCK_USERS = [
   {
     id: "1",
@@ -34,6 +37,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   hasPrivilege: (privilege: string) => boolean;
   updateUser: (user: Partial<User>) => void;
+  signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,50 +48,178 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: false,
     isLoading: true,
   });
+  const [session, setSession] = useState<Session | null>(null);
 
+  // This effect sets up auth state listener and checks for existing session
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem("policyHubUser");
-    
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session && session.user) {
+          try {
+            // Fetch user profile from profiles table
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('name, email, role, avatar_url, company_id')
+              .eq('id', session.user.id)
+              .single();
+
+            if (error) {
+              console.error("Error fetching user profile:", error);
+              // Fall back to session user data
+              setAuthState({
+                user: {
+                  id: session.user.id,
+                  name: session.user.email?.split('@')[0] || 'User',
+                  email: session.user.email || '',
+                  role: 'employee' as UserRole, // Default role
+                  avatar: session.user.user_metadata?.avatar_url,
+                  companyId: session.user.user_metadata?.company_id,
+                },
+                isAuthenticated: true,
+                isLoading: false,
+              });
+              return;
+            }
+
+            // Use profile data
+            if (profile) {
+              setAuthState({
+                user: {
+                  id: session.user.id,
+                  name: profile.name,
+                  email: profile.email,
+                  role: profile.role as UserRole,
+                  avatar: profile.avatar_url,
+                  companyId: profile.company_id,
+                },
+                isAuthenticated: true,
+                isLoading: false,
+              });
+            }
+          } catch (err) {
+            console.error("Error in profile fetch:", err);
+            setAuthState({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+            });
+          }
+        } else {
+          // No session, user is logged out
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      
+      if (session && session.user) {
+        try {
+          // Fetch user profile from profiles table
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('name, email, role, avatar_url, company_id')
+            .eq('id', session.user.id)
+            .single();
+
+          if (error) {
+            console.error("Error fetching user profile:", error);
+            // Fall back to session user data
+            setAuthState({
+              user: {
+                id: session.user.id,
+                name: session.user.email?.split('@')[0] || 'User',
+                email: session.user.email || '',
+                role: 'employee' as UserRole, // Default role
+                avatar: session.user.user_metadata?.avatar_url,
+                companyId: session.user.user_metadata?.company_id,
+              },
+              isAuthenticated: true,
+              isLoading: false,
+            });
+            return;
+          }
+
+          // Use profile data
+          if (profile) {
+            setAuthState({
+              user: {
+                id: session.user.id,
+                name: profile.name,
+                email: profile.email,
+                role: profile.role as UserRole,
+                avatar: profile.avatar_url,
+                companyId: profile.company_id,
+              },
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          }
+        } catch (err) {
+          console.error("Error in profile fetch:", err);
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      } else {
+        // No session, user is logged out
         setAuthState({
-          user,
-          isAuthenticated: true,
+          user: null,
+          isAuthenticated: false,
           isLoading: false,
         });
-      } catch (error) {
-        console.error("Failed to parse stored user:", error);
-        localStorage.removeItem("policyHubUser");
-        setAuthState({ ...authState, isLoading: false });
       }
-    } else {
-      setAuthState({ ...authState, isLoading: false });
-    }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
     setAuthState({ ...authState, isLoading: true });
     
     try {
-      // In a real app, this would be an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Try to sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      // Find user by email (mock authentication)
-      const user = MOCK_USERS.find(u => u.email === email);
-      
-      if (user) {
-        setAuthState({
-          user,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        localStorage.setItem("policyHubUser", JSON.stringify(user));
-      } else {
-        throw new Error("Invalid credentials");
+      if (error) {
+        console.error("Supabase login error:", error);
+        
+        // Fall back to mock login for demo (only in development)
+        if (process.env.NODE_ENV === 'development') {
+          const mockUser = MOCK_USERS.find(u => u.email === email);
+          
+          if (mockUser) {
+            console.log("Using mock user login for development");
+            setAuthState({
+              user: mockUser,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+            return;
+          }
+        }
+        
+        throw error;
       }
+      
+      // Real Supabase auth - user profile is handled by the onAuthStateChange listener
+      console.log("Supabase login successful");
     } catch (error) {
       console.error("Login failed:", error);
       setAuthState({ ...authState, isLoading: false });
@@ -95,13 +227,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("policyHubUser");
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-    });
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      // Auth state will be updated by the onAuthStateChange listener
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Force logout anyway
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+    }
+  };
+
+  const signUp = async (email: string, password: string, userData: Partial<User>) => {
+    setAuthState({ ...authState, isLoading: true });
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: userData.name,
+            role: userData.role || 'employee',
+            company_id: userData.companyId,
+            avatar_url: userData.avatar
+          },
+        },
+      });
+      
+      if (error) {
+        toast.error(`Sign up failed: ${error.message}`);
+        throw error;
+      }
+      
+      toast.success('Sign up successful! Verification email sent.');
+      
+      // NOTE: User profile is created automatically via the database trigger
+    } catch (error) {
+      console.error("Sign up failed:", error);
+      setAuthState({ ...authState, isLoading: false });
+      throw error;
+    }
   };
 
   const hasPrivilege = (privilege: string) => {
@@ -115,14 +285,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userPrivileges.includes(privilege);
   };
 
-  const updateUser = (userData: Partial<User>) => {
-    if (authState.user) {
-      const updatedUser = { ...authState.user, ...userData };
+  const updateUser = async (userData: Partial<User>) => {
+    if (!authState.user || !authState.isAuthenticated) {
+      console.error("Cannot update user: No authenticated user");
+      return;
+    }
+    
+    try {
+      // Update the profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: userData.name,
+          avatar_url: userData.avatar,
+          // Only update role or company_id if explicitly provided
+          ...(userData.role && { role: userData.role }),
+          ...(userData.companyId && { company_id: userData.companyId }),
+        })
+        .eq('id', authState.user.id);
+      
+      if (error) {
+        console.error("Error updating profile:", error);
+        toast.error(`Failed to update profile: ${error.message}`);
+        return;
+      }
+      
+      // Update local state
       setAuthState({
         ...authState,
-        user: updatedUser,
+        user: { ...authState.user, ...userData },
       });
-      localStorage.setItem("policyHubUser", JSON.stringify(updatedUser));
+      
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error("Failed to update profile");
     }
   };
 
@@ -134,6 +331,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         hasPrivilege,
         updateUser,
+        signUp,
       }}
     >
       {children}

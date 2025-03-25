@@ -16,6 +16,7 @@ import Codebook from "./pages/Codebook";
 import Agent from "./pages/Agent";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
@@ -37,6 +38,13 @@ const App = () => (
               <ProtectedRoute requiredPrivilege="dashboard:view">
                 <AppLayout>
                   <Dashboard />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Profile />
                 </AppLayout>
               </ProtectedRoute>
             } />
