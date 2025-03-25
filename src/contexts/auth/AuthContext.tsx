@@ -1,8 +1,6 @@
 
 import React, { createContext, useContext } from "react";
-import { User, UserRole, AuthState } from "@/types/auth";
 import { AuthContextType } from "./types";
-import { checkPrivilege } from "@/utils/authUtils";
 
 // Create the context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
