@@ -32,5 +32,17 @@
   "seatsLimit": "Seats Limit",
   "currentUsage": "Current Usage",
   "noSeatsAvailable": "No seats available",
-  "seatsLimitReached": "This company has reached its seat limit. Please contact a SuperAdmin to increase the limit."
+  "seatsLimitReached": "This company has reached its seat limit. Please contact a SuperAdmin to increase the limit.",
+  "invitationManagement": "Invitation Management",
+  "inviteUser": "Invite User",
+  "sendInvitation": "Send Invitation",
+  "invitationSent": "Invitation sent successfully",
+  "invitationDeleted": "Invitation deleted successfully",
+  "invitationExpires": "Expires",
+  "invitationStatus": "Status",
+  "invitationPending": "Pending",
+  "invitationAccepted": "Accepted",
+  "invitationExpired": "Expired",
+  "invitationCreateDescription": "Send an invitation email to a new user to join your organization",
+  "invitationManagementDescription": "Invite new users to join your organization"
 }

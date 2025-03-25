@@ -32,5 +32,17 @@
   "seatsLimit": "Ограничување на места",
   "currentUsage": "Моментална употреба",
   "noSeatsAvailable": "Нема достапни места",
-  "seatsLimitReached": "Оваа компанија го достигна својот лимит на места. Контактирајте супер админ за да го зголемите лимитот."
+  "seatsLimitReached": "Оваа компанија го достигна својот лимит на места. Контактирајте супер админ за да го зголемите лимитот.",
+  "invitationManagement": "Управување со покани",
+  "inviteUser": "Поканете корисник",
+  "sendInvitation": "Испратете покана",
+  "invitationSent": "Поканата е успешно испратена",
+  "invitationDeleted": "Поканата е успешно избришана",
+  "invitationExpires": "Истекува",
+  "invitationStatus": "Статус",
+  "invitationPending": "Во очекување",
+  "invitationAccepted": "Прифатена",
+  "invitationExpired": "Истечена",
+  "invitationCreateDescription": "Испратете покана по е-пошта на нов корисник да се придружи на вашата организација",
+  "invitationManagementDescription": "Поканете нови корисници да се придружат на вашата организација"
 }

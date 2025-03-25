@@ -32,5 +32,17 @@
   "seatsLimit": "Limit sedišta",
   "currentUsage": "Trenutna upotreba",
   "noSeatsAvailable": "Nema dostupnih sedišta",
-  "seatsLimitReached": "Ova kompanija je dostigla svoj limit sedišta. Obratite se Super Adminu da poveća limit."
+  "seatsLimitReached": "Ova kompanija je dostigla svoj limit sedišta. Obratite se Super Adminu da poveća limit.",
+  "invitationManagement": "Upravljanje pozivnicama",
+  "inviteUser": "Pozovite korisnika",
+  "sendInvitation": "Pošaljite pozivnicu",
+  "invitationSent": "Pozivnica uspešno poslata",
+  "invitationDeleted": "Pozivnica uspešno obrisana",
+  "invitationExpires": "Ističe",
+  "invitationStatus": "Status",
+  "invitationPending": "Na čekanju",
+  "invitationAccepted": "Prihvaćeno",
+  "invitationExpired": "Isteklo",
+  "invitationCreateDescription": "Pošaljite pozivnicu novom korisniku da se pridruži vašoj organizaciji",
+  "invitationManagementDescription": "Pozovite nove korisnike da se pridruže vašoj organizaciji"
 }

@@ -32,5 +32,17 @@
   "seatsLimit": "Límite de Asientos",
   "currentUsage": "Uso Actual",
   "noSeatsAvailable": "No hay asientos disponibles",
-  "seatsLimitReached": "Esta empresa ha alcanzado su límite de asientos. Por favor, contacte a un Superadministrador para aumentar el límite."
+  "seatsLimitReached": "Esta empresa ha alcanzado su límite de asientos. Por favor, contacte a un Superadministrador para aumentar el límite.",
+  "invitationManagement": "Gestión de Invitaciones",
+  "inviteUser": "Invitar Usuario",
+  "sendInvitation": "Enviar Invitación",
+  "invitationSent": "Invitación enviada exitosamente",
+  "invitationDeleted": "Invitación eliminada exitosamente",
+  "invitationExpires": "Vence",
+  "invitationStatus": "Estado",
+  "invitationPending": "Pendiente",
+  "invitationAccepted": "Aceptada",
+  "invitationExpired": "Vencida",
+  "invitationCreateDescription": "Enviar una invitación por correo electrónico a un nuevo usuario para unirse a su organización",
+  "invitationManagementDescription": "Invite a nuevos usuarios a unirse a su organización"
 }

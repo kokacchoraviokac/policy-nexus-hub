@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, Building, FileText, Mail } from "lucide-react";
 import CompanyManagement from "@/components/settings/CompanyManagement";
+import InvitationManagement from "@/components/settings/InvitationManagement";
 
 const Settings = () => {
   const { hasPrivilege } = useAuth();
@@ -25,6 +26,11 @@ const Settings = () => {
           <CompanyManagement />
         </div>
       )}
+      
+      {/* Invitation Management */}
+      <div className="mt-8">
+        <InvitationManagement />
+      </div>
       
       <div className="grid gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
         {canManageUsers && (

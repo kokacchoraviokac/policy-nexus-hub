@@ -57,6 +57,53 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          expires_at: string
+          id: string
+          role: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          role: string
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          role?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -98,6 +145,12 @@ export type Database = {
       company_has_available_seats: {
         Args: {
           company_id: string
+        }
+        Returns: boolean
+      }
+      is_valid_invitation: {
+        Args: {
+          token: string
         }
         Returns: boolean
       }

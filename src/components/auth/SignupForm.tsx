@@ -15,16 +15,19 @@ import { UserRole } from "@/types/auth";
 import { useCompanies, Company } from "@/hooks/useCompanies";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { useInvitations } from "@/hooks/useInvitations";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const createSignupSchema = (t: (key: string) => string) => z.object({
   name: z.string().min(2, t("nameRequired")),
   email: z.string().email(t("invalidEmail")),
   password: z.string().min(6, t("passwordMinLength")),
   role: z.enum(["superAdmin", "admin", "employee"] as const),
-  companyOption: z.enum(["existing", "new"]),
+  companyOption: z.enum(["existing", "new", "invitation"]),
   companyId: z.string().optional(),
   companyName: z.string().optional(),
+  invitationToken: z.string().optional(),
 }).refine((data) => {
   if (data.companyOption === "existing") {
     return !!data.companyId;
@@ -60,6 +63,11 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { companies, loading: loadingCompanies, createCompany } = useCompanies();
   const [companySeatsInfo, setCompanySeatsInfo] = useState<Record<string, CompanySeatsInfo>>({});
+  const { checkInvitation, acceptInvitation } = useInvitations();
+  const [invitation, setInvitation] = useState<any>(null);
+  const [verifyingInvitation, setVerifyingInvitation] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
   
   const signupSchema = createSignupSchema(t);
   type SignupFormValues = z.infer<typeof signupSchema>;
@@ -74,11 +82,42 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
       companyOption: "existing",
       companyId: "",
       companyName: "",
+      invitationToken: "",
     },
   });
 
   const companyOption = form.watch("companyOption");
   const selectedCompanyId = form.watch("companyId");
+  const email = form.watch("email");
+
+  // Check for invitation token in URL
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const token = queryParams.get('token');
+    
+    if (token) {
+      setVerifyingInvitation(true);
+      form.setValue('invitationToken', token);
+      form.setValue('companyOption', 'invitation');
+      
+      checkInvitation(token).then(invitationData => {
+        if (invitationData) {
+          setInvitation(invitationData);
+          form.setValue('email', invitationData.email);
+          form.setValue('role', invitationData.role as UserRole);
+          form.setValue('companyId', invitationData.company_id);
+          
+          // Remove token from URL without refreshing
+          const url = new URL(window.location.href);
+          url.searchParams.delete('token');
+          window.history.replaceState({}, '', url.toString());
+        } else {
+          toast.error('Invalid or expired invitation token');
+        }
+        setVerifyingInvitation(false);
+      });
+    }
+  }, [location.search]);
 
   // Fetch company seats information when companies are loaded
   useEffect(() => {
@@ -110,7 +149,31 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
     setIsSubmitting(true);
     
     try {
-      // Check if selected company has available seats
+      // Check if this is an invitation-based signup
+      if (values.companyOption === 'invitation' && invitation) {
+        // Additional verification that the email matches the invitation
+        if (values.email !== invitation.email) {
+          toast.error('The email address does not match the invitation');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Sign up the user
+        await signUp(values.email, values.password, {
+          name: values.name,
+          role: values.role as UserRole,
+          companyId: invitation.company_id,
+        });
+        
+        // Accept the invitation
+        await acceptInvitation(invitation.token);
+        
+        toast.success("Sign up successful! Check your email to confirm your account.");
+        onSuccess();
+        return;
+      }
+      
+      // Check if selected company has available seats for regular signup
       if (values.companyOption === "existing" && values.companyId) {
         const companyInfo = companySeatsInfo[values.companyId];
         
@@ -149,9 +212,28 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
     }
   };
 
+  // Only show the invitation section if we have a valid invitation
+  const showInvitationSection = companyOption === 'invitation' && invitation;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSignup)} className="space-y-4">
+        {verifyingInvitation ? (
+          <div className="flex items-center justify-center py-6">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <span className="ml-2">Verifying invitation...</span>
+          </div>
+        ) : showInvitationSection ? (
+          <Alert className="mb-4 bg-green-50 border-green-200">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-600">
+              You've been invited to join as a{' '}
+              <strong>{invitation.role === 'admin' ? 'Company Admin' : 'Employee'}</strong>.
+              Complete your registration below.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         <FormField
           control={form.control}
           name="name"
@@ -173,7 +255,11 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
             <FormItem>
               <FormLabel>{t("email")}</FormLabel>
               <FormControl>
-                <Input placeholder="name@example.com" {...field} />
+                <Input 
+                  placeholder="name@example.com" 
+                  {...field} 
+                  disabled={!!invitation}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -194,65 +280,69 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <FormControl>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="employee">{t("employee")}</SelectItem>
-                    <SelectItem value="admin">{t("brokerAdmin")}</SelectItem>
-                    <SelectItem value="superAdmin">{t("superAdmin")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!invitation && (
+          <FormField
+            control={form.control}
+            name="role"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Role</FormLabel>
+                <FormControl>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="employee">{t("employee")}</SelectItem>
+                      <SelectItem value="admin">{t("brokerAdmin")}</SelectItem>
+                      <SelectItem value="superAdmin">{t("superAdmin")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
-        <FormField
-          control={form.control}
-          name="companyOption"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <FormLabel>{t("company")}</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="existing" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      {t("existingCompany")}
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value="new" />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      {t("newCompany")}
-                    </FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {!invitation && (
+          <FormField
+            control={form.control}
+            name="companyOption"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <FormLabel>{t("company")}</FormLabel>
+                <FormControl>
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    className="flex flex-col space-y-1"
+                  >
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="existing" />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        {t("existingCompany")}
+                      </FormLabel>
+                    </FormItem>
+                    <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value="new" />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        {t("newCompany")}
+                      </FormLabel>
+                    </FormItem>
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
-        {companyOption === "existing" && (
+        {companyOption === "existing" && !invitation && (
           <FormField
             control={form.control}
             name="companyId"
@@ -307,7 +397,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
           />
         )}
         
-        {companyOption === "new" && (
+        {companyOption === "new" && !invitation && (
           <FormField
             control={form.control}
             name="companyName"
