@@ -14,12 +14,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email").disabled(),
-  role: z.enum(["superAdmin", "admin", "employee"] as const).disabled(),
+  email: z.string().email("Please enter a valid email"),
+  role: z.enum(["superAdmin", "admin", "employee"] as const),
   avatar: z.string().optional(),
 });
 
-type ProfileFormValues = z.infer<typeof profileSchema>;
+type ProfileFormValues = {
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+};
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
