@@ -22,18 +22,23 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
   return (
     <div className="flex-1 py-4 px-2 overflow-y-auto no-scrollbar">
       <nav className="space-y-1">
-        {authorizedSidebarItems.map((item, index) => (
-          <SidebarItem
-            key={index}
-            icon={item.icon}
-            label={item.label}
-            path={item.path}
-            collapsed={collapsed}
-            active={currentPath === item.path || currentPath.startsWith(`${item.path}/`)}
-            requiredPrivilege={item.requiredPrivilege}
-            subItems={item.subItems}
-          />
-        ))}
+        {authorizedSidebarItems.map((item, index) => {
+          const isActiveParent = currentPath === item.path || 
+                              currentPath.startsWith(`${item.path}/`);
+          
+          return (
+            <SidebarItem
+              key={index}
+              icon={item.icon}
+              label={item.label}
+              path={item.path}
+              collapsed={collapsed}
+              active={isActiveParent}
+              requiredPrivilege={item.requiredPrivilege}
+              subItems={item.subItems}
+            />
+          );
+        })}
       </nav>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   BarChart3, 
@@ -9,9 +8,7 @@ import {
   Book, 
   Users, 
   FileBarChart, 
-  Settings,
-  Building2,
-  Tag
+  Settings
 } from "lucide-react";
 
 interface SubItem {

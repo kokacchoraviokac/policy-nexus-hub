@@ -41,17 +41,21 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   // If no subItems are authorized, don't show any
   const hasAuthorizedSubItems = authorizedSubItems && authorizedSubItems.length > 0;
   
-  // Show subItems if the item is active and has authorized subItems
-  const showSubItems = active && hasAuthorizedSubItems;
+  React.useEffect(() => {
+    // When the active state changes, update the isOpen state accordingly
+    if (active) {
+      setIsOpen(true);
+    }
+  }, [active]);
   
   return (
     <div>
-      <Link 
-        to={path} 
+      {/* Parent item */}
+      <div 
         className={cn(
           "sidebar-item group relative",
-          active && !showSubItems ? "active" : "",
-          "mb-1"
+          active ? "active" : "",
+          "mb-1 cursor-pointer"
         )}
         onClick={(e) => {
           if (hasAuthorizedSubItems) {
@@ -60,19 +64,30 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           }
         }}
       >
-        <Icon size={20} />
-        {!collapsed && (
-          <span className="text-sm font-medium transition-opacity duration-200">{label}</span>
-        )}
-        {!collapsed && hasAuthorizedSubItems && (
-          <ChevronRight 
-            size={16} 
-            className={cn(
-              "ml-auto transition-transform", 
-              isOpen && "transform rotate-90"
-            )} 
-          />
-        )}
+        <Link 
+          to={path} 
+          className="flex items-center w-full h-full"
+          onClick={(e) => {
+            if (hasAuthorizedSubItems) {
+              e.preventDefault();
+            }
+          }}
+        >
+          <Icon size={20} />
+          {!collapsed && (
+            <span className="text-sm font-medium transition-opacity duration-200 ml-2">{label}</span>
+          )}
+          {!collapsed && hasAuthorizedSubItems && (
+            <ChevronRight 
+              size={16} 
+              className={cn(
+                "ml-auto transition-transform", 
+                isOpen && "transform rotate-90"
+              )} 
+            />
+          )}
+        </Link>
+        
         {collapsed && hasAuthorizedSubItems && (
           <div className="absolute left-full ml-2 top-0 w-48 p-2 rounded-md bg-sidebar-accent border border-sidebar-border shadow-glass-md scale-90 origin-left opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 z-10">
             <div className="font-medium text-sm mb-1 text-sidebar-accent-foreground">{label}</div>
@@ -87,9 +102,10 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             ))}
           </div>
         )}
-      </Link>
+      </div>
       
-      {!collapsed && showSubItems && isOpen && (
+      {/* Sub-items for expanded view */}
+      {!collapsed && hasAuthorizedSubItems && isOpen && (
         <div className="ml-8 mt-1 mb-2 border-l border-sidebar-border pl-2 space-y-1">
           {authorizedSubItems.map((item, index) => (
             <Link
