@@ -137,19 +137,22 @@ export const checkPrivilegeWithContext = (
   return checkGranularPrivilege(role, privilege, context);
 };
 
-// New: Custom privilege management
+// New: Custom privilege management - fixed to handle Supabase tables correctly
 export const fetchUserCustomPrivileges = async (userId: string): Promise<CustomPrivilege[]> => {
   try {
     const { data, error } = await supabase
       .from('user_custom_privileges')
       .select('*')
       .eq('user_id', userId)
-      .lt('expires_at', new Date().toISOString());
+      .is('expires_at', null)
+      .or(`expires_at.gt.${new Date().toISOString()}`);
       
     if (error) {
       console.error("Error fetching user custom privileges:", error);
       return [];
     }
+    
+    if (!data) return [];
     
     return data.map(item => ({
       id: item.id,
