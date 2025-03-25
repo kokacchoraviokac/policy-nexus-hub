@@ -8,6 +8,7 @@ import AuthCard from "@/components/auth/AuthCard";
 import LoginForm from "@/components/auth/LoginForm";
 import SignupForm from "@/components/auth/SignupForm";
 import DemoAccounts from "@/components/auth/DemoAccounts";
+import LanguageSelector from "@/components/language/LanguageSelector";
 
 const Login = () => {
   const location = useLocation();
@@ -23,26 +24,32 @@ const Login = () => {
   }
 
   return (
-    <AuthCard 
-      title={t("welcome")} 
-      description={t("signInDescription")}
-      footer={<DemoAccounts />}
-    >
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "signup")}>
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="login">{t("login")}</TabsTrigger>
-          <TabsTrigger value="signup">{t("signUp")}</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="login">
-          <LoginForm />
-        </TabsContent>
-        
-        <TabsContent value="signup">
-          <SignupForm onSuccess={() => setActiveTab("login")} />
-        </TabsContent>
-      </Tabs>
-    </AuthCard>
+    <>
+      <div className="absolute top-4 right-4">
+        <LanguageSelector variant="default" />
+      </div>
+      
+      <AuthCard 
+        title={t("welcome")} 
+        description={t("signInDescription")}
+        footer={<DemoAccounts />}
+      >
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "signup")}>
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="login">{t("login")}</TabsTrigger>
+            <TabsTrigger value="signup">{t("signUp")}</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login">
+            <LoginForm />
+          </TabsContent>
+          
+          <TabsContent value="signup">
+            <SignupForm onSuccess={() => setActiveTab("login")} />
+          </TabsContent>
+        </Tabs>
+      </AuthCard>
+    </>
   );
 };
 

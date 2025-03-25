@@ -1,6 +1,7 @@
 
 import React from "react";
 import { User, UserRole } from "@/types/auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ProfileHeaderProps {
@@ -8,6 +9,8 @@ interface ProfileHeaderProps {
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
+  const { t } = useLanguage();
+  
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -19,11 +22,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ user }) => {
   const getRoleLabel = (role: UserRole) => {
     switch (role) {
       case "superAdmin":
-        return "Super Admin";
+        return t("superAdmin");
       case "admin":
-        return "Admin";
+        return t("brokerAdmin");
       case "employee":
-        return "Employee";
+        return t("employee");
       default:
         return "User";
     }

@@ -44,5 +44,20 @@
   "invitationAccepted": "Accepted",
   "invitationExpired": "Expired",
   "invitationCreateDescription": "Send an invitation email to a new user to join your organization",
-  "invitationManagementDescription": "Invite new users to join your organization"
+  "invitationManagementDescription": "Invite new users to join your organization",
+  
+  "myProfile": "My Profile",
+  "pleaseLoginToViewProfile": "Please log in to view your profile.",
+  "profileDetails": "Profile Details",
+  "security": "Security",
+  "privileges": "Privileges",
+  "changePassword": "Change Password",
+  "profileUpdated": "Profile updated successfully",
+  "profileUpdateFailed": "Failed to update profile",
+  "save": "Save",
+  "saving": "Saving...",
+  "language": "Language",
+  "darkMode": "Dark Mode",
+  "lightMode": "Light Mode",
+  "systemDefault": "System Default"
 }

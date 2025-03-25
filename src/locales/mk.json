@@ -44,5 +44,20 @@
   "invitationAccepted": "Прифатена",
   "invitationExpired": "Истечена",
   "invitationCreateDescription": "Испратете покана по е-пошта на нов корисник да се придружи на вашата организација",
-  "invitationManagementDescription": "Поканете нови корисници да се придружат на вашата организација"
+  "invitationManagementDescription": "Поканете нови корисници да се придружат на вашата организација",
+  
+  "myProfile": "Мој Профил",
+  "pleaseLoginToViewProfile": "Најавете се за да го видите вашиот профил.",
+  "profileDetails": "Детали за профилот",
+  "security": "Безбедност",
+  "privileges": "Привилегии",
+  "changePassword": "Промена на лозинка",
+  "profileUpdated": "Профилот е успешно ажуриран",
+  "profileUpdateFailed": "Ажурирањето на профилот не успеа",
+  "save": "Зачувај",
+  "saving": "Зачувување...",
+  "language": "Јазик",
+  "darkMode": "Темен режим",
+  "lightMode": "Светол режим",
+  "systemDefault": "Системски зададено"
 }

@@ -44,5 +44,20 @@
   "invitationAccepted": "Prihvaćeno",
   "invitationExpired": "Isteklo",
   "invitationCreateDescription": "Pošaljite pozivnicu novom korisniku da se pridruži vašoj organizaciji",
-  "invitationManagementDescription": "Pozovite nove korisnike da se pridruže vašoj organizaciji"
+  "invitationManagementDescription": "Pozovite nove korisnike da se pridruže vašoj organizaciji",
+  
+  "myProfile": "Moj Profil",
+  "pleaseLoginToViewProfile": "Prijavite se da biste videli svoj profil.",
+  "profileDetails": "Detalji Profila",
+  "security": "Bezbednost",
+  "privileges": "Privilegije",
+  "changePassword": "Promena Lozinke",
+  "profileUpdated": "Profil je uspešno ažuriran",
+  "profileUpdateFailed": "Ažuriranje profila nije uspelo",
+  "save": "Sačuvaj",
+  "saving": "Čuvanje...",
+  "language": "Jezik",
+  "darkMode": "Tamni režim",
+  "lightMode": "Svetli režim",
+  "systemDefault": "Podrazumevano sistemski"
 }

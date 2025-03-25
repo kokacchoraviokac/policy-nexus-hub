@@ -44,5 +44,20 @@
   "invitationAccepted": "Aceptada",
   "invitationExpired": "Vencida",
   "invitationCreateDescription": "Enviar una invitación por correo electrónico a un nuevo usuario para unirse a su organización",
-  "invitationManagementDescription": "Invite a nuevos usuarios a unirse a su organización"
+  "invitationManagementDescription": "Invite a nuevos usuarios a unirse a su organización",
+  
+  "myProfile": "Mi Perfil",
+  "pleaseLoginToViewProfile": "Por favor inicie sesión para ver su perfil.",
+  "profileDetails": "Detalles del Perfil",
+  "security": "Seguridad",
+  "privileges": "Privilegios",
+  "changePassword": "Cambiar Contraseña",
+  "profileUpdated": "Perfil actualizado exitosamente",
+  "profileUpdateFailed": "Error al actualizar el perfil",
+  "save": "Guardar",
+  "saving": "Guardando...",
+  "language": "Idioma",
+  "darkMode": "Modo Oscuro",
+  "lightMode": "Modo Claro",
+  "systemDefault": "Predeterminado del Sistema"
 }
