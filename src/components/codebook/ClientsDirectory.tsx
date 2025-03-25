@@ -9,11 +9,11 @@ import DataTable from "@/components/ui/data-table";
 import { useClients } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import ClientFormDialog from "./dialogs/ClientFormDialog";
 
 const ClientsDirectory = () => {
-  const { authState } = useAuthSession();
+  const { user } = useAuth();
   const { clients, isLoading, searchTerm, setSearchTerm, deleteClient } = useClients();
   const { toast } = useToast();
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);

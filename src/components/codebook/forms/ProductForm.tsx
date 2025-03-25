@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -11,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { InsuranceProduct } from "@/types/codebook";
 import { useInsurers } from "@/hooks/useInsurers";
 import { Switch } from "@/components/ui/switch";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/contexts/auth/AuthContext";
 
 const productFormSchema = z.object({
   code: z.string().min(1, "Code is required"),
@@ -44,7 +43,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onCancel,
   isSubmitting,
 }) => {
-  const { authState } = useAuthSession();
+  const { user } = useAuth();
   const { insurers = [], isLoading: isLoadingInsurers } = useInsurers();
 
   const form = useForm<ProductFormValues>({

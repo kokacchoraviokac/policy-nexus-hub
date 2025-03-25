@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ClientForm from "../forms/ClientForm";
 import { useClients } from "@/hooks/useClients";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface ClientFormDialogProps {
@@ -19,7 +19,7 @@ const ClientFormDialog: React.FC<ClientFormDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { authState } = useAuthSession();
+  const { user } = useAuth();
   const { clients, addClient, updateClient } = useClients();
   
   const currentClient = clientId
@@ -33,7 +33,7 @@ const ClientFormDialog: React.FC<ClientFormDialogProps> = ({
       if (clientId && currentClient) {
         await updateClient(clientId, {
           ...values,
-          company_id: authState.user?.company_id,
+          company_id: user?.companyId,
         });
         toast({
           title: "Client updated",
@@ -42,7 +42,7 @@ const ClientFormDialog: React.FC<ClientFormDialogProps> = ({
       } else {
         await addClient({
           ...values,
-          company_id: authState.user?.company_id,
+          company_id: user?.companyId,
         });
         toast({
           title: "Client added",

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ProductForm from "../forms/ProductForm";
 import { useInsuranceProducts } from "@/hooks/useInsuranceProducts";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProductFormDialogProps {
@@ -19,7 +19,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { authState } = useAuthSession();
+  const { user } = useAuth();
   const { products, addProduct, updateProduct } = useInsuranceProducts();
   
   const currentProduct = productId
@@ -33,7 +33,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       if (productId && currentProduct) {
         await updateProduct(productId, {
           ...values,
-          company_id: authState.user?.company_id,
+          company_id: user?.companyId,
         });
         toast({
           title: "Product updated",
@@ -42,7 +42,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       } else {
         await addProduct({
           ...values,
-          company_id: authState.user?.company_id,
+          company_id: user?.companyId,
         });
         toast({
           title: "Product added",

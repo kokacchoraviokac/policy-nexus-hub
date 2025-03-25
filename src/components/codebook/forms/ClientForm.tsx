@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/contexts/auth/AuthContext";
 
 const clientFormSchema = z.object({
   name: z.string().min(1, "Company name is required"),
@@ -53,7 +52,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
   onCancel,
   isSubmitting,
 }) => {
-  const { authState } = useAuthSession();
+  const { user } = useAuth();
 
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),

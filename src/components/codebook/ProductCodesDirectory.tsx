@@ -9,11 +9,11 @@ import DataTable from "@/components/ui/data-table";
 import { useInsuranceProducts } from "@/hooks/useInsuranceProducts";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import ProductFormDialog from "./dialogs/ProductFormDialog";
 
 const ProductCodesDirectory = () => {
-  const { authState } = useAuthSession();
+  const { user } = useAuth();
   const { products, isLoading, searchTerm, setSearchTerm, deleteProduct } = useInsuranceProducts();
   const { toast } = useToast();
   const [productToDelete, setProductToDelete] = useState<string | null>(null);

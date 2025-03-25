@@ -1,18 +1,20 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { AuthContextProvider } from "./AuthContext";
-import { useAuthSession } from "@/hooks/useAuthSession";
 import { useAuthOperations } from "@/hooks/useAuthOperations";
 import { usePrivilegeCheck } from "@/hooks/usePrivilegeCheck";
+import { AuthState, CustomPrivilege } from "@/types/auth";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Get auth session state
-  const { 
-    authState, 
-    setAuthState, 
-    customPrivileges, 
-    setCustomPrivileges 
-  } = useAuthSession();
+  // Initialize auth state
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false
+  });
+  
+  // Initialize custom privileges
+  const [customPrivileges, setCustomPrivileges] = useState<CustomPrivilege[]>([]);
 
   // Get auth operations
   const { login, logout, signUp, updateUser } = useAuthOperations(authState, setAuthState);
@@ -26,7 +28,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Combine all context values
   const contextValue = {
-    ...authState,
+    user: authState.user,
+    isAuthenticated: authState.isAuthenticated,
+    isLoading: authState.isLoading,
     login,
     logout,
     hasPrivilege,

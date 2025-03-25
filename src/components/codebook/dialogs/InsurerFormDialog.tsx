@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import InsurerForm from "../forms/InsurerForm";
 import { useInsurers } from "@/hooks/useInsurers";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface InsurerFormDialogProps {
@@ -19,7 +19,7 @@ const InsurerFormDialog: React.FC<InsurerFormDialogProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { authState } = useAuthSession();
+  const { user } = useAuth();
   const { insurers, addInsurer, updateInsurer } = useInsurers();
   
   const currentInsurer = insurerId
@@ -33,7 +33,7 @@ const InsurerFormDialog: React.FC<InsurerFormDialogProps> = ({
       if (insurerId && currentInsurer) {
         await updateInsurer(insurerId, {
           ...values,
-          company_id: authState.user?.company_id,
+          company_id: user?.companyId,
         });
         toast({
           title: "Insurance company updated",
@@ -42,7 +42,7 @@ const InsurerFormDialog: React.FC<InsurerFormDialogProps> = ({
       } else {
         await addInsurer({
           ...values,
-          company_id: authState.user?.company_id,
+          company_id: user?.companyId,
         });
         toast({
           title: "Insurance company added",

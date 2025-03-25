@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -7,7 +6,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { useAuth } from "@/contexts/auth/AuthContext";
 
 const insurerFormSchema = z.object({
   name: z.string().min(1, "Company name is required"),
@@ -48,7 +47,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
   onCancel,
   isSubmitting,
 }) => {
-  const { authState } = useAuthSession();
+  const { user } = useAuth();
 
   const form = useForm<InsurerFormValues>({
     resolver: zodResolver(insurerFormSchema),
