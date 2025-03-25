@@ -22,13 +22,20 @@ interface SidebarProps {
   setCollapsed: (collapsed: boolean) => void;
 }
 
+interface SubItem {
+  label: string;
+  path: string;
+  requiredPrivilege: string;
+}
+
 interface SidebarItemProps {
   icon: React.ElementType;
   label: string;
   path: string;
   collapsed: boolean;
   active: boolean;
-  subItems?: { label: string; path: string }[];
+  requiredPrivilege: string;
+  subItems?: SubItem[];
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({ 
@@ -37,10 +44,20 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   path, 
   collapsed, 
   active,
+  requiredPrivilege,
   subItems 
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { hasPrivilege } = useAuth();
   const showSubItems = active && subItems && subItems.length > 0;
+  
+  // Filter subItems based on user privileges
+  const authorizedSubItems = subItems?.filter(item => 
+    hasPrivilege(item.requiredPrivilege)
+  );
+  
+  // If no subItems are authorized, don't show any
+  const hasAuthorizedSubItems = authorizedSubItems && authorizedSubItems.length > 0;
   
   return (
     <div>
@@ -52,7 +69,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           "mb-1"
         )}
         onClick={(e) => {
-          if (subItems && subItems.length > 0) {
+          if (hasAuthorizedSubItems) {
             e.preventDefault();
             setIsOpen(!isOpen);
           }
@@ -62,7 +79,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         {!collapsed && (
           <span className="text-sm font-medium transition-opacity duration-200">{label}</span>
         )}
-        {!collapsed && subItems && subItems.length > 0 && (
+        {!collapsed && hasAuthorizedSubItems && (
           <ChevronRight 
             size={16} 
             className={cn(
@@ -71,10 +88,10 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             )} 
           />
         )}
-        {collapsed && (
+        {collapsed && hasAuthorizedSubItems && (
           <div className="absolute left-full ml-2 top-0 w-48 p-2 rounded-md bg-sidebar-accent border border-sidebar-border shadow-glass-md scale-90 origin-left opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 z-10">
             <div className="font-medium text-sm mb-1 text-sidebar-accent-foreground">{label}</div>
-            {subItems && subItems.map((item, index) => (
+            {authorizedSubItems.map((item, index) => (
               <Link
                 key={index}
                 to={item.path}
@@ -87,9 +104,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         )}
       </Link>
       
-      {!collapsed && showSubItems && isOpen && (
+      {!collapsed && showSubItems && isOpen && hasAuthorizedSubItems && (
         <div className="ml-8 mt-1 mb-2 border-l border-sidebar-border pl-2 space-y-1">
-          {subItems.map((item, index) => (
+          {authorizedSubItems.map((item, index) => (
             <Link
               key={index}
               to={item.path}
@@ -106,7 +123,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, hasPrivilege } = useAuth();
   const currentPath = location.pathname;
   
   const sidebarItems = [
@@ -114,84 +131,98 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
       icon: BarChart3,
       label: "Dashboard",
       path: "/",
+      requiredPrivilege: "dashboard:view"
     },
     {
       icon: FileText,
       label: "Policies",
       path: "/policies",
+      requiredPrivilege: "policies:view",
       subItems: [
-        { label: "All Policies", path: "/policies/all" },
-        { label: "Policies Workflow", path: "/policies/workflow" },
-        { label: "Policy Addendums", path: "/policies/addendums" },
-        { label: "Unlinked Payments", path: "/policies/unlinked" },
-        { label: "Documents", path: "/policies/documents" },
+        { label: "All Policies", path: "/policies/all", requiredPrivilege: "policies.all:view" },
+        { label: "Policies Workflow", path: "/policies/workflow", requiredPrivilege: "policies.workflow:view" },
+        { label: "Policy Addendums", path: "/policies/addendums", requiredPrivilege: "policies.addendums:view" },
+        { label: "Unlinked Payments", path: "/policies/unlinked", requiredPrivilege: "policies.unlinked:view" },
+        { label: "Documents", path: "/policies/documents", requiredPrivilege: "policies.documents:view" },
       ]
     },
     {
       icon: TrendingUp,
       label: "Sales",
       path: "/sales",
+      requiredPrivilege: "sales:view",
       subItems: [
-        { label: "Pipeline Overview", path: "/sales/pipeline" },
-        { label: "Leads", path: "/sales/leads" },
-        { label: "Sales Processes", path: "/sales/processes" },
-        { label: "Responsible Persons", path: "/sales/persons" },
+        { label: "Pipeline Overview", path: "/sales/pipeline", requiredPrivilege: "sales.pipeline:view" },
+        { label: "Leads", path: "/sales/leads", requiredPrivilege: "sales.leads:view" },
+        { label: "Sales Processes", path: "/sales/processes", requiredPrivilege: "sales.processes:view" },
+        { label: "Responsible Persons", path: "/sales/persons", requiredPrivilege: "sales.persons:view" },
       ]
     },
     {
       icon: ClipboardCheck,
       label: "Claims",
       path: "/claims",
+      requiredPrivilege: "claims:view",
     },
     {
       icon: DollarSign,
       label: "Finances",
       path: "/finances",
+      requiredPrivilege: "finances:view",
       subItems: [
-        { label: "Commissions", path: "/finances/commissions" },
-        { label: "Invoicing", path: "/finances/invoicing" },
-        { label: "Statement Processing", path: "/finances/statements" },
+        { label: "Commissions", path: "/finances/commissions", requiredPrivilege: "finances.commissions:view" },
+        { label: "Invoicing", path: "/finances/invoicing", requiredPrivilege: "finances.invoicing:view" },
+        { label: "Statement Processing", path: "/finances/statements", requiredPrivilege: "finances.statements:view" },
       ]
     },
     {
       icon: Book,
       label: "Codebook",
       path: "/codebook",
+      requiredPrivilege: "codebook:view",
       subItems: [
-        { label: "Clients", path: "/codebook/clients" },
-        { label: "Insurance Companies", path: "/codebook/companies" },
-        { label: "Insurance Codes", path: "/codebook/codes" },
+        { label: "Clients", path: "/codebook/clients", requiredPrivilege: "codebook.clients:view" },
+        { label: "Insurance Companies", path: "/codebook/companies", requiredPrivilege: "codebook.companies:view" },
+        { label: "Insurance Codes", path: "/codebook/codes", requiredPrivilege: "codebook.codes:view" },
       ]
     },
     {
       icon: Users,
       label: "Agent",
       path: "/agent",
+      requiredPrivilege: "agent:view",
       subItems: [
-        { label: "Fixed Commissions", path: "/agent/fixed-commissions" },
-        { label: "Client Commissions", path: "/agent/client-commissions" },
-        { label: "Manual Commissions", path: "/agent/manual-commissions" },
-        { label: "Calculate Payouts", path: "/agent/calculate-payouts" },
-        { label: "Payout Reports", path: "/agent/payout-reports" },
+        { label: "Fixed Commissions", path: "/agent/fixed-commissions", requiredPrivilege: "agent.fixed-commissions:view" },
+        { label: "Client Commissions", path: "/agent/client-commissions", requiredPrivilege: "agent.client-commissions:view" },
+        { label: "Manual Commissions", path: "/agent/manual-commissions", requiredPrivilege: "agent.manual-commissions:view" },
+        { label: "Calculate Payouts", path: "/agent/calculate-payouts", requiredPrivilege: "agent.calculate-payouts:view" },
+        { label: "Payout Reports", path: "/agent/payout-reports", requiredPrivilege: "agent.payout-reports:view" },
       ]
     },
     {
       icon: FileBarChart,
       label: "Reports",
       path: "/reports",
+      requiredPrivilege: "reports:view",
       subItems: [
-        { label: "Production Report", path: "/reports/production" },
-        { label: "Clients Report", path: "/reports/clients" },
-        { label: "Agents Report", path: "/reports/agents" },
-        { label: "Claims Report", path: "/reports/claims" },
+        { label: "Production Report", path: "/reports/production", requiredPrivilege: "reports.production:view" },
+        { label: "Clients Report", path: "/reports/clients", requiredPrivilege: "reports.clients:view" },
+        { label: "Agents Report", path: "/reports/agents", requiredPrivilege: "reports.agents:view" },
+        { label: "Claims Report", path: "/reports/claims", requiredPrivilege: "reports.claims:view" },
       ]
     },
     {
       icon: Settings,
       label: "Settings",
       path: "/settings",
+      requiredPrivilege: "settings:view",
     },
   ];
+
+  // Filter sidebar items based on user privileges
+  const authorizedSidebarItems = sidebarItems.filter(item => 
+    hasPrivilege(item.requiredPrivilege)
+  );
 
   return (
     <aside 
@@ -221,7 +252,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
       
       <div className="flex-1 py-4 px-2 overflow-y-auto no-scrollbar">
         <nav className="space-y-1">
-          {sidebarItems.map((item, index) => (
+          {authorizedSidebarItems.map((item, index) => (
             <SidebarItem
               key={index}
               icon={item.icon}
@@ -229,6 +260,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
               path={item.path}
               collapsed={collapsed}
               active={currentPath === item.path || currentPath.startsWith(`${item.path}/`)}
+              requiredPrivilege={item.requiredPrivilege}
               subItems={item.subItems}
             />
           ))}

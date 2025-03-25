@@ -37,6 +37,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/unauthorized" element={<Unauthorized />} />
               
+              {/* Dashboard */}
               <Route path="/" element={
                 <ProtectedRoute requiredPrivilege="dashboard:view">
                   <AppLayout>
@@ -44,6 +45,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* User Profile - accessible to all authenticated users */}
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <AppLayout>
@@ -51,6 +54,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* Policies Module */}
               <Route path="/policies" element={
                 <ProtectedRoute requiredPrivilege="policies:view">
                   <AppLayout>
@@ -58,6 +63,19 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* Sub-routes for Policies would be defined here */}
+              {/* Example: 
+              <Route path="/policies/all" element={
+                <ProtectedRoute requiredPrivilege="policies.all:view">
+                  <AppLayout>
+                    <PoliciesAll />
+                  </AppLayout>
+                </ProtectedRoute>
+              } /> 
+              */}
+              
+              {/* Sales Module */}
               <Route path="/sales" element={
                 <ProtectedRoute requiredPrivilege="sales:view">
                   <AppLayout>
@@ -65,6 +83,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* Claims Module */}
               <Route path="/claims" element={
                 <ProtectedRoute requiredPrivilege="claims:view">
                   <AppLayout>
@@ -72,6 +92,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* Finances Module */}
               <Route path="/finances" element={
                 <ProtectedRoute requiredPrivilege="finances:view">
                   <AppLayout>
@@ -79,6 +101,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* Codebook Module */}
               <Route path="/codebook" element={
                 <ProtectedRoute requiredPrivilege="codebook:view">
                   <AppLayout>
@@ -86,6 +110,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* Agent Module */}
               <Route path="/agent" element={
                 <ProtectedRoute requiredPrivilege="agent:view">
                   <AppLayout>
@@ -93,6 +119,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* Reports Module */}
               <Route path="/reports" element={
                 <ProtectedRoute requiredPrivilege="reports:view">
                   <AppLayout>
@@ -100,6 +128,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* Settings Module */}
               <Route path="/settings" element={
                 <ProtectedRoute requiredPrivilege="settings:view">
                   <AppLayout>
@@ -107,6 +137,8 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
+              {/* User Management */}
               <Route path="/settings/users" element={
                 <ProtectedRoute requiredPrivilege="users:manage">
                   <AppLayout>
@@ -114,6 +146,7 @@ const App = () => (
                   </AppLayout>
                 </ProtectedRoute>
               } />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
