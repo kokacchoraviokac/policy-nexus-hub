@@ -1,8 +1,10 @@
 
-import React from "react";
-import { Bell, Search, Menu } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Bell, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UserProfileMenu from "@/components/auth/UserProfileMenu";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TopBarProps {
   sidebarCollapsed: boolean;
@@ -10,6 +12,36 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }) => {
+  const { user } = useAuth();
+  const [companyName, setCompanyName] = useState<string>("");
+
+  useEffect(() => {
+    const fetchCompanyName = async () => {
+      if (user?.companyId) {
+        try {
+          const { data, error } = await supabase
+            .from('companies')
+            .select('name')
+            .eq('id', user.companyId)
+            .single();
+          
+          if (error) {
+            console.error("Error fetching company name:", error);
+            return;
+          }
+          
+          if (data) {
+            setCompanyName(data.name);
+          }
+        } catch (error) {
+          console.error("Failed to fetch company name:", error);
+        }
+      }
+    };
+    
+    fetchCompanyName();
+  }, [user]);
+
   return (
     <header className="h-16 border-b border-border flex items-center px-4 bg-white/80 backdrop-blur-sm">
       <button 
@@ -20,20 +52,11 @@ const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }
       </button>
       
       <div className="flex-1">
-        <div className="relative max-w-md">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Search className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <input 
-            type="search" 
-            placeholder="Search..." 
-            className={cn(
-              "pl-10 pr-4 py-2 text-sm rounded-full w-full",
-              "bg-secondary border-none focus:ring-1 focus:ring-primary/20",
-              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            )}
-          />
-        </div>
+        {companyName && (
+          <h2 className="text-lg font-semibold text-primary">
+            {companyName}
+          </h2>
+        )}
       </div>
       
       <div className="flex items-center space-x-4">
