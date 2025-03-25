@@ -28,6 +28,14 @@ const ProductCodesDirectory = () => {
     }
   };
 
+  const handleAddProduct = () => {
+    // This will be implemented later with a form dialog
+    toast({
+      title: "Add Product",
+      description: "Product creation functionality will be implemented soon.",
+    });
+  };
+
   const columns = [
     {
       header: "Code",
@@ -102,7 +110,7 @@ const ProductCodesDirectory = () => {
             Manage product codes for different types of insurance
           </CardDescription>
         </div>
-        <Button className="flex items-center gap-1">
+        <Button className="flex items-center gap-1" onClick={handleAddProduct}>
           <Plus className="h-4 w-4" /> Add Product
         </Button>
       </CardHeader>
@@ -121,11 +129,7 @@ const ProductCodesDirectory = () => {
           emptyState={{
             title: "No insurance products found",
             description: "Try adjusting your search or add a new product.",
-            action: (
-              <Button className="mt-2">
-                <Plus className="mr-2 h-4 w-4" /> Add Product
-              </Button>
-            ),
+            action: null // Removed duplicate button from empty state
           }}
         />
       </CardContent>

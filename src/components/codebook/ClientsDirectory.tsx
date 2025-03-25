@@ -28,6 +28,14 @@ const ClientsDirectory = () => {
     }
   };
 
+  const handleAddClient = () => {
+    // This will be implemented later with a form dialog
+    toast({
+      title: "Add Client",
+      description: "Client creation functionality will be implemented soon.",
+    });
+  };
+
   const columns = [
     {
       header: "Name",
@@ -104,7 +112,7 @@ const ClientsDirectory = () => {
             Manage client records including contact details and tax information
           </CardDescription>
         </div>
-        <Button className="flex items-center gap-1">
+        <Button className="flex items-center gap-1" onClick={handleAddClient}>
           <Plus className="h-4 w-4" /> Add Client
         </Button>
       </CardHeader>
@@ -123,11 +131,7 @@ const ClientsDirectory = () => {
           emptyState={{
             title: "No clients found",
             description: "Try adjusting your search or add a new client.",
-            action: (
-              <Button className="mt-2">
-                <Plus className="mr-2 h-4 w-4" /> Add Client
-              </Button>
-            ),
+            action: null // Removed duplicate button from empty state
           }}
         />
       </CardContent>

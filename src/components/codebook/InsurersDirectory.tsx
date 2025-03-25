@@ -28,6 +28,14 @@ const InsurersDirectory = () => {
     }
   };
 
+  const handleAddInsurer = () => {
+    // This will be implemented later with a form dialog
+    toast({
+      title: "Add Insurer",
+      description: "Insurer creation functionality will be implemented soon.",
+    });
+  };
+
   const columns = [
     {
       header: "Name",
@@ -104,7 +112,7 @@ const InsurersDirectory = () => {
             Manage insurance company records including branch and parent company details
           </CardDescription>
         </div>
-        <Button className="flex items-center gap-1">
+        <Button className="flex items-center gap-1" onClick={handleAddInsurer}>
           <Plus className="h-4 w-4" /> Add Insurer
         </Button>
       </CardHeader>
@@ -123,11 +131,7 @@ const InsurersDirectory = () => {
           emptyState={{
             title: "No insurance companies found",
             description: "Try adjusting your search or add a new insurance company.",
-            action: (
-              <Button className="mt-2">
-                <Plus className="mr-2 h-4 w-4" /> Add Insurer
-              </Button>
-            ),
+            action: null // Removed duplicate button from empty state
           }}
         />
       </CardContent>
