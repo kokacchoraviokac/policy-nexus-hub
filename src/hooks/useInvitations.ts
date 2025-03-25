@@ -17,8 +17,8 @@ export const useInvitations = () => {
         .select('*')
         .order('created_at', { ascending: false });
       
-      // If company_id provided, filter by it (for admin users)
-      if (company_id) {
+      // If company_id provided and it's not "all", filter by it (for admin users)
+      if (company_id && company_id !== 'all') {
         query = query.eq('company_id', company_id);
       }
       
