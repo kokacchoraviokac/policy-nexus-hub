@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { fetchUserProfile } from "@/utils/authUtils";
 import { useAuthOperations } from "@/hooks/useAuthOperations";
 import { AuthContextProvider } from "./AuthContext";
-import { checkPrivilege } from "@/utils/authUtils";
+import { checkPrivilege, checkPrivilegeWithContext } from "@/utils/authUtils";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -26,6 +26,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
     return checkPrivilege(authState.user.role, privilege);
+  };
+  
+  // Enhanced function to check privileges with context
+  const hasPrivilegeWithContext = (
+    privilege: string,
+    context?: {
+      ownerId?: string;
+      currentUserId?: string;
+      companyId?: string;
+      currentUserCompanyId?: string;
+      resourceType?: string;
+      resourceValue?: any;
+      [key: string]: any;
+    }
+  ) => {
+    if (!authState.user || !authState.isAuthenticated) {
+      return false;
+    }
+    
+    // Add user context if not provided
+    const contextWithDefaults = {
+      currentUserId: authState.user.id,
+      currentUserCompanyId: authState.user.companyId,
+      ...context
+    };
+    
+    return checkPrivilegeWithContext(authState.user.role, privilege, contextWithDefaults);
   };
 
   // This effect sets up auth state listener and checks for existing session
@@ -139,6 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     logout,
     hasPrivilege,
+    hasPrivilegeWithContext,
     updateUser,
     signUp,
   };

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole, rolePrivileges } from "@/types/auth";
+import { User, UserRole, rolePrivileges, checkGranularPrivilege } from "@/types/auth";
 import { toast } from "sonner";
 
 export const fetchUserProfile = async (userId: string): Promise<User | null> => {
@@ -64,6 +64,7 @@ export const updateUserProfile = async (
   }
 };
 
+// Simple privilege check (backward compatible)
 export const checkPrivilege = (
   role: UserRole | undefined,
   privilege: string
@@ -71,4 +72,21 @@ export const checkPrivilege = (
   if (!role) return false;
   const userPrivileges = rolePrivileges[role];
   return userPrivileges.includes(privilege);
+};
+
+// Enhanced check with context
+export const checkPrivilegeWithContext = (
+  role: UserRole | undefined,
+  privilege: string,
+  context?: {
+    ownerId?: string;
+    currentUserId?: string;
+    companyId?: string;
+    currentUserCompanyId?: string;
+    resourceType?: string;
+    resourceValue?: any;
+    [key: string]: any;
+  }
+): boolean => {
+  return checkGranularPrivilege(role, privilege, context);
 };
