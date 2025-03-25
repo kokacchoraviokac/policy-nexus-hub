@@ -1,7 +1,8 @@
 
 import { CompanySeatsInfo } from "./auth/signup";
 
-export { CompanySeatsInfo };
+// Use 'export type' to avoid TS1205 error when 'isolatedModules' is enabled
+export type { CompanySeatsInfo };
 
 export interface Company {
   id: string;
