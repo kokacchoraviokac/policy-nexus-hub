@@ -1,0 +1,20 @@
+
+{
+  "welcome": "Dobrodošli",
+  "signInDescription": "Prijavite se na svoj nalog ili kreirajte novi",
+  "login": "Prijava",
+  "signUp": "Registracija",
+  "email": "E-pošta",
+  "password": "Lozinka",
+  "forgotPassword": "Zaboravili ste lozinku?",
+  "signingIn": "Prijava u toku...",
+  "signIn": "Prijavite se",
+  "demoAccounts": "Demo nalozi:",
+  "passwordAny": "Lozinka: bilo koja (kada se koristi mock autentifikacija)",
+  "superAdmin": "Super Admin",
+  "brokerAdmin": "Admin brokera",
+  "employee": "Zaposleni",
+  "invalidEmail": "Unesite važeću e-mail adresu",
+  "passwordMinLength": "Lozinka mora imati najmanje 6 karaktera",
+  "loginSuccessful": "Prijava uspešna"
+}
