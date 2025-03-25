@@ -120,10 +120,10 @@ export const useAuthOperations = (
     }
   };
 
-  const updateUser = async (userData: Partial<User>) => {
+  const updateUser = async (userData: Partial<User>): Promise<void> => {
     if (!authState.user || !authState.isAuthenticated) {
       console.error("Cannot update user: No authenticated user");
-      return;
+      return Promise.reject("No authenticated user");
     }
     
     const success = await updateUserProfile(authState.user.id, userData);
@@ -134,6 +134,9 @@ export const useAuthOperations = (
         ...authState,
         user: { ...authState.user, ...userData },
       });
+      return Promise.resolve();
+    } else {
+      return Promise.reject("Failed to update user profile");
     }
   };
 
