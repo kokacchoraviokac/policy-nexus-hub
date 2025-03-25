@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -73,15 +72,6 @@ const App = () => (
                 } />
                 
                 {/* Sub-routes for Policies would be defined here */}
-                {/* Example: 
-                <Route path="/policies/all" element={
-                  <ProtectedRoute requiredPrivilege="policies.all:view">
-                    <AppLayout>
-                      <PoliciesAll />
-                    </AppLayout>
-                  </ProtectedRoute>
-                } /> 
-                */}
                 
                 {/* Sales Module */}
                 <Route path="/sales" element={

@@ -21,6 +21,9 @@ export const rolePrivileges = {
     
     // Codebook
     'codebook:view', 'codebook:create', 'codebook:edit', 'codebook:delete',
+    'codebook.clients:view', 'codebook.clients:create', 'codebook.clients:edit', 'codebook.clients:delete',
+    'codebook.companies:view', 'codebook.companies:create', 'codebook.companies:edit', 'codebook.companies:delete',
+    'codebook.codes:view', 'codebook.codes:create', 'codebook.codes:edit', 'codebook.codes:delete',
     
     // Agent
     'agent:view', 'agent:create', 'agent:edit', 'agent:delete',
@@ -73,6 +76,9 @@ export const rolePrivileges = {
     
     // Codebook
     'codebook:view', 'codebook:create', 'codebook:edit',
+    'codebook.clients:view', 'codebook.clients:create', 'codebook.clients:edit',
+    'codebook.companies:view', 'codebook.companies:create', 'codebook.companies:edit',
+    'codebook.codes:view', 'codebook.codes:create', 'codebook.codes:edit',
     
     // Agent
     'agent:view',
@@ -114,6 +120,12 @@ export const rolePrivileges = {
     
     // Claims
     'claims:view', 'claims:create',
+    
+    // Codebook
+    'codebook:view',
+    'codebook.clients:view',
+    'codebook.companies:view',
+    'codebook.codes:view',
     
     // Reports
     'reports:view',

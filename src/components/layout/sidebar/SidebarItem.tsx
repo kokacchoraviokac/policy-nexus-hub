@@ -30,7 +30,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   requiredPrivilege,
   subItems 
 }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(active);
   const { hasPrivilege } = useAuth();
   const showSubItems = active && subItems && subItems.length > 0;
   
