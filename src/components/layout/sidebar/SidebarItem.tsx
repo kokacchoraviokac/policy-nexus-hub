@@ -32,7 +32,6 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 }) => {
   const [isOpen, setIsOpen] = React.useState(active);
   const { hasPrivilege } = useAuth();
-  const showSubItems = active && subItems && subItems.length > 0;
   
   // Filter subItems based on user privileges
   const authorizedSubItems = subItems?.filter(item => 
@@ -41,6 +40,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   
   // If no subItems are authorized, don't show any
   const hasAuthorizedSubItems = authorizedSubItems && authorizedSubItems.length > 0;
+  
+  // Show subItems if the item is active and has authorized subItems
+  const showSubItems = active && hasAuthorizedSubItems;
   
   return (
     <div>
@@ -87,7 +89,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         )}
       </Link>
       
-      {!collapsed && showSubItems && isOpen && hasAuthorizedSubItems && (
+      {!collapsed && showSubItems && isOpen && (
         <div className="ml-8 mt-1 mb-2 border-l border-sidebar-border pl-2 space-y-1">
           {authorizedSubItems.map((item, index) => (
             <Link
