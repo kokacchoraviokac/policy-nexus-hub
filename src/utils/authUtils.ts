@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, rolePrivileges, checkGranularPrivilege } from "@/types/auth";
+import { ResourceContext } from "@/types/auth/contextTypes";
 import { toast } from "sonner";
 
 export const fetchUserProfile = async (userId: string): Promise<User | null> => {
@@ -131,15 +131,7 @@ export const checkPrivilege = (
 export const checkPrivilegeWithContext = (
   role: UserRole | undefined,
   privilege: string,
-  context?: {
-    ownerId?: string;
-    currentUserId?: string;
-    companyId?: string;
-    currentUserCompanyId?: string;
-    resourceType?: string;
-    resourceValue?: any;
-    [key: string]: any;
-  }
+  context?: ResourceContext
 ): boolean => {
   return checkGranularPrivilege(role, privilege, context);
 };

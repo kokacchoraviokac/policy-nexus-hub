@@ -1,20 +1,5 @@
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatar?: string;
-  companyId?: string;
-}
-
-export type UserRole = 'superAdmin' | 'admin' | 'employee';
-
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-}
+import { UserRole } from './user';
 
 // Basic module-level privileges (backward compatible)
 export const rolePrivileges = {
@@ -139,66 +124,4 @@ export const rolePrivileges = {
     'policies.status:view',
     'claims.status:view',
   ]
-};
-
-// Enhanced permission checking function to support granular checks
-export const checkGranularPrivilege = (
-  role: UserRole | undefined,
-  privilege: string,
-  resourceContext?: {
-    ownerId?: string;
-    currentUserId?: string;
-    companyId?: string;
-    currentUserCompanyId?: string;
-    resourceType?: string;
-    resourceValue?: any;
-    [key: string]: any;
-  }
-): boolean => {
-  if (!role) return false;
-  
-  const userPrivileges = rolePrivileges[role];
-  
-  // Check for exact privilege match first
-  if (userPrivileges.includes(privilege)) return true;
-  
-  // Check for module-level privilege (backward compatibility)
-  const moduleLevelPrivilege = privilege.split('.')[0];
-  if (userPrivileges.includes(`${moduleLevelPrivilege}:view`) && privilege.endsWith(':view')) return true;
-  if (userPrivileges.includes(`${moduleLevelPrivilege}:edit`) && privilege.endsWith(':edit')) return true;
-  if (userPrivileges.includes(`${moduleLevelPrivilege}:create`) && privilege.endsWith(':create')) return true;
-  if (userPrivileges.includes(`${moduleLevelPrivilege}:delete`) && privilege.endsWith(':delete')) return true;
-  
-  // Context-based checks
-  if (resourceContext) {
-    // Own resource check
-    if (
-      privilege.includes('.own:') && 
-      resourceContext.ownerId === resourceContext.currentUserId &&
-      userPrivileges.includes(privilege)
-    ) {
-      return true;
-    }
-    
-    // Company resource check
-    if (
-      privilege.includes('.company:') && 
-      resourceContext.companyId === resourceContext.currentUserCompanyId &&
-      userPrivileges.includes(privilege)
-    ) {
-      return true;
-    }
-    
-    // Value-based checks (like highValue claims)
-    if (
-      privilege.includes('.highValue:') && 
-      resourceContext.resourceType === 'amount' && 
-      resourceContext.resourceValue < 10000 && // Example threshold
-      userPrivileges.includes(privilege.replace('highValue', 'all'))
-    ) {
-      return true;
-    }
-  }
-  
-  return false;
 };
