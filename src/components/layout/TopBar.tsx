@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Bell, Menu } from "lucide-react";
+import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UserProfileMenu from "@/components/auth/UserProfileMenu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,13 +44,6 @@ const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }
 
   return (
     <header className="h-16 border-b border-border flex items-center px-4 bg-white/80 backdrop-blur-sm">
-      <button 
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        className="lg:hidden p-2 rounded-md hover:bg-secondary transition-colors mr-2"
-      >
-        <Menu size={20} />
-      </button>
-      
       <div className="flex-1">
         {companyName && (
           <h2 className="text-lg font-semibold text-primary">
