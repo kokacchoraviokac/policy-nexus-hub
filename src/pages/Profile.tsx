@@ -1,15 +1,19 @@
+
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 import { UserRole } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserSecuritySettings from "@/components/auth/UserSecuritySettings";
+import CustomPrivilegeManager from "@/components/auth/CustomPrivilegeManager";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -26,8 +30,11 @@ type ProfileFormValues = {
 };
 
 const Profile = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, hasPrivilege } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
+  
+  const canViewPrivileges = hasPrivilege("settings:view");
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -103,91 +110,114 @@ const Profile = () => {
         </div>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit Profile</CardTitle>
-          <CardDescription>
-            Update your personal information
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} disabled />
-                    </FormControl>
-                    <FormDescription>
-                      Email cannot be changed
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <FormControl>
-                      <Input {...field} disabled value={getRoleLabel(field.value)} />
-                    </FormControl>
-                    <FormDescription>
-                      Your role is assigned by an administrator
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="avatar"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Avatar URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="https://example.com/avatar.png" />
-                    </FormControl>
-                    <FormDescription>
-                      Enter a URL for your profile picture
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <Button 
-                type="submit" 
-                disabled={isSubmitting || !form.formState.isDirty}
-              >
-                {isSubmitting ? "Saving..." : "Save Changes"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
+          {canViewPrivileges && <TabsTrigger value="privileges">Privileges</TabsTrigger>}
+        </TabsList>
+        
+        <TabsContent value="profile" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Edit Profile</CardTitle>
+              <CardDescription>
+                Update your personal information
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input {...field} disabled />
+                        </FormControl>
+                        <FormDescription>
+                          Email cannot be changed
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <FormControl>
+                          <Input {...field} disabled value={getRoleLabel(field.value)} />
+                        </FormControl>
+                        <FormDescription>
+                          Your role is assigned by an administrator
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="avatar"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Avatar URL</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="https://example.com/avatar.png" />
+                        </FormControl>
+                        <FormDescription>
+                          Enter a URL for your profile picture
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting || !form.formState.isDirty}
+                  >
+                    {isSubmitting ? "Saving..." : "Save Changes"}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="security" className="mt-6">
+          <UserSecuritySettings />
+        </TabsContent>
+        
+        {canViewPrivileges && (
+          <TabsContent value="privileges" className="mt-6">
+            <CustomPrivilegeManager 
+              userId={user.id}
+              isAdmin={hasPrivilege("users:manage")}
+            />
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 };

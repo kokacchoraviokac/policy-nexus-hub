@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
 import PrivilegeTestPage from "./pages/PrivilegeTestPage";
@@ -38,6 +39,7 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 
                 {/* Dashboard */}

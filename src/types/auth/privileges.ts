@@ -56,3 +56,13 @@ export const checkGranularPrivilege = (
   
   return false;
 };
+
+// New: Support for custom user privileges (beyond role-based)
+export interface CustomPrivilege {
+  id: string;
+  userId: string;
+  privilege: string;
+  grantedBy: string;
+  grantedAt: Date;
+  expiresAt?: Date;
+}

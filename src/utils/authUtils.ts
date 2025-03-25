@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole, rolePrivileges, checkGranularPrivilege } from "@/types/auth";
+import { User, UserRole, rolePrivileges, checkGranularPrivilege, CustomPrivilege } from "@/types/auth";
 import { ResourceContext } from "@/types/auth/contextTypes";
 import { toast } from "sonner";
 
@@ -134,4 +135,122 @@ export const checkPrivilegeWithContext = (
   context?: ResourceContext
 ): boolean => {
   return checkGranularPrivilege(role, privilege, context);
+};
+
+// New: Custom privilege management
+export const fetchUserCustomPrivileges = async (userId: string): Promise<CustomPrivilege[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_custom_privileges')
+      .select('*')
+      .eq('user_id', userId)
+      .lt('expires_at', new Date().toISOString());
+      
+    if (error) {
+      console.error("Error fetching user custom privileges:", error);
+      return [];
+    }
+    
+    return data.map(item => ({
+      id: item.id,
+      userId: item.user_id,
+      privilege: item.privilege,
+      grantedBy: item.granted_by,
+      grantedAt: new Date(item.granted_at),
+      expiresAt: item.expires_at ? new Date(item.expires_at) : undefined
+    }));
+  } catch (error) {
+    console.error("Error in custom privileges fetch:", error);
+    return [];
+  }
+};
+
+export const grantCustomPrivilege = async (
+  userId: string,
+  privilege: string,
+  grantedBy: string,
+  expiresAt?: Date
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('user_custom_privileges')
+      .insert({
+        user_id: userId,
+        privilege,
+        granted_by: grantedBy,
+        expires_at: expiresAt?.toISOString()
+      });
+      
+    if (error) {
+      console.error("Error granting custom privilege:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in custom privilege grant:", error);
+    return false;
+  }
+};
+
+export const revokeCustomPrivilege = async (privilegeId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('user_custom_privileges')
+      .delete()
+      .eq('id', privilegeId);
+      
+    if (error) {
+      console.error("Error revoking custom privilege:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in custom privilege revocation:", error);
+    return false;
+  }
+};
+
+// New: Password management
+export const initiatePasswordReset = async (email: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/reset-password',
+    });
+    
+    if (error) {
+      console.error("Error initiating password reset:", error);
+      toast.error("Failed to send password reset email");
+      return false;
+    }
+    
+    toast.success("Password reset email sent");
+    return true;
+  } catch (error) {
+    console.error("Error in password reset:", error);
+    toast.error("Failed to send password reset email");
+    return false;
+  }
+};
+
+export const updatePassword = async (newPassword: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (error) {
+      console.error("Error updating password:", error);
+      toast.error("Failed to update password");
+      return false;
+    }
+    
+    toast.success("Password updated successfully");
+    return true;
+  } catch (error) {
+    console.error("Error in password update:", error);
+    toast.error("Failed to update password");
+    return false;
+  }
 };
