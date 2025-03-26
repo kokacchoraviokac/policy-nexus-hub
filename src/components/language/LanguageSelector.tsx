@@ -27,7 +27,7 @@ const languageFlags: Record<Language, string> = {
 };
 
 interface LanguageSelectorProps {
-  variant?: 'default' | 'compact';
+  variant?: 'default' | 'compact' | 'minimal';
 }
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default' }) => {
@@ -36,27 +36,45 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default'
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full">
-          {variant === 'default' ? (
-            <span className="flex items-center gap-2">
-              <Globe className="h-4 w-4" />
-              <span className="hidden sm:inline">{languageNames[language]}</span>
-            </span>
-          ) : (
+        {variant === 'minimal' ? (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-1.5 h-8 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="text-base">{languageFlags[language]}</span>
+            <span className="sr-only">Select language</span>
+          </Button>
+        ) : variant === 'compact' ? (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 px-2 py-1 rounded-md"
+          >
+            <Globe className="h-4 w-4 mr-1" />
+            <span className="text-sm">{language.toUpperCase()}</span>
+          </Button>
+        ) : (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 bg-background/60 backdrop-blur-sm border-muted flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-background/80"
+          >
             <Globe className="h-4 w-4" />
-          )}
-          <span className="sr-only">Select language</span>
-        </Button>
+            <span className="hidden sm:inline text-sm font-normal">{languageNames[language]}</span>
+            <span className="text-xs opacity-80">{language.toUpperCase()}</span>
+          </Button>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-background">
+      <DropdownMenuContent align="end" className="bg-background border-border w-36">
         {Object.entries(languageNames).map(([code, name]) => (
           <DropdownMenuItem
             key={code}
             onClick={() => setLanguage(code as Language)}
-            className={`cursor-pointer ${code === language ? 'bg-accent font-medium' : ''}`}
+            className={`cursor-pointer flex items-center gap-2 ${code === language ? 'bg-accent/50 font-medium' : ''}`}
           >
-            <span className="mr-2">{languageFlags[code as Language]}</span>
-            {name}
+            <span className="text-base">{languageFlags[code as Language]}</span>
+            <span className="text-sm">{name}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

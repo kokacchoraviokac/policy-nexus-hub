@@ -24,32 +24,38 @@ const Login = () => {
   }
 
   return (
-    <>
-      <div className="absolute top-4 right-4 z-10">
-        <LanguageSelector variant="default" />
+    <div className="min-h-screen flex flex-col relative bg-gray-50">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0">
+        <LanguageSelector variant="outline" />
       </div>
       
-      <AuthCard 
-        title={t("welcome")} 
-        description={t("signInDescription")}
-        footer={<DemoAccounts />}
-      >
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "signup")}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="login">{t("login")}</TabsTrigger>
-            <TabsTrigger value="signup">{t("signUp")}</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login">
-            <LoginForm />
-          </TabsContent>
-          
-          <TabsContent value="signup">
-            <SignupForm onSuccess={() => setActiveTab("login")} />
-          </TabsContent>
-        </Tabs>
-      </AuthCard>
-    </>
+      <div className="flex items-center justify-center flex-grow px-4">
+        <AuthCard 
+          title={t("welcome")} 
+          description={t("signInDescription")}
+          footer={<DemoAccounts />}
+        >
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "signup")}>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="login">{t("login")}</TabsTrigger>
+              <TabsTrigger value="signup">{t("signUp")}</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="login">
+              <LoginForm />
+            </TabsContent>
+            
+            <TabsContent value="signup">
+              <SignupForm onSuccess={() => setActiveTab("login")} />
+            </TabsContent>
+          </Tabs>
+        </AuthCard>
+      </div>
+      
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-muted-foreground">
+        © {new Date().getFullYear()} PolicyHub. {t("allRightsReserved")}
+      </div>
+    </div>
   );
 };
 
