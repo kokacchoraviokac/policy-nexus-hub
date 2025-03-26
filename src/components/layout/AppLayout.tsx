@@ -38,7 +38,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         </div>
         
         <main className={cn(
-          "flex-1 overflow-auto transition-all duration-300 animate-enter flex flex-col no-scrollbar",
+          "flex-1 overflow-auto transition-all duration-300 animate-enter",
           sidebarCollapsed ? "lg:pl-24" : "lg:pl-6"
         )}>
           <div className="p-6 flex-1">

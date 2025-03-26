@@ -20,7 +20,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
   );
 
   return (
-    <div className="flex-1 py-4 px-2 overflow-y-auto no-scrollbar">
+    <div className="py-4 px-2">
       <nav className="space-y-1">
         {authorizedSidebarItems.map((item, index) => {
           const isActiveParent = currentPath === item.path || 
