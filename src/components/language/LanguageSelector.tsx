@@ -27,7 +27,7 @@ const languageFlags: Record<Language, string> = {
 };
 
 interface LanguageSelectorProps {
-  variant?: 'default' | 'compact' | 'minimal';
+  variant?: 'default' | 'compact' | 'minimal' | 'outline';
 }
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default' }) => {
@@ -53,6 +53,16 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default'
           >
             <Globe className="h-4 w-4 mr-1" />
             <span className="text-sm">{language.toUpperCase()}</span>
+          </Button>
+        ) : variant === 'outline' ? (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 bg-background/60 backdrop-blur-sm border-muted flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-background/80"
+          >
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline text-sm font-normal">{languageNames[language]}</span>
+            <span className="text-xs opacity-80">{language.toUpperCase()}</span>
           </Button>
         ) : (
           <Button 
