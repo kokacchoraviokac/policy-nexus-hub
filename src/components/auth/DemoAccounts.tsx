@@ -22,7 +22,7 @@ const DemoAccounts: React.FC = () => {
         </code>
       </div>
       <div className="mt-2 text-xs">
-        {t("passwordAny")} - {t("developmentOnly")}
+        {t("passwordAny")} - <span className="text-green-600 font-medium">Works in all environments</span>
       </div>
     </div>
   );

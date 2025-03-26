@@ -1,3 +1,4 @@
+
 {
   "welcome": "Welcome",
   "signInDescription": "Sign in to your account or create a new one",
@@ -9,12 +10,14 @@
   "signingIn": "Signing in...",
   "signIn": "Sign in",
   "demoAccounts": "Demo Accounts:",
-  "passwordAny": "Password: any (when using mock authentication)",
+  "passwordAny": "Password: any (mock authentication)",
   "superAdmin": "Super Admin",
   "brokerAdmin": "Broker Admin",
   "employee": "Employee",
   "invalidEmail": "Please enter a valid email address",
   "passwordMinLength": "Password must be at least 6 characters",
+  "passwordRequired": "Password is required",
+  "invalidCredentials": "Invalid email or password",
   "loginSuccessful": "Login successful",
   "name": "Name",
   "company": "Company",
