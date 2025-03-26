@@ -26,7 +26,6 @@ const ClientsDirectory = () => {
   const [isClientFormOpen, setIsClientFormOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
   
-  // New state for filters
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("");
@@ -36,13 +35,11 @@ const ClientsDirectory = () => {
     
     let filtered = [...clients];
     
-    // Apply status filter
     if (statusFilter !== "all") {
       const isActive = statusFilter === "active";
       filtered = filtered.filter(client => client.is_active === isActive);
     }
     
-    // Apply city filter if specified
     if (cityFilter) {
       filtered = filtered.filter(client => 
         client.city && client.city.toLowerCase().includes(cityFilter.toLowerCase())
@@ -78,23 +75,18 @@ const ClientsDirectory = () => {
     setCityFilter("");
   };
 
-  // Data Import function
   const handleImport = async (importedClients: Partial<Client>[]) => {
     try {
-      // Track how many were created and updated
       let created = 0;
       let updated = 0;
       
       for (const clientData of importedClients) {
-        // Check if client with same name exists (replace with better unique identifier if available)
         const existingClient = clients?.find(c => c.name === clientData.name);
         
         if (existingClient) {
-          // Update existing client
           await updateClient(existingClient.id, clientData as Partial<Client>);
           updated++;
         } else {
-          // Add new client
           await addClient(clientData as Omit<Client, 'id' | 'created_at' | 'updated_at'>);
           created++;
         }
@@ -114,9 +106,7 @@ const ClientsDirectory = () => {
     }
   };
 
-  // Data Export function
   const getExportData = () => {
-    // Return data to export - can be filtered or all clients
     return filteredClients.map(client => ({
       name: client.name,
       contact_person: client.contact_person || '',
@@ -128,7 +118,7 @@ const ClientsDirectory = () => {
       country: client.country || '',
       tax_id: client.tax_id || '',
       registration_number: client.registration_number || '',
-      is_active: client.is_active ? 'Yes' : 'No',
+      is_active: client.is_active,
       notes: client.notes || ''
     }));
   };

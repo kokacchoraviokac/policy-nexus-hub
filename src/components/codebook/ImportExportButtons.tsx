@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { parseCSV, exportToCSV } from '@/utils/csv';
-import { FileCsv, Import, Export } from 'lucide-react';
+import { Files, Import, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImportExportButtonsProps<T> {
@@ -131,7 +131,7 @@ function ImportExportButtons<T>({
         className="flex items-center gap-1"
         onClick={handleExport}
       >
-        <Export className="h-4 w-4" />
+        <FileDown className="h-4 w-4" />
         Export
       </Button>
     </div>

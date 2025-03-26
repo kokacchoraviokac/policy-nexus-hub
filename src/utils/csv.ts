@@ -9,6 +9,17 @@ export function parseCSV<T>(csvContent: string): Promise<T[]> {
     parse(csvContent, {
       header: true,
       skipEmptyLines: true,
+      transformHeader: (header) => header.trim(),
+      transform: (value, field) => {
+        // Handle boolean conversions from strings
+        if (value.toLowerCase() === 'true' || value.toLowerCase() === 'yes') {
+          return true;
+        } else if (value.toLowerCase() === 'false' || value.toLowerCase() === 'no') {
+          return false;
+        } else {
+          return value;
+        }
+      },
       complete: (results) => {
         resolve(results.data as T[]);
       },
@@ -23,7 +34,20 @@ export function parseCSV<T>(csvContent: string): Promise<T[]> {
  * Convert data to CSV format and trigger download
  */
 export function exportToCSV<T>(data: T[], filename: string): void {
-  const csv = unparse(data);
+  // Pre-process data to format boolean values as Yes/No for readability
+  const processedData = data.map(item => {
+    const processed: any = {};
+    for (const [key, value] of Object.entries(item)) {
+      if (typeof value === 'boolean') {
+        processed[key] = value ? 'Yes' : 'No';
+      } else {
+        processed[key] = value;
+      }
+    }
+    return processed;
+  });
+
+  const csv = unparse(processedData);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   

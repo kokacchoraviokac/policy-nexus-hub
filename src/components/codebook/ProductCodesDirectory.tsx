@@ -26,7 +26,6 @@ const ProductCodesDirectory = () => {
   const [isProductFormOpen, setIsProductFormOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
   
-  // New state for filters
   const [filteredProducts, setFilteredProducts] = useState<InsuranceProduct[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
@@ -37,20 +36,17 @@ const ProductCodesDirectory = () => {
     
     let filtered = [...products];
     
-    // Apply status filter
     if (statusFilter !== "all") {
       const isActive = statusFilter === "active";
       filtered = filtered.filter(product => product.is_active === isActive);
     }
     
-    // Apply category filter if specified
     if (categoryFilter) {
       filtered = filtered.filter(product => 
         product.category && product.category.toLowerCase().includes(categoryFilter.toLowerCase())
       );
     }
     
-    // Apply insurer filter if specified
     if (insurerFilter) {
       filtered = filtered.filter(product => 
         product.insurer_name && product.insurer_name.toLowerCase().includes(insurerFilter.toLowerCase())
@@ -87,23 +83,18 @@ const ProductCodesDirectory = () => {
     setInsurerFilter("");
   };
 
-  // Data Import function
   const handleImport = async (importedProducts: Partial<Omit<InsuranceProduct, 'insurer_name'>>[]) => {
     try {
-      // Track how many were created and updated
       let created = 0;
       let updated = 0;
       
       for (const productData of importedProducts) {
-        // Check if product with same code exists
         const existingProduct = products?.find(p => p.code === productData.code);
         
         if (existingProduct) {
-          // Update existing product
           await updateProduct(existingProduct.id, productData as Partial<Omit<InsuranceProduct, 'insurer_name'>>);
           updated++;
         } else {
-          // Add new product
           await addProduct(productData as Omit<InsuranceProduct, 'id' | 'created_at' | 'updated_at' | 'insurer_name'>);
           created++;
         }
@@ -123,17 +114,14 @@ const ProductCodesDirectory = () => {
     }
   };
 
-  // Data Export function
   const getExportData = () => {
-    // Return data to export - can be filtered or all products
     return filteredProducts.map(product => ({
       code: product.code,
       name: product.name,
       category: product.category || '',
       description: product.description || '',
       insurer_id: product.insurer_id,
-      insurer_name: product.insurer_name,
-      is_active: product.is_active ? 'Yes' : 'No'
+      is_active: product.is_active,
     }));
   };
 

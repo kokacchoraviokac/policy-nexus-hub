@@ -26,7 +26,6 @@ const InsurersDirectory = () => {
   const [isInsurerFormOpen, setIsInsurerFormOpen] = useState(false);
   const [selectedInsurerId, setSelectedInsurerId] = useState<string | undefined>(undefined);
   
-  // New state for filters
   const [filteredInsurers, setFilteredInsurers] = useState<Insurer[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [countryFilter, setCountryFilter] = useState<string>("");
@@ -36,13 +35,11 @@ const InsurersDirectory = () => {
     
     let filtered = [...insurers];
     
-    // Apply status filter
     if (statusFilter !== "all") {
       const isActive = statusFilter === "active";
       filtered = filtered.filter(insurer => insurer.is_active === isActive);
     }
     
-    // Apply country filter if specified
     if (countryFilter) {
       filtered = filtered.filter(insurer => 
         insurer.country && insurer.country.toLowerCase().includes(countryFilter.toLowerCase())
@@ -78,23 +75,18 @@ const InsurersDirectory = () => {
     setCountryFilter("");
   };
 
-  // Data Import function
   const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
     try {
-      // Track how many were created and updated
       let created = 0;
       let updated = 0;
       
       for (const insurerData of importedInsurers) {
-        // Check if insurer with same name exists
         const existingInsurer = insurers?.find(c => c.name === insurerData.name);
         
         if (existingInsurer) {
-          // Update existing insurer
           await updateInsurer(existingInsurer.id, insurerData as Partial<Insurer>);
           updated++;
         } else {
-          // Add new insurer
           await addInsurer(insurerData as Omit<Insurer, 'id' | 'created_at' | 'updated_at'>);
           created++;
         }
@@ -114,9 +106,7 @@ const InsurersDirectory = () => {
     }
   };
 
-  // Data Export function
   const getExportData = () => {
-    // Return data to export - can be filtered or all insurers
     return filteredInsurers.map(insurer => ({
       name: insurer.name,
       contact_person: insurer.contact_person || '',
@@ -127,7 +117,7 @@ const InsurersDirectory = () => {
       postal_code: insurer.postal_code || '',
       country: insurer.country || '',
       registration_number: insurer.registration_number || '',
-      is_active: insurer.is_active ? 'Yes' : 'No'
+      is_active: insurer.is_active
     }));
   };
 
