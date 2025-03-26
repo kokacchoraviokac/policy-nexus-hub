@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, AuthState } from "@/types/auth";
@@ -65,7 +64,7 @@ export const useAuthOperations = (
         isLoading: false,
       });
       
-      return true;
+      return;
     } catch (error) {
       console.error("Logout error:", error);
       // Force logout anyway
@@ -74,7 +73,7 @@ export const useAuthOperations = (
         isAuthenticated: false,
         isLoading: false,
       });
-      return false;
+      throw error;
     }
   };
 
