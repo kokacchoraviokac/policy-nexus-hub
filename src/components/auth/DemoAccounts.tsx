@@ -22,7 +22,7 @@ const DemoAccounts: React.FC = () => {
         </code>
       </div>
       <div className="mt-2 text-xs">
-        {t("passwordAny")}
+        {t("passwordAny")} - {t("developmentOnly")}
       </div>
     </div>
   );

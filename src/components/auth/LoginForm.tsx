@@ -26,7 +26,7 @@ const LoginForm: React.FC = () => {
 
   const loginSchema = z.object({
     email: z.string().email(t("invalidEmail")),
-    password: z.string().min(6, t("passwordMinLength")),
+    password: z.string().min(1, t("passwordRequired")),
   });
 
   type LoginFormValues = z.infer<typeof loginSchema>;
@@ -47,7 +47,7 @@ const LoginForm: React.FC = () => {
       toast.success(t("loginSuccessful"));
       navigate(from, { replace: true });
     } catch (error: any) {
-      toast.error(error.message || "Invalid email or password");
+      toast.error(error.message || t("invalidCredentials"));
       console.error("Login error:", error);
     } finally {
       setIsSubmitting(false);

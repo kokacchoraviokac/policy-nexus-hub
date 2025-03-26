@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, AuthState } from "@/types/auth";
@@ -15,7 +16,22 @@ export const useAuthOperations = (
     setAuthState({ ...authState, isLoading: true });
     
     try {
-      // Try to sign in with Supabase
+      // For development mode, check if the email matches a mock user first
+      if (process.env.NODE_ENV === 'development') {
+        const mockUser = MOCK_USERS.find(u => u.email === email);
+        
+        if (mockUser) {
+          console.log("Using mock user login for development");
+          setAuthState({
+            user: mockUser,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          return;
+        }
+      }
+      
+      // If not in development mode or no matching mock user, try Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -23,22 +39,6 @@ export const useAuthOperations = (
       
       if (error) {
         console.error("Supabase login error:", error);
-        
-        // Fall back to mock login for demo (only in development)
-        if (process.env.NODE_ENV === 'development') {
-          const mockUser = MOCK_USERS.find(u => u.email === email);
-          
-          if (mockUser) {
-            console.log("Using mock user login for development");
-            setAuthState({
-              user: mockUser,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-            return;
-          }
-        }
-        
         throw error;
       }
       
