@@ -54,8 +54,18 @@ export const useAuthOperations = (
 
   const logout = async () => {
     try {
+      setAuthState({ ...authState, isLoading: true });
       await supabase.auth.signOut();
+      
       // Auth state will be updated by the onAuthStateChange listener
+      // But let's also manually update state to ensure immediate UI response
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+      
+      return true;
     } catch (error) {
       console.error("Logout error:", error);
       // Force logout anyway
@@ -64,6 +74,7 @@ export const useAuthOperations = (
         isAuthenticated: false,
         isLoading: false,
       });
+      return false;
     }
   };
 

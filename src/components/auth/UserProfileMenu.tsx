@@ -46,9 +46,14 @@ const UserProfileMenu: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
-      toast.success("Successfully logged out");
-      navigate("/login");
+      const success = await logout();
+      if (success) {
+        toast.success("Successfully logged out");
+        // Force navigation to login page
+        navigate("/login", { replace: true });
+      } else {
+        toast.error("Failed to log out. Please try again.");
+      }
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Failed to log out. Please try again.");
