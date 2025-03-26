@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SidebarHeader from "./sidebar/SidebarHeader";
 import SidebarNav from "./sidebar/SidebarNav";
-import SidebarFooter from "./sidebar/SidebarFooter";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -25,7 +24,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
           <SidebarNav collapsed={collapsed} />
         </ScrollArea>
       </div>
-      <SidebarFooter collapsed={collapsed} />
     </aside>
   );
 };
