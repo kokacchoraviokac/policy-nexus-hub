@@ -24,33 +24,34 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
-        
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <TopBar sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
-          
-          <div className={cn(
-            "transition-all duration-300",
-            sidebarCollapsed ? "lg:pl-16" : "lg:pl-0"
-          )}>
-            <BreadcrumbNav />
-          </div>
-          
-          <main className={cn(
-            "flex-1 overflow-auto transition-all duration-300 animate-enter",
-            sidebarCollapsed ? "lg:pl-24" : "lg:pl-6"
-          )}>
-            <div className="p-6 flex-1">
-              {children}
-            </div>
-          </main>
-        </div>
-      </div>
+    <div className="flex h-screen w-full bg-background overflow-hidden">
+      {/* Sidebar - independently scrollable */}
+      <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
       
-      {/* Fixed footer at the bottom of the screen */}
-      <Footer />
+      {/* Main content + fixed footer */}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <TopBar sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
+        
+        <div className={cn(
+          "transition-all duration-300",
+          sidebarCollapsed ? "lg:pl-16" : "lg:pl-0"
+        )}>
+          <BreadcrumbNav />
+        </div>
+        
+        {/* Scrollable main content */}
+        <main className={cn(
+          "flex-1 overflow-auto transition-all duration-300 animate-enter",
+          sidebarCollapsed ? "lg:pl-24" : "lg:pl-6"
+        )}>
+          <div className="p-6 flex-1">
+            {children}
+          </div>
+        </main>
+        
+        {/* Fixed footer */}
+        <Footer />
+      </div>
     </div>
   );
 };
