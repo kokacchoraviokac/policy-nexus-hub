@@ -25,7 +25,7 @@ const Login = () => {
 
   return (
     <>
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-10">
         <LanguageSelector variant="default" />
       </div>
       
