@@ -1,7 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import SidebarHeader from "./sidebar/SidebarHeader";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarFooter from "./sidebar/SidebarFooter";
@@ -15,12 +15,16 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
   return (
     <aside 
       className={cn(
-        "bg-sidebar h-full flex flex-col border-r border-sidebar-border transition-all duration-300 z-10",
+        "bg-sidebar h-screen flex flex-col border-r border-sidebar-border transition-all duration-300 z-10",
         collapsed ? "w-16" : "w-64"
       )}
     >
       <SidebarHeader collapsed={collapsed} setCollapsed={setCollapsed} />
-      <SidebarNav collapsed={collapsed} />
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <SidebarNav collapsed={collapsed} />
+        </ScrollArea>
+      </div>
       <SidebarFooter collapsed={collapsed} />
     </aside>
   );
