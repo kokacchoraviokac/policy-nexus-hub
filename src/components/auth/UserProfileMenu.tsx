@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserCircle, Settings, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 const UserProfileMenu: React.FC = () => {
   const { user, logout } = useAuth();
@@ -43,9 +44,15 @@ const UserProfileMenu: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Successfully logged out");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to log out. Please try again.");
+    }
   };
 
   return (
