@@ -19,31 +19,29 @@ const AuthCard: React.FC<AuthCardProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md shadow-xl animate-enter">
-        <CardHeader className="space-y-1">
-          <div className="flex justify-center items-center mb-4">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Policy<span className="text-sidebar-primary">Hub</span>
-            </h2>
-          </div>
-          <CardTitle className="text-2xl text-center">{title}</CardTitle>
-          {description && (
-            <CardDescription className="text-center">
-              {description}
-            </CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          {children}
-        </CardContent>
-        {footer && (
-          <CardFooter className="flex flex-col">
-            {footer}
-          </CardFooter>
+    <Card className="w-full max-w-md shadow-xl animate-enter">
+      <CardHeader className="space-y-1">
+        <div className="flex justify-center items-center mb-4">
+          <h2 className="text-3xl font-bold tracking-tight">
+            Policy<span className="text-sidebar-primary">Hub</span>
+          </h2>
+        </div>
+        <CardTitle className="text-2xl text-center">{title}</CardTitle>
+        {description && (
+          <CardDescription className="text-center">
+            {description}
+          </CardDescription>
         )}
-      </Card>
-    </div>
+      </CardHeader>
+      <CardContent>
+        {children}
+      </CardContent>
+      {footer && (
+        <CardFooter className="flex flex-col">
+          {footer}
+        </CardFooter>
+      )}
+    </Card>
   );
 };
 
