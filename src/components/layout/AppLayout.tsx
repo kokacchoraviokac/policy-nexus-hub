@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import TopBar from "./TopBar";
 import Sidebar from "./Sidebar";
 import BreadcrumbNav from "./BreadcrumbNav";
+import Footer from "./Footer";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -37,10 +38,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         </div>
         
         <main className={cn(
-          "flex-1 overflow-auto p-6 transition-all duration-300 animate-enter no-scrollbar",
+          "flex-1 overflow-auto transition-all duration-300 animate-enter flex flex-col no-scrollbar",
           sidebarCollapsed ? "lg:pl-24" : "lg:pl-6"
         )}>
-          {children}
+          <div className="p-6 flex-1">
+            {children}
+          </div>
+          <Footer />
         </main>
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 {
   "welcome": "Welcome",
   "signInDescription": "Sign in to your account or create a new one",
@@ -59,5 +58,10 @@
   "language": "Language",
   "darkMode": "Dark Mode",
   "lightMode": "Light Mode",
-  "systemDefault": "System Default"
+  "systemDefault": "System Default",
+  "termsOfService": "Terms of Service",
+  "privacyPolicy": "Privacy Policy",
+  "help": "Help",
+  "madeWith": "Made with",
+  "allRightsReserved": "All Rights Reserved"
 }
