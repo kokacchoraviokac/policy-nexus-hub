@@ -13,12 +13,12 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ collapsed, setCollapsed }
     <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
       {!collapsed && (
         <div className="text-sidebar-foreground font-medium text-xl">
-          Policy<span className="text-primary">Hub</span>
+          Policy<span className="text-[#33C3F0]">Hub</span>
         </div>
       )}
       {collapsed && (
         <div className="w-full flex justify-center text-sidebar-foreground font-medium text-xl">
-          P<span className="text-primary">H</span>
+          P<span className="text-[#33C3F0]">H</span>
         </div>
       )}
       <button 
