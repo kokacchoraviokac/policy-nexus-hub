@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,10 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Insurer } from "@/types/codebook";
+import ImportExportButtons from "./ImportExportButtons";
 
 const InsurersDirectory = () => {
   const { user } = useAuth();
-  const { insurers, isLoading, searchTerm, setSearchTerm, deleteInsurer } = useInsurers();
+  const { insurers, isLoading, searchTerm, setSearchTerm, deleteInsurer, addInsurer, updateInsurer } = useInsurers();
   const { toast } = useToast();
   const [insurerToDelete, setInsurerToDelete] = useState<string | null>(null);
   const [isInsurerFormOpen, setIsInsurerFormOpen] = useState(false);
@@ -76,6 +76,59 @@ const InsurersDirectory = () => {
   const resetFilters = () => {
     setStatusFilter("all");
     setCountryFilter("");
+  };
+
+  // Data Import function
+  const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
+    try {
+      // Track how many were created and updated
+      let created = 0;
+      let updated = 0;
+      
+      for (const insurerData of importedInsurers) {
+        // Check if insurer with same name exists
+        const existingInsurer = insurers?.find(c => c.name === insurerData.name);
+        
+        if (existingInsurer) {
+          // Update existing insurer
+          await updateInsurer(existingInsurer.id, insurerData as Partial<Insurer>);
+          updated++;
+        } else {
+          // Add new insurer
+          await addInsurer(insurerData as Omit<Insurer, 'id' | 'created_at' | 'updated_at'>);
+          created++;
+        }
+      }
+      
+      toast({
+        title: "Import completed",
+        description: `Created ${created} new insurers and updated ${updated} existing insurers.`,
+      });
+    } catch (error) {
+      console.error("Error during import:", error);
+      toast({
+        title: "Import failed",
+        description: "There was an error processing the imported data.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Data Export function
+  const getExportData = () => {
+    // Return data to export - can be filtered or all insurers
+    return filteredInsurers.map(insurer => ({
+      name: insurer.name,
+      contact_person: insurer.contact_person || '',
+      email: insurer.email || '',
+      phone: insurer.phone || '',
+      address: insurer.address || '',
+      city: insurer.city || '',
+      postal_code: insurer.postal_code || '',
+      country: insurer.country || '',
+      registration_number: insurer.registration_number || '',
+      is_active: insurer.is_active ? 'Yes' : 'No'
+    }));
   };
 
   const columns = [
@@ -169,9 +222,16 @@ const InsurersDirectory = () => {
             Manage insurance company records including branch and parent company details
           </CardDescription>
         </div>
-        <Button className="flex items-center gap-1" onClick={handleAddInsurer}>
-          <Plus className="h-4 w-4" /> Add Insurer
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <ImportExportButtons
+            onImport={handleImport}
+            getData={getExportData}
+            entityName="Insurers"
+          />
+          <Button className="flex items-center gap-1" onClick={handleAddInsurer}>
+            <Plus className="h-4 w-4" /> Add Insurer
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

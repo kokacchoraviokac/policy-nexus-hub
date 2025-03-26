@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,10 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { InsuranceProduct } from "@/types/codebook";
+import ImportExportButtons from "./ImportExportButtons";
 
 const ProductCodesDirectory = () => {
   const { user } = useAuth();
-  const { products, isLoading, searchTerm, setSearchTerm, deleteProduct } = useInsuranceProducts();
+  const { products, isLoading, searchTerm, setSearchTerm, deleteProduct, addProduct, updateProduct } = useInsuranceProducts();
   const { toast } = useToast();
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [isProductFormOpen, setIsProductFormOpen] = useState(false);
@@ -85,6 +85,56 @@ const ProductCodesDirectory = () => {
     setStatusFilter("all");
     setCategoryFilter("");
     setInsurerFilter("");
+  };
+
+  // Data Import function
+  const handleImport = async (importedProducts: Partial<Omit<InsuranceProduct, 'insurer_name'>>[]) => {
+    try {
+      // Track how many were created and updated
+      let created = 0;
+      let updated = 0;
+      
+      for (const productData of importedProducts) {
+        // Check if product with same code exists
+        const existingProduct = products?.find(p => p.code === productData.code);
+        
+        if (existingProduct) {
+          // Update existing product
+          await updateProduct(existingProduct.id, productData as Partial<Omit<InsuranceProduct, 'insurer_name'>>);
+          updated++;
+        } else {
+          // Add new product
+          await addProduct(productData as Omit<InsuranceProduct, 'id' | 'created_at' | 'updated_at' | 'insurer_name'>);
+          created++;
+        }
+      }
+      
+      toast({
+        title: "Import completed",
+        description: `Created ${created} new products and updated ${updated} existing products.`,
+      });
+    } catch (error) {
+      console.error("Error during import:", error);
+      toast({
+        title: "Import failed",
+        description: "There was an error processing the imported data.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Data Export function
+  const getExportData = () => {
+    // Return data to export - can be filtered or all products
+    return filteredProducts.map(product => ({
+      code: product.code,
+      name: product.name,
+      category: product.category || '',
+      description: product.description || '',
+      insurer_id: product.insurer_id,
+      insurer_name: product.insurer_name,
+      is_active: product.is_active ? 'Yes' : 'No'
+    }));
   };
 
   const columns = [
@@ -171,9 +221,16 @@ const ProductCodesDirectory = () => {
             Manage product codes for different types of insurance
           </CardDescription>
         </div>
-        <Button className="flex items-center gap-1" onClick={handleAddProduct}>
-          <Plus className="h-4 w-4" /> Add Product
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <ImportExportButtons
+            onImport={handleImport}
+            getData={getExportData}
+            entityName="Products"
+          />
+          <Button className="flex items-center gap-1" onClick={handleAddProduct}>
+            <Plus className="h-4 w-4" /> Add Product
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

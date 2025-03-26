@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,10 +16,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Client } from "@/types/codebook";
+import ImportExportButtons from "./ImportExportButtons";
 
 const ClientsDirectory = () => {
   const { user } = useAuth();
-  const { clients, isLoading, searchTerm, setSearchTerm, deleteClient } = useClients();
+  const { clients, isLoading, searchTerm, setSearchTerm, deleteClient, addClient, updateClient } = useClients();
   const { toast } = useToast();
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
   const [isClientFormOpen, setIsClientFormOpen] = useState(false);
@@ -76,6 +76,61 @@ const ClientsDirectory = () => {
   const resetFilters = () => {
     setStatusFilter("all");
     setCityFilter("");
+  };
+
+  // Data Import function
+  const handleImport = async (importedClients: Partial<Client>[]) => {
+    try {
+      // Track how many were created and updated
+      let created = 0;
+      let updated = 0;
+      
+      for (const clientData of importedClients) {
+        // Check if client with same name exists (replace with better unique identifier if available)
+        const existingClient = clients?.find(c => c.name === clientData.name);
+        
+        if (existingClient) {
+          // Update existing client
+          await updateClient(existingClient.id, clientData as Partial<Client>);
+          updated++;
+        } else {
+          // Add new client
+          await addClient(clientData as Omit<Client, 'id' | 'created_at' | 'updated_at'>);
+          created++;
+        }
+      }
+      
+      toast({
+        title: "Import completed",
+        description: `Created ${created} new clients and updated ${updated} existing clients.`,
+      });
+    } catch (error) {
+      console.error("Error during import:", error);
+      toast({
+        title: "Import failed",
+        description: "There was an error processing the imported data.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Data Export function
+  const getExportData = () => {
+    // Return data to export - can be filtered or all clients
+    return filteredClients.map(client => ({
+      name: client.name,
+      contact_person: client.contact_person || '',
+      email: client.email || '',
+      phone: client.phone || '',
+      address: client.address || '',
+      city: client.city || '',
+      postal_code: client.postal_code || '',
+      country: client.country || '',
+      tax_id: client.tax_id || '',
+      registration_number: client.registration_number || '',
+      is_active: client.is_active ? 'Yes' : 'No',
+      notes: client.notes || ''
+    }));
   };
 
   const columns = [
@@ -169,9 +224,16 @@ const ClientsDirectory = () => {
             Manage client records including contact details and tax information
           </CardDescription>
         </div>
-        <Button className="flex items-center gap-1" onClick={handleAddClient}>
-          <Plus className="h-4 w-4" /> Add Client
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <ImportExportButtons
+            onImport={handleImport}
+            getData={getExportData}
+            entityName="Clients"
+          />
+          <Button className="flex items-center gap-1" onClick={handleAddClient}>
+            <Plus className="h-4 w-4" /> Add Client
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
