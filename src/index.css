@@ -5,44 +5,56 @@
 
 @layer base {
   :root {
-    --background: 230 40% 98%;
-    --foreground: 230 25% 14%;
+    /* Main palette colors */
+    --primary: 210 30% 36%; /* #405A76 - Deeper Smoky Blue */
+    --primary-foreground: 0 0% 100%; /* White text for primary elements */
+    
+    --secondary: 33 13% 62%; /* #B0A08F - Warm Taupe */
+    --secondary-foreground: 0 0% 100%; /* White text for secondary elements */
+    
+    --accent: 14 46% 53%; /* #C76449 - Soft Terracotta */
+    --accent-foreground: 0 0% 100%; /* White text for accent elements */
 
-    --card: 0 0% 100%;
-    --card-foreground: 230 25% 14%;
+    /* Neutral colors */
+    --background: 40 15% 97%; /* #F6F5F3 - light off-white */
+    --foreground: 240 0% 24%; /* #3C3C3B - deep charcoal gray */
+    
+    --card: 0 0% 100%; /* White for cards */
+    --card-foreground: 240 0% 24%; /* #3C3C3B - deep charcoal gray for card text */
+    
+    --popover: 0 0% 100%; /* White for popovers */
+    --popover-foreground: 240 0% 24%; /* #3C3C3B - deep charcoal gray for popover text */
+    
+    /* UI Utility colors */
+    --muted: 33 8% 92%; /* Lighter version of our taupe for muted elements */
+    --muted-foreground: 240 0% 40%; /* Medium gray for muted text */
+    
+    /* Border & Input */
+    --border: 33 7% 82%; /* #CCC9C5 - subtle neutral for borders */
+    --input: 33 7% 82%; /* #CCC9C5 - subtle neutral for inputs */
+    --ring: 210 30% 36%; /* #405A76 - primary color for focus rings */
+    
+    /* Status colors */
+    --success: 150 25% 45%; /* #5B8A72 - muted green */
+    --success-foreground: 0 0% 100%; /* White text for success elements */
+    
+    --destructive: 0 20% 49%; /* #A15958 - muted red */
+    --destructive-foreground: 0 0% 100%; /* White text for destructive elements */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 230 25% 14%;
-
-    --primary: 224 82% 56%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 230 10% 94%;
-    --secondary-foreground: 230 25% 14%;
-
-    --muted: 230 10% 94%;
-    --muted-foreground: 230 25% 40%;
-
-    --accent: 224 82% 96%;
-    --accent-foreground: 230 25% 14%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 230 16% 90%;
-    --input: 230 16% 90%;
-    --ring: 224 82% 56%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 230 32% 14%;
-    --sidebar-foreground: 220 25% 86%;
-    --sidebar-primary: 224 82% 56%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 230 25% 22%;
-    --sidebar-accent-foreground: 220 25% 98%;
-    --sidebar-border: 230 25% 22%;
-    --sidebar-ring: 224 82% 56%;
+    --warning: 14 46% 53%; /* #C76449 - Soft Terracotta for warnings */
+    --warning-foreground: 0 0% 100%; /* White text for warning elements */
+    
+    /* Sidebar specific colors */
+    --sidebar-background: 210 35% 25%; /* #2D3F54 - Darker variation of primary blue */
+    --sidebar-foreground: 30 10% 90%; /* Light neutral color for sidebar text */
+    --sidebar-primary: 14 46% 53%; /* #C76449 - Accent color for active items */
+    --sidebar-primary-foreground: 0 0% 100%; /* White text for sidebar primary elements */
+    --sidebar-accent: 210 30% 30%; /* Slightly lighter than sidebar background */
+    --sidebar-accent-foreground: 0 0% 100%; /* White text for sidebar accent elements */
+    --sidebar-border: 210 30% 30%; /* Same as sidebar accent for borders */
+    --sidebar-ring: 14 46% 53%; /* #C76449 - Accent color for sidebar focus rings */
+    
+    --radius: 0.5rem; /* Slightly reduced for a more refined look */
   }
 
   * {
@@ -68,11 +80,11 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/90 backdrop-blur-md border border-white/20 shadow-glass-sm hover:shadow-glass-md transition-shadow duration-300;
+    @apply bg-white/90 backdrop-blur-md border border-border shadow-glass-sm hover:shadow-glass-md transition-shadow duration-300;
   }
   
   .glass-panel {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-glass-sm;
+    @apply bg-white/70 backdrop-blur-md border border-border shadow-glass-sm;
   }
 
   .sidebar-item {
