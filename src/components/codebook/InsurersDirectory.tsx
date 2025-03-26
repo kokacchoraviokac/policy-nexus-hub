@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, Trash } from "lucide-react";
+import { Edit, Plus, Trash, Filter } from "lucide-react";
 import SearchInput from "@/components/ui/search-input";
 import DataTable from "@/components/ui/data-table";
 import { useInsurers } from "@/hooks/useInsurers";
@@ -11,6 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import InsurerFormDialog from "./dialogs/InsurerFormDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Insurer } from "@/types/codebook";
 
 const InsurersDirectory = () => {
   const { user } = useAuth();
@@ -19,6 +25,32 @@ const InsurersDirectory = () => {
   const [insurerToDelete, setInsurerToDelete] = useState<string | null>(null);
   const [isInsurerFormOpen, setIsInsurerFormOpen] = useState(false);
   const [selectedInsurerId, setSelectedInsurerId] = useState<string | undefined>(undefined);
+  
+  // New state for filters
+  const [filteredInsurers, setFilteredInsurers] = useState<Insurer[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [countryFilter, setCountryFilter] = useState<string>("");
+
+  useEffect(() => {
+    if (!insurers) return;
+    
+    let filtered = [...insurers];
+    
+    // Apply status filter
+    if (statusFilter !== "all") {
+      const isActive = statusFilter === "active";
+      filtered = filtered.filter(insurer => insurer.is_active === isActive);
+    }
+    
+    // Apply country filter if specified
+    if (countryFilter) {
+      filtered = filtered.filter(insurer => 
+        insurer.country && insurer.country.toLowerCase().includes(countryFilter.toLowerCase())
+      );
+    }
+    
+    setFilteredInsurers(filtered);
+  }, [insurers, statusFilter, countryFilter, searchTerm]);
 
   const handleDelete = async () => {
     if (!insurerToDelete) return;
@@ -41,38 +73,53 @@ const InsurersDirectory = () => {
     setIsInsurerFormOpen(true);
   };
 
+  const resetFilters = () => {
+    setStatusFilter("all");
+    setCountryFilter("");
+  };
+
   const columns = [
     {
       header: "Name",
-      accessorKey: "name",
+      accessorKey: "name" as keyof Insurer,
+      sortable: true
     },
     {
       header: "Contact Person",
-      accessorKey: "contact_person",
-      cell: (row) => row.contact_person || "-",
+      accessorKey: "contact_person" as keyof Insurer,
+      cell: (row: Insurer) => row.contact_person || "-",
+      sortable: true
     },
     {
       header: "Email",
-      accessorKey: "email",
-      cell: (row) => row.email || "-",
+      accessorKey: "email" as keyof Insurer,
+      cell: (row: Insurer) => row.email || "-",
+      sortable: true
     },
     {
       header: "Phone",
-      accessorKey: "phone",
-      cell: (row) => row.phone || "-",
+      accessorKey: "phone" as keyof Insurer,
+      cell: (row: Insurer) => row.phone || "-",
+    },
+    {
+      header: "Country",
+      accessorKey: "country" as keyof Insurer,
+      cell: (row: Insurer) => row.country || "-",
+      sortable: true
     },
     {
       header: "Status",
-      accessorKey: "is_active",
-      cell: (row) => (
+      accessorKey: "is_active" as keyof Insurer,
+      cell: (row: Insurer) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
           {row.is_active ? "Active" : "Inactive"}
         </Badge>
       ),
+      sortable: true
     },
     {
       header: "Actions",
-      accessorKey: (row) => (
+      accessorKey: (row: Insurer) => (
         <div className="flex gap-2 justify-end">
           <Button 
             variant="outline" 
@@ -127,21 +174,71 @@ const InsurersDirectory = () => {
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        <SearchInput
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder="Search insurance companies..."
-          className="w-full md:max-w-xs"
-        />
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search insurance companies..."
+            className="w-full sm:max-w-xs"
+          />
+          
+          <div className="flex gap-2 items-center">
+            <Select
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+            >
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-1">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Filter Insurance Companies</h4>
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Input 
+                      id="country" 
+                      placeholder="Filter by country"
+                      value={countryFilter}
+                      onChange={(e) => setCountryFilter(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between pt-2">
+                    <Button variant="outline" size="sm" onClick={resetFilters}>
+                      Reset Filters
+                    </Button>
+                    <Button size="sm">Apply</Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
         
         <DataTable
-          data={insurers || []}
+          data={filteredInsurers || []}
           columns={columns}
           isLoading={isLoading}
           emptyState={{
             title: "No insurance companies found",
             description: "Try adjusting your search or add a new insurance company.",
-            action: null // Removed duplicate button from empty state
+            action: null
           }}
         />
       </CardContent>

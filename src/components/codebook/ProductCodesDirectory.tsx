@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, Trash } from "lucide-react";
+import { Edit, Plus, Trash, Filter } from "lucide-react";
 import SearchInput from "@/components/ui/search-input";
 import DataTable from "@/components/ui/data-table";
 import { useInsuranceProducts } from "@/hooks/useInsuranceProducts";
@@ -11,6 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import ProductFormDialog from "./dialogs/ProductFormDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { InsuranceProduct } from "@/types/codebook";
 
 const ProductCodesDirectory = () => {
   const { user } = useAuth();
@@ -19,6 +25,40 @@ const ProductCodesDirectory = () => {
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [isProductFormOpen, setIsProductFormOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<string | undefined>(undefined);
+  
+  // New state for filters
+  const [filteredProducts, setFilteredProducts] = useState<InsuranceProduct[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [insurerFilter, setInsurerFilter] = useState<string>("");
+
+  useEffect(() => {
+    if (!products) return;
+    
+    let filtered = [...products];
+    
+    // Apply status filter
+    if (statusFilter !== "all") {
+      const isActive = statusFilter === "active";
+      filtered = filtered.filter(product => product.is_active === isActive);
+    }
+    
+    // Apply category filter if specified
+    if (categoryFilter) {
+      filtered = filtered.filter(product => 
+        product.category && product.category.toLowerCase().includes(categoryFilter.toLowerCase())
+      );
+    }
+    
+    // Apply insurer filter if specified
+    if (insurerFilter) {
+      filtered = filtered.filter(product => 
+        product.insurer_name && product.insurer_name.toLowerCase().includes(insurerFilter.toLowerCase())
+      );
+    }
+    
+    setFilteredProducts(filtered);
+  }, [products, statusFilter, categoryFilter, insurerFilter, searchTerm]);
 
   const handleDelete = async () => {
     if (!productToDelete) return;
@@ -41,36 +81,47 @@ const ProductCodesDirectory = () => {
     setIsProductFormOpen(true);
   };
 
+  const resetFilters = () => {
+    setStatusFilter("all");
+    setCategoryFilter("");
+    setInsurerFilter("");
+  };
+
   const columns = [
     {
       header: "Code",
-      accessorKey: "code",
+      accessorKey: "code" as keyof InsuranceProduct,
+      sortable: true
     },
     {
       header: "Name",
-      accessorKey: "name",
+      accessorKey: "name" as keyof InsuranceProduct,
+      sortable: true
     },
     {
       header: "Category",
-      accessorKey: "category",
-      cell: (row) => row.category || "-",
+      accessorKey: "category" as keyof InsuranceProduct,
+      cell: (row: InsuranceProduct) => row.category || "-",
+      sortable: true
     },
     {
       header: "Insurer",
-      accessorKey: "insurer_name",
+      accessorKey: "insurer_name" as keyof InsuranceProduct,
+      sortable: true
     },
     {
       header: "Status",
-      accessorKey: "is_active",
-      cell: (row) => (
+      accessorKey: "is_active" as keyof InsuranceProduct,
+      cell: (row: InsuranceProduct) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
           {row.is_active ? "Active" : "Inactive"}
         </Badge>
       ),
+      sortable: true
     },
     {
       header: "Actions",
-      accessorKey: (row) => (
+      accessorKey: (row: InsuranceProduct) => (
         <div className="flex gap-2 justify-end">
           <Button 
             variant="outline" 
@@ -125,21 +176,81 @@ const ProductCodesDirectory = () => {
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        <SearchInput
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder="Search products..."
-          className="w-full md:max-w-xs"
-        />
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search products..."
+            className="w-full sm:max-w-xs"
+          />
+          
+          <div className="flex gap-2 items-center">
+            <Select
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+            >
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-1">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Filter Products</h4>
+                  <Separator />
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Input 
+                      id="category" 
+                      placeholder="Filter by category"
+                      value={categoryFilter}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="insurer">Insurer</Label>
+                    <Input 
+                      id="insurer" 
+                      placeholder="Filter by insurer"
+                      value={insurerFilter}
+                      onChange={(e) => setInsurerFilter(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between pt-2">
+                    <Button variant="outline" size="sm" onClick={resetFilters}>
+                      Reset Filters
+                    </Button>
+                    <Button size="sm">Apply</Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
         
         <DataTable
-          data={products || []}
+          data={filteredProducts || []}
           columns={columns}
           isLoading={isLoading}
           emptyState={{
             title: "No insurance products found",
             description: "Try adjusting your search or add a new product.",
-            action: null // Removed duplicate button from empty state
+            action: null
           }}
         />
       </CardContent>

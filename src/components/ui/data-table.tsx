@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,13 +8,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 
-interface Column<T> {
+interface SortConfig {
+  key: string;
+  direction: 'asc' | 'desc';
+}
+
+export interface Column<T> {
   header: string;
   accessorKey: keyof T | ((row: T) => React.ReactNode);
   cell?: (row: T) => React.ReactNode;
+  sortable?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -29,6 +36,8 @@ interface DataTableProps<T> {
 }
 
 function DataTable<T>({ data, columns, isLoading, emptyState }: DataTableProps<T>) {
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -47,20 +56,69 @@ function DataTable<T>({ data, columns, isLoading, emptyState }: DataTableProps<T
     );
   }
 
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig && sortConfig.key === key) {
+      direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Sort the data if a sort configuration exists
+  const sortedData = React.useMemo(() => {
+    if (!sortConfig) return data;
+
+    return [...data].sort((a, b) => {
+      const key = sortConfig.key as keyof T;
+      const valueA = typeof a[key] === 'string' ? (a[key] as string).toLowerCase() : a[key];
+      const valueB = typeof b[key] === 'string' ? (b[key] as string).toLowerCase() : b[key];
+
+      if (valueA < valueB) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (valueA > valueB) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [data, sortConfig]);
+
+  const getSortIcon = (columnKey: string) => {
+    if (!sortConfig || sortConfig.key !== columnKey) {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-4 w-4" /> 
+      : <ArrowDown className="ml-2 h-4 w-4" />;
+  };
+
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
             {columns.map((column, index) => (
               <TableHead key={index}>
-                {column.header}
+                {column.sortable ? (
+                  <Button
+                    variant="ghost"
+                    className="p-0 h-auto font-medium flex items-center"
+                    onClick={() => handleSort(column.accessorKey as string)}
+                  >
+                    {column.header}
+                    {getSortIcon(column.accessorKey as string)}
+                  </Button>
+                ) : (
+                  column.header
+                )}
               </TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row, rowIndex) => (
+          {sortedData.map((row, rowIndex) => (
             <TableRow key={rowIndex}>
               {columns.map((column, colIndex) => (
                 <TableCell key={colIndex}>
