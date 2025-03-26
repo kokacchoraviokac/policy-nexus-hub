@@ -98,4 +98,15 @@
   .animate-enter {
     @apply animate-fade-in;
   }
+  
+  /* Sidebar tooltip styles */
+  .sidebar-tooltip {
+    @apply z-50 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border;
+  }
+  
+  /* Sidebar hover card styles */
+  .sidebar-hover-card {
+    @apply z-50 bg-sidebar-accent border-sidebar-border shadow-glass-md;
+  }
 }
+

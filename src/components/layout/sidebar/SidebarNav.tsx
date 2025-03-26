@@ -26,6 +26,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
           const isActiveParent = currentPath === item.path || 
                               currentPath.startsWith(`${item.path}/`);
           
+          // Also check if any subitem path matches the current path
+          const hasActiveChild = item.subItems?.some(
+            subItem => currentPath === subItem.path
+          );
+          
           return (
             <SidebarItem
               key={index}
@@ -33,7 +38,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
               label={item.label}
               path={item.path}
               collapsed={collapsed}
-              active={isActiveParent}
+              active={isActiveParent || !!hasActiveChild}
               requiredPrivilege={item.requiredPrivilege}
               subItems={item.subItems}
             />
