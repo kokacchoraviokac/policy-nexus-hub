@@ -1,16 +1,17 @@
+
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InsuranceProduct } from "@/types/codebook";
 import { useInsurers } from "@/hooks/useInsurers";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/auth/AuthContext";
+import { FormActions } from "./shared/FormActions";
 
 const productFormSchema = z.object({
   code: z.string().min(1, "Code is required"),
@@ -169,19 +170,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
           )}
         />
 
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : defaultValues.code ? "Update Product" : "Add Product"}
-          </Button>
-        </div>
+        <FormActions
+          onCancel={onCancel}
+          isSubmitting={isSubmitting}
+          isEditing={!!defaultValues.code}
+          entityName="Product"
+        />
       </form>
     </Form>
   );
