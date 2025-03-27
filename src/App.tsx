@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -27,6 +28,9 @@ import PrivilegeTestPage from "./pages/PrivilegeTestPage";
 import ClientsPage from "./pages/codebook/ClientsPage";
 import InsurersPage from "./pages/codebook/InsurersPage";
 import ProductsPage from "./pages/codebook/ProductsPage";
+import ClientDetailPage from "./pages/codebook/ClientDetailPage";
+import InsurerDetailPage from "./pages/codebook/InsurerDetailPage";
+import ProductDetailPage from "./pages/codebook/ProductDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +121,14 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 
+                <Route path="/codebook/clients/:clientId" element={
+                  <ProtectedRoute requiredPrivilege="codebook.clients:view">
+                    <AppLayout>
+                      <ClientDetailPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                
                 <Route path="/codebook/companies" element={
                   <ProtectedRoute requiredPrivilege="codebook.companies:view">
                     <AppLayout>
@@ -125,10 +137,26 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 
+                <Route path="/codebook/companies/:insurerId" element={
+                  <ProtectedRoute requiredPrivilege="codebook.companies:view">
+                    <AppLayout>
+                      <InsurerDetailPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                
                 <Route path="/codebook/products" element={
                   <ProtectedRoute requiredPrivilege="codebook.codes:view">
                     <AppLayout>
                       <ProductsPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/codebook/products/:productId" element={
+                  <ProtectedRoute requiredPrivilege="codebook.codes:view">
+                    <AppLayout>
+                      <ProductDetailPage />
                     </AppLayout>
                   </ProtectedRoute>
                 } />
