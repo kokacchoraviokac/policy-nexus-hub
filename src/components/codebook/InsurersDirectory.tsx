@@ -15,11 +15,13 @@ import InsurerFormDialog from "@/components/codebook/dialogs/InsurerFormDialog";
 import AdvancedFilterDialog from "@/components/codebook/filters/AdvancedFilterDialog";
 import SaveFilterDialog from "@/components/codebook/filters/SaveFilterDialog";
 import { CodebookFilterState, Insurer } from "@/types/codebook";
+import { useAuth } from "@/contexts/AuthContext";
 
 const InsurersDirectory: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { hasPrivilege } = usePrivilegeCheck();
+  const { user } = useAuth();
   
   const [formOpen, setFormOpen] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
