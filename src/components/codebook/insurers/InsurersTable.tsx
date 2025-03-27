@@ -1,91 +1,63 @@
 
 import React from "react";
-import { Badge } from "@/components/ui/badge";
+import DataTable from "@/components/ui/data-table";
+import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash } from "lucide-react";
-import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Column } from "@/components/ui/data-table";
+import { Insurer } from "@/types/codebook";
+import { getInsurerColumns } from "@/components/codebook/insurers/InsurersTable";
 
-// Export the table columns function for reuse across the app
-export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id: string) => void): Column<Insurer>[] => {
+interface InsurersTableProps {
+  insurers: Insurer[];
+  isLoading: boolean;
+  canAddInsurer: boolean;
+  onViewDetails: (id: string) => void;
+  onAddInsurer: () => void;
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
+    pageSizeOptions: number[];
+  };
+}
+
+const InsurersTable: React.FC<InsurersTableProps> = ({
+  insurers,
+  isLoading,
+  canAddInsurer,
+  onViewDetails,
+  onAddInsurer,
+  pagination
+}) => {
   const { t } = useLanguage();
-  
-  return [
-    {
-      header: t("name"),
-      accessorKey: "name" as keyof Insurer,
-      sortable: true
-    },
-    {
-      header: t("contactPerson"),
-      accessorKey: "contact_person" as keyof Insurer,
-      cell: (row: Insurer) => row.contact_person || "-",
-      sortable: true
-    },
-    {
-      header: t("email"),
-      accessorKey: "email" as keyof Insurer,
-      cell: (row: Insurer) => row.email || "-",
-      sortable: true
-    },
-    {
-      header: t("phone"),
-      accessorKey: "phone" as keyof Insurer,
-      cell: (row: Insurer) => row.phone || "-",
-    },
-    {
-      header: t("country"),
-      accessorKey: "country" as keyof Insurer,
-      cell: (row: Insurer) => row.country || "-",
-      sortable: true
-    },
-    {
-      header: t("status"),
-      accessorKey: "is_active" as keyof Insurer,
-      cell: (row: Insurer) => (
-        <Badge variant={row.is_active ? "default" : "secondary"}>
-          {row.is_active ? t("active") : t("inactive")}
-        </Badge>
-      ),
-      sortable: true
-    },
-    ...(onEdit || onDelete ? [
-      {
-        header: t("actions"),
-        accessorKey: "id" as keyof Insurer,
-        cell: (row: Insurer) => (
-          <div className="flex gap-2 justify-end">
-            {onEdit && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 w-8 p-0"
-                onClick={() => onEdit(row.id)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-destructive"
-                onClick={() => onDelete(row.id)}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        ),
-      }
-    ] : [])
-  ];
-};
 
-// This is the actual component that renders the insurers table
-const InsurersTable: React.FC = () => {
-  return null; // This component doesn't render anything itself, just exports the columns function
+  return (
+    <DataTable
+      data={insurers}
+      columns={getInsurerColumns(onViewDetails)}
+      isLoading={isLoading}
+      emptyState={{
+        title: t("noInsurersFound"),
+        description: t("noInsurersFoundDescription"),
+        action: canAddInsurer ? (
+          <Button onClick={onAddInsurer}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            {t("addInsurer")}
+          </Button>
+        ) : undefined
+      }}
+      pagination={{
+        currentPage: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        totalItems: pagination.totalItems,
+        onPageChange: pagination.onPageChange,
+        onPageSizeChange: pagination.onPageSizeChange,
+        pageSizeOptions: pagination.pageSizeOptions
+      }}
+    />
+  );
 };
 
 export default InsurersTable;
