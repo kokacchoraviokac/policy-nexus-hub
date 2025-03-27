@@ -8,7 +8,7 @@ import ActiveFilters from "@/components/codebook/filters/ActiveFilters";
 import { CodebookFilterState, SavedFilter } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface ClientsFiltersProps {
+interface ProductsFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   filters: CodebookFilterState;
@@ -16,13 +16,13 @@ interface ClientsFiltersProps {
   onClearFilter: (key: keyof CodebookFilterState) => void;
   onOpenFilterDialog: () => void;
   activeFilterCount: number;
-  // New props for saved filters
+  // Saved filters props
   savedFilters?: SavedFilter[];
   onOpenSaveFilterDialog?: () => void;
   onDeleteFilter?: (filterId: string) => Promise<void>;
 }
 
-const ClientsFilters: React.FC<ClientsFiltersProps> = ({
+const ProductsFilters: React.FC<ProductsFiltersProps> = ({
   searchTerm,
   onSearchChange,
   filters,
@@ -30,7 +30,6 @@ const ClientsFilters: React.FC<ClientsFiltersProps> = ({
   onClearFilter,
   onOpenFilterDialog,
   activeFilterCount,
-  // New props for saved filters
   savedFilters = [],
   onOpenSaveFilterDialog,
   onDeleteFilter
@@ -45,7 +44,7 @@ const ClientsFilters: React.FC<ClientsFiltersProps> = ({
         <SearchInput
           value={searchTerm}
           onChange={onSearchChange}
-          placeholder={t("searchClients")}
+          placeholder={t("searchProducts")}
           className="w-full sm:max-w-xs"
         />
         
@@ -70,7 +69,7 @@ const ClientsFilters: React.FC<ClientsFiltersProps> = ({
               onApplyFilter={onFilterChange}
               onDeleteFilter={onDeleteFilter!}
               onOpenSaveDialog={onOpenSaveFilterDialog!}
-              entityType="clients"
+              entityType="products"
             />
           )}
           
@@ -84,9 +83,13 @@ const ClientsFilters: React.FC<ClientsFiltersProps> = ({
       <ActiveFilters 
         filters={filters} 
         onClearFilter={onClearFilter}
+        filterLabels={{
+          category: t("category"),
+          insurer: t("insurer")
+        }}
       />
     </>
   );
 };
 
-export default ClientsFilters;
+export default ProductsFilters;
