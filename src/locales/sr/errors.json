@@ -1,0 +1,7 @@
+
+{
+  "notFound": "Stranica nije pronađena",
+  "notFoundDescription": "Stranica koju tražite ne postoji ili je premeštena.",
+  "unauthorized": "Neovlašćen pristup",
+  "unauthorizedDescription": "Nemate potrebne privilegije za pristup ovoj stranici."
+}

@@ -1,0 +1,24 @@
+
+{
+  "dashboard": "Kontrolna tabla",
+  "upcomingPolicies": "Predstojeće polise",
+  "incompletePolicies": "Nepotpune polise",
+  "openClaims": "Otvoreni zahtevi",
+  "totalPolicies": "Ukupno polisa",
+  "salesPipeline": "Prodajni tok",
+  "monthlyRevenue": "Mesečni prihod",
+  "salesPipelineOverview": "Pregled prodajnog toka",
+  "currentLeadsByStage": "Trenutni potencijalni klijenti po fazama",
+  "readyToInputPolicies": "Polise spremne za unos",
+  "policiesWithCompleteData": "Polise sa potpunim podacima koje čekaju finalizaciju",
+  "viewAllReadyPolicies": "Pregledaj sve spremne polise",
+  "finalize": "Finalizuj",
+  "processAll": "Obradi sve",
+  "viewAll": "Pregledaj sve",
+  "upcomingRenewals": "Predstojeća obnavljanja",
+  "nextDays": "Narednih 30 dana",
+  "activePolicies": "Aktivne polise",
+  "acrossClients": "Kod 42 klijenta",
+  "unassignedPolicies": "Nedodeljene polise",
+  "needAttention": "Zahtevaju pažnju"
+}

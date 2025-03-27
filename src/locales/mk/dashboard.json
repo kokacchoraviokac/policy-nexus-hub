@@ -1,0 +1,18 @@
+
+{
+  "dashboard": "Командна табла",
+  "upcomingPolicies": "Претстојни полиси",
+  "incompletePolicies": "Нецелосни полиси",
+  "openClaims": "Отворени побарувања",
+  "totalPolicies": "Вкупно полиси",
+  "salesPipeline": "Продажен тек",
+  "monthlyRevenue": "Месечен приход",
+  "salesPipelineOverview": "Преглед на продажниот тек",
+  "currentLeadsByStage": "Тековни потенцијални клиенти по фази",
+  "readyToInputPolicies": "Полиси подготвени за внес",
+  "policiesWithCompleteData": "Полиси со целосни податоци кои чекаат финализација",
+  "viewAllReadyPolicies": "Прегледај ги сите подготвени полиси",
+  "finalize": "Финализирај",
+  "processAll": "Обработи сè",
+  "viewAll": "Прегледај сè"
+}

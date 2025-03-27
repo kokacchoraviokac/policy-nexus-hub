@@ -1,7 +1,6 @@
-
 import en from '../locales/en.json';
-import sr from '../locales/sr.json';
-import mk from '../locales/mk.json';
+import sr from '../locales/sr/index';
+import mk from '../locales/mk/index';
 import es from '../locales/es.json';
 import { Language } from '@/contexts/LanguageContext';
 

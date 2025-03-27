@@ -1,9 +1,11 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { formatDate, formatNumber, formatCurrency, formatRelativeTime } from '../utils/formatters';
 import { logMissingTranslation, formatMissingTranslation } from '../utils/translationValidator';
+import en from '../locales/en.json';
+import sr from '../locales/sr/index';
+import mk from '../locales/mk/index';
+import es from '../locales/es.json';
 
-// Supported languages based on the requirements
 export type Language = 'en' | 'sr' | 'mk' | 'es';
 
 type LanguageContextType = {
@@ -27,7 +29,6 @@ export const useLanguage = () => {
   return context;
 };
 
-// Local storage key for saving language preference
 const LANGUAGE_STORAGE_KEY = 'policyhub_language';
 
 type LanguageProviderProps = {
@@ -35,7 +36,6 @@ type LanguageProviderProps = {
 };
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  // Get initial language from local storage or use browser language or default to English
   const getInitialLanguage = (): Language => {
     const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
     
@@ -48,7 +48,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       return browserLang as Language;
     }
     
-    return 'en'; // Default to English
+    return 'en';
   };
 
   const [language, setLanguageState] = useState<Language>(getInitialLanguage);
@@ -56,13 +56,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const [isLoading, setIsLoading] = useState(true);
   const [missingTranslationsCount, setMissingTranslationsCount] = useState(0);
 
-  // Update the language and save to local storage
   const setLanguage = (newLanguage: Language) => {
     localStorage.setItem(LANGUAGE_STORAGE_KEY, newLanguage);
     setLanguageState(newLanguage);
   };
 
-  // Load translations for the current language
   useEffect(() => {
     const loadTranslations = async () => {
       try {
@@ -70,10 +68,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         const module = await import(`../locales/${language}.json`);
         setTranslations(module.default);
         
-        // Count missing translations for the selected language
         if (language !== 'en') {
-          const englishModule = await import('../locales/en.json');
-          const englishKeys = Object.keys(englishModule.default);
+          const englishKeys = Object.keys(en);
           const currentKeys = Object.keys(module.default);
           const missingCount = englishKeys.filter(key => !currentKeys.includes(key)).length;
           setMissingTranslationsCount(missingCount);
@@ -82,10 +78,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         }
       } catch (error) {
         console.error(`Failed to load translations for ${language}:`, error);
-        // Fallback to English if translation file cannot be loaded
         if (language !== 'en') {
-          const fallbackModule = await import('../locales/en.json');
-          setTranslations(fallbackModule.default);
+          setTranslations(en);
         }
       } finally {
         setIsLoading(false);
@@ -95,9 +89,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     loadTranslations();
   }, [language]);
 
-  // Translation function
   const t = (key: string): string => {
-    if (isLoading) return key; // Return the key while loading
+    if (isLoading) return key;
     
     const translation = translations[key];
     if (!translation) {
@@ -108,12 +101,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     return translation;
   };
 
-  // Function to get the count of missing translations
   const getMissingTranslationsCount = () => {
     return missingTranslationsCount;
   };
 
-  // Formatting helper functions that use the current language
   const formatDateWithCurrentLang = (date: Date | string | number) => 
     formatDate(date, language);
     

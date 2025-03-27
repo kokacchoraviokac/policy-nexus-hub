@@ -1,0 +1,13 @@
+
+{
+  "agentPortalModule": "Модул за агенти",
+  "agentPortalDescription": "Овој дел ќе содржи функционалност за управување со агенти.",
+  "claimsManagementModule": "Модул за управување со оштетни барања",
+  "claimsModuleDescription": "Овој дел ќе обезбеди функционалност за обработка на оштетни барања.",
+  "financialOperationsModule": "Модул за финансиски операции",
+  "financialModuleDescription": "Овој дел ќе содржи алатки за финансиско управување.",
+  "analyticsReportingModule": "Модул за аналитика и известување",
+  "analyticsModuleDescription": "Овој дел ќе обезбеди алатки за известување и аналитика.",
+  "salesLeadModule": "Модул за управување со продажба и потенцијални клиенти",
+  "salesModuleDescription": "Овој дел ќе обезбеди алатки за управување со продажниот процес."
+}

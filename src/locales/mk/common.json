@@ -1,0 +1,23 @@
+
+{
+  "save": "Зачувај",
+  "saving": "Зачувување...",
+  "cancel": "Откажи",
+  "delete": "Избриши",
+  "actions": "Акции",
+  "language": "Јазик",
+  "darkMode": "Темен режим",
+  "lightMode": "Светол режим",
+  "systemDefault": "Системски зададено",
+  "name": "Име",
+  "company": "Компанија",
+  "email": "Е-пошта",
+  "password": "Лозинка",
+  "madeWith": "Направено со",
+  "allRightsReserved": "Сите права задржани",
+  "termsOfService": "Услови за користење",
+  "privacyPolicy": "Политика за приватност",
+  "help": "Помош",
+  "redirecting": "Пренасочување...",
+  "deleteConfirmation": "Дали сте сигурни дека сакате да го избришете <span class=\"font-medium\">{0}</span>? Оваа акција не може да се поништи."
+}

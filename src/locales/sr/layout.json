@@ -1,0 +1,20 @@
+
+{
+  "dashboard": "Kontrolna tabla",
+  "policies": "Polise",
+  "policyManagement": "Upravljanje polisama, adendumima i povezanim dokumentima",
+  "sales": "Prodaja",
+  "salesManagement": "Upravljanje potencijalnim klijentima, prodajnim procesima i praćenje celokupnog ciklusa prodaje",
+  "claims": "Odštetni zahtevi",
+  "claimsManagement": "Registracija i obrada odštetnih zahteva klijenata",
+  "finances": "Finansije",
+  "financesManagement": "Upravljanje provizijama, fakturisanjem i platnim prometom",
+  "codebook": "Šifarnik",
+  "codebookManagement": "Upravljanje master podacima za klijente, osiguravajuće kompanije i šifre proizvoda",
+  "agent": "Agent",
+  "agentManagement": "Upravljanje portalom za agente",
+  "reports": "Izveštaji",
+  "reportsManagement": "Generisanje i pregled izveštaja o poslovanju",
+  "settings": "Podešavanja",
+  "settingsManagement": "Konfiguracija sistemskih podešavanja, upravljanje korisničkim nalozima i podešavanje privilegija"
+}

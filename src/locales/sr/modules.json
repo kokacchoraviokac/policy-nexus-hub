@@ -1,0 +1,63 @@
+
+{
+  "policiesDescription": "Upravljanje svim polisama osiguranja, uključujući kreiranje, modifikacije i upravljanje dokumentima.",
+  "allPolicies": "Sve polise",
+  "policiesWorkflow": "Tok polisa",
+  "policyAddendums": "Dodaci polisama",
+  "unlinkedPayments": "Nepovezane uplate",
+  "documents": "Dokumenti",
+  
+  "salesDescription": "Upravljanje prodajnim ciklusom od potencijalnih klijenata do potpisanih polisa.",
+  "pipelineOverview": "Pregled toka prodaje",
+  "leads": "Potencijalni klijenti",
+  "salesProcesses": "Prodajni procesi",
+  "responsiblePersons": "Odgovorne osobe",
+  
+  "claimsDescription": "Upravljanje celokupnim ciklusom odštetnih zahteva.",
+  "claimsRegistration": "Registracija zahteva",
+  "claimsProcessing": "Obrada zahteva",
+  "claimsStatistics": "Statistika zahteva",
+  
+  "financesDescription": "Upravljanje finansijskim operacijama, uključujući komisije, fakturisanje i obradu izvoda.",
+  "commissions": "Provizije",
+  "invoicing": "Fakturisanje",
+  "statementProcessing": "Obrada izvoda",
+  
+  "agentDescription": "Portal za specifične funkcije agenata, uključujući provizije i isplate.",
+  "fixedCommissions": "Fiksne provizije",
+  "clientCommissions": "Provizije klijenata",
+  "manualCommissions": "Ručne provizije",
+  "calculatePayouts": "Izračunaj isplate",
+  "payoutReports": "Izveštaji o isplatama",
+  
+  "reportsDescription": "Generisanje i izvoz prilagođenih izveštaja na osnovu podataka iz svih modula.",
+  "productionReport": "Izveštaj o produkciji",
+  "clientsReport": "Izveštaj o klijentima",
+  "agentsReport": "Izveštaj o agentima",
+  "claimsReport": "Izveštaj o odštetnim zahtevima",
+  
+  "agentPortalModule": "Modul portala za agente",
+  "agentPortalDescription": "Upravljanje provizijama i isplatama agentima",
+  
+  "salesLeadModule": "Modul za vođenje prodaje",
+  "salesModuleDescription": "Upravljanje potencijalnim klijentima i prodajnim procesima",
+  
+  "claimsManagementModule": "Modul za upravljanje odštetnim zahtevima",
+  "claimsModuleDescription": "Registracija i obrada odštetnih zahteva klijenata",
+  
+  "financialOperationsModule": "Modul za finansijske operacije",
+  "financialModuleDescription": "Upravljanje provizijama, fakturisanjem i platnim prometom",
+  
+  "analyticsReportingModule": "Modul za analitiku i izveštavanje",
+  "analyticsModuleDescription": "Generisanje i pregled izveštaja o poslovanju",
+  
+  "recentPolicies": "Nedavne polise",
+  "searchPolicies": "Pretraži polise...",
+  "loadingPolicies": "Učitavanje polisa...",
+  "errorLoadingPolicies": "Greška pri učitavanju polisa. Pokušajte ponovo.",
+  "noPoliciesFound": "Nije pronađena nijedna polisa. Pokušajte da izmenite pretragu.",
+  "policyNumber": "Broj polise",
+  "expiryDate": "Datum isteka",
+  "premium": "Premija",
+  "newPolicy": "Nova polisa"
+}
