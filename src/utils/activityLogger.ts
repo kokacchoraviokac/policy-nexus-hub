@@ -15,6 +15,14 @@ export interface LogActivityParams {
   companyId?: string;
 }
 
+interface ActivityLogItem {
+  id: string;
+  action: string;
+  timestamp: string;
+  user: string;
+  details?: string;
+}
+
 /**
  * Logs an activity to the activity_logs table
  */
@@ -37,16 +45,15 @@ export const logActivity = async (params: LogActivityParams): Promise<void> => {
       return;
     }
 
-    // Insert activity log
+    // Insert activity log using raw SQL query since the table might not be in TypeScript types yet
     const { error } = await supabase
-      .from('activity_logs')
-      .insert({
-        entity_type: entityType,
-        entity_id: entityId,
-        action,
-        details,
-        company_id: userCompanyId,
-        user_id: userId
+      .rpc('log_activity', {
+        p_entity_type: entityType,
+        p_entity_id: entityId,
+        p_action: action,
+        p_details: details,
+        p_company_id: userCompanyId,
+        p_user_id: userId
       });
 
     if (error) {
@@ -83,21 +90,14 @@ export const useActivityLogger = () => {
 /**
  * Fetch activity logs for a specific entity
  */
-export const fetchActivityLogs = async (entityType: EntityType, entityId: string) => {
+export const fetchActivityLogs = async (entityType: EntityType, entityId: string): Promise<ActivityLogItem[]> => {
   try {
+    // Use a stored procedure to get activity logs
     const { data, error } = await supabase
-      .from('activity_logs')
-      .select(`
-        id,
-        action,
-        details,
-        created_at,
-        user_id,
-        profiles:user_id (name, email)
-      `)
-      .eq('entity_type', entityType)
-      .eq('entity_id', entityId)
-      .order('created_at', { ascending: false });
+      .rpc('get_activity_logs', {
+        p_entity_type: entityType,
+        p_entity_id: entityId
+      });
     
     if (error) {
       console.error("Error fetching activity logs:", error);
@@ -105,11 +105,12 @@ export const fetchActivityLogs = async (entityType: EntityType, entityId: string
       return [];
     }
     
-    return data.map(log => ({
+    // Transform the data into the expected format
+    return data.map((log: any) => ({
       id: log.id,
       action: formatAction(log.action as ActivityAction),
       timestamp: log.created_at,
-      user: log.profiles?.name || 'Unknown user',
+      user: log.user_name || 'Unknown user',
       details: formatDetails(log.action as ActivityAction, log.details)
     }));
   } catch (error) {

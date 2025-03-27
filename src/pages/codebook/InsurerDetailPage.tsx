@@ -3,12 +3,12 @@ import React from "react";
 import { useInsurerDetail } from "@/hooks/useInsurerDetail";
 import InsurerDetailHeader from "@/components/codebook/details/insurers/InsurerDetailHeader";
 import { EntityDetailsCard } from "@/components/codebook/details/EntityDetailsCard";
-import { EntityLoadError } from "@/components/codebook/details/EntityLoadError";
+import EntityLoadError from "@/components/codebook/details/EntityLoadError";
 import InsurerDetailTabs from "@/components/codebook/details/InsurerDetailTabs";
 import DeleteInsurerDialog from "@/components/codebook/dialogs/DeleteInsurerDialog";
 import EditInsurerDialog from "@/components/codebook/details/insurers/EditInsurerDialog";
 import AddProductDialog from "@/components/codebook/details/insurers/AddProductDialog";
-import { EntityNotFound } from "@/components/codebook/details/EntityNotFound";
+import EntityNotFound from "@/components/codebook/details/EntityNotFound";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const InsurerDetailPage = () => {
@@ -50,7 +50,7 @@ const InsurerDetailPage = () => {
   }
 
   if (!insurer) {
-    return <EntityNotFound entityType="insurer" />;
+    return <EntityNotFound entityType="insurer" backPath="/codebook/companies" backLabel={t('insuranceCompanies')} />;
   }
 
   const tabs = InsurerDetailTabs({
@@ -79,7 +79,7 @@ const InsurerDetailPage = () => {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={handleDelete}
-        insurer={insurer}
+        insurerName={insurer.name}
       />
       
       <EditInsurerDialog
