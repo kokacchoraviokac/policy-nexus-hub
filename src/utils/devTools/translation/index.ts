@@ -34,14 +34,15 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('- window.__translationManager.reportTranslationWorkflow()');
 }
 
-// Export all functions and types
+// Export all functions
 export {
   exportMissingTranslations,
   generateTranslationWorkflow,
-  reportTranslationWorkflow,
-  TranslationWorkflow,
-  TranslationStatus
+  reportTranslationWorkflow
 };
+
+// Export types with 'export type' syntax for isolatedModules compliance
+export type { TranslationWorkflow, TranslationStatus };
 
 export default {
   exportMissingTranslations,
