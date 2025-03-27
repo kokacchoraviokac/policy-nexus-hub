@@ -8,7 +8,8 @@ import { EntityType, SavedFilter } from '@/types/savedFilters';
 export function useSimpleSavedFilters(
   entityType: EntityType,
   userId?: string,
-  companyId?: string
+  companyId?: string,
+  currentFilters?: CodebookFilterState
 ) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -43,12 +44,12 @@ export function useSimpleSavedFilters(
   // Save filter mutation
   const saveFilterMutation = useMutation({
     mutationFn: async (name: string) => {
-      if (!userId) throw new Error('User ID is required');
+      if (!userId || !currentFilters) throw new Error('User ID and filters are required');
       
       const newFilter = {
         name,
         entity_type: entityType,
-        filters: JSON.stringify({}), // This will be updated in the component
+        filters: JSON.stringify(currentFilters), // Use the current filters
         user_id: userId,
         company_id: companyId || '00000000-0000-0000-0000-000000000000'
       };
