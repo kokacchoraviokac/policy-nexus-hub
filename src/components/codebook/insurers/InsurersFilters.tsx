@@ -3,9 +3,10 @@ import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SearchInput from "@/components/ui/search-input";
 import FilterButton from "@/components/codebook/filters/FilterButton";
-import SavedFiltersMenu from "@/components/codebook/filters/SavedFiltersMenu";
+import SimpleSavedFiltersButton from "@/components/codebook/filters/SimpleSavedFiltersButton";
 import ActiveFilters from "@/components/codebook/filters/ActiveFilters";
-import { CodebookFilterState, SavedFilter } from "@/types/codebook";
+import { CodebookFilterState } from "@/types/codebook";
+import { SavedFilter } from "@/types/savedFilters";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface InsurersFiltersProps {
@@ -16,10 +17,14 @@ interface InsurersFiltersProps {
   onClearFilter: (key: keyof CodebookFilterState) => void;
   onOpenFilterDialog: () => void;
   activeFilterCount: number;
-  // New props for saved filters
+  // Saved filters props
   savedFilters: SavedFilter[];
-  onOpenSaveFilterDialog: () => void;
-  onDeleteFilter: (filterId: string) => Promise<void>;
+  onSaveFilter: (name: string, filters: CodebookFilterState) => void;
+  onDeleteFilter: (filterId: string) => void;
+  isSaving?: boolean;
+  isDeleting?: boolean;
+  parseFilterData: (filter: SavedFilter) => CodebookFilterState;
+  showSavedFilters?: boolean;
 }
 
 const InsurersFilters: React.FC<InsurersFiltersProps> = ({
@@ -30,10 +35,14 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
   onClearFilter,
   onOpenFilterDialog,
   activeFilterCount,
-  // New props for saved filters
+  // Saved filters props
   savedFilters,
-  onOpenSaveFilterDialog,
-  onDeleteFilter
+  onSaveFilter,
+  onDeleteFilter,
+  isSaving,
+  isDeleting,
+  parseFilterData,
+  showSavedFilters = true
 }) => {
   const { t } = useLanguage();
 
@@ -62,13 +71,18 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
             </SelectContent>
           </Select>
           
-          <SavedFiltersMenu
-            savedFilters={savedFilters}
-            onApplyFilter={onFilterChange}
-            onDeleteFilter={onDeleteFilter}
-            onOpenSaveDialog={onOpenSaveFilterDialog}
-            entityType="insurers"
-          />
+          {showSavedFilters && (
+            <SimpleSavedFiltersButton
+              savedFilters={savedFilters}
+              onApplyFilter={onFilterChange}
+              onSaveFilter={onSaveFilter}
+              onDeleteFilter={onDeleteFilter}
+              currentFilters={filters}
+              isSaving={isSaving}
+              isDeleting={isDeleting}
+              parseFilterData={parseFilterData}
+            />
+          )}
           
           <FilterButton
             activeFilterCount={activeFilterCount}

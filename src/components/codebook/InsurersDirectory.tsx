@@ -5,7 +5,7 @@ import { PlusCircle, Info } from "lucide-react";
 import { useInsurers } from "@/hooks/useInsurers";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePrivilegeCheck } from "@/hooks/usePrivilegeCheck";
-import { useSavedFilters } from "@/hooks/useSavedFilters";
+import { useSimpleSavedFilters } from "@/hooks/useSimpleSavedFilters";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/data-table";
 import { getInsurerColumns } from "@/components/codebook/insurers/InsurersTable";
@@ -13,7 +13,6 @@ import InsurersFilters from "@/components/codebook/insurers/InsurersFilters";
 import ImportExportButtons from "@/components/codebook/ImportExportButtons";
 import InsurerFormDialog from "@/components/codebook/dialogs/InsurerFormDialog";
 import AdvancedFilterDialog from "@/components/codebook/filters/AdvancedFilterDialog";
-import SaveFilterDialog from "@/components/codebook/filters/SaveFilterDialog";
 import { CodebookFilterState, Insurer } from "@/types/codebook";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -25,7 +24,6 @@ const InsurersDirectory: React.FC = () => {
   
   const [formOpen, setFormOpen] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [saveFilterDialogOpen, setSaveFilterDialogOpen] = useState(false);
   
   const {
     insurers,
@@ -44,8 +42,11 @@ const InsurersDirectory: React.FC = () => {
   const {
     savedFilters,
     saveFilter,
-    deleteFilter
-  } = useSavedFilters('insurers', user?.id, user?.companyId);
+    deleteFilter,
+    parseFilterData,
+    isSaving,
+    isDeleting
+  } = useSimpleSavedFilters('insurers', user?.id, user?.companyId);
 
   const handleViewDetails = (id: string) => {
     navigate(`/codebook/companies/${id}`);
@@ -73,15 +74,6 @@ const InsurersDirectory: React.FC = () => {
     } catch (error) {
       console.error("Error adding insurer:", error);
     }
-  };
-  
-  const handleSaveFilter = async (name: string) => {
-    await saveFilter(name, filters);
-    setSaveFilterDialogOpen(false);
-  };
-  
-  const handleDeleteFilter = async (filterId: string) => {
-    await deleteFilter(filterId);
   };
 
   const canAddInsurer = hasPrivilege('codebook.insurers.create');
@@ -136,8 +128,12 @@ const InsurersDirectory: React.FC = () => {
         onOpenFilterDialog={() => setFilterDialogOpen(true)}
         activeFilterCount={getActiveFilterCount()}
         savedFilters={savedFilters}
-        onOpenSaveFilterDialog={() => setSaveFilterDialogOpen(true)}
-        onDeleteFilter={handleDeleteFilter}
+        onSaveFilter={saveFilter}
+        onDeleteFilter={deleteFilter}
+        isSaving={isSaving}
+        isDeleting={isDeleting}
+        parseFilterData={parseFilterData}
+        showSavedFilters={true}
       />
       
       <DataTable
@@ -182,14 +178,6 @@ const InsurersDirectory: React.FC = () => {
           showCountry: true,
           showCreatedDates: true
         }}
-      />
-      
-      <SaveFilterDialog
-        open={saveFilterDialogOpen}
-        onOpenChange={setSaveFilterDialogOpen}
-        onSave={handleSaveFilter}
-        filters={filters}
-        entityType="insurers"
       />
       
       {!canAddInsurer && !canImportExport && (

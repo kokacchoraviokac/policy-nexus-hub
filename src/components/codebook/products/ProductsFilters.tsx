@@ -3,9 +3,10 @@ import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SearchInput from "@/components/ui/search-input";
 import FilterButton from "@/components/codebook/filters/FilterButton";
-import SavedFiltersMenu from "@/components/codebook/filters/SavedFiltersMenu";
+import SimpleSavedFiltersButton from "@/components/codebook/filters/SimpleSavedFiltersButton";
 import ActiveFilters from "@/components/codebook/filters/ActiveFilters";
-import { CodebookFilterState, SavedFilter } from "@/types/codebook";
+import { CodebookFilterState } from "@/types/codebook";
+import { SavedFilter } from "@/types/savedFilters";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProductsFiltersProps {
@@ -18,8 +19,12 @@ interface ProductsFiltersProps {
   activeFilterCount: number;
   // Saved filters props
   savedFilters?: SavedFilter[];
-  onOpenSaveFilterDialog?: () => void;
-  onDeleteFilter?: (filterId: string) => Promise<void>;
+  onSaveFilter?: (name: string, filters: CodebookFilterState) => void;
+  onDeleteFilter?: (filterId: string) => void;
+  isSaving?: boolean;
+  isDeleting?: boolean;
+  parseFilterData?: (filter: SavedFilter) => CodebookFilterState;
+  showSavedFilters?: boolean;
 }
 
 const ProductsFilters: React.FC<ProductsFiltersProps> = ({
@@ -31,12 +36,19 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
   onOpenFilterDialog,
   activeFilterCount,
   savedFilters = [],
-  onOpenSaveFilterDialog,
-  onDeleteFilter
+  onSaveFilter,
+  onDeleteFilter,
+  isSaving,
+  isDeleting,
+  parseFilterData,
+  showSavedFilters = false
 }) => {
   const { t } = useLanguage();
   
-  const showSavedFilters = !!onOpenSaveFilterDialog && !!onDeleteFilter;
+  const canShowSavedFilters = showSavedFilters && 
+    onSaveFilter && 
+    onDeleteFilter && 
+    parseFilterData;
 
   return (
     <>
@@ -63,13 +75,16 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
             </SelectContent>
           </Select>
           
-          {showSavedFilters && (
-            <SavedFiltersMenu
+          {canShowSavedFilters && (
+            <SimpleSavedFiltersButton
               savedFilters={savedFilters}
               onApplyFilter={onFilterChange}
-              onDeleteFilter={onDeleteFilter!}
-              onOpenSaveDialog={onOpenSaveFilterDialog!}
-              entityType="products"
+              onSaveFilter={onSaveFilter}
+              onDeleteFilter={onDeleteFilter}
+              currentFilters={filters}
+              isSaving={isSaving}
+              isDeleting={isDeleting}
+              parseFilterData={parseFilterData}
             />
           )}
           
