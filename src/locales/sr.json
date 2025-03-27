@@ -261,5 +261,15 @@
   "country": "Država",
   "actions": "Akcije",
   "insurer": "Osiguravač",
-  "companiesFilter": "Filter kompanija"
+  "companiesFilter": "Filter kompanija",
+  
+  "companyManagement": "Upravljanje kompanijama",
+  "companyManagementDescription": "Upravljanje kompanijama i njihovim alokacijama sedišta",
+  "seatsUsage": "Korišćenje sedišta",
+  "noCompaniesFound": "Nije pronađena nijedna kompanija",
+  "seats": "sedišta",
+  "editSeatAllocation": "Uredi dodelu sedišta",
+  "setMaximumNumberOfUserAccounts": "Postavi maksimalan broj korisničkih naloga za",
+  "seatLimitCannotBeLessThanCurrentUsage": "Ograničenje sedišta ne može biti manje od trenutne upotrebe",
+  "saveChanges": "Sačuvaj promene"
 }

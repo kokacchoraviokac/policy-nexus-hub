@@ -16,12 +16,14 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Edit, Users } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const CompanyManagement: React.FC = () => {
   const { companies, loading, updateCompanySeats } = useCompanies();
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [newSeatsLimit, setNewSeatsLimit] = useState<number>(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
   const handleEditSeats = (company: Company) => {
     setEditingCompany(company);
@@ -49,10 +51,10 @@ const CompanyManagement: React.FC = () => {
       <CardHeader>
         <div className="flex items-center space-x-2">
           <Users className="h-5 w-5 text-primary" />
-          <CardTitle>Company Management</CardTitle>
+          <CardTitle>{t("companyManagement")}</CardTitle>
         </div>
         <CardDescription>
-          Manage companies and their seat allocations
+          {t("companyManagementDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -64,16 +66,16 @@ const CompanyManagement: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Company Name</TableHead>
-                <TableHead>Seats Usage</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>{t("companyName")}</TableHead>
+                <TableHead>{t("seatsUsage")}</TableHead>
+                <TableHead>{t("actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {companies.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4">
-                    No companies found
+                    {t("noCompaniesFound")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -85,7 +87,7 @@ const CompanyManagement: React.FC = () => {
                       <TableCell>
                         <div className="flex flex-col space-y-1">
                           <div className="flex justify-between text-xs">
-                            <span>{company.usedSeats || 0} / {company.seatsLimit || 0} seats</span>
+                            <span>{company.usedSeats || 0} / {company.seatsLimit || 0} {t("seats")}</span>
                             <span>{usagePercentage}%</span>
                           </div>
                           <Progress value={usagePercentage} className="h-2" />
@@ -98,7 +100,7 @@ const CompanyManagement: React.FC = () => {
                           onClick={() => handleEditSeats(company)}
                         >
                           <Edit className="h-4 w-4 mr-2" />
-                          Edit Seats
+                          {t("editSeats")}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -112,9 +114,9 @@ const CompanyManagement: React.FC = () => {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Seat Allocation</DialogTitle>
+              <DialogTitle>{t("editSeatAllocation")}</DialogTitle>
               <DialogDescription>
-                Set the maximum number of user accounts for {editingCompany?.name}
+                {t("setMaximumNumberOfUserAccounts")} {editingCompany?.name}
               </DialogDescription>
             </DialogHeader>
 
@@ -122,7 +124,7 @@ const CompanyManagement: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="seatsLimit" className="block text-sm font-medium mb-1">
-                    Seats Limit
+                    {t("seatsLimit")}
                   </label>
                   <Input
                     id="seatsLimit"
@@ -133,13 +135,13 @@ const CompanyManagement: React.FC = () => {
                   />
                   {editingCompany && editingCompany.usedSeats && newSeatsLimit < editingCompany.usedSeats && (
                     <p className="text-sm text-destructive mt-1">
-                      Seat limit cannot be less than current usage ({editingCompany.usedSeats})
+                      {t("seatLimitCannotBeLessThanCurrentUsage")} ({editingCompany.usedSeats})
                     </p>
                   )}
                 </div>
 
                 <div className="text-sm text-muted-foreground">
-                  <p>Current Usage: {editingCompany?.usedSeats || 0} seats</p>
+                  <p>{t("currentUsage")}: {editingCompany?.usedSeats || 0} {t("seats")}</p>
                 </div>
               </div>
             </div>
@@ -149,7 +151,7 @@ const CompanyManagement: React.FC = () => {
                 variant="outline" 
                 onClick={() => setIsDialogOpen(false)}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button 
                 onClick={handleSaveSeats}
@@ -157,7 +159,7 @@ const CompanyManagement: React.FC = () => {
                   ? newSeatsLimit < editingCompany.usedSeats 
                   : false}
               >
-                Save Changes
+                {t("saveChanges")}
               </Button>
             </DialogFooter>
           </DialogContent>
