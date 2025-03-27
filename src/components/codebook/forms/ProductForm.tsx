@@ -26,6 +26,8 @@ interface ProductFormProps {
   onSubmit: (values: ProductFormValues) => void;
   onCancel: () => void;
   isSubmitting: boolean;
+  preselectedInsurerId?: string;
+  preselectedInsurerName?: string;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -40,8 +42,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onSubmit,
   onCancel,
   isSubmitting,
+  preselectedInsurerId,
+  preselectedInsurerName
 }) => {
   const { user } = useAuth();
+
+  // If we have a preselected insurer, make sure it's set in the default values
+  if (preselectedInsurerId && !defaultValues.insurer_id) {
+    defaultValues.insurer_id = preselectedInsurerId;
+  }
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -51,7 +60,11 @@ const ProductForm: React.FC<ProductFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <ProductFields form={form} />
+        <ProductFields 
+          form={form} 
+          preselectedInsurerId={preselectedInsurerId}
+          preselectedInsurerName={preselectedInsurerName}
+        />
         
         <StatusField 
           form={form} 

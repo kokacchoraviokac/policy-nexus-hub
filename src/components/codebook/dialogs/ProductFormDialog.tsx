@@ -10,12 +10,16 @@ interface ProductFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   productId?: string;
+  preselectedInsurerId?: string;
+  preselectedInsurerName?: string;
 }
 
 const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   open,
   onOpenChange,
   productId,
+  preselectedInsurerId,
+  preselectedInsurerName,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -80,11 +84,17 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                   is_active: currentProduct.is_active,
                   insurer_id: currentProduct.insurer_id,
                 }
-              : undefined
+              : preselectedInsurerId 
+                ? {
+                    insurer_id: preselectedInsurerId,
+                  } 
+                : undefined
           }
           onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
           isSubmitting={isSubmitting}
+          preselectedInsurerId={preselectedInsurerId}
+          preselectedInsurerName={preselectedInsurerName}
         />
       </DialogContent>
     </Dialog>

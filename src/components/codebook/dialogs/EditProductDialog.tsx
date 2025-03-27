@@ -10,6 +10,8 @@ interface EditProductDialogProps {
   product: InsuranceProduct | null;
   onSubmit: (values: any) => void;
   isSubmitting: boolean;
+  preselectedInsurerId?: string;
+  preselectedInsurerName?: string;
 }
 
 const EditProductDialog: React.FC<EditProductDialogProps> = ({
@@ -18,6 +20,8 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   product,
   onSubmit,
   isSubmitting,
+  preselectedInsurerId,
+  preselectedInsurerName,
 }) => {
   if (!product) return null;
   
@@ -42,6 +46,8 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
           onSubmit={onSubmit}
           onCancel={() => onOpenChange(false)}
           isSubmitting={isSubmitting}
+          preselectedInsurerId={preselectedInsurerId || product.insurer_id}
+          preselectedInsurerName={preselectedInsurerName}
         />
       </DialogContent>
     </Dialog>

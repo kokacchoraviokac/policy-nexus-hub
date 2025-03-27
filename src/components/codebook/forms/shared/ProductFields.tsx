@@ -14,6 +14,8 @@ interface ProductFieldsProps {
   categoryName?: string;
   insurerIdName?: string;
   descriptionName?: string;
+  preselectedInsurerId?: string;
+  preselectedInsurerName?: string;
 }
 
 export const ProductFields: React.FC<ProductFieldsProps> = ({
@@ -23,6 +25,8 @@ export const ProductFields: React.FC<ProductFieldsProps> = ({
   categoryName = "category",
   insurerIdName = "insurer_id",
   descriptionName = "description",
+  preselectedInsurerId,
+  preselectedInsurerName,
 }) => {
   const { insurers = [], isLoading: isLoadingInsurers } = useInsurers();
 
@@ -79,24 +83,32 @@ export const ProductFields: React.FC<ProductFieldsProps> = ({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Insurance Company*</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                disabled={isLoadingInsurers}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an insurance company" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {insurers.filter(insurer => insurer.is_active).map((insurer) => (
-                    <SelectItem key={insurer.id} value={insurer.id}>
-                      {insurer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {preselectedInsurerId && preselectedInsurerName ? (
+                <Input 
+                  value={preselectedInsurerName} 
+                  disabled={true}
+                  className="bg-muted"
+                />
+              ) : (
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  disabled={isLoadingInsurers}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an insurance company" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {insurers.filter(insurer => insurer.is_active).map((insurer) => (
+                      <SelectItem key={insurer.id} value={insurer.id}>
+                        {insurer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <FormMessage />
             </FormItem>
           )}
