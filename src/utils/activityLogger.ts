@@ -45,15 +45,16 @@ export const logActivity = async (params: LogActivityParams): Promise<void> => {
       return;
     }
 
-    // Insert activity log using raw SQL query since the table might not be in TypeScript types yet
+    // Instead of using rpc, we'll insert directly into the activity_logs table
     const { error } = await supabase
-      .rpc('log_activity', {
-        p_entity_type: entityType,
-        p_entity_id: entityId,
-        p_action: action,
-        p_details: details,
-        p_company_id: userCompanyId,
-        p_user_id: userId
+      .from('activity_logs')
+      .insert({
+        entity_type: entityType,
+        entity_id: entityId,
+        action,
+        details,
+        company_id: userCompanyId,
+        user_id: userId
       });
 
     if (error) {
@@ -92,12 +93,19 @@ export const useActivityLogger = () => {
  */
 export const fetchActivityLogs = async (entityType: EntityType, entityId: string): Promise<ActivityLogItem[]> => {
   try {
-    // Use a stored procedure to get activity logs
+    // Instead of using rpc, we'll query the table directly
     const { data, error } = await supabase
-      .rpc('get_activity_logs', {
-        p_entity_type: entityType,
-        p_entity_id: entityId
-      });
+      .from('activity_logs')
+      .select(`
+        id,
+        action,
+        created_at,
+        user_id,
+        details
+      `)
+      .eq('entity_type', entityType)
+      .eq('entity_id', entityId)
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error("Error fetching activity logs:", error);
@@ -105,12 +113,34 @@ export const fetchActivityLogs = async (entityType: EntityType, entityId: string
       return [];
     }
     
+    if (!data || !Array.isArray(data)) {
+      return [];
+    }
+    
+    // Get user names for all user_ids
+    const userIds = data.map(log => log.user_id).filter(Boolean);
+    let userNames: Record<string, string> = {};
+    
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', userIds);
+        
+      if (profiles) {
+        userNames = profiles.reduce((acc, profile) => {
+          acc[profile.id] = profile.name;
+          return acc;
+        }, {} as Record<string, string>);
+      }
+    }
+    
     // Transform the data into the expected format
-    return data.map((log: any) => ({
+    return data.map((log) => ({
       id: log.id,
       action: formatAction(log.action as ActivityAction),
       timestamp: log.created_at,
-      user: log.user_name || 'Unknown user',
+      user: userNames[log.user_id] || 'Unknown user',
       details: formatDetails(log.action as ActivityAction, log.details)
     }));
   } catch (error) {
