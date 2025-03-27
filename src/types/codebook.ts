@@ -1,4 +1,3 @@
-
 export interface Client {
   id: string;
   name: string;
@@ -63,4 +62,14 @@ export interface CodebookFilterState {
   insurer?: string;
   createdAfter?: Date | null;
   createdBefore?: Date | null;
+}
+
+export interface SavedFilter {
+  id: string;
+  name: string;
+  entity_type: 'insurers' | 'clients' | 'products';
+  filters: CodebookFilterState;
+  company_id: string;
+  user_id: string;
+  created_at: string;
 }

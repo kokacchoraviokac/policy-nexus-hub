@@ -3,8 +3,9 @@ import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SearchInput from "@/components/ui/search-input";
 import FilterButton from "@/components/codebook/filters/FilterButton";
+import SavedFiltersMenu from "@/components/codebook/filters/SavedFiltersMenu";
 import ActiveFilters from "@/components/codebook/filters/ActiveFilters";
-import { CodebookFilterState } from "@/types/codebook";
+import { CodebookFilterState, SavedFilter } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface InsurersFiltersProps {
@@ -15,6 +16,10 @@ interface InsurersFiltersProps {
   onClearFilter: (key: keyof CodebookFilterState) => void;
   onOpenFilterDialog: () => void;
   activeFilterCount: number;
+  // New props for saved filters
+  savedFilters: SavedFilter[];
+  onOpenSaveFilterDialog: () => void;
+  onDeleteFilter: (filterId: string) => Promise<void>;
 }
 
 const InsurersFilters: React.FC<InsurersFiltersProps> = ({
@@ -24,7 +29,11 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
   onFilterChange,
   onClearFilter,
   onOpenFilterDialog,
-  activeFilterCount
+  activeFilterCount,
+  // New props for saved filters
+  savedFilters,
+  onOpenSaveFilterDialog,
+  onDeleteFilter
 }) => {
   const { t } = useLanguage();
 
@@ -38,7 +47,7 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
           className="w-full sm:max-w-xs"
         />
         
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <Select
             value={filters.status || 'all'}
             onValueChange={(value) => onFilterChange({ ...filters, status: value as 'all' | 'active' | 'inactive' })}
@@ -52,6 +61,14 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
               <SelectItem value="inactive">{t("inactive")}</SelectItem>
             </SelectContent>
           </Select>
+          
+          <SavedFiltersMenu
+            savedFilters={savedFilters}
+            onApplyFilter={onFilterChange}
+            onDeleteFilter={onDeleteFilter}
+            onOpenSaveDialog={onOpenSaveFilterDialog}
+            entityType="insurers"
+          />
           
           <FilterButton
             activeFilterCount={activeFilterCount}

@@ -4,7 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useInsurers } from "@/hooks/useInsurers";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/auth/AuthContext";
+import { useSavedFilters } from "@/hooks/useSavedFilters";
 import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
+import SaveFilterDialog from "./filters/SaveFilterDialog";
 import InsurersTable from "./insurers/InsurersTable";
 import InsurersFilters from "./insurers/InsurersFilters";
 import InsurersActionButtons from "./insurers/InsurersActionButtons";
@@ -32,6 +34,14 @@ const InsurersDirectory = () => {
   } = useInsurers();
   
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  
+  const {
+    savedFilters,
+    saveFilter,
+    deleteFilter,
+    isSaveDialogOpen,
+    setIsSaveDialogOpen
+  } = useSavedFilters('insurers');
 
   const handleDelete = async (insurerId: string) => {
     try {
@@ -102,6 +112,14 @@ const InsurersDirectory = () => {
     pagination.setPage(1); // Reset to first page when changing page size
   };
 
+  const handleSaveFilter = async (name: string, filtersToSave: any) => {
+    return saveFilter(name, filtersToSave);
+  };
+
+  const handleDeleteFilter = async (filterId: string) => {
+    return deleteFilter(filterId);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -130,6 +148,9 @@ const InsurersDirectory = () => {
           onClearFilter={handleClearFilter}
           onOpenFilterDialog={() => setIsFilterDialogOpen(true)}
           activeFilterCount={getActiveFilterCount()}
+          savedFilters={savedFilters}
+          onOpenSaveFilterDialog={() => setIsSaveDialogOpen(true)}
+          onDeleteFilter={handleDeleteFilter}
         />
         
         <InsurerFormManager>
@@ -164,6 +185,14 @@ const InsurersDirectory = () => {
           showCountry: true,
           showCreatedDates: true
         }}
+      />
+
+      <SaveFilterDialog
+        open={isSaveDialogOpen}
+        onOpenChange={setIsSaveDialogOpen}
+        currentFilters={filters}
+        onSaveFilter={handleSaveFilter}
+        entityType="insurers"
       />
     </Card>
   );
