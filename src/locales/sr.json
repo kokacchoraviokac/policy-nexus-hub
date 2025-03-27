@@ -1,3 +1,4 @@
+
 {
   "welcome": "Dobrodošli",
   "signInDescription": "Prijavite se na svoj nalog ili kreirajte novi",
@@ -87,6 +88,48 @@
   "insuranceProductsDescription": "Upravljanje šiframa proizvoda za različite vrste osiguranja",
   "access": "Pristup",
 
+  "policies": "Polise",
+  "policiesDescription": "Upravljanje svim polisama osiguranja, uključujući kreiranje, modifikacije i upravljanje dokumentima.",
+  "allPolicies": "Sve polise",
+  "policiesWorkflow": "Tok polisa",
+  "policyAddendums": "Dodaci polisama",
+  "unlinkedPayments": "Nepovezane uplate",
+  "documents": "Dokumenti",
+  
+  "sales": "Prodaja",
+  "salesDescription": "Upravljanje prodajnim ciklusom od potencijalnih klijenata do potpisanih polisa.",
+  "pipelineOverview": "Pregled toka prodaje",
+  "leads": "Potencijalni klijenti",
+  "salesProcesses": "Prodajni procesi",
+  "responsiblePersons": "Odgovorne osobe",
+  
+  "claims": "Odštetni zahtevi",
+  "claimsDescription": "Upravljanje celokupnim ciklusom odštetnih zahteva.",
+  "claimsRegistration": "Registracija zahteva",
+  "claimsProcessing": "Obrada zahteva",
+  "claimsStatistics": "Statistika zahteva",
+  
+  "finances": "Finansije",
+  "financesDescription": "Upravljanje finansijskim operacijama, uključujući komisije, fakturisanje i obradu izvoda.",
+  "commissions": "Provizije",
+  "invoicing": "Fakturisanje",
+  "statementProcessing": "Obrada izvoda",
+  
+  "agent": "Agent",
+  "agentDescription": "Portal za specifične funkcije agenata, uključujući provizije i isplate.",
+  "fixedCommissions": "Fiksne provizije",
+  "clientCommissions": "Provizije klijenata",
+  "manualCommissions": "Ručne provizije",
+  "calculatePayouts": "Izračunaj isplate",
+  "payoutReports": "Izveštaji o isplatama",
+  
+  "reports": "Izveštaji",
+  "reportsDescription": "Generisanje i izvoz prilagođenih izveštaja na osnovu podataka iz svih modula.",
+  "productionReport": "Izveštaj o produkciji",
+  "clientsReport": "Izveštaj o klijentima",
+  "agentsReport": "Izveštaj o agentima",
+  "claimsReport": "Izveštaj o odštetnim zahtevima",
+  
   "settings": "Podešavanja",
   "settingsDescription": "Konfiguracija sistemskih podešavanja, upravljanje korisničkim nalozima i podešavanje privilegija.",
   "userManagement": "Upravljanje korisnicima",
@@ -110,5 +153,22 @@
   "simplePermissionCheckDescription": "Unesite privilegiju poput \"policies:view\" da biste proverili da li trenutni korisnik ima tu dozvolu.",
   "contextBasedPermissionCheck": "Provera privilegija zasnovana na kontekstu",
   "contextBasedPermissionCheckDescription": "Omogućite \"Koristi kontekstne podatke\" za testiranje dozvola koje zavise od vlasništva resursa ili drugih atributa.",
-  "examplePermissionsToTest": "Primeri privilegija za testiranje"
+  "examplePermissionsToTest": "Primeri privilegija za testiranje",
+  
+  "redirecting": "Preusmeravanje...",
+  "madeWith": "Napravljeno sa",
+  "allRightsReserved": "Sva prava zadržana",
+  "termsOfService": "Uslovi korišćenja",
+  "privacyPolicy": "Politika privatnosti",
+  "help": "Pomoć",
+  
+  "notFound": "Stranica nije pronađena",
+  "notFoundDescription": "Stranica koju tražite ne postoji ili je premeštena.",
+  "goBack": "Nazad",
+  "goHome": "Idi na početnu",
+  
+  "unauthorized": "Neovlašćen pristup",
+  "unauthorizedDescription": "Nemate potrebne privilegije za pristup ovoj stranici.",
+  "contactAdmin": "Kontaktirajte administratora ako smatrate da je ovo greška.",
+  "passwordRequired": "Lozinka je obavezna"
 }
