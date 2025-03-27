@@ -1,6 +1,7 @@
+
 import sr from '../../../locales/sr/index';
 import mk from '../../../locales/mk/index';
-import es from '../../../locales/es.json';
+import es from '../../../locales/es/index';
 import { Language } from '@/contexts/LanguageContext';
 import { TestResult } from './types';
 

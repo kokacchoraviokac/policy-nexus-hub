@@ -1,0 +1,8 @@
+
+{
+  "notFound": "Página no encontrada",
+  "notFoundDescription": "La página que está buscando no existe o ha sido movida.",
+  "unauthorized": "Acceso no autorizado",
+  "unauthorizedDescription": "No tiene los privilegios necesarios para acceder a esta página.",
+  "contactAdmin": "Contacte al administrador si cree que esto es un error."
+}

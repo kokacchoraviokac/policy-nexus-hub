@@ -1,3 +1,4 @@
+
 /**
  * Translation Manager - Development Tool
  * 
@@ -14,7 +15,7 @@
 import en from '../../locales/en.json';
 import sr from '../../locales/sr/index';
 import mk from '../../locales/mk/index';
-import es from '../../locales/es.json';
+import es from '../../locales/es/index';
 import { generateTranslationReport } from '../translationValidator';
 import { Language } from '@/contexts/LanguageContext';
 

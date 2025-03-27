@@ -1,10 +1,11 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { formatDate, formatNumber, formatCurrency, formatRelativeTime } from '../utils/formatters';
 import { logMissingTranslation, formatMissingTranslation } from '../utils/translationValidator';
 import en from '../locales/en.json';
 import sr from '../locales/sr/index';
 import mk from '../locales/mk/index';
-import es from '../locales/es.json';
+import es from '../locales/es/index';
 
 export type Language = 'en' | 'sr' | 'mk' | 'es';
 

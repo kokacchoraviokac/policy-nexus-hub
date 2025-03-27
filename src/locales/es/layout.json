@@ -1,0 +1,21 @@
+
+{
+  "dashboard": "Panel de Control",
+  "policies": "Pólizas",
+  "policyManagement": "Gestionar pólizas, adendas y documentos relacionados",
+  "sales": "Ventas",
+  "salesManagement": "Gestionar leads, procesos de venta y seguimiento del ciclo completo de ventas",
+  "claims": "Reclamaciones",
+  "claimsManagement": "Registrar, seguir y gestionar reclamaciones a lo largo de su ciclo de vida",
+  "finances": "Finanzas",
+  "financesManagement": "Gestionar comisiones, facturación y procesamiento de extractos financieros",
+  "codebook": "Catálogo",
+  "codebookManagement": "Gestionar datos maestros para clientes, compañías de seguros y códigos de productos",
+  "agent": "Agente",
+  "agentManagement": "Gestionar comisiones de agentes, calcular pagos y generar informes",
+  "reports": "Informes",
+  "reportsManagement": "Generar informes personalizados para producción, clientes, agentes y reclamaciones",
+  "settings": "Configuración",
+  "settingsManagement": "Configurar ajustes del sistema, acceso de usuarios e información de la empresa",
+  "returnToDashboard": "Volver al panel de control"
+}
