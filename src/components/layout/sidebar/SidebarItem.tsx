@@ -6,6 +6,7 @@ import { LucideIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SubItem {
   label: string;
@@ -34,6 +35,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   subItems
 }) => {
   const { hasPrivilege } = useAuth();
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   
   // Filter sub-items based on user privileges
@@ -64,7 +66,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     >
       <Icon className="h-5 w-5 flex-shrink-0" />
       {!collapsed && (
-        <span className="ml-3 truncate">{label}</span>
+        <span className="ml-3 truncate">{t(label)}</span>
       )}
       {!collapsed && hasSubItems && (
         <svg 
@@ -96,7 +98,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           )}
         >
           {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}
-          <span>{subItem.label}</span>
+          <span>{t(subItem.label)}</span>
         </Link>
       ))}
     </div>
@@ -116,7 +118,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           align="start" 
           className="w-52 p-2 sidebar-hover-card border-sidebar-border z-50"
         >
-          <div className="font-medium text-sm mb-2 border-b border-sidebar-border pb-1">{label}</div>
+          <div className="font-medium text-sm mb-2 border-b border-sidebar-border pb-1">{t(label)}</div>
           <div className="space-y-1">
             {authorizedSubItems?.map((subItem, index) => (
               <Link
@@ -128,7 +130,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                 )}
               >
                 {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}
-                <span>{subItem.label}</span>
+                <span>{t(subItem.label)}</span>
               </Link>
             ))}
           </div>
@@ -145,7 +147,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           <div>{item}</div>
         </TooltipTrigger>
         <TooltipContent side="right" className="sidebar-tooltip">
-          {label}
+          {t(label)}
         </TooltipContent>
       </Tooltip>
     );

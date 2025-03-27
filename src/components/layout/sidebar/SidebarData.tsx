@@ -16,54 +16,54 @@ import {
 export const sidebarItems = [
   {
     icon: LayoutDashboard,
-    label: "Dashboard",
+    label: "dashboard",
     path: "/",
     requiredPrivilege: "dashboard:view"
   },
   {
     icon: FileText,
-    label: "Policies",
+    label: "policies",
     path: "/policies",
     requiredPrivilege: "policies:view"
   },
   {
     icon: Briefcase,
-    label: "Sales",
+    label: "sales",
     path: "/sales",
     requiredPrivilege: "sales:view"
   },
   {
     icon: ClipboardList,
-    label: "Claims",
+    label: "claims",
     path: "/claims",
     requiredPrivilege: "claims:view"
   },
   {
     icon: DollarSign,
-    label: "Finances",
+    label: "finances",
     path: "/finances",
     requiredPrivilege: "finances:view"
   },
   {
     icon: Book,
-    label: "Codebook",
+    label: "codebook",
     path: "/codebook",
     requiredPrivilege: "codebook:view",
     subItems: [
       {
-        label: "Clients",
+        label: "clients",
         path: "/codebook/clients",
         requiredPrivilege: "codebook.clients:view",
         icon: Users
       },
       {
-        label: "Insurance Companies",
+        label: "insuranceCompanies",
         path: "/codebook/companies",
         requiredPrivilege: "codebook.companies:view",
         icon: Building2
       },
       {
-        label: "Insurance Products",
+        label: "insuranceProducts",
         path: "/codebook/products",
         requiredPrivilege: "codebook.codes:view",
         icon: Tag
@@ -72,19 +72,19 @@ export const sidebarItems = [
   },
   {
     icon: CircleDollarSign,
-    label: "Agent",
+    label: "agent",
     path: "/agent",
     requiredPrivilege: "agent:view"
   },
   {
     icon: FileText,
-    label: "Reports",
+    label: "reports",
     path: "/reports",
     requiredPrivilege: "reports:view"
   },
   {
     icon: Settings,
-    label: "Settings",
+    label: "settings",
     path: "/settings",
     requiredPrivilege: "settings:view"
   }

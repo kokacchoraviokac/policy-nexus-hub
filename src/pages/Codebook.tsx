@@ -13,22 +13,22 @@ const Codebook = () => {
 
   const sections = [
     {
-      title: "Clients",
-      description: "Manage client records including contact details and tax information",
+      title: "clients",
+      description: "clientsDescription",
       icon: Users,
       path: "/codebook/clients",
       privilege: "codebook.clients:view"
     },
     {
-      title: "Insurance Companies",
-      description: "Manage insurance company records including branch and parent company details",
+      title: "insuranceCompanies",
+      description: "insuranceCompaniesDescription",
       icon: Building2,
       path: "/codebook/companies",
       privilege: "codebook.companies:view"
     },
     {
-      title: "Insurance Products",
-      description: "Manage product codes for different types of insurance",
+      title: "insuranceProducts",
+      description: "insuranceProductsDescription",
       icon: Tag,
       path: "/codebook/products",
       privilege: "codebook.codes:view"
@@ -39,11 +39,11 @@ const Codebook = () => {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center space-x-2 mb-6">
         <Book className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold tracking-tight">Codebook</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("codebook")}</h1>
       </div>
       
       <p className="text-muted-foreground mb-6">
-        Manage master data including clients, insurance companies, and product codes.
+        {t("codebookDescription")}
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -52,16 +52,16 @@ const Codebook = () => {
             <Card key={section.path} className="hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div className="space-y-1">
-                  <CardTitle className="text-xl">{section.title}</CardTitle>
+                  <CardTitle className="text-xl">{t(section.title)}</CardTitle>
                   <CardDescription>
-                    {section.description}
+                    {t(section.description)}
                   </CardDescription>
                 </div>
                 <section.icon className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardFooter className="pt-4">
                 <Button asChild className="w-full">
-                  <Link to={section.path}>Access {section.title}</Link>
+                  <Link to={section.path}>{t("access")} {t(section.title)}</Link>
                 </Button>
               </CardFooter>
             </Card>

@@ -2,14 +2,17 @@
 import React from "react";
 import PrivilegeTest from "@/components/auth/PrivilegeTest";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PrivilegeTestPage: React.FC = () => {
+  const { t } = useLanguage();
+  
   return (
     <div className="max-w-5xl mx-auto py-6 space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Privilege Testing</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("privilegeTesting")}</h1>
         <p className="text-muted-foreground">
-          Test the role-based access control system to verify permissions are working correctly.
+          {t("privilegeTestingDescription")}
         </p>
       </div>
       
@@ -20,23 +23,23 @@ const PrivilegeTestPage: React.FC = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>How to Use This Tool</CardTitle>
+            <CardTitle>{t("howToUseThisTool")}</CardTitle>
             <CardDescription>
-              Verify that your permission system is working as expected
+              {t("verifyPermissionSystem")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="font-medium">Simple Permission Check</h3>
+              <h3 className="font-medium">{t("simplePermissionCheck")}</h3>
               <p className="text-sm text-muted-foreground">
-                Enter a privilege like "policies:view" to check if the current user has that permission.
+                {t("simplePermissionCheckDescription")}
               </p>
             </div>
             
             <div>
-              <h3 className="font-medium">Context-Based Permission Check</h3>
+              <h3 className="font-medium">{t("contextBasedPermissionCheck")}</h3>
               <p className="text-sm text-muted-foreground">
-                Enable "Use context data" to test permissions that depend on resource ownership or other attributes.
+                {t("contextBasedPermissionCheckDescription")}
               </p>
               <ul className="text-sm text-muted-foreground list-disc pl-5 mt-2">
                 <li>For "own resource" checks, set Owner ID to the current user's ID</li>
@@ -46,7 +49,7 @@ const PrivilegeTestPage: React.FC = () => {
             </div>
             
             <div>
-              <h3 className="font-medium">Example Permissions to Test</h3>
+              <h3 className="font-medium">{t("examplePermissionsToTest")}</h3>
               <ul className="text-sm text-muted-foreground list-disc pl-5">
                 <li>policies:view - Can view policies module</li>
                 <li>policies.own:edit - Can edit own policies</li>

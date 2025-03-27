@@ -1,10 +1,14 @@
+
 import React from "react";
 import { FileText, TrendingUp, ClipboardCheck, DollarSign, Calendar, AlertTriangle, CheckCircle } from "lucide-react";
 import StatCard from "@/components/dashboard/StatCard";
 import ListCard from "@/components/dashboard/ListCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Dashboard = () => {
+  const { t } = useLanguage();
+  
   // Mock data for the dashboard
   const upcomingPolicies = [
     { id: "1", primary: "Auto Insurance - John Doe", secondary: "Policy #A123456", tertiary: "Jul 15", status: "warning" as const },
@@ -26,30 +30,30 @@ const Dashboard = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("dashboard")}</h1>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Total Policies" 
+          title={t("totalPolicies")} 
           value="248" 
           icon={<FileText className="h-5 w-5 text-primary" />} 
           trend={{ value: 12, positive: true }} 
         />
         <StatCard 
-          title="Sales Pipeline" 
+          title={t("salesPipeline")} 
           value="$1.2M" 
           icon={<TrendingUp className="h-5 w-5 text-primary" />} 
           trend={{ value: 8, positive: true }}
         />
         <StatCard 
-          title="Open Claims" 
+          title={t("openClaims")} 
           value="24" 
           icon={<ClipboardCheck className="h-5 w-5 text-primary" />} 
           trend={{ value: 3, positive: false }}
         />
         <StatCard 
-          title="Monthly Revenue" 
+          title={t("monthlyRevenue")} 
           value="$45,821" 
           icon={<DollarSign className="h-5 w-5 text-primary" />} 
           trend={{ value: 5, positive: true }}
@@ -58,29 +62,29 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <ListCard 
-          title="Upcoming Policies" 
+          title={t("upcomingPolicies")} 
           items={upcomingPolicies} 
           icon={<Calendar className="h-5 w-5" />}
           onItemClick={(id) => console.log("Clicked policy", id)}
-          actionLabel="View All"
+          actionLabel={t("viewAll")}
           onAction={() => console.log("View all upcoming policies")}
         />
         
         <ListCard 
-          title="Incomplete Policies" 
+          title={t("incompletePolicies")} 
           items={incompletePolicies} 
           icon={<AlertTriangle className="h-5 w-5" />}
           onItemClick={(id) => console.log("Clicked incomplete policy", id)}
-          actionLabel="Process All"
+          actionLabel={t("processAll")}
           onAction={() => console.log("Process all incomplete policies")}
         />
         
         <ListCard 
-          title="Open Claims" 
+          title={t("openClaims")} 
           items={openClaims} 
           icon={<ClipboardCheck className="h-5 w-5" />}
           onItemClick={(id) => console.log("Clicked claim", id)}
-          actionLabel="View All"
+          actionLabel={t("viewAll")}
           onAction={() => console.log("View all open claims")}
         />
       </div>
@@ -88,8 +92,8 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="animate-enter">
           <CardHeader>
-            <CardTitle>Sales Pipeline Overview</CardTitle>
-            <CardDescription>Current leads by stage</CardDescription>
+            <CardTitle>{t("salesPipelineOverview")}</CardTitle>
+            <CardDescription>{t("currentLeadsByStage")}</CardDescription>
           </CardHeader>
           <CardContent className="h-[200px] flex items-center justify-center">
             <div className="text-muted-foreground">Sales pipeline visualization</div>
@@ -98,8 +102,8 @@ const Dashboard = () => {
         
         <Card className="animate-enter">
           <CardHeader>
-            <CardTitle>Ready-to-Input Policies</CardTitle>
-            <CardDescription>Policies with complete data awaiting finalization</CardDescription>
+            <CardTitle>{t("readyToInputPolicies")}</CardTitle>
+            <CardDescription>{t("policiesWithCompleteData")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -109,7 +113,7 @@ const Dashboard = () => {
                   <p className="text-xs text-muted-foreground">Policy #H567890</p>
                 </div>
                 <button className="text-xs bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md transition-colors">
-                  Finalize
+                  {t("finalize")}
                 </button>
               </div>
               
@@ -119,13 +123,13 @@ const Dashboard = () => {
                   <p className="text-xs text-muted-foreground">Policy #P123456</p>
                 </div>
                 <button className="text-xs bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md transition-colors">
-                  Finalize
+                  {t("finalize")}
                 </button>
               </div>
               
               <div className="flex items-center justify-center">
                 <button className="text-sm text-primary hover:text-primary/80 font-medium">
-                  View All Ready Policies
+                  {t("viewAllReadyPolicies")}
                 </button>
               </div>
             </div>

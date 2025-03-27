@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -6,9 +7,11 @@ import { Link } from "react-router-dom";
 import { Users, Building, FileText, Mail, Shield } from "lucide-react";
 import CompanyManagement from "@/components/settings/CompanyManagement";
 import InvitationManagement from "@/components/settings/InvitationManagement";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Settings = () => {
   const { hasPrivilege } = useAuth();
+  const { t } = useLanguage();
   
   const canManageUsers = hasPrivilege("users:manage");
   const isSuperAdmin = hasPrivilege("company:manage");
@@ -16,9 +19,9 @@ const Settings = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("settings")}</h1>
         <p className="text-muted-foreground">
-          Configure system settings, manage user accounts, and set privileges.
+          {t("settingsDescription")}
         </p>
       </div>
       
@@ -39,18 +42,18 @@ const Settings = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center space-x-2">
                 <Users className="h-5 w-5 text-primary" />
-                <CardTitle>User Management</CardTitle>
+                <CardTitle>{t("userManagement")}</CardTitle>
               </div>
               <CardDescription>
-                Manage users and their roles
+                {t("userManagementDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Add, edit, or remove users and assign appropriate roles based on their responsibilities.
+                {t("userManagementDescription")}
               </p>
               <Button variant="outline" className="w-full" asChild>
-                <Link to="/settings/users">Manage Users</Link>
+                <Link to="/settings/users">{t("manageUsers")}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -60,18 +63,18 @@ const Settings = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center space-x-2">
               <Building className="h-5 w-5 text-primary" />
-              <CardTitle>Company Data</CardTitle>
+              <CardTitle>{t("companyData")}</CardTitle>
             </div>
             <CardDescription>
-              Manage company information
+              {t("companyDataDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Update your company details, address, contact information, and registration numbers.
+              {t("companyDataDescription")}
             </p>
             <Button variant="outline" className="w-full" disabled>
-              Edit Company Data
+              {t("editCompanyData")}
             </Button>
           </CardContent>
         </Card>
@@ -80,18 +83,18 @@ const Settings = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center space-x-2">
               <FileText className="h-5 w-5 text-primary" />
-              <CardTitle>Instructions</CardTitle>
+              <CardTitle>{t("instructions")}</CardTitle>
             </div>
             <CardDescription>
-              Manage internal guidelines
+              {t("instructionsDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Create and edit instruction documents to help users understand system functionality.
+              {t("instructionsDescription")}
             </p>
             <Button variant="outline" className="w-full" disabled>
-              Manage Instructions
+              {t("manageInstructions")}
             </Button>
           </CardContent>
         </Card>
@@ -100,18 +103,18 @@ const Settings = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center space-x-2">
               <Mail className="h-5 w-5 text-primary" />
-              <CardTitle>Email Settings</CardTitle>
+              <CardTitle>{t("emailSettings")}</CardTitle>
             </div>
             <CardDescription>
-              Configure email notifications
+              {t("emailSettingsDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Set up email templates, signature, and notification preferences.
+              {t("emailSettingsDescription")}
             </p>
             <Button variant="outline" className="w-full" disabled>
-              Configure Email
+              {t("configureEmail")}
             </Button>
           </CardContent>
         </Card>
@@ -120,18 +123,18 @@ const Settings = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center space-x-2">
               <Shield className="h-5 w-5 text-primary" />
-              <CardTitle>Privilege Testing</CardTitle>
+              <CardTitle>{t("privilegeTesting")}</CardTitle>
             </div>
             <CardDescription>
-              Test and verify permissions
+              {t("privilegeTestingDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Validate that role-based permissions are working as expected for different user roles.
+              {t("privilegeTestingDescription")}
             </p>
             <Button variant="outline" className="w-full" asChild>
-              <Link to="/settings/privileges/test">Test Privileges</Link>
+              <Link to="/settings/privileges/test">{t("testPrivileges")}</Link>
             </Button>
           </CardContent>
         </Card>
