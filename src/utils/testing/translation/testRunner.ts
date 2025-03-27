@@ -1,4 +1,3 @@
-
 import en from '../../../locales/en.json';
 import sr from '../../../locales/sr/index';
 import mk from '../../../locales/mk/index';
@@ -7,6 +6,7 @@ import { testTranslationExists } from './existenceTest';
 import { testTranslationParameters } from './parameterTest';
 import { testHtmlTranslations } from './htmlTest';
 import { TestCaseResult, TranslationTestReport } from './types';
+import { generateTranslationWorkflow } from '../../devTools/translation';
 
 /**
  * Runs all translation tests on every translation key

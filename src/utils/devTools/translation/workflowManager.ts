@@ -1,33 +1,26 @@
 
 /**
- * Translation Manager - Development Tool
+ * Translation Workflow Manager
  * 
- * This utility helps manage translations across different language files.
- * It provides functions to:
- * 1. Export translation keys that need attention
- * 2. Import updated translations
- * 3. Track translation workflow status
- * 
- * Usage in browser console:
- *   import('/src/utils/devTools/translationManager.js').then(m => m.exportMissingTranslations())
+ * Utilities for tracking and reporting on translation workflow status
  */
 
-import en from '../../locales/en.json';
-import sr from '../../locales/sr/index';
-import mk from '../../locales/mk/index';
-import es from '../../locales/es/index';
-import { generateTranslationReport } from '../translationValidator';
+import en from '../../../locales/en.json';
+import sr from '../../../locales/sr/index';
+import mk from '../../../locales/mk/index';
+import es from '../../../locales/es/index';
+import { generateTranslationReport } from '../../translationValidator';
 import { Language } from '@/contexts/LanguageContext';
 
 /**
  * Status of a translation key workflow
  */
-type TranslationStatus = 'complete' | 'missing' | 'needs-review' | 'in-progress';
+export type TranslationStatus = 'complete' | 'missing' | 'needs-review' | 'in-progress';
 
 /**
  * A record to track translation workflow
  */
-interface TranslationWorkflow {
+export interface TranslationWorkflow {
   key: string;
   english: string;
   languages: Record<string, {
@@ -36,64 +29,6 @@ interface TranslationWorkflow {
     lastUpdated?: string;
   }>;
 }
-
-/**
- * Creates a CSV string for missing translations
- */
-export const exportMissingTranslations = (language?: Language) => {
-  const report = generateTranslationReport();
-  
-  // If no language specified, export all languages
-  const languagesToExport = language ? [language] : ['sr', 'mk', 'es'];
-  let csvContent = "key,english";
-  
-  languagesToExport.forEach(lang => {
-    csvContent += `,${lang}`;
-  });
-  
-  csvContent += "\n";
-  
-  // Get all keys from English as the source
-  const sourceKeys = Object.keys(en);
-  
-  sourceKeys.forEach(key => {
-    const englishText = en[key].replace(/,/g, '\\,').replace(/\n/g, '\\n');
-    let row = `"${key}","${englishText}"`;
-    
-    languagesToExport.forEach(lang => {
-      const targetLang = lang as Language;
-      const translations = { sr, mk, es };
-      
-      if (report.missingKeys[targetLang].includes(key)) {
-        // Missing translation
-        row += `,""`;
-      } else {
-        // Existing translation
-        const text = translations[targetLang][key].replace(/,/g, '\\,').replace(/\n/g, '\\n');
-        row += `,${text ? `"${text}"` : ''}`;
-      }
-    });
-    
-    csvContent += row + "\n";
-  });
-  
-  // Create a downloadable file
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  
-  link.setAttribute("href", url);
-  link.setAttribute("download", language 
-    ? `policyhub_translations_${language}.csv` 
-    : "policyhub_translations_all.csv");
-  
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  console.log(`Exported translations to CSV${language ? ` for ${language.toUpperCase()}` : ''}`);
-  return csvContent;
-};
 
 /**
  * Generates a workflow status for all translations
@@ -208,24 +143,4 @@ export const reportTranslationWorkflow = () => {
   console.groupEnd(); // Translation Workflow Status
   
   return { workflow, stats };
-};
-
-// Create a global access point for the translation manager in development
-if (process.env.NODE_ENV !== 'production') {
-  // @ts-ignore
-  window.__translationManager = {
-    exportMissingTranslations,
-    generateTranslationWorkflow,
-    reportTranslationWorkflow
-  };
-  
-  console.log('Translation manager available. Use these functions in the console:');
-  console.log('- window.__translationManager.exportMissingTranslations()');
-  console.log('- window.__translationManager.reportTranslationWorkflow()');
-}
-
-export default {
-  exportMissingTranslations,
-  generateTranslationWorkflow,
-  reportTranslationWorkflow
 };

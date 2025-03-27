@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, Download } from 'lucide-react';
 import { Language } from '@/contexts/LanguageContext';
 import { generateTranslationReport } from '@/utils/translationValidator';
-import { exportMissingTranslations } from '@/utils/devTools/translationManager';
+import { exportMissingTranslations } from '@/utils/devTools/translation';
 
 interface TranslationDashboardProps {
   exportLanguage: Language | 'all';
