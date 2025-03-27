@@ -1,11 +1,12 @@
 
-import { useAuth } from "@/contexts/auth/AuthContext";
 import { User, UserRole, CustomPrivilege } from "@/types/auth";
 import { checkPrivilege, checkPrivilegeWithContext } from "@/utils/authUtils";
 
-export function usePrivilegeCheck() {
-  const { user, customPrivileges, isAuthenticated } = useAuth();
-
+export function usePrivilegeCheck(
+  user: User | null,
+  isAuthenticated: boolean,
+  customPrivileges: CustomPrivilege[]
+) {
   // Function to check if user has a specific privilege
   const hasPrivilege = (privilege: string) => {
     if (!user || !isAuthenticated) {

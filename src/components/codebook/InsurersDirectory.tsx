@@ -1,59 +1,123 @@
 
-import React from "react";
-import { useInsurerDirectory } from "@/components/codebook/insurers/useInsurerDirectory";
-import InsurersHeader from "@/components/codebook/insurers/InsurersHeader";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { PlusCircle, Info } from "lucide-react";
+import { useInsurers } from "@/hooks/useInsurers";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { usePrivilegeCheck } from "@/hooks/usePrivilegeCheck";
+import { useSimpleSavedFilters } from "@/hooks/useSimpleSavedFilters";
+import { Button } from "@/components/ui/button";
+import DataTable from "@/components/ui/data-table";
+import { getInsurerColumns } from "@/components/codebook/insurers/InsurersTable";
 import InsurersFilters from "@/components/codebook/insurers/InsurersFilters";
-import InsurersTable from "@/components/codebook/insurers/InsurersTable";
-import InsurersPrivilegeNotice from "@/components/codebook/insurers/InsurersPrivilegeNotice";
+import ImportExportButtons from "@/components/codebook/ImportExportButtons";
 import InsurerFormDialog from "@/components/codebook/dialogs/InsurerFormDialog";
 import AdvancedFilterDialog from "@/components/codebook/filters/AdvancedFilterDialog";
+import { CodebookFilterState, Insurer } from "@/types/codebook";
+import { useAuth } from "@/contexts/AuthContext";
 
 const InsurersDirectory: React.FC = () => {
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  const { hasPrivilege } = usePrivilegeCheck();
+  const { user } = useAuth();
+  
+  const [formOpen, setFormOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  
   const {
-    // Data
     insurers,
     isLoading,
     searchTerm,
-    filters,
-    savedFilters,
-    pagination,
-    
-    // UI state
-    formOpen,
-    setFormOpen,
-    filterDialogOpen,
-    setFilterDialogOpen,
-    
-    // Actions
-    handleViewDetails,
-    handleAddInsurer,
     setSearchTerm,
+    filters,
     handleFilterChange,
     handleClearFilter,
-    resetFilters,
     getActiveFilterCount,
+    addInsurer,
+    resetFilters,
+    pagination
+  } = useInsurers();
+  
+  const {
+    savedFilters,
     saveFilter,
     deleteFilter,
     parseFilterData,
-    getExportData,
-    
-    // Status
     isSaving,
-    isDeleting,
-    
-    // Permissions
-    canAddInsurer,
-    canImportExport
-  } = useInsurerDirectory();
+    isDeleting
+  } = useSimpleSavedFilters('insurers', user?.id, user?.companyId);
+
+  const handleViewDetails = (id: string) => {
+    navigate(`/codebook/companies/${id}`);
+  };
+
+  const handleAddInsurer = async (formData: any) => {
+    try {
+      const result = await addInsurer({
+        name: formData.name,
+        contact_person: formData.contactPerson || null,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        postal_code: formData.postalCode || null,
+        country: formData.country || null,
+        registration_number: formData.registrationNumber || null,
+        is_active: formData.isActive,
+        company_id: formData.companyId
+      });
+      
+      if (result?.id) {
+        setFormOpen(false);
+      }
+    } catch (error) {
+      console.error("Error adding insurer:", error);
+    }
+  };
+
+  const canAddInsurer = hasPrivilege('codebook.insurers.create');
+  const canImportExport = hasPrivilege('codebook.insurers.import') || hasPrivilege('codebook.insurers.export');
+
+  const getExportData = () => {
+    return insurers.map(insurer => ({
+      name: insurer.name,
+      contact_person: insurer.contact_person || '',
+      email: insurer.email || '',
+      phone: insurer.phone || '',
+      address: insurer.address || '',
+      city: insurer.city || '',
+      country: insurer.country || '',
+      is_active: insurer.is_active ? 'Active' : 'Inactive'
+    }));
+  };
 
   return (
     <div className="space-y-6">
-      <InsurersHeader
-        onAddInsurer={() => setFormOpen(true)}
-        canAddInsurer={canAddInsurer}
-        canImportExport={canImportExport}
-        getExportData={getExportData}
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">{t("insuranceCompanies")}</h2>
+          <p className="text-muted-foreground">
+            {t("insuranceCompaniesDescription")}
+          </p>
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          {canImportExport && (
+            <ImportExportButtons
+              getData={getExportData}
+              entityName={t('insuranceCompanies')}
+            />
+          )}
+          
+          {canAddInsurer && (
+            <Button onClick={() => setFormOpen(true)}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              {t("addInsurer")}
+            </Button>
+          )}
+        </div>
+      </div>
 
       <InsurersFilters
         searchTerm={searchTerm}
@@ -72,13 +136,28 @@ const InsurersDirectory: React.FC = () => {
         showSavedFilters={true}
       />
       
-      <InsurersTable
-        insurers={insurers}
+      <DataTable
+        data={insurers}
+        columns={getInsurerColumns((id) => handleViewDetails(id))}
         isLoading={isLoading}
-        canAddInsurer={canAddInsurer}
-        onViewDetails={handleViewDetails}
-        onAddInsurer={() => setFormOpen(true)}
-        pagination={pagination}
+        emptyState={{
+          title: t("noInsurersFound"),
+          description: t("noInsurersFoundDescription"),
+          action: canAddInsurer ? (
+            <Button onClick={() => setFormOpen(true)}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              {t("addInsurer")}
+            </Button>
+          ) : undefined
+        }}
+        pagination={{
+          currentPage: pagination.page,
+          pageSize: pagination.pageSize,
+          totalItems: pagination.totalCount,
+          onPageChange: pagination.setPage,
+          onPageSizeChange: pagination.setPageSize,
+          pageSizeOptions: [10, 25, 50, 100]
+        }}
       />
       
       <InsurerFormDialog
@@ -101,10 +180,12 @@ const InsurersDirectory: React.FC = () => {
         }}
       />
       
-      <InsurersPrivilegeNotice 
-        canAddInsurer={canAddInsurer} 
-        canImportExport={canImportExport} 
-      />
+      {!canAddInsurer && !canImportExport && (
+        <div className="flex items-center justify-center p-4 bg-muted/50 rounded-lg mt-4">
+          <Info className="h-5 w-5 mr-2 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">{t("noInsurersPrivileges")}</p>
+        </div>
+      )}
     </div>
   );
 };

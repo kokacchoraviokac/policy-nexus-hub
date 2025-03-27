@@ -3,23 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CodebookFilterState } from '@/types/codebook';
-import { SavedFilter } from '@/types/savedFilters';
-import { EntityType } from '@/types/savedFilters';
+import { SavedFilter, EntityType } from '@/types/savedFilters';
 
 export function useSimpleSavedFilters(
   entityType: EntityType, 
-  userId: string, 
-  companyId: string
+  userId?: string, 
+  companyId?: string
 ) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
   // Fetch saved filters
-  const { 
-    data: savedFilters = [], 
-    isLoading,
-    error
-  } = useQuery({
+  const { data: savedFilters, isLoading } = useQuery({
     queryKey: ['savedFilters', entityType, userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -33,11 +28,11 @@ export function useSimpleSavedFilters(
       if (error) {
         console.error('Error fetching saved filters:', error);
         toast({
-          title: 'Error fetching saved filters',
-          description: error.message,
+          title: 'Error',
+          description: 'Could not load saved filters',
           variant: 'destructive',
         });
-        throw error;
+        return [];
       }
       
       return data as SavedFilter[];
@@ -47,39 +42,43 @@ export function useSimpleSavedFilters(
 
   // Save filter mutation
   const saveFilterMutation = useMutation({
-    mutationFn: async (params: { name: string, filters: CodebookFilterState }) => {
-      const { name, filters } = params;
+    mutationFn: async ({ name, filters }: { name: string, filters: CodebookFilterState }) => {
+      if (!userId) throw new Error('User ID is required');
       
       const newFilter = {
         name,
         entity_type: entityType,
-        filters: JSON.stringify(filters), // Convert to JSON string
+        filters: JSON.stringify(filters),
         user_id: userId,
-        company_id: companyId
+        company_id: companyId || '00000000-0000-0000-0000-000000000000'
       };
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('saved_filters')
         .insert(newFilter);
       
       if (error) throw error;
       
-      return data;
+      return true;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType, userId] });
+      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType] });
+      toast({
+        title: 'Success',
+        description: 'Filter saved successfully',
+      });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       console.error('Error saving filter:', error);
       toast({
-        title: 'Error saving filter',
-        description: error.message,
+        title: 'Error',
+        description: 'Could not save filter',
         variant: 'destructive',
       });
     }
   });
 
-  // Delete filter mutation  
+  // Delete filter mutation
   const deleteFilterMutation = useMutation({
     mutationFn: async (filterId: string) => {
       const { error } = await supabase
@@ -88,55 +87,43 @@ export function useSimpleSavedFilters(
         .eq('id', filterId);
       
       if (error) throw error;
+      
+      return true;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType, userId] });
-      
+      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType] });
       toast({
-        title: 'Filter deleted',
-        description: 'The filter has been deleted successfully',
+        title: 'Success',
+        description: 'Filter deleted successfully',
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       console.error('Error deleting filter:', error);
       toast({
-        title: 'Error deleting filter',
-        description: error.message,
+        title: 'Error',
+        description: 'Could not delete filter',
         variant: 'destructive',
       });
     }
   });
 
-  // Handle saving a filter
-  const saveFilter = (name: string, filters: CodebookFilterState) => {
-    saveFilterMutation.mutate({ name, filters });
-  };
-
-  // Handle deleting a filter
-  const deleteFilter = (filterId: string) => {
-    deleteFilterMutation.mutate(filterId);
-  };
-
-  // Parse the stored filter string back to CodebookFilterState
-  const parseFilterData = (filter: SavedFilter): CodebookFilterState => {
+  // Helper function to parse filter data
+  const parseFilterData = (filterData: SavedFilter): CodebookFilterState => {
     try {
-      if (typeof filter.filters === 'string') {
-        return JSON.parse(filter.filters) as CodebookFilterState;
-      }
-      // For backward compatibility
-      return filter.filters as unknown as CodebookFilterState;
+      return JSON.parse(filterData.filters) as CodebookFilterState;
     } catch (error) {
-      console.error('Error parsing filter data:', error);
-      return { status: 'all' };
+      console.error("Error parsing filter data:", error);
+      return {};
     }
   };
 
   return {
-    savedFilters,
+    savedFilters: savedFilters || [],
     isLoading,
-    error,
-    saveFilter,
-    deleteFilter,
+    saveFilter: (name: string, filters: CodebookFilterState) => 
+      saveFilterMutation.mutate({ name, filters }),
+    deleteFilter: (filterId: string) => 
+      deleteFilterMutation.mutate(filterId),
     parseFilterData,
     isSaving: saveFilterMutation.isPending,
     isDeleting: deleteFilterMutation.isPending
