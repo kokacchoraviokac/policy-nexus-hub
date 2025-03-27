@@ -1,3 +1,4 @@
+
 {
   "welcome": "Welcome",
   "signInDescription": "Sign in to your account or create a new one",
@@ -93,6 +94,19 @@
   "insuranceProducts": "Insurance Products",
   "insuranceProductsDescription": "Manage product codes for different types of insurance",
   "access": "Access",
+  
+  "policies": "Policies",
+  "policyManagement": "Policy Management",
+  "allPolicies": "All Policies",
+  "policiesWorkflow": "Policies Workflow",
+  "policyAddendums": "Policy Addendums",
+  "unlinkedPayments": "Unlinked Payments",
+  "documents": "Documents",
+  "policyDirectory": "Policy Directory",
+  "policyProcessing": "Policy Processing",
+  "policyAmendments": "Policy Amendments",
+  "unmatchedPayments": "Unmatched Payments",
+  "policyDocuments": "Policy Documents",
 
   "settings": "Settings",
   "settingsDescription": "Configure system settings, manage user accounts, and set privileges.",
