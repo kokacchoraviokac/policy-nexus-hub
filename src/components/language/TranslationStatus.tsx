@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { generateTranslationReport } from '@/utils/translationValidator';
+import { runTranslationTests } from '@/utils/testing/translationTester';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TranslationStatusProps {
@@ -42,31 +43,62 @@ const TranslationStatus: React.FC<TranslationStatusProps> = ({ showDetails = fal
       console.groupEnd();
     }
   };
+  
+  const handleRunTests = () => {
+    runTranslationTests();
+  };
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="flex items-center">
-            <Badge variant="outline" className="cursor-help bg-yellow-50 text-yellow-800 border-yellow-300">
-              {missingCount} missing translations
+            <Badge 
+              variant="outline" 
+              className={`cursor-help ${
+                missingCount > 0 
+                  ? "bg-yellow-50 text-yellow-800 border-yellow-300" 
+                  : "bg-green-50 text-green-800 border-green-300"
+              }`}
+            >
+              {missingCount > 0 
+                ? `${missingCount} missing translations` 
+                : "All translations complete"}
             </Badge>
             {showDetails && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="ml-2 h-6 text-xs"
-                onClick={handleShowFullReport}
-              >
-                Show Report
-              </Button>
+              <div className="flex ml-2 space-x-1">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 text-xs"
+                  onClick={handleShowFullReport}
+                >
+                  Show Report
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 text-xs"
+                  onClick={handleRunTests}
+                >
+                  Run Tests
+                </Button>
+              </div>
             )}
           </div>
         </TooltipTrigger>
         <TooltipContent>
           <p>Current language: {language.toUpperCase()}</p>
-          <p>{missingCount} keys are missing translations</p>
-          <p className="text-xs mt-1">Open console and click "Show Report" for details</p>
+          {missingCount > 0 ? (
+            <p>{missingCount} keys are missing translations</p>
+          ) : (
+            <p>All translations are complete!</p>
+          )}
+          <p className="text-xs mt-1">
+            {showDetails 
+              ? "Click 'Show Report' for details or 'Run Tests' for validation" 
+              : "Open console and click 'Show Report' for details"}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

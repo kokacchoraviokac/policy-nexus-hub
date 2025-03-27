@@ -3,6 +3,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { processDynamicTranslation } from "@/utils/testing/translationTester";
 
 interface DeleteConfirmationDialogProps {
   open: boolean;
@@ -21,15 +22,19 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
 }) => {
   const { t } = useLanguage();
   
+  // Process the confirmation message with dynamic content
+  const confirmationMessage = processDynamicTranslation(
+    t("deleteConfirmation"), 
+    { 0: `<span class="font-medium">${entityTitle}</span>` }
+  );
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("delete") + " " + t(entityName)}</DialogTitle>
           <DialogDescription>
-            <div dangerouslySetInnerHTML={{ 
-              __html: t("deleteConfirmation").replace("{0}", `<span class="font-medium">${entityTitle}</span>`) 
-            }} />
+            <div dangerouslySetInnerHTML={{ __html: confirmationMessage }} />
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
