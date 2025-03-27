@@ -2,6 +2,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DeleteConfirmationDialogProps {
   open: boolean;
@@ -18,21 +19,23 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
   entityName,
   entityTitle,
 }) => {
+  const { t } = useLanguage();
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete {entityName}</DialogTitle>
+          <DialogTitle>{t("delete") + " " + t(entityName)}</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete <span className="font-medium">{entityTitle}</span>? This action cannot be undone.
+            {t("deleteConfirmation").replace("{0}", entityTitle)}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button variant="destructive" onClick={onDelete}>
-            Delete
+            {t("delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

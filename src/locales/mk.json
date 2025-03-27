@@ -147,5 +147,6 @@
   "simplePermissionCheckDescription": "Внесете привилегија како \"policies:view\" за да проверите дали тековниот корисник ја има таа дозвола.",
   "contextBasedPermissionCheck": "Проверка на привилегии базирана на контекст",
   "contextBasedPermissionCheckDescription": "Овозможете \"Користи контекстни податоци\" за тестирање на дозволи кои зависат од сопственост на ресурси или други атрибути.",
-  "examplePermissionsToTest": "Примери на привилегии за тестирање"
+  "examplePermissionsToTest": "Примери на привилегии за тестирање",
+  "deleteConfirmation": "Дали сте сигурни дека сакате да го избришете <span class=\"font-medium\">{0}</span>? Оваа акција не може да се поништи."
 }

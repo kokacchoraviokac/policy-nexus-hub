@@ -247,6 +247,7 @@
   "importFailed": "Uvoz nije uspeo",
   "importFailedDescription": "Došlo je do greške prilikom obrade uvezenih podataka.",
   "areYouSure": "Da li ste sigurni?",
+  "deleteConfirmation": "Da li ste sigurni da želite da obrišete <span class=\"font-medium\">{0}</span>? Ova akcija se ne može poništiti.",
   "deleteClientConfirmation": "Ovo će trajno izbrisati klijenta \"{0}\". Ova akcija se ne može poništiti.",
   "deleteInsurerConfirmation": "Ovo će trajno izbrisati osiguravajuću kompaniju \"{0}\". Ova akcija se ne može poništiti.",
   "deleteProductConfirmation": "Ovo će trajno izbrisati proizvod \"{0}\". Ova akcija se ne može poništiti.",

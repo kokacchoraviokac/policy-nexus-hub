@@ -144,5 +144,6 @@
   "analyticsModuleDescription": "This section will provide reporting and analytics tools.",
   "salesLeadModule": "Sales & Lead Management Module",
   "salesModuleDescription": "This section will provide tools for managing the sales process.",
-  "redirecting": "Redirecting..."
+  "redirecting": "Redirecting...",
+  "deleteConfirmation": "Are you sure you want to delete <span class=\"font-medium\">{0}</span>? This action cannot be undone."
 }

@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { formatDate, formatNumber, formatCurrency, formatRelativeTime } from '../utils/formatters';
 
 // Supported languages based on the requirements
 export type Language = 'en' | 'sr' | 'mk' | 'es';
@@ -8,6 +9,10 @@ type LanguageContextType = {
   language: Language;
   setLanguage: (language: Language) => void;
   t: (key: string) => string;
+  formatDate: (date: Date | string | number) => string;
+  formatNumber: (number: number, options?: Intl.NumberFormatOptions) => string;
+  formatCurrency: (amount: number, currencyCode?: string) => string;
+  formatRelativeTime: (date: Date | string | number) => string;
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -89,10 +94,27 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     return translation;
   };
 
+  // Formatting helper functions that use the current language
+  const formatDateWithCurrentLang = (date: Date | string | number) => 
+    formatDate(date, language);
+    
+  const formatNumberWithCurrentLang = (number: number, options?: Intl.NumberFormatOptions) => 
+    formatNumber(number, language, options);
+    
+  const formatCurrencyWithCurrentLang = (amount: number, currencyCode: string = 'EUR') => 
+    formatCurrency(amount, language, currencyCode);
+    
+  const formatRelativeTimeWithCurrentLang = (date: Date | string | number) => 
+    formatRelativeTime(date, language);
+
   const value = {
     language,
     setLanguage,
-    t
+    t,
+    formatDate: formatDateWithCurrentLang,
+    formatNumber: formatNumberWithCurrentLang,
+    formatCurrency: formatCurrencyWithCurrentLang,
+    formatRelativeTime: formatRelativeTimeWithCurrentLang
   };
 
   return (
