@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -50,6 +49,19 @@ const SavedFiltersMenu: React.FC<SavedFiltersMenuProps> = ({
     }
   };
 
+  const parseFilterData = (filterData: SavedFilter): CodebookFilterState => {
+    try {
+      if (typeof filterData.filters === 'object' && filterData.filters !== null) {
+        return filterData.filters as CodebookFilterState;
+      }
+      
+      return JSON.parse(filterData.filters as unknown as string) as CodebookFilterState;
+    } catch (error) {
+      console.error("Error parsing filter data:", error);
+      return {};
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -69,7 +81,7 @@ const SavedFiltersMenu: React.FC<SavedFiltersMenuProps> = ({
             <DropdownMenuItem
               key={filter.id}
               className="flex justify-between items-center cursor-pointer"
-              onClick={() => onApplyFilter(filter.filters)}
+              onClick={() => onApplyFilter(parseFilterData(filter))}
             >
               <span className="truncate">{filter.name}</span>
               <Button
