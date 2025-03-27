@@ -1825,6 +1825,36 @@ export type Database = {
           },
         ]
       }
+      saved_filters: {
+        Row: {
+          company_id: string
+          created_at: string
+          entity_type: string
+          filters: Json
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          entity_type: string
+          filters: Json
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          entity_type?: string
+          filters?: Json
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_reports: {
         Row: {
           columns: Json | null

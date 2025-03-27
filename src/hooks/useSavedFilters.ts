@@ -1,124 +1,121 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/auth/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { CodebookFilterState, SavedFilter } from '@/types/codebook';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useSavedFilters(entityType: 'insurers' | 'clients' | 'products') {
-  const { t } = useLanguage();
   const { toast } = useToast();
-  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
-
-  const {
-    data: savedFilters,
+  const { user } = useAuth();
+  
+  // Fetch saved filters for the current user and entity type
+  const { 
+    data: savedFilters, 
     isLoading,
-    isError,
     error
   } = useQuery({
-    queryKey: ['savedFilters', entityType, user?.id],
+    queryKey: ['savedFilters', entityType],
     queryFn: async () => {
       if (!user?.id) return [];
       
       const { data, error } = await supabase
         .from('saved_filters')
         .select('*')
-        .eq('entity_type', entityType)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('entity_type', entityType);
       
       if (error) {
         console.error('Error fetching saved filters:', error);
+        toast({
+          title: 'Error fetching saved filters',
+          description: error.message,
+          variant: 'destructive',
+        });
         throw error;
       }
       
       return data as SavedFilter[];
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
   });
 
-  const saveFilterMutation = useMutation({
-    mutationFn: async ({ name, filters }: { name: string, filters: CodebookFilterState }) => {
-      if (!user?.id || !user?.companyId) {
-        throw new Error('User not authenticated');
-      }
-      
-      const { data, error } = await supabase
-        .from('saved_filters')
-        .insert({
-          name,
-          entity_type: entityType,
-          filters,
-          user_id: user.id,
-          company_id: user.companyId
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error saving filter:', error);
-        throw error;
-      }
-      
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType, user?.id] });
+  // Save a new filter
+  const saveFilter = async (name: string, filters: CodebookFilterState): Promise<void> => {
+    if (!user?.id) {
+      toast({
+        title: 'Authentication required',
+        description: 'You must be logged in to save filters',
+        variant: 'destructive',
+      });
+      return;
     }
-  });
-
-  const deleteFilterMutation = useMutation({
-    mutationFn: async (filterId: string) => {
+    
+    const newFilter = {
+      name,
+      entity_type: entityType,
+      filters,
+      user_id: user.id,
+      company_id: user.company_id || '00000000-0000-0000-0000-000000000000' // Fallback if no company_id
+    };
+    
+    try {
       const { error } = await supabase
         .from('saved_filters')
-        .delete()
-        .eq('id', filterId)
-        .eq('user_id', user?.id);
+        .insert(newFilter);
       
-      if (error) {
-        console.error('Error deleting filter:', error);
-        throw error;
-      }
+      if (error) throw error;
       
-      return filterId;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType, user?.id] });
-    }
-  });
-
-  const saveFilter = async (name: string, filters: CodebookFilterState) => {
-    try {
-      await saveFilterMutation.mutateAsync({ name, filters });
-      return true;
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType] });
+      
+      toast({
+        title: 'Filter saved',
+        description: `Filter "${name}" has been saved successfully`,
+      });
+    } catch (error: any) {
       console.error('Error saving filter:', error);
-      return false;
+      toast({
+        title: 'Error saving filter',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
     }
   };
 
-  const deleteFilter = async (filterId: string) => {
+  // Delete a saved filter
+  const deleteFilter = async (filterId: string): Promise<void> => {
     try {
-      await deleteFilterMutation.mutateAsync(filterId);
-      return true;
-    } catch (error) {
+      const { error } = await supabase
+        .from('saved_filters')
+        .delete()
+        .eq('id', filterId);
+      
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType] });
+      
+      toast({
+        title: 'Filter deleted',
+        description: 'The filter has been deleted successfully',
+      });
+    } catch (error: any) {
       console.error('Error deleting filter:', error);
-      return false;
+      toast({
+        title: 'Error deleting filter',
+        description: error.message,
+        variant: 'destructive',
+      });
+      throw error;
     }
   };
 
   return {
     savedFilters: savedFilters || [],
     isLoading,
-    isError,
     error,
     saveFilter,
-    deleteFilter,
-    isSaveDialogOpen,
-    setIsSaveDialogOpen
+    deleteFilter
   };
 }

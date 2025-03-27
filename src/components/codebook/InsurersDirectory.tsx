@@ -1,200 +1,192 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { PlusCircle, Info } from "lucide-react";
 import { useInsurers } from "@/hooks/useInsurers";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/auth/AuthContext";
+import { usePrivilegeCheck } from "@/hooks/usePrivilegeCheck";
 import { useSavedFilters } from "@/hooks/useSavedFilters";
-import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
-import SaveFilterDialog from "./filters/SaveFilterDialog";
-import InsurersTable from "./insurers/InsurersTable";
-import InsurersFilters from "./insurers/InsurersFilters";
-import InsurersActionButtons from "./insurers/InsurersActionButtons";
-import InsurerFormManager from "./insurers/InsurerFormManager";
-import { Insurer } from "@/types/codebook";
+import { Button } from "@/components/ui/button";
+import DataTable from "@/components/ui/data-table";
+import InsurersTable from "@/components/codebook/insurers/InsurersTable";
+import InsurersFilters from "@/components/codebook/insurers/InsurersFilters";
+import ImportExportButtons from "@/components/codebook/ImportExportButtons";
+import InsurerFormManager from "@/components/codebook/insurers/InsurerFormManager";
+import AdvancedFilterDialog from "@/components/codebook/filters/AdvancedFilterDialog";
+import SaveFilterDialog from "@/components/codebook/filters/SaveFilterDialog";
+import { CodebookFilterState } from "@/types/codebook";
 
-const InsurersDirectory = () => {
+const InsurersDirectory: React.FC = () => {
+  const navigate = useNavigate();
   const { t } = useLanguage();
-  const { user } = useAuth();
-  const { 
-    insurers, 
-    allInsurers,
-    isLoading, 
-    searchTerm, 
-    setSearchTerm, 
-    deleteInsurer, 
-    addInsurer, 
-    updateInsurer,
+  const { hasPrivilege } = usePrivilegeCheck();
+  
+  const [formOpen, setFormOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [saveFilterDialogOpen, setSaveFilterDialogOpen] = useState(false);
+  
+  const {
+    insurers,
+    isLoading,
+    searchTerm,
+    setSearchTerm,
     filters,
     handleFilterChange,
     handleClearFilter,
-    resetFilters,
     getActiveFilterCount,
+    addInsurer,
     pagination
   } = useInsurers();
-  
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   
   const {
     savedFilters,
     saveFilter,
-    deleteFilter,
-    isSaveDialogOpen,
-    setIsSaveDialogOpen
+    deleteFilter
   } = useSavedFilters('insurers');
 
-  const handleDelete = async (insurerId: string) => {
-    try {
-      await deleteInsurer(insurerId);
-    } catch (error) {
-      console.error("Failed to delete insurer:", error);
-    }
+  const handleViewDetails = (id: string) => {
+    navigate(`/codebook/insurers/${id}`);
   };
 
-  const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
+  const handleAddInsurer = async (formData: any) => {
     try {
-      let created = 0;
-      let updated = 0;
+      const result = await addInsurer({
+        name: formData.name,
+        contact_person: formData.contactPerson || null,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        postal_code: formData.postalCode || null,
+        country: formData.country || null,
+        registration_number: formData.registrationNumber || null,
+        is_active: formData.isActive,
+        company_id: formData.companyId
+      });
       
-      for (const insurerData of importedInsurers) {
-        const existingInsurer = allInsurers?.find(c => c.name === insurerData.name);
-        
-        if (existingInsurer) {
-          await updateInsurer(existingInsurer.id, insurerData);
-          updated++;
-        } else if (insurerData.name) {
-          // Ensure required fields are present
-          await addInsurer({
-            name: insurerData.name,
-            is_active: insurerData.is_active ?? true,
-            company_id: user?.companyId || "",
-            contact_person: insurerData.contact_person,
-            email: insurerData.email,
-            phone: insurerData.phone,
-            address: insurerData.address,
-            city: insurerData.city,
-            postal_code: insurerData.postal_code,
-            country: insurerData.country,
-            registration_number: insurerData.registration_number
-          });
-          created++;
-        }
+      if (result?.id) {
+        setFormOpen(false);
       }
-      
-      return { created, updated };
     } catch (error) {
-      console.error("Error during import:", error);
-      throw error;
+      console.error("Error adding insurer:", error);
     }
   };
-
-  const getExportData = () => {
-    return insurers.map(insurer => ({
-      name: insurer.name,
-      contact_person: insurer.contact_person || '',
-      email: insurer.email || '',
-      phone: insurer.phone || '',
-      address: insurer.address || '',
-      city: insurer.city || '',
-      postal_code: insurer.postal_code || '',
-      country: insurer.country || '',
-      registration_number: insurer.registration_number || '',
-      is_active: insurer.is_active
-    }));
+  
+  const handleSaveFilter = async (name: string, filtersToSave: CodebookFilterState) => {
+    await saveFilter(name, filtersToSave);
+    setSaveFilterDialogOpen(false);
   };
-
-  const handlePageChange = (page: number) => {
-    pagination.setPage(page);
-  };
-
-  const handlePageSizeChange = (pageSize: number) => {
-    pagination.setPageSize(pageSize);
-    pagination.setPage(1); // Reset to first page when changing page size
-  };
-
-  const handleSaveFilter = async (name: string, filtersToSave: any) => {
-    return saveFilter(name, filtersToSave);
-  };
-
+  
   const handleDeleteFilter = async (filterId: string) => {
-    return deleteFilter(filterId);
+    await deleteFilter(filterId);
   };
+
+  const canAddInsurer = hasPrivilege('codebook.insurers.create');
+  const canImportExport = hasPrivilege('codebook.insurers.import') || hasPrivilege('codebook.insurers.export');
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <CardTitle>{t("insuranceCompaniesDirectory")}</CardTitle>
-          <CardDescription>
-            {t("insuranceCompaniesDirectoryDescription")}
-          </CardDescription>
+          <h2 className="text-3xl font-bold tracking-tight">{t("insuranceCompanies")}</h2>
+          <p className="text-muted-foreground">
+            {t("insuranceCompaniesDescription")}
+          </p>
         </div>
-        <InsurerFormManager>
-          {({ openAddForm }) => (
-            <InsurersActionButtons
-              onImport={handleImport}
-              getExportData={getExportData}
-              onAddInsurer={openAddForm}
-            />
-          )}
-        </InsurerFormManager>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <InsurersFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onClearFilter={handleClearFilter}
-          onOpenFilterDialog={() => setIsFilterDialogOpen(true)}
-          activeFilterCount={getActiveFilterCount()}
-          savedFilters={savedFilters}
-          onOpenSaveFilterDialog={() => setIsSaveDialogOpen(true)}
-          onDeleteFilter={handleDeleteFilter}
-        />
         
-        <InsurerFormManager>
-          {({ openEditForm }) => (
-            <InsurersTable
-              insurers={insurers}
-              isLoading={isLoading}
-              onEdit={openEditForm}
-              onDelete={handleDelete}
-              pagination={{
-                pageSize: pagination.pageSize,
-                currentPage: pagination.page,
-                totalItems: pagination.totalCount,
-                onPageChange: handlePageChange,
-                onPageSizeChange: handlePageSizeChange,
-                pageSizeOptions: [10, 25, 50, 100]
-              }}
+        <div className="flex flex-wrap gap-2">
+          {canImportExport && (
+            <ImportExportButtons 
+              entityType="insurers" 
+              data={insurers}
+              fields={[
+                { key: 'name', label: t('name') },
+                { key: 'contact_person', label: t('contactPerson') },
+                { key: 'email', label: t('email') },
+                { key: 'phone', label: t('phone') },
+                { key: 'address', label: t('address') },
+                { key: 'city', label: t('city') },
+                { key: 'country', label: t('country') },
+                { key: 'is_active', label: t('status') }
+              ]}
             />
           )}
-        </InsurerFormManager>
-      </CardContent>
+          
+          {canAddInsurer && (
+            <Button onClick={() => setFormOpen(true)}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              {t("addInsurer")}
+            </Button>
+          )}
+        </div>
+      </div>
 
-      <AdvancedFilterDialog
-        open={isFilterDialogOpen}
-        onOpenChange={setIsFilterDialogOpen}
+      <InsurersFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         filters={filters}
-        onApplyFilters={handleFilterChange}
-        onResetFilters={resetFilters}
-        filterOptions={{
-          showStatus: true,
-          showCity: true,
-          showCountry: true,
-          showCreatedDates: true
+        onFilterChange={handleFilterChange}
+        onClearFilter={handleClearFilter}
+        onOpenFilterDialog={() => setFilterDialogOpen(true)}
+        activeFilterCount={getActiveFilterCount()}
+        savedFilters={savedFilters}
+        onOpenSaveFilterDialog={() => setSaveFilterDialogOpen(true)}
+        onDeleteFilter={handleDeleteFilter}
+      />
+      
+      <DataTable
+        data={insurers}
+        columns={InsurersTable({ onViewDetails: handleViewDetails })}
+        isLoading={isLoading}
+        emptyState={{
+          title: t("noInsurersFound"),
+          description: t("noInsurersFoundDescription"),
+          action: canAddInsurer ? (
+            <Button onClick={() => setFormOpen(true)}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              {t("addInsurer")}
+            </Button>
+          ) : undefined
+        }}
+        pagination={{
+          currentPage: pagination.page,
+          pageSize: pagination.pageSize,
+          totalItems: pagination.totalCount,
+          onPageChange: pagination.setPage,
+          onPageSizeChange: pagination.setPageSize,
+          pageSizeOptions: [10, 25, 50, 100]
         }}
       />
-
-      <SaveFilterDialog
-        open={isSaveDialogOpen}
-        onOpenChange={setIsSaveDialogOpen}
-        currentFilters={filters}
-        onSaveFilter={handleSaveFilter}
+      
+      <InsurerFormManager
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleAddInsurer}
+      />
+      
+      <AdvancedFilterDialog
+        open={filterDialogOpen}
+        onOpenChange={setFilterDialogOpen}
+        filters={filters}
+        onFilterChange={handleFilterChange}
         entityType="insurers"
       />
-    </Card>
+      
+      <SaveFilterDialog
+        open={saveFilterDialogOpen}
+        onOpenChange={setSaveFilterDialogOpen}
+        onSave={handleSaveFilter}
+        filters={filters}
+        entityType="insurers"
+      />
+      
+      {!canAddInsurer && !canImportExport && (
+        <div className="flex items-center justify-center p-4 bg-muted/50 rounded-lg mt-4">
+          <Info className="h-5 w-5 mr-2 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">{t("noInsurersPrivileges")}</p>
+        </div>
+      )}
+    </div>
   );
 };
 
