@@ -45,7 +45,7 @@ export const logActivity = async (params: LogActivityParams): Promise<void> => {
       return;
     }
 
-    // Instead of using rpc, we'll insert directly into the activity_logs table
+    // Insert directly into the activity_logs table we created
     const { error } = await supabase
       .from('activity_logs')
       .insert({
@@ -93,7 +93,7 @@ export const useActivityLogger = () => {
  */
 export const fetchActivityLogs = async (entityType: EntityType, entityId: string): Promise<ActivityLogItem[]> => {
   try {
-    // Instead of using rpc, we'll query the table directly
+    // Query the activity_logs table directly
     const { data, error } = await supabase
       .from('activity_logs')
       .select(`
