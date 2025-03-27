@@ -3,14 +3,17 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useInsurers } from "@/hooks/useInsurers";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
 import InsurersTable from "./insurers/InsurersTable";
 import InsurersFilters from "./insurers/InsurersFilters";
 import InsurersActionButtons from "./insurers/InsurersActionButtons";
 import InsurerFormManager from "./insurers/InsurerFormManager";
+import { Insurer } from "@/types/codebook";
 
 const InsurersDirectory = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const { 
     insurers, 
     allInsurers,
@@ -37,7 +40,7 @@ const InsurersDirectory = () => {
     }
   };
 
-  const handleImport = async (importedInsurers: Partial<any>[]) => {
+  const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
     try {
       let created = 0;
       let updated = 0;
@@ -48,8 +51,21 @@ const InsurersDirectory = () => {
         if (existingInsurer) {
           await updateInsurer(existingInsurer.id, insurerData);
           updated++;
-        } else {
-          await addInsurer(insurerData);
+        } else if (insurerData.name) {
+          // Ensure required fields are present
+          await addInsurer({
+            name: insurerData.name,
+            is_active: insurerData.is_active ?? true,
+            company_id: user?.companyId || "",
+            contact_person: insurerData.contact_person,
+            email: insurerData.email,
+            phone: insurerData.phone,
+            address: insurerData.address,
+            city: insurerData.city,
+            postal_code: insurerData.postal_code,
+            country: insurerData.country,
+            registration_number: insurerData.registration_number
+          });
           created++;
         }
       }
