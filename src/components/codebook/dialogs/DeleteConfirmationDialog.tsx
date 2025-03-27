@@ -27,7 +27,9 @@ const DeleteConfirmationDialog: React.FC<DeleteConfirmationDialogProps> = ({
         <DialogHeader>
           <DialogTitle>{t("delete") + " " + t(entityName)}</DialogTitle>
           <DialogDescription>
-            {t("deleteConfirmation").replace("{0}", entityTitle)}
+            <div dangerouslySetInnerHTML={{ 
+              __html: t("deleteConfirmation").replace("{0}", `<span class="font-medium">${entityTitle}</span>`) 
+            }} />
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

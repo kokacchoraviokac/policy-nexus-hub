@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { formatDate, formatNumber, formatCurrency, formatRelativeTime } from '../utils/formatters';
+import { logMissingTranslation, formatMissingTranslation } from '../utils/translationValidator';
 
 // Supported languages based on the requirements
 export type Language = 'en' | 'sr' | 'mk' | 'es';
@@ -13,6 +14,7 @@ type LanguageContextType = {
   formatNumber: (number: number, options?: Intl.NumberFormatOptions) => string;
   formatCurrency: (amount: number, currencyCode?: string) => string;
   formatRelativeTime: (date: Date | string | number) => string;
+  getMissingTranslationsCount: () => number;
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -52,6 +54,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const [language, setLanguageState] = useState<Language>(getInitialLanguage);
   const [translations, setTranslations] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [missingTranslationsCount, setMissingTranslationsCount] = useState(0);
 
   // Update the language and save to local storage
   const setLanguage = (newLanguage: Language) => {
@@ -66,6 +69,17 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         setIsLoading(true);
         const module = await import(`../locales/${language}.json`);
         setTranslations(module.default);
+        
+        // Count missing translations for the selected language
+        if (language !== 'en') {
+          const englishModule = await import('../locales/en.json');
+          const englishKeys = Object.keys(englishModule.default);
+          const currentKeys = Object.keys(module.default);
+          const missingCount = englishKeys.filter(key => !currentKeys.includes(key)).length;
+          setMissingTranslationsCount(missingCount);
+        } else {
+          setMissingTranslationsCount(0);
+        }
       } catch (error) {
         console.error(`Failed to load translations for ${language}:`, error);
         // Fallback to English if translation file cannot be loaded
@@ -87,11 +101,16 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     
     const translation = translations[key];
     if (!translation) {
-      console.warn(`Translation missing for key: ${key}`);
-      return key;
+      logMissingTranslation(key, language);
+      return formatMissingTranslation(key);
     }
     
     return translation;
+  };
+
+  // Function to get the count of missing translations
+  const getMissingTranslationsCount = () => {
+    return missingTranslationsCount;
   };
 
   // Formatting helper functions that use the current language
@@ -114,7 +133,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     formatDate: formatDateWithCurrentLang,
     formatNumber: formatNumberWithCurrentLang,
     formatCurrency: formatCurrencyWithCurrentLang,
-    formatRelativeTime: formatRelativeTimeWithCurrentLang
+    formatRelativeTime: formatRelativeTimeWithCurrentLang,
+    getMissingTranslationsCount
   };
 
   return (
