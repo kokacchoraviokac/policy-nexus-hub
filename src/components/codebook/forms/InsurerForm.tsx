@@ -9,6 +9,7 @@ import { ContactFields } from "./shared/ContactFields";
 import { AddressFields } from "./shared/AddressFields";
 import { CompanyFields } from "./shared/CompanyFields";
 import { FormActions } from "./shared/FormActions";
+import { StatusField } from "./shared/StatusField";
 
 const insurerFormSchema = z.object({
   name: z.string().min(1, "Company name is required"),
@@ -63,16 +64,17 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
           <CompanyFields 
             form={form} 
             companyNameName="name" 
-            taxIdName={undefined}
+            taxIdName={null}
             registrationNumberName="registration_number"
-            notesName={undefined}
-            isActiveName="is_active"
+            notesName={null}
           />
         </div>
 
         <ContactFields form={form} />
         
         <AddressFields form={form} />
+
+        <StatusField form={form} />
 
         <FormActions
           onCancel={onCancel}

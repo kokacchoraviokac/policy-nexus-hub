@@ -9,6 +9,7 @@ import { ContactFields } from "./shared/ContactFields";
 import { AddressFields } from "./shared/AddressFields";
 import { CompanyFields } from "./shared/CompanyFields";
 import { FormActions } from "./shared/FormActions";
+import { StatusField } from "./shared/StatusField";
 
 const clientFormSchema = z.object({
   name: z.string().min(1, "Company name is required"),
@@ -70,13 +71,14 @@ const ClientForm: React.FC<ClientFormProps> = ({
             taxIdName="tax_id"
             registrationNumberName="registration_number"
             notesName="notes"
-            isActiveName="is_active"
           />
         </div>
 
         <ContactFields form={form} />
         
         <AddressFields form={form} />
+
+        <StatusField form={form} />
 
         <FormActions
           onCancel={onCancel}

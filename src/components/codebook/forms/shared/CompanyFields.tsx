@@ -2,17 +2,15 @@
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 
 interface CompanyFieldsProps {
   form: UseFormReturn<any>;
   companyNameName?: string;
-  taxIdName?: string;
+  taxIdName?: string | null;
   registrationNumberName?: string;
-  notesName?: string;
-  isActiveName?: string;
+  notesName?: string | null;
   required?: boolean;
 }
 
@@ -22,7 +20,6 @@ export const CompanyFields: React.FC<CompanyFieldsProps> = ({
   taxIdName = "tax_id",
   registrationNumberName = "registration_number",
   notesName = "notes",
-  isActiveName = "is_active",
   required = true,
 }) => {
   return (
@@ -93,27 +90,6 @@ export const CompanyFields: React.FC<CompanyFieldsProps> = ({
           )}
         />
       )}
-
-      <FormField
-        control={form.control}
-        name={isActiveName}
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-            <div className="space-y-0.5">
-              <FormLabel>Active Status</FormLabel>
-              <div className="text-sm text-muted-foreground">
-                Set whether this entity is active in your system
-              </div>
-            </div>
-            <FormControl>
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-          </FormItem>
-        )}
-      />
     </>
   );
 };
