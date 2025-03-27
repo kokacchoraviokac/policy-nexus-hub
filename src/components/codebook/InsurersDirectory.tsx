@@ -1,26 +1,17 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, Trash } from "lucide-react";
-import SearchInput from "@/components/ui/search-input";
-import DataTable from "@/components/ui/data-table";
 import { useInsurers } from "@/hooks/useInsurers";
 import { useToast } from "@/hooks/use-toast";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/contexts/auth/AuthContext";
-import InsurerFormDialog from "./dialogs/InsurerFormDialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Insurer, CodebookFilterState } from "@/types/codebook";
-import ImportExportButtons from "./ImportExportButtons";
 import { useLanguage } from "@/contexts/LanguageContext";
-import FilterButton from "./filters/FilterButton";
 import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
-import ActiveFilters from "./filters/ActiveFilters";
+import InsurerFormDialog from "./dialogs/InsurerFormDialog";
+import InsurersTable from "./insurers/InsurersTable";
+import InsurersFilters from "./insurers/InsurersFilters";
+import InsurersActionButtons from "./insurers/InsurersActionButtons";
 
 const InsurersDirectory = () => {
-  const { user } = useAuth();
   const { t } = useLanguage();
   const { insurers, isLoading, searchTerm, setSearchTerm, deleteInsurer, addInsurer, updateInsurer } = useInsurers();
   const { toast } = useToast();
@@ -176,88 +167,6 @@ const InsurersDirectory = () => {
     }));
   };
 
-  const columns = [
-    {
-      header: t("name"),
-      accessorKey: "name" as keyof Insurer,
-      sortable: true
-    },
-    {
-      header: t("contactPerson"),
-      accessorKey: "contact_person" as keyof Insurer,
-      cell: (row: Insurer) => row.contact_person || "-",
-      sortable: true
-    },
-    {
-      header: t("email"),
-      accessorKey: "email" as keyof Insurer,
-      cell: (row: Insurer) => row.email || "-",
-      sortable: true
-    },
-    {
-      header: t("phone"),
-      accessorKey: "phone" as keyof Insurer,
-      cell: (row: Insurer) => row.phone || "-",
-    },
-    {
-      header: t("country"),
-      accessorKey: "country" as keyof Insurer,
-      cell: (row: Insurer) => row.country || "-",
-      sortable: true
-    },
-    {
-      header: t("status"),
-      accessorKey: "is_active" as keyof Insurer,
-      cell: (row: Insurer) => (
-        <Badge variant={row.is_active ? "default" : "secondary"}>
-          {row.is_active ? t("active") : t("inactive")}
-        </Badge>
-      ),
-      sortable: true
-    },
-    {
-      header: t("actions"),
-      accessorKey: (row: Insurer) => (
-        <div className="flex gap-2 justify-end">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 w-8 p-0"
-            onClick={() => handleEditInsurer(row.id)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-destructive"
-                onClick={() => setInsurerToDelete(row.id)}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("deleteInsurerConfirmation").replace("{0}", row.name)}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setInsurerToDelete(null)}>{t("cancel")}</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                  {t("delete")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      ),
-    },
-  ];
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -267,61 +176,30 @@ const InsurersDirectory = () => {
             {t("insuranceCompaniesDirectoryDescription")}
           </CardDescription>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <ImportExportButtons
-            onImport={handleImport}
-            getData={getExportData}
-            entityName={t("insuranceCompanies")}
-          />
-          <Button className="flex items-center gap-1" onClick={handleAddInsurer}>
-            <Plus className="h-4 w-4" /> {t("addInsurer")}
-          </Button>
-        </div>
+        <InsurersActionButtons
+          onImport={handleImport}
+          getExportData={getExportData}
+          onAddInsurer={handleAddInsurer}
+        />
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t("searchInsuranceCompanies")}
-            className="w-full sm:max-w-xs"
-          />
-          
-          <div className="flex gap-2 items-center">
-            <Select
-              value={filters.status || 'all'}
-              onValueChange={(value) => handleFilterChange({ ...filters, status: value as 'all' | 'active' | 'inactive' })}
-            >
-              <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder={t("status")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("allStatus")}</SelectItem>
-                <SelectItem value="active">{t("active")}</SelectItem>
-                <SelectItem value="inactive">{t("inactive")}</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <FilterButton
-              activeFilterCount={getActiveFilterCount()}
-              onClick={() => setIsFilterDialogOpen(true)}
-            />
-          </div>
-        </div>
-        
-        <ActiveFilters 
-          filters={filters} 
+        <InsurersFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          filters={filters}
+          onFilterChange={handleFilterChange}
           onClearFilter={handleClearFilter}
+          onOpenFilterDialog={() => setIsFilterDialogOpen(true)}
+          activeFilterCount={getActiveFilterCount()}
         />
         
-        <DataTable
-          data={filteredInsurers || []}
-          columns={columns}
+        <InsurersTable
+          insurers={filteredInsurers}
           isLoading={isLoading}
-          emptyState={{
-            title: t("noInsuranceCompaniesFound"),
-            description: t("noInsuranceCompaniesFound"),
-            action: null
+          onEdit={handleEditInsurer}
+          onDelete={(id) => {
+            setInsurerToDelete(id);
+            handleDelete();
           }}
         />
       </CardContent>

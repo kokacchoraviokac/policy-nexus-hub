@@ -1,10 +1,9 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import InsurersDirectory from "@/components/codebook/InsurersDirectory";
 import { Book, Building2 } from "lucide-react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
+import InsurersDirectory from "@/components/codebook/InsurersDirectory";
 
 // Create a client
 const queryClient = new QueryClient({
