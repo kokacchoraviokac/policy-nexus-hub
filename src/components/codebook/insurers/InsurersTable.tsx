@@ -5,7 +5,7 @@ import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Insurer } from "@/types/codebook";
-import { getInsurerColumns } from "@/components/codebook/insurers/InsurersTable";
+import getInsurerColumns from "@/components/codebook/insurers/InsurersColumns";
 
 interface InsurersTableProps {
   insurers: Insurer[];
@@ -48,14 +48,7 @@ const InsurersTable: React.FC<InsurersTableProps> = ({
           </Button>
         ) : undefined
       }}
-      pagination={{
-        currentPage: pagination.currentPage,
-        pageSize: pagination.pageSize,
-        totalItems: pagination.totalItems,
-        onPageChange: pagination.onPageChange,
-        onPageSizeChange: pagination.onPageSizeChange,
-        pageSizeOptions: pagination.pageSizeOptions
-      }}
+      pagination={pagination}
     />
   );
 };

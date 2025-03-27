@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useInsurers } from "@/hooks/useInsurers";
 import { usePrivilegeCheck } from "@/hooks/usePrivilegeCheck";
 import { useSimpleSavedFilters } from "@/hooks/useSimpleSavedFilters";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
 import { Insurer } from "@/types/codebook";
 
 export function useInsurerDirectory() {
@@ -60,7 +60,7 @@ export function useInsurerDirectory() {
         country: formData.country || null,
         registration_number: formData.registrationNumber || null,
         is_active: formData.isActive,
-        company_id: formData.companyId
+        company_id: user?.companyId
       });
       
       if (result?.id) {
@@ -89,6 +89,16 @@ export function useInsurerDirectory() {
     }));
   };
 
+  // Map pagination data to match the expected format
+  const mappedPagination = {
+    currentPage: pagination.page,
+    pageSize: pagination.pageSize,
+    totalItems: pagination.totalCount,
+    onPageChange: pagination.setPage,
+    onPageSizeChange: pagination.setPageSize,
+    pageSizeOptions: [10, 25, 50, 100]
+  };
+
   return {
     // Data
     insurers,
@@ -96,7 +106,7 @@ export function useInsurerDirectory() {
     searchTerm,
     filters,
     savedFilters,
-    pagination,
+    pagination: mappedPagination,
     
     // UI state
     formOpen,
