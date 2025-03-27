@@ -1,8 +1,8 @@
 
 import en from '../../../locales/en.json';
-import sr from '../../../locales/sr.json';
-import mk from '../../../locales/mk.json';
-import es from '../../../locales/es.json';
+import sr from '../../../locales/sr/index';
+import mk from '../../../locales/mk/index';
+import es from '../../../locales/es/index';
 import { testTranslationExists } from './existenceTest';
 import { testTranslationParameters } from './parameterTest';
 import { testHtmlTranslations } from './htmlTest';
