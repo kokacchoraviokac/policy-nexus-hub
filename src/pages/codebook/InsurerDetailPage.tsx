@@ -1,23 +1,24 @@
 
 import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useInsurerDetail } from "@/hooks/useInsurerDetail";
-import { EntityDetailsCard } from "@/components/codebook/details/EntityDetailsCard";
-import DeleteConfirmationDialog from "@/components/codebook/dialogs/DeleteConfirmationDialog";
-import EntityNotFound from "@/components/codebook/details/EntityNotFound";
-import EntityLoadError from "@/components/codebook/details/EntityLoadError";
-import InsurerDetailTabs from "@/components/codebook/details/InsurerDetailTabs";
 import InsurerDetailHeader from "@/components/codebook/details/insurers/InsurerDetailHeader";
+import { EntityDetailsCard } from "@/components/codebook/details/EntityDetailsCard";
+import { EntityLoadError } from "@/components/codebook/details/EntityLoadError";
+import InsurerDetailTabs from "@/components/codebook/details/InsurerDetailTabs";
+import DeleteInsurerDialog from "@/components/codebook/dialogs/DeleteInsurerDialog";
 import EditInsurerDialog from "@/components/codebook/details/insurers/EditInsurerDialog";
 import AddProductDialog from "@/components/codebook/details/insurers/AddProductDialog";
+import { EntityNotFound } from "@/components/codebook/details/EntityNotFound";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-export default function InsurerDetailPage() {
+const InsurerDetailPage = () => {
   const { t } = useLanguage();
   const {
     insurer,
     isLoading,
     error,
     activityData,
+    isLoadingActivity,
     isDeleteDialogOpen,
     setIsDeleteDialogOpen,
     isEditDialogOpen,
@@ -32,66 +33,70 @@ export default function InsurerDetailPage() {
   } = useInsurerDetail();
 
   if (isLoading) {
-    return <div className="flex justify-center p-8">{t('loadingInsurerDetails')}</div>;
+    return (
+      <div className="container py-6">
+        <InsurerDetailHeader />
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <EntityLoadError entityType={t('insurer')} error={error as Error} />;
+    return <EntityLoadError error={error} entityType="insurer" />;
   }
 
   if (!insurer) {
-    return <EntityNotFound entityType={t('insurer')} backPath="/codebook/companies" backLabel={t('insuranceCompaniesDirectory')} />;
+    return <EntityNotFound entityType="insurer" />;
   }
 
-  const tabs = InsurerDetailTabs({ 
-    insurer, 
-    activityData, 
-    onAddProduct: handleAddProduct 
+  const tabs = InsurerDetailTabs({
+    insurer,
+    activityData,
+    isLoadingActivity,
+    onAddProduct: handleAddProduct
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <InsurerDetailHeader />
+    <div className="container py-6">
+      <InsurerDetailHeader title={insurer.name} />
       
       <EntityDetailsCard
         title={insurer.name}
-        subtitle={insurer.contact_person ? `${t('contact')}: ${insurer.contact_person}` : undefined}
+        subtitle={insurer.is_active ? t('activeInsurer') : t('inactiveInsurer')}
         backLink="/codebook/companies"
-        backLinkLabel={t('insuranceCompaniesDirectory')}
+        backLinkLabel={t('insuranceCompanies')}
         onEdit={() => setIsEditDialogOpen(true)}
         onDelete={() => setIsDeleteDialogOpen(true)}
         onExport={handleExport}
         tabs={tabs}
       />
-
-      {/* Edit Dialog */}
-      {insurer && (
-        <EditInsurerDialog 
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          insurer={insurer}
-          onEditSuccess={handleEditSuccess}
-        />
-      )}
-
-      {/* Add Product Dialog */}
-      {insurer && (
-        <AddProductDialog
-          open={isAddProductDialogOpen}
-          onOpenChange={setIsAddProductDialogOpen}
-          insurer={insurer}
-          onProductAdded={handleProductAdded}
-        />
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmationDialog
+      
+      <DeleteInsurerDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        onDelete={handleDelete}
-        entityName={t('insuranceCompany')}
-        entityTitle={insurer.name}
+        onConfirm={handleDelete}
+        insurer={insurer}
+      />
+      
+      <EditInsurerDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        insurer={insurer}
+        onEditSuccess={handleEditSuccess}
+      />
+      
+      <AddProductDialog
+        open={isAddProductDialogOpen}
+        onOpenChange={setIsAddProductDialogOpen}
+        insurer={insurer}
+        onProductAdded={handleProductAdded}
       />
     </div>
   );
-}
+};
+
+export default InsurerDetailPage;

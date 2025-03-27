@@ -18,12 +18,14 @@ interface ActivityItem {
 interface InsurerDetailTabsProps {
   insurer: Insurer;
   activityData: ActivityItem[];
+  isLoadingActivity?: boolean;
   onAddProduct?: () => void;
 }
 
 const InsurerDetailTabs = ({ 
   insurer, 
   activityData,
+  isLoadingActivity = false,
   onAddProduct
 }: InsurerDetailTabsProps): TabItem[] => {
   const navigate = useNavigate();
@@ -61,7 +63,7 @@ const InsurerDetailTabs = ({
     {
       id: 'activity',
       label: 'Activity History',
-      content: <ActivityLog items={activityData} />
+      content: <ActivityLog items={activityData} isLoading={isLoadingActivity} />
     }
   ];
 };

@@ -2,9 +2,11 @@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import type { Insurer } from '@/types/codebook';
+import { useActivityLogger } from '@/utils/activityLogger';
 
 export function useInsurersCrud(refetch: () => void) {
   const { toast } = useToast();
+  const { logActivity } = useActivityLogger();
 
   const addInsurer = async (insurer: Omit<Insurer, 'id' | 'created_at' | 'updated_at'>) => {
     try {
@@ -15,6 +17,16 @@ export function useInsurersCrud(refetch: () => void) {
         .single();
       
       if (error) throw error;
+      
+      // Log insurer creation
+      if (data) {
+        await logActivity({
+          entityType: "insurer",
+          entityId: data.id,
+          action: "create",
+          details: { fields: insurer }
+        });
+      }
       
       toast({
         title: 'Insurance company added',
@@ -36,12 +48,41 @@ export function useInsurersCrud(refetch: () => void) {
 
   const updateInsurer = async (id: string, updates: Partial<Insurer>) => {
     try {
+      // Fetch original insurer to capture changes
+      const { data: originalInsurer, error: fetchError } = await supabase
+        .from('insurers')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // Track changes for activity log
+      const changes: Record<string, { old: any; new: any }> = {};
+      Object.keys(updates).forEach(key => {
+        const typedKey = key as keyof Insurer;
+        if (updates[typedKey] !== originalInsurer[typedKey]) {
+          changes[key] = {
+            old: originalInsurer[typedKey],
+            new: updates[typedKey]
+          };
+        }
+      });
+      
       const { error } = await supabase
         .from('insurers')
         .update(updates)
         .eq('id', id);
       
       if (error) throw error;
+      
+      // Log insurer update
+      await logActivity({
+        entityType: "insurer",
+        entityId: id,
+        action: "update",
+        details: { changes }
+      });
       
       toast({
         title: 'Insurance company updated',
@@ -62,12 +103,29 @@ export function useInsurersCrud(refetch: () => void) {
 
   const deleteInsurer = async (id: string) => {
     try {
+      // Fetch insurer details for activity log
+      const { data: insurer, error: fetchError } = await supabase
+        .from('insurers')
+        .select('name, company_id')
+        .eq('id', id)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
       const { error } = await supabase
         .from('insurers')
         .delete()
         .eq('id', id);
       
       if (error) throw error;
+      
+      // Log insurer deletion
+      await logActivity({
+        entityType: "insurer",
+        entityId: id,
+        action: "delete",
+        details: { name: insurer.name }
+      });
       
       toast({
         title: 'Insurance company deleted',

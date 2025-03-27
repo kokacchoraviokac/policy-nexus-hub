@@ -2,6 +2,7 @@
 import React from "react";
 import { format } from "date-fns";
 import { Clock, User } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ActivityItem {
   id: string;
@@ -19,8 +20,22 @@ interface ActivityLogProps {
 export function ActivityLog({ items, isLoading = false }: ActivityLogProps) {
   if (isLoading) {
     return (
-      <div className="text-center p-6 text-muted-foreground">
-        Loading activity history...
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="p-4 border rounded-md">
+            <Skeleton className="h-5 w-2/3 mb-2" />
+            <div className="flex items-center text-muted-foreground text-sm mt-2 space-x-4">
+              <div className="flex items-center">
+                <Clock className="h-3.5 w-3.5 mr-1" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+              <div className="flex items-center">
+                <User className="h-3.5 w-3.5 mr-1" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

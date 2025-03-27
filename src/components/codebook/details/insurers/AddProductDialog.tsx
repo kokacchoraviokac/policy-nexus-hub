@@ -1,9 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ProductForm from "@/components/codebook/forms/ProductForm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Insurer } from "@/types/codebook";
+import { supabase } from "@/integrations/supabase/client";
+import { useActivityLogger } from "@/utils/activityLogger";
 
 interface AddProductDialogProps {
   open: boolean;
@@ -19,6 +21,44 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
   onProductAdded
 }) => {
   const { t } = useLanguage();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { logActivity } = useActivityLogger();
+  
+  const handleSubmit = async (values: any) => {
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from('insurance_products')
+        .insert({
+          ...values,
+          insurer_id: insurer.id,
+          company_id: insurer.company_id
+        })
+        .select('id')
+        .single();
+      
+      if (error) throw error;
+      
+      // Log product creation
+      if (data) {
+        await logActivity({
+          entityType: "product",
+          entityId: data.id,
+          action: "create",
+          details: { 
+            fields: values,
+            insurer: { id: insurer.id, name: insurer.name }
+          }
+        });
+      }
+      
+      onProductAdded();
+    } catch (error) {
+      console.error("Error adding product:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -38,9 +78,9 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
             is_active: true,
             insurer_id: insurer.id,
           }}
-          onSubmit={() => onProductAdded()}
+          onSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
-          isSubmitting={false}
+          isSubmitting={isSubmitting}
           preselectedInsurerId={insurer.id}
           preselectedInsurerName={insurer.name}
         />
