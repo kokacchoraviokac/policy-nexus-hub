@@ -3,12 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CodebookFilterState, SavedFilter } from '@/types/codebook';
-import { useAuth } from '@/contexts/AuthContext';
 
-export function useSavedFilters(entityType: 'insurers' | 'clients' | 'products') {
+export function useSavedFilters(
+  entityType: 'insurers' | 'clients' | 'products', 
+  userId?: string, 
+  companyId?: string
+) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   
   // Fetch saved filters for the current user and entity type
   const { 
@@ -16,14 +18,14 @@ export function useSavedFilters(entityType: 'insurers' | 'clients' | 'products')
     isLoading,
     error
   } = useQuery({
-    queryKey: ['savedFilters', entityType],
+    queryKey: ['savedFilters', entityType, userId],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!userId) return [];
       
       const { data, error } = await supabase
         .from('saved_filters')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('entity_type', entityType);
       
       if (error) {
@@ -38,12 +40,12 @@ export function useSavedFilters(entityType: 'insurers' | 'clients' | 'products')
       
       return data as SavedFilter[];
     },
-    enabled: !!user?.id,
+    enabled: !!userId,
   });
 
   // Save a new filter
   const saveFilter = async (name: string, filters: CodebookFilterState): Promise<void> => {
-    if (!user?.id) {
+    if (!userId) {
       toast({
         title: 'Authentication required',
         description: 'You must be logged in to save filters',
@@ -56,8 +58,8 @@ export function useSavedFilters(entityType: 'insurers' | 'clients' | 'products')
       name,
       entity_type: entityType,
       filters: JSON.stringify(filters), // Convert CodebookFilterState to JSON string
-      user_id: user.id,
-      company_id: user.companyId || '00000000-0000-0000-0000-000000000000' // Fallback if no company_id
+      user_id: userId,
+      company_id: companyId || '00000000-0000-0000-0000-000000000000' // Fallback if no company_id
     };
     
     try {

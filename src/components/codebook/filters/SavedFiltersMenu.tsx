@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -51,11 +52,15 @@ const SavedFiltersMenu: React.FC<SavedFiltersMenuProps> = ({
 
   const parseFilterData = (filterData: SavedFilter): CodebookFilterState => {
     try {
-      if (typeof filterData.filters === 'object' && filterData.filters !== null) {
-        return filterData.filters as CodebookFilterState;
+      if (typeof filterData.filters === 'string') {
+        return JSON.parse(filterData.filters) as CodebookFilterState;
       }
       
-      return JSON.parse(filterData.filters as unknown as string) as CodebookFilterState;
+      if (typeof filterData.filters === 'object' && filterData.filters !== null) {
+        return filterData.filters as unknown as CodebookFilterState;
+      }
+      
+      return {};
     } catch (error) {
       console.error("Error parsing filter data:", error);
       return {};

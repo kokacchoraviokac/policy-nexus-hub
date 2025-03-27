@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PlusCircle, Info } from "lucide-react";
@@ -45,7 +44,7 @@ const InsurersDirectory: React.FC = () => {
     savedFilters,
     saveFilter,
     deleteFilter
-  } = useSavedFilters('insurers');
+  } = useSavedFilters('insurers', user?.id, user?.companyId);
 
   const handleViewDetails = (id: string) => {
     navigate(`/codebook/companies/${id}`);
