@@ -2,13 +2,12 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useInsurers } from "@/hooks/useInsurers";
-import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
-import InsurerFormDialog from "./dialogs/InsurerFormDialog";
 import InsurersTable from "./insurers/InsurersTable";
 import InsurersFilters from "./insurers/InsurersFilters";
 import InsurersActionButtons from "./insurers/InsurersActionButtons";
+import InsurerFormManager from "./insurers/InsurerFormManager";
 
 const InsurersDirectory = () => {
   const { t } = useLanguage();
@@ -28,33 +27,17 @@ const InsurersDirectory = () => {
     getActiveFilterCount
   } = useInsurers();
   
-  const [insurerToDelete, setInsurerToDelete] = useState<string | null>(null);
-  const [isInsurerFormOpen, setIsInsurerFormOpen] = useState(false);
-  const [selectedInsurerId, setSelectedInsurerId] = useState<string | undefined>(undefined);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
 
-  const handleDelete = async () => {
-    if (!insurerToDelete) return;
-    
+  const handleDelete = async (insurerId: string) => {
     try {
-      await deleteInsurer(insurerToDelete);
-      setInsurerToDelete(null);
+      await deleteInsurer(insurerId);
     } catch (error) {
       console.error("Failed to delete insurer:", error);
     }
   };
 
-  const handleAddInsurer = () => {
-    setSelectedInsurerId(undefined);
-    setIsInsurerFormOpen(true);
-  };
-
-  const handleEditInsurer = (insurerId: string) => {
-    setSelectedInsurerId(insurerId);
-    setIsInsurerFormOpen(true);
-  };
-
-  const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
+  const handleImport = async (importedInsurers: Partial<any>[]) => {
     try {
       let created = 0;
       let updated = 0;
@@ -63,10 +46,10 @@ const InsurersDirectory = () => {
         const existingInsurer = allInsurers?.find(c => c.name === insurerData.name);
         
         if (existingInsurer) {
-          await updateInsurer(existingInsurer.id, insurerData as Partial<Insurer>);
+          await updateInsurer(existingInsurer.id, insurerData);
           updated++;
         } else {
-          await addInsurer(insurerData as Omit<Insurer, 'id' | 'created_at' | 'updated_at'>);
+          await addInsurer(insurerData);
           created++;
         }
       }
@@ -102,11 +85,15 @@ const InsurersDirectory = () => {
             {t("insuranceCompaniesDirectoryDescription")}
           </CardDescription>
         </div>
-        <InsurersActionButtons
-          onImport={handleImport}
-          getExportData={getExportData}
-          onAddInsurer={handleAddInsurer}
-        />
+        <InsurerFormManager>
+          {({ openAddForm }) => (
+            <InsurersActionButtons
+              onImport={handleImport}
+              getExportData={getExportData}
+              onAddInsurer={openAddForm}
+            />
+          )}
+        </InsurerFormManager>
       </CardHeader>
       <CardContent className="space-y-4">
         <InsurersFilters
@@ -119,23 +106,18 @@ const InsurersDirectory = () => {
           activeFilterCount={getActiveFilterCount()}
         />
         
-        <InsurersTable
-          insurers={insurers}
-          isLoading={isLoading}
-          onEdit={handleEditInsurer}
-          onDelete={(id) => {
-            setInsurerToDelete(id);
-            handleDelete();
-          }}
-        />
+        <InsurerFormManager>
+          {({ openEditForm }) => (
+            <InsurersTable
+              insurers={insurers}
+              isLoading={isLoading}
+              onEdit={openEditForm}
+              onDelete={handleDelete}
+            />
+          )}
+        </InsurerFormManager>
       </CardContent>
 
-      <InsurerFormDialog 
-        open={isInsurerFormOpen}
-        onOpenChange={setIsInsurerFormOpen}
-        insurerId={selectedInsurerId}
-      />
-      
       <AdvancedFilterDialog
         open={isFilterDialogOpen}
         onOpenChange={setIsFilterDialogOpen}

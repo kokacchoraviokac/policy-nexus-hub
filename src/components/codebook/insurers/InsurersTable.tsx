@@ -1,12 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import DataTable from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
+import DeleteInsurerDialog from "../dialogs/DeleteInsurerDialog";
 
 interface InsurersTableProps {
   insurers: Insurer[];
@@ -22,6 +22,18 @@ const InsurersTable: React.FC<InsurersTableProps> = ({
   onDelete
 }) => {
   const { t } = useLanguage();
+  const [insurerToDelete, setInsurerToDelete] = useState<Insurer | null>(null);
+  
+  const handleDeleteClick = (insurer: Insurer) => {
+    setInsurerToDelete(insurer);
+  };
+  
+  const handleConfirmDelete = () => {
+    if (insurerToDelete) {
+      onDelete(insurerToDelete.id);
+      setInsurerToDelete(null);
+    }
+  };
   
   const columns = [
     {
@@ -74,47 +86,39 @@ const InsurersTable: React.FC<InsurersTableProps> = ({
           >
             <Edit className="h-4 w-4" />
           </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0 text-destructive"
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("deleteInsurerConfirmation").replace("{0}", row.name)}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDelete(row.id)} className="bg-destructive text-destructive-foreground">
-                  {t("delete")}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0 text-destructive"
+            onClick={() => handleDeleteClick(row)}
+          >
+            <Trash className="h-4 w-4" />
+          </Button>
         </div>
       ),
     },
   ];
 
   return (
-    <DataTable
-      data={insurers || []}
-      columns={columns}
-      isLoading={isLoading}
-      emptyState={{
-        title: t("noInsuranceCompaniesFound"),
-        description: t("noInsuranceCompaniesFound"),
-        action: null
-      }}
-    />
+    <>
+      <DataTable
+        data={insurers || []}
+        columns={columns}
+        isLoading={isLoading}
+        emptyState={{
+          title: t("noInsuranceCompaniesFound"),
+          description: t("noInsuranceCompaniesFound"),
+          action: null
+        }}
+      />
+      
+      <DeleteInsurerDialog
+        open={!!insurerToDelete}
+        onOpenChange={(open) => !open && setInsurerToDelete(null)}
+        insurerName={insurerToDelete?.name || ""}
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 };
 
