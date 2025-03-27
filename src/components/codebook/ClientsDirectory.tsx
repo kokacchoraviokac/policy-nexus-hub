@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, Trash, Filter } from "lucide-react";
+import { Edit, Plus, Trash } from "lucide-react";
 import SearchInput from "@/components/ui/search-input";
 import DataTable from "@/components/ui/data-table";
 import { useClients } from "@/hooks/useClients";
@@ -12,13 +12,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuth } from "@/contexts/auth/AuthContext";
 import ClientFormDialog from "./dialogs/ClientFormDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Client } from "@/types/codebook";
+import { Client, CodebookFilterState } from "@/types/codebook";
 import ImportExportButtons from "./ImportExportButtons";
 import { useLanguage } from "@/contexts/LanguageContext";
+import FilterButton from "./filters/FilterButton";
+import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
+import ActiveFilters from "./filters/ActiveFilters";
+import { parseISO } from "date-fns";
 
 const ClientsDirectory = () => {
   const { user } = useAuth();
@@ -28,29 +28,54 @@ const ClientsDirectory = () => {
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
   const [isClientFormOpen, setIsClientFormOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  
+  const [filters, setFilters] = useState<CodebookFilterState>({
+    status: 'all',
+    city: '',
+    country: ''
+  });
   
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [cityFilter, setCityFilter] = useState<string>("");
 
   useEffect(() => {
     if (!clients) return;
     
     let filtered = [...clients];
     
-    if (statusFilter !== "all") {
-      const isActive = statusFilter === "active";
+    if (filters.status !== "all") {
+      const isActive = filters.status === "active";
       filtered = filtered.filter(client => client.is_active === isActive);
     }
     
-    if (cityFilter) {
+    if (filters.city && filters.city.trim() !== '') {
       filtered = filtered.filter(client => 
-        client.city && client.city.toLowerCase().includes(cityFilter.toLowerCase())
+        client.city && client.city.toLowerCase().includes(filters.city!.toLowerCase())
       );
     }
     
+    if (filters.country && filters.country.trim() !== '') {
+      filtered = filtered.filter(client => 
+        client.country && client.country.toLowerCase().includes(filters.country!.toLowerCase())
+      );
+    }
+    
+    if (filters.createdAfter) {
+      filtered = filtered.filter(client => {
+        const createdAt = new Date(client.created_at);
+        return createdAt >= filters.createdAfter!;
+      });
+    }
+    
+    if (filters.createdBefore) {
+      filtered = filtered.filter(client => {
+        const createdAt = new Date(client.created_at);
+        return createdAt <= filters.createdBefore!;
+      });
+    }
+    
     setFilteredClients(filtered);
-  }, [clients, statusFilter, cityFilter, searchTerm]);
+  }, [clients, filters, searchTerm]);
 
   const handleDelete = async () => {
     if (!clientToDelete) return;
@@ -73,9 +98,39 @@ const ClientsDirectory = () => {
     setIsClientFormOpen(true);
   };
 
+  const handleFilterChange = (newFilters: CodebookFilterState) => {
+    setFilters(newFilters);
+  };
+
+  const handleClearFilter = (key: keyof CodebookFilterState) => {
+    setFilters(prev => {
+      const updatedFilters = { ...prev };
+      if (key === 'status') {
+        updatedFilters.status = 'all';
+      } else {
+        updatedFilters[key] = undefined;
+      }
+      return updatedFilters;
+    });
+  };
+
   const resetFilters = () => {
-    setStatusFilter("all");
-    setCityFilter("");
+    setFilters({
+      status: 'all',
+      city: '',
+      country: ''
+    });
+  };
+
+  // Count active filters
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.status && filters.status !== 'all') count++;
+    if (filters.city && filters.city.trim() !== '') count++;
+    if (filters.country && filters.country.trim() !== '') count++;
+    if (filters.createdAfter) count++;
+    if (filters.createdBefore) count++;
+    return count;
   };
 
   const handleImport = async (importedClients: Partial<Client>[]) => {
@@ -239,8 +294,8 @@ const ClientsDirectory = () => {
           
           <div className="flex gap-2 items-center">
             <Select
-              value={statusFilter}
-              onValueChange={setStatusFilter}
+              value={filters.status || 'all'}
+              onValueChange={(value) => handleFilterChange({ ...filters, status: value as 'all' | 'active' | 'inactive' })}
             >
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder={t("status")} />
@@ -252,39 +307,17 @@ const ClientsDirectory = () => {
               </SelectContent>
             </Select>
             
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-1">
-                  <Filter className="h-4 w-4" />
-                  {t("filters")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="space-y-4">
-                  <h4 className="font-medium">{t("filterClients")}</h4>
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="city">{t("city")}</Label>
-                    <Input 
-                      id="city" 
-                      placeholder={t("filterByCity")}
-                      value={cityFilter}
-                      onChange={(e) => setCityFilter(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-between pt-2">
-                    <Button variant="outline" size="sm" onClick={resetFilters}>
-                      {t("resetFilters")}
-                    </Button>
-                    <Button size="sm">{t("apply")}</Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <FilterButton
+              activeFilterCount={getActiveFilterCount()}
+              onClick={() => setIsFilterDialogOpen(true)}
+            />
           </div>
         </div>
+        
+        <ActiveFilters 
+          filters={filters} 
+          onClearFilter={handleClearFilter}
+        />
         
         <DataTable
           data={filteredClients || []}
@@ -302,6 +335,20 @@ const ClientsDirectory = () => {
         open={isClientFormOpen}
         onOpenChange={setIsClientFormOpen}
         clientId={selectedClientId}
+      />
+      
+      <AdvancedFilterDialog
+        open={isFilterDialogOpen}
+        onOpenChange={setIsFilterDialogOpen}
+        filters={filters}
+        onApplyFilters={handleFilterChange}
+        onResetFilters={resetFilters}
+        filterOptions={{
+          showStatus: true,
+          showCity: true,
+          showCountry: true,
+          showCreatedDates: true
+        }}
       />
     </Card>
   );

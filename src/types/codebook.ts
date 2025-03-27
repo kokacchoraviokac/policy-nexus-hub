@@ -54,3 +54,13 @@ export interface InsuranceProduct {
 }
 
 export type MultilingualProductField = 'name' | 'description' | 'category';
+
+export interface CodebookFilterState {
+  status?: 'all' | 'active' | 'inactive';
+  city?: string;
+  country?: string;
+  category?: string;
+  insurer?: string;
+  createdAfter?: Date | null;
+  createdBefore?: Date | null;
+}

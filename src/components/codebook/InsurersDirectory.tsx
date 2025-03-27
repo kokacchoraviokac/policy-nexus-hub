@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, Trash, Filter } from "lucide-react";
+import { Edit, Plus, Trash } from "lucide-react";
 import SearchInput from "@/components/ui/search-input";
 import DataTable from "@/components/ui/data-table";
 import { useInsurers } from "@/hooks/useInsurers";
@@ -12,13 +12,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuth } from "@/contexts/auth/AuthContext";
 import InsurerFormDialog from "./dialogs/InsurerFormDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Insurer } from "@/types/codebook";
+import { Insurer, CodebookFilterState } from "@/types/codebook";
 import ImportExportButtons from "./ImportExportButtons";
 import { useLanguage } from "@/contexts/LanguageContext";
+import FilterButton from "./filters/FilterButton";
+import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
+import ActiveFilters from "./filters/ActiveFilters";
 
 const InsurersDirectory = () => {
   const { user } = useAuth();
@@ -28,29 +27,53 @@ const InsurersDirectory = () => {
   const [insurerToDelete, setInsurerToDelete] = useState<string | null>(null);
   const [isInsurerFormOpen, setIsInsurerFormOpen] = useState(false);
   const [selectedInsurerId, setSelectedInsurerId] = useState<string | undefined>(undefined);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  
+  const [filters, setFilters] = useState<CodebookFilterState>({
+    status: 'all',
+    country: ''
+  });
   
   const [filteredInsurers, setFilteredInsurers] = useState<Insurer[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [countryFilter, setCountryFilter] = useState<string>("");
 
   useEffect(() => {
     if (!insurers) return;
     
     let filtered = [...insurers];
     
-    if (statusFilter !== "all") {
-      const isActive = statusFilter === "active";
+    if (filters.status !== "all") {
+      const isActive = filters.status === "active";
       filtered = filtered.filter(insurer => insurer.is_active === isActive);
     }
     
-    if (countryFilter) {
+    if (filters.country && filters.country.trim() !== '') {
       filtered = filtered.filter(insurer => 
-        insurer.country && insurer.country.toLowerCase().includes(countryFilter.toLowerCase())
+        insurer.country && insurer.country.toLowerCase().includes(filters.country!.toLowerCase())
       );
     }
     
+    if (filters.city && filters.city.trim() !== '') {
+      filtered = filtered.filter(insurer => 
+        insurer.city && insurer.city.toLowerCase().includes(filters.city!.toLowerCase())
+      );
+    }
+    
+    if (filters.createdAfter) {
+      filtered = filtered.filter(insurer => {
+        const createdAt = new Date(insurer.created_at);
+        return createdAt >= filters.createdAfter!;
+      });
+    }
+    
+    if (filters.createdBefore) {
+      filtered = filtered.filter(insurer => {
+        const createdAt = new Date(insurer.created_at);
+        return createdAt <= filters.createdBefore!;
+      });
+    }
+    
     setFilteredInsurers(filtered);
-  }, [insurers, statusFilter, countryFilter, searchTerm]);
+  }, [insurers, filters, searchTerm]);
 
   const handleDelete = async () => {
     if (!insurerToDelete) return;
@@ -73,9 +96,38 @@ const InsurersDirectory = () => {
     setIsInsurerFormOpen(true);
   };
 
+  const handleFilterChange = (newFilters: CodebookFilterState) => {
+    setFilters(newFilters);
+  };
+
+  const handleClearFilter = (key: keyof CodebookFilterState) => {
+    setFilters(prev => {
+      const updatedFilters = { ...prev };
+      if (key === 'status') {
+        updatedFilters.status = 'all';
+      } else {
+        updatedFilters[key] = undefined;
+      }
+      return updatedFilters;
+    });
+  };
+
   const resetFilters = () => {
-    setStatusFilter("all");
-    setCountryFilter("");
+    setFilters({
+      status: 'all',
+      country: ''
+    });
+  };
+
+  // Count active filters
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.status && filters.status !== 'all') count++;
+    if (filters.country && filters.country.trim() !== '') count++;
+    if (filters.city && filters.city.trim() !== '') count++;
+    if (filters.createdAfter) count++;
+    if (filters.createdBefore) count++;
+    return count;
   };
 
   const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
@@ -237,8 +289,8 @@ const InsurersDirectory = () => {
           
           <div className="flex gap-2 items-center">
             <Select
-              value={statusFilter}
-              onValueChange={setStatusFilter}
+              value={filters.status || 'all'}
+              onValueChange={(value) => handleFilterChange({ ...filters, status: value as 'all' | 'active' | 'inactive' })}
             >
               <SelectTrigger className="w-[130px]">
                 <SelectValue placeholder={t("status")} />
@@ -250,39 +302,17 @@ const InsurersDirectory = () => {
               </SelectContent>
             </Select>
             
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-1">
-                  <Filter className="h-4 w-4" />
-                  {t("filters")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="space-y-4">
-                  <h4 className="font-medium">{t("filterInsuranceCompanies")}</h4>
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="country">{t("country")}</Label>
-                    <Input 
-                      id="country" 
-                      placeholder={t("filterByCountry")}
-                      value={countryFilter}
-                      onChange={(e) => setCountryFilter(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="flex justify-between pt-2">
-                    <Button variant="outline" size="sm" onClick={resetFilters}>
-                      {t("resetFilters")}
-                    </Button>
-                    <Button size="sm">{t("apply")}</Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+            <FilterButton
+              activeFilterCount={getActiveFilterCount()}
+              onClick={() => setIsFilterDialogOpen(true)}
+            />
           </div>
         </div>
+        
+        <ActiveFilters 
+          filters={filters} 
+          onClearFilter={handleClearFilter}
+        />
         
         <DataTable
           data={filteredInsurers || []}
@@ -300,6 +330,20 @@ const InsurersDirectory = () => {
         open={isInsurerFormOpen}
         onOpenChange={setIsInsurerFormOpen}
         insurerId={selectedInsurerId}
+      />
+      
+      <AdvancedFilterDialog
+        open={isFilterDialogOpen}
+        onOpenChange={setIsFilterDialogOpen}
+        filters={filters}
+        onApplyFilters={handleFilterChange}
+        onResetFilters={resetFilters}
+        filterOptions={{
+          showStatus: true,
+          showCity: true,
+          showCountry: true,
+          showCreatedDates: true
+        }}
       />
     </Card>
   );
