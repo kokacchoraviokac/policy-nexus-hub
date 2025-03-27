@@ -14,7 +14,7 @@ interface EntityDetailsCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onExport?: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   tabs?: {
     id: string;
     label: string;

@@ -12,7 +12,7 @@ import { exportToCSV } from "@/utils/csv";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ClientForm } from "@/components/codebook/forms/ClientForm";
+import ClientForm from "@/components/codebook/forms/ClientForm";
 
 export default function ClientDetailPage() {
   const { clientId } = useParams<{ clientId: string }>();
@@ -194,11 +194,31 @@ export default function ClientDetailPage() {
               Make changes to the client information below.
             </DialogDescription>
           </DialogHeader>
-          <ClientForm 
-            client={client} 
-            onSuccess={handleEditSuccess} 
-            onCancel={() => setIsEditDialogOpen(false)} 
-          />
+          {client && (
+            <ClientForm
+              defaultValues={{
+                name: client.name,
+                contact_person: client.contact_person || "",
+                email: client.email || "",
+                phone: client.phone || "",
+                address: client.address || "",
+                city: client.city || "",
+                postal_code: client.postal_code || "",
+                country: client.country || "",
+                tax_id: client.tax_id || "",
+                registration_number: client.registration_number || "",
+                notes: client.notes || "",
+                is_active: client.is_active,
+              }}
+              onSubmit={(values) => {
+                // In a real app, this would update the client data
+                console.log("Updated client values:", values);
+                handleEditSuccess();
+              }}
+              onCancel={() => setIsEditDialogOpen(false)}
+              isSubmitting={false}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

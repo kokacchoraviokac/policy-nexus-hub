@@ -12,7 +12,7 @@ import { exportToCSV } from "@/utils/csv";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { InsurerForm } from "@/components/codebook/forms/InsurerForm";
+import InsurerForm from "@/components/codebook/forms/InsurerForm";
 
 export default function InsurerDetailPage() {
   const { insurerId } = useParams<{ insurerId: string }>();
@@ -185,11 +185,29 @@ export default function InsurerDetailPage() {
               Make changes to the insurance company information below.
             </DialogDescription>
           </DialogHeader>
-          <InsurerForm 
-            insurer={insurer} 
-            onSuccess={handleEditSuccess} 
-            onCancel={() => setIsEditDialogOpen(false)} 
-          />
+          {insurer && (
+            <InsurerForm 
+              defaultValues={{
+                name: insurer.name,
+                contact_person: insurer.contact_person || "",
+                email: insurer.email || "",
+                phone: insurer.phone || "",
+                address: insurer.address || "",
+                city: insurer.city || "",
+                postal_code: insurer.postal_code || "",
+                country: insurer.country || "",
+                registration_number: insurer.registration_number || "",
+                is_active: insurer.is_active,
+              }} 
+              onSubmit={(values) => {
+                // In a real app, this would update the insurer data
+                console.log("Updated insurer values:", values);
+                handleEditSuccess();
+              }}
+              onCancel={() => setIsEditDialogOpen(false)}
+              isSubmitting={false}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

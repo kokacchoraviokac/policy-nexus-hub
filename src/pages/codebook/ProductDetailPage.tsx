@@ -12,7 +12,7 @@ import { exportToCSV } from "@/utils/csv";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ProductForm } from "@/components/codebook/forms/ProductForm";
+import ProductForm from "@/components/codebook/forms/ProductForm";
 
 export default function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>();
@@ -200,11 +200,25 @@ export default function ProductDetailPage() {
               Make changes to the product information below.
             </DialogDescription>
           </DialogHeader>
-          <ProductForm 
-            product={product} 
-            onSuccess={handleEditSuccess} 
-            onCancel={() => setIsEditDialogOpen(false)} 
-          />
+          {product && (
+            <ProductForm 
+              defaultValues={{
+                code: product.code,
+                name: product.name,
+                category: product.category || "",
+                description: product.description || "",
+                is_active: product.is_active,
+                insurer_id: product.insurer_id,
+              }}
+              onSubmit={(values) => {
+                // In a real app, this would update the product data
+                console.log("Updated product values:", values);
+                handleEditSuccess();
+              }}
+              onCancel={() => setIsEditDialogOpen(false)}
+              isSubmitting={false}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
