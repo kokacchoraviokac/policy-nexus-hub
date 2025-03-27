@@ -19,7 +19,7 @@ interface ClientsFiltersProps {
   activeFilterCount: number;
   // Saved filters props
   savedFilters?: SavedFilter[];
-  onSaveFilter?: (name: string, filters: CodebookFilterState) => void;
+  onSaveFilter?: (name: string) => void;
   onDeleteFilter?: (filterId: string) => void;
   isSaving?: boolean;
   isDeleting?: boolean;
@@ -86,6 +86,7 @@ const ClientsFilters: React.FC<ClientsFiltersProps> = ({
               isSaving={isSaving}
               isDeleting={isDeleting}
               parseFilterData={parseFilterData}
+              entityType="clients"
             />
           )}
           

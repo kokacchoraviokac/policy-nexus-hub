@@ -3,11 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CodebookFilterState } from '@/types/codebook';
-import { SavedFilter, EntityType } from '@/types/savedFilters';
+import { EntityType, SavedFilter } from '@/types/savedFilters';
 
 export function useSimpleSavedFilters(
-  entityType: EntityType, 
-  userId?: string, 
+  entityType: EntityType,
+  userId?: string,
   companyId?: string
 ) {
   const { toast } = useToast();
@@ -42,13 +42,13 @@ export function useSimpleSavedFilters(
 
   // Save filter mutation
   const saveFilterMutation = useMutation({
-    mutationFn: async ({ name, filters }: { name: string, filters: CodebookFilterState }) => {
+    mutationFn: async (name: string) => {
       if (!userId) throw new Error('User ID is required');
       
       const newFilter = {
         name,
         entity_type: entityType,
-        filters: JSON.stringify(filters),
+        filters: JSON.stringify({}), // This will be updated in the component
         user_id: userId,
         company_id: companyId || '00000000-0000-0000-0000-000000000000'
       };
@@ -120,10 +120,8 @@ export function useSimpleSavedFilters(
   return {
     savedFilters: savedFilters || [],
     isLoading,
-    saveFilter: (name: string, filters: CodebookFilterState) => 
-      saveFilterMutation.mutate({ name, filters }),
-    deleteFilter: (filterId: string) => 
-      deleteFilterMutation.mutate(filterId),
+    saveFilter: (name: string) => saveFilterMutation.mutate(name),
+    deleteFilter: (filterId: string) => deleteFilterMutation.mutate(filterId),
     parseFilterData,
     isSaving: saveFilterMutation.isPending,
     isDeleting: deleteFilterMutation.isPending

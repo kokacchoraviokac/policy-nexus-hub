@@ -4,23 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { PlusCircle, Info } from "lucide-react";
 import { useInsurers } from "@/hooks/useInsurers";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { usePrivilegeCheck } from "@/hooks/usePrivilegeCheck";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSimpleSavedFilters } from "@/hooks/useSimpleSavedFilters";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/data-table";
-import { getInsurerColumns } from "@/components/codebook/insurers/InsurersTable";
+import getInsurerColumns from "@/components/codebook/insurers/InsurersColumns";
 import InsurersFilters from "@/components/codebook/insurers/InsurersFilters";
 import ImportExportButtons from "@/components/codebook/ImportExportButtons";
 import InsurerFormDialog from "@/components/codebook/dialogs/InsurerFormDialog";
 import AdvancedFilterDialog from "@/components/codebook/filters/AdvancedFilterDialog";
-import { CodebookFilterState, Insurer } from "@/types/codebook";
-import { useAuth } from "@/contexts/AuthContext";
 
 const InsurersDirectory: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { hasPrivilege } = usePrivilegeCheck();
-  const { user } = useAuth();
+  const { hasPrivilege, user } = useAuth();
   
   const [formOpen, setFormOpen] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
@@ -92,6 +89,11 @@ const InsurersDirectory: React.FC = () => {
     }));
   };
 
+  const handleSaveFilter = (name: string) => {
+    // We need to pass the current filters here
+    saveFilter(name);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -128,7 +130,7 @@ const InsurersDirectory: React.FC = () => {
         onOpenFilterDialog={() => setFilterDialogOpen(true)}
         activeFilterCount={getActiveFilterCount()}
         savedFilters={savedFilters}
-        onSaveFilter={saveFilter}
+        onSaveFilter={handleSaveFilter}
         onDeleteFilter={deleteFilter}
         isSaving={isSaving}
         isDeleting={isDeleting}

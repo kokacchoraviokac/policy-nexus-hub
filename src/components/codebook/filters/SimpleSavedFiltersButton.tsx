@@ -9,23 +9,22 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Bookmark, Save, Trash2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CodebookFilterState } from "@/types/codebook";
 import { SavedFilter } from "@/types/savedFilters";
+import SaveFilterDialog from "./SaveFilterDialog";
 
 interface SimpleSavedFiltersButtonProps {
   savedFilters: SavedFilter[];
   onApplyFilter: (filters: CodebookFilterState) => void;
-  onSaveFilter: (name: string, filters: CodebookFilterState) => void;
+  onSaveFilter: (name: string) => void;
   onDeleteFilter: (filterId: string) => void;
   currentFilters: CodebookFilterState;
   isSaving?: boolean;
   isDeleting?: boolean;
   parseFilterData: (filter: SavedFilter) => CodebookFilterState;
+  entityType: 'insurers' | 'clients' | 'products';
 }
 
 const SimpleSavedFiltersButton: React.FC<SimpleSavedFiltersButtonProps> = ({
@@ -36,17 +35,15 @@ const SimpleSavedFiltersButton: React.FC<SimpleSavedFiltersButtonProps> = ({
   currentFilters,
   isSaving = false,
   isDeleting = false,
-  parseFilterData
+  parseFilterData,
+  entityType
 }) => {
   const { t } = useLanguage();
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
-  const [filterName, setFilterName] = useState("");
 
-  const handleSave = () => {
-    if (!filterName.trim()) return;
-    onSaveFilter(filterName, currentFilters);
-    setFilterName("");
-    setIsSaveDialogOpen(false);
+  const handleSave = async (name: string) => {
+    onSaveFilter(name);
+    return Promise.resolve();
   };
 
   return (
@@ -96,44 +93,13 @@ const SimpleSavedFiltersButton: React.FC<SimpleSavedFiltersButtonProps> = ({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>{t("saveFilter")}</DialogTitle>
-            <DialogDescription>
-              {t("enterNameForFilter")}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="filter-name" className="text-right">
-                {t("filterName")}
-              </Label>
-              <Input
-                id="filter-name"
-                className="col-span-3"
-                value={filterName}
-                onChange={(e) => setFilterName(e.target.value)}
-                placeholder={t("myFilterName")}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>
-              {t("cancel")}
-            </Button>
-            <Button 
-              type="submit" 
-              onClick={handleSave} 
-              disabled={!filterName.trim() || isSaving}
-            >
-              {isSaving ? t("saving") : t("saveFilter")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SaveFilterDialog
+        open={isSaveDialogOpen}
+        onOpenChange={setIsSaveDialogOpen}
+        onSave={handleSave}
+        filters={currentFilters}
+        entityType={entityType}
+      />
     </>
   );
 };

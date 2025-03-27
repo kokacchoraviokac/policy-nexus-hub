@@ -19,7 +19,7 @@ interface InsurersFiltersProps {
   activeFilterCount: number;
   // Saved filters props
   savedFilters: SavedFilter[];
-  onSaveFilter: (name: string, filters: CodebookFilterState) => void;
+  onSaveFilter: (name: string) => void;
   onDeleteFilter: (filterId: string) => void;
   isSaving?: boolean;
   isDeleting?: boolean;
@@ -81,6 +81,7 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
               isSaving={isSaving}
               isDeleting={isDeleting}
               parseFilterData={parseFilterData}
+              entityType="insurers"
             />
           )}
           
