@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,11 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Client } from "@/types/codebook";
 import ImportExportButtons from "./ImportExportButtons";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ClientsDirectory = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { clients, isLoading, searchTerm, setSearchTerm, deleteClient, addClient, updateClient } = useClients();
   const { toast } = useToast();
   const [clientToDelete, setClientToDelete] = useState<string | null>(null);
@@ -93,14 +96,14 @@ const ClientsDirectory = () => {
       }
       
       toast({
-        title: "Import completed",
-        description: `Created ${created} new clients and updated ${updated} existing clients.`,
+        title: t("importCompleted"),
+        description: t("createdNewClients").replace("{0}", created.toString()).replace("{1}", updated.toString()),
       });
     } catch (error) {
       console.error("Error during import:", error);
       toast({
-        title: "Import failed",
-        description: "There was an error processing the imported data.",
+        title: t("importFailed"),
+        description: t("importFailedDescription"),
         variant: "destructive"
       });
     }
@@ -125,45 +128,45 @@ const ClientsDirectory = () => {
 
   const columns = [
     {
-      header: "Name",
+      header: t("name"),
       accessorKey: "name" as keyof Client,
       sortable: true
     },
     {
-      header: "Contact Person",
+      header: t("contactPerson"),
       accessorKey: "contact_person" as keyof Client,
       cell: (row: Client) => row.contact_person || "-",
       sortable: true
     },
     {
-      header: "Email",
+      header: t("email"),
       accessorKey: "email" as keyof Client,
       cell: (row: Client) => row.email || "-",
       sortable: true
     },
     {
-      header: "Phone",
+      header: t("phone"),
       accessorKey: "phone" as keyof Client,
       cell: (row: Client) => row.phone || "-",
     },
     {
-      header: "City",
+      header: t("city"),
       accessorKey: "city" as keyof Client,
       cell: (row: Client) => row.city || "-",
       sortable: true
     },
     {
-      header: "Status",
+      header: t("status"),
       accessorKey: "is_active" as keyof Client,
       cell: (row: Client) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
-          {row.is_active ? "Active" : "Inactive"}
+          {row.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
       sortable: true
     },
     {
-      header: "Actions",
+      header: t("actions"),
       accessorKey: (row: Client) => (
         <div className="flex gap-2 justify-end">
           <Button 
@@ -187,15 +190,15 @@ const ClientsDirectory = () => {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete the client "{row.name}". This action cannot be undone.
+                  {t("deleteClientConfirmation").replace("{0}", row.name)}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setClientToDelete(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setClientToDelete(null)}>{t("cancel")}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                  Delete
+                  {t("delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -209,19 +212,19 @@ const ClientsDirectory = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Client Directory</CardTitle>
+          <CardTitle>{t("clientDirectory")}</CardTitle>
           <CardDescription>
-            Manage client records including contact details and tax information
+            {t("clientDirectoryDescription")}
           </CardDescription>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <ImportExportButtons
             onImport={handleImport}
             getData={getExportData}
-            entityName="Clients"
+            entityName={t("clients")}
           />
           <Button className="flex items-center gap-1" onClick={handleAddClient}>
-            <Plus className="h-4 w-4" /> Add Client
+            <Plus className="h-4 w-4" /> {t("addClient")}
           </Button>
         </div>
       </CardHeader>
@@ -230,7 +233,7 @@ const ClientsDirectory = () => {
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder="Search clients..."
+            placeholder={t("searchClients")}
             className="w-full sm:max-w-xs"
           />
           
@@ -240,12 +243,12 @@ const ClientsDirectory = () => {
               onValueChange={setStatusFilter}
             >
               <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="all">{t("allStatus")}</SelectItem>
+                <SelectItem value="active">{t("active")}</SelectItem>
+                <SelectItem value="inactive">{t("inactive")}</SelectItem>
               </SelectContent>
             </Select>
             
@@ -253,19 +256,19 @@ const ClientsDirectory = () => {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-1">
                   <Filter className="h-4 w-4" />
-                  Filters
+                  {t("filters")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
                 <div className="space-y-4">
-                  <h4 className="font-medium">Filter Clients</h4>
+                  <h4 className="font-medium">{t("filterClients")}</h4>
                   <Separator />
                   
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">{t("city")}</Label>
                     <Input 
                       id="city" 
-                      placeholder="Filter by city"
+                      placeholder={t("filterByCity")}
                       value={cityFilter}
                       onChange={(e) => setCityFilter(e.target.value)}
                     />
@@ -273,9 +276,9 @@ const ClientsDirectory = () => {
                   
                   <div className="flex justify-between pt-2">
                     <Button variant="outline" size="sm" onClick={resetFilters}>
-                      Reset Filters
+                      {t("resetFilters")}
                     </Button>
-                    <Button size="sm">Apply</Button>
+                    <Button size="sm">{t("apply")}</Button>
                   </div>
                 </div>
               </PopoverContent>
@@ -288,8 +291,8 @@ const ClientsDirectory = () => {
           columns={columns}
           isLoading={isLoading}
           emptyState={{
-            title: "No clients found",
-            description: "Try adjusting your search or add a new client.",
+            title: t("noClientsFound"),
+            description: t("noClientsFound"),
             action: null
           }}
         />

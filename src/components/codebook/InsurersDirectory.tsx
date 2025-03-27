@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,11 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Insurer } from "@/types/codebook";
 import ImportExportButtons from "./ImportExportButtons";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const InsurersDirectory = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { insurers, isLoading, searchTerm, setSearchTerm, deleteInsurer, addInsurer, updateInsurer } = useInsurers();
   const { toast } = useToast();
   const [insurerToDelete, setInsurerToDelete] = useState<string | null>(null);
@@ -93,14 +96,14 @@ const InsurersDirectory = () => {
       }
       
       toast({
-        title: "Import completed",
-        description: `Created ${created} new insurers and updated ${updated} existing insurers.`,
+        title: t("importCompleted"),
+        description: t("createdNewInsurers").replace("{0}", created.toString()).replace("{1}", updated.toString()),
       });
     } catch (error) {
       console.error("Error during import:", error);
       toast({
-        title: "Import failed",
-        description: "There was an error processing the imported data.",
+        title: t("importFailed"),
+        description: t("importFailedDescription"),
         variant: "destructive"
       });
     }
@@ -123,45 +126,45 @@ const InsurersDirectory = () => {
 
   const columns = [
     {
-      header: "Name",
+      header: t("name"),
       accessorKey: "name" as keyof Insurer,
       sortable: true
     },
     {
-      header: "Contact Person",
+      header: t("contactPerson"),
       accessorKey: "contact_person" as keyof Insurer,
       cell: (row: Insurer) => row.contact_person || "-",
       sortable: true
     },
     {
-      header: "Email",
+      header: t("email"),
       accessorKey: "email" as keyof Insurer,
       cell: (row: Insurer) => row.email || "-",
       sortable: true
     },
     {
-      header: "Phone",
+      header: t("phone"),
       accessorKey: "phone" as keyof Insurer,
       cell: (row: Insurer) => row.phone || "-",
     },
     {
-      header: "Country",
+      header: t("country"),
       accessorKey: "country" as keyof Insurer,
       cell: (row: Insurer) => row.country || "-",
       sortable: true
     },
     {
-      header: "Status",
+      header: t("status"),
       accessorKey: "is_active" as keyof Insurer,
       cell: (row: Insurer) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
-          {row.is_active ? "Active" : "Inactive"}
+          {row.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
       sortable: true
     },
     {
-      header: "Actions",
+      header: t("actions"),
       accessorKey: (row: Insurer) => (
         <div className="flex gap-2 justify-end">
           <Button 
@@ -185,15 +188,15 @@ const InsurersDirectory = () => {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete the insurance company "{row.name}". This action cannot be undone.
+                  {t("deleteInsurerConfirmation").replace("{0}", row.name)}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setInsurerToDelete(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setInsurerToDelete(null)}>{t("cancel")}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                  Delete
+                  {t("delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -207,19 +210,19 @@ const InsurersDirectory = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Insurance Companies</CardTitle>
+          <CardTitle>{t("insuranceCompaniesDirectory")}</CardTitle>
           <CardDescription>
-            Manage insurance company records including branch and parent company details
+            {t("insuranceCompaniesDirectoryDescription")}
           </CardDescription>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <ImportExportButtons
             onImport={handleImport}
             getData={getExportData}
-            entityName="Insurers"
+            entityName={t("insuranceCompanies")}
           />
           <Button className="flex items-center gap-1" onClick={handleAddInsurer}>
-            <Plus className="h-4 w-4" /> Add Insurer
+            <Plus className="h-4 w-4" /> {t("addInsurer")}
           </Button>
         </div>
       </CardHeader>
@@ -228,7 +231,7 @@ const InsurersDirectory = () => {
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder="Search insurance companies..."
+            placeholder={t("searchInsuranceCompanies")}
             className="w-full sm:max-w-xs"
           />
           
@@ -238,12 +241,12 @@ const InsurersDirectory = () => {
               onValueChange={setStatusFilter}
             >
               <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="all">{t("allStatus")}</SelectItem>
+                <SelectItem value="active">{t("active")}</SelectItem>
+                <SelectItem value="inactive">{t("inactive")}</SelectItem>
               </SelectContent>
             </Select>
             
@@ -251,19 +254,19 @@ const InsurersDirectory = () => {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-1">
                   <Filter className="h-4 w-4" />
-                  Filters
+                  {t("filters")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
                 <div className="space-y-4">
-                  <h4 className="font-medium">Filter Insurance Companies</h4>
+                  <h4 className="font-medium">{t("filterInsuranceCompanies")}</h4>
                   <Separator />
                   
                   <div className="space-y-2">
-                    <Label htmlFor="country">Country</Label>
+                    <Label htmlFor="country">{t("country")}</Label>
                     <Input 
                       id="country" 
-                      placeholder="Filter by country"
+                      placeholder={t("filterByCountry")}
                       value={countryFilter}
                       onChange={(e) => setCountryFilter(e.target.value)}
                     />
@@ -271,9 +274,9 @@ const InsurersDirectory = () => {
                   
                   <div className="flex justify-between pt-2">
                     <Button variant="outline" size="sm" onClick={resetFilters}>
-                      Reset Filters
+                      {t("resetFilters")}
                     </Button>
-                    <Button size="sm">Apply</Button>
+                    <Button size="sm">{t("apply")}</Button>
                   </div>
                 </div>
               </PopoverContent>
@@ -286,8 +289,8 @@ const InsurersDirectory = () => {
           columns={columns}
           isLoading={isLoading}
           emptyState={{
-            title: "No insurance companies found",
-            description: "Try adjusting your search or add a new insurance company.",
+            title: t("noInsuranceCompaniesFound"),
+            description: t("noInsuranceCompaniesFound"),
             action: null
           }}
         />

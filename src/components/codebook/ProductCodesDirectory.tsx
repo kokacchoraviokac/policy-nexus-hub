@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,11 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { InsuranceProduct } from "@/types/codebook";
 import ImportExportButtons from "./ImportExportButtons";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ProductCodesDirectory = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { products, isLoading, searchTerm, setSearchTerm, deleteProduct, addProduct, updateProduct } = useInsuranceProducts();
   const { toast } = useToast();
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
@@ -101,14 +104,14 @@ const ProductCodesDirectory = () => {
       }
       
       toast({
-        title: "Import completed",
-        description: `Created ${created} new products and updated ${updated} existing products.`,
+        title: t("importCompleted"),
+        description: t("createdNewProducts").replace("{0}", created.toString()).replace("{1}", updated.toString()),
       });
     } catch (error) {
       console.error("Error during import:", error);
       toast({
-        title: "Import failed",
-        description: "There was an error processing the imported data.",
+        title: t("importFailed"),
+        description: t("importFailedDescription"),
         variant: "destructive"
       });
     }
@@ -127,38 +130,38 @@ const ProductCodesDirectory = () => {
 
   const columns = [
     {
-      header: "Code",
+      header: t("code"),
       accessorKey: "code" as keyof InsuranceProduct,
       sortable: true
     },
     {
-      header: "Name",
+      header: t("name"),
       accessorKey: "name" as keyof InsuranceProduct,
       sortable: true
     },
     {
-      header: "Category",
+      header: t("category"),
       accessorKey: "category" as keyof InsuranceProduct,
       cell: (row: InsuranceProduct) => row.category || "-",
       sortable: true
     },
     {
-      header: "Insurer",
+      header: t("insurer"),
       accessorKey: "insurer_name" as keyof InsuranceProduct,
       sortable: true
     },
     {
-      header: "Status",
+      header: t("status"),
       accessorKey: "is_active" as keyof InsuranceProduct,
       cell: (row: InsuranceProduct) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
-          {row.is_active ? "Active" : "Inactive"}
+          {row.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
       sortable: true
     },
     {
-      header: "Actions",
+      header: t("actions"),
       accessorKey: (row: InsuranceProduct) => (
         <div className="flex gap-2 justify-end">
           <Button 
@@ -182,15 +185,15 @@ const ProductCodesDirectory = () => {
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will permanently delete the product "{row.name}". This action cannot be undone.
+                  {t("deleteProductConfirmation").replace("{0}", row.name)}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setProductToDelete(null)}>{t("cancel")}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-                  Delete
+                  {t("delete")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -204,19 +207,19 @@ const ProductCodesDirectory = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Insurance Products</CardTitle>
+          <CardTitle>{t("insuranceProductsDirectory")}</CardTitle>
           <CardDescription>
-            Manage product codes for different types of insurance
+            {t("insuranceProductsDirectoryDescription")}
           </CardDescription>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <ImportExportButtons
             onImport={handleImport}
             getData={getExportData}
-            entityName="Products"
+            entityName={t("insuranceProducts")}
           />
           <Button className="flex items-center gap-1" onClick={handleAddProduct}>
-            <Plus className="h-4 w-4" /> Add Product
+            <Plus className="h-4 w-4" /> {t("addProduct")}
           </Button>
         </div>
       </CardHeader>
@@ -225,7 +228,7 @@ const ProductCodesDirectory = () => {
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder="Search products..."
+            placeholder={t("searchProducts")}
             className="w-full sm:max-w-xs"
           />
           
@@ -235,12 +238,12 @@ const ProductCodesDirectory = () => {
               onValueChange={setStatusFilter}
             >
               <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t("status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="all">{t("allStatus")}</SelectItem>
+                <SelectItem value="active">{t("active")}</SelectItem>
+                <SelectItem value="inactive">{t("inactive")}</SelectItem>
               </SelectContent>
             </Select>
             
@@ -248,29 +251,29 @@ const ProductCodesDirectory = () => {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-1">
                   <Filter className="h-4 w-4" />
-                  Filters
+                  {t("filters")}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
                 <div className="space-y-4">
-                  <h4 className="font-medium">Filter Products</h4>
+                  <h4 className="font-medium">{t("filterProducts")}</h4>
                   <Separator />
                   
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
+                    <Label htmlFor="category">{t("category")}</Label>
                     <Input 
                       id="category" 
-                      placeholder="Filter by category"
+                      placeholder={t("filterByCategory")}
                       value={categoryFilter}
                       onChange={(e) => setCategoryFilter(e.target.value)}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="insurer">Insurer</Label>
+                    <Label htmlFor="insurer">{t("insurer")}</Label>
                     <Input 
                       id="insurer" 
-                      placeholder="Filter by insurer"
+                      placeholder={t("filterByInsurer")}
                       value={insurerFilter}
                       onChange={(e) => setInsurerFilter(e.target.value)}
                     />
@@ -278,9 +281,9 @@ const ProductCodesDirectory = () => {
                   
                   <div className="flex justify-between pt-2">
                     <Button variant="outline" size="sm" onClick={resetFilters}>
-                      Reset Filters
+                      {t("resetFilters")}
                     </Button>
-                    <Button size="sm">Apply</Button>
+                    <Button size="sm">{t("apply")}</Button>
                   </div>
                 </div>
               </PopoverContent>
@@ -293,8 +296,8 @@ const ProductCodesDirectory = () => {
           columns={columns}
           isLoading={isLoading}
           emptyState={{
-            title: "No insurance products found",
-            description: "Try adjusting your search or add a new product.",
+            title: t("noProductsFound"),
+            description: t("noProductsFound"),
             action: null
           }}
         />

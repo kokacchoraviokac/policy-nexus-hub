@@ -69,7 +69,7 @@ const InvitationManagement = () => {
   };
   
   const handleDeleteInvitation = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this invitation?')) {
+    if (window.confirm(t('areYouSure'))) {
       await deleteInvitation(id);
     }
   };
@@ -89,9 +89,9 @@ const InvitationManagement = () => {
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle>Invitation Management</CardTitle>
+            <CardTitle>{t('invitationManagementTitle')}</CardTitle>
             <CardDescription>
-              Invite new users to join your organization
+              {t('invitationManagementDescription')}
             </CardDescription>
           </div>
           <Button 
