@@ -333,6 +333,7 @@ const ProductCodesDirectory = () => {
         filters={filters}
         onApplyFilters={handleFilterChange}
         onResetFilters={resetFilters}
+        entityType="products"
         filterOptions={{
           showStatus: true,
           showCategory: true,

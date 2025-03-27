@@ -219,6 +219,7 @@ const ClientsDirectory = () => {
         filters={filters}
         onApplyFilters={handleFilterChange}
         onResetFilters={resetFilters}
+        entityType="clients"
         filterOptions={{
           showStatus: true,
           showCity: true,
