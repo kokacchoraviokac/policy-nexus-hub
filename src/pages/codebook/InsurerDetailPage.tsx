@@ -1,25 +1,30 @@
 
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Book, Building2, AlertCircle } from "lucide-react";
+import { Book, Building2, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EntityDetailsCard } from "@/components/codebook/details/EntityDetailsCard";
-import { InfoGrid, InfoItem } from "@/components/codebook/details/InfoItem";
-import { ActivityLog } from "@/components/codebook/details/ActivityLog";
 import { Insurer } from "@/types/codebook";
 import { exportToCSV } from "@/utils/csv";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import DeleteConfirmationDialog from "@/components/codebook/dialogs/DeleteConfirmationDialog";
 import InsurerForm from "@/components/codebook/forms/InsurerForm";
+import EntityNotFound from "@/components/codebook/details/EntityNotFound";
+import EntityLoadError from "@/components/codebook/details/EntityLoadError";
+import InsurerDetailTabs from "@/components/codebook/details/InsurerDetailTabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import ProductForm from "@/components/codebook/forms/ProductForm";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function InsurerDetailPage() {
   const { insurerId } = useParams<{ insurerId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
 
   const { data: insurer, isLoading, error, refetch } = useQuery({
     queryKey: ['insurer', insurerId],
@@ -52,51 +57,24 @@ export default function InsurerDetailPage() {
     }
   ];
 
-  if (isLoading) {
-    return <div className="flex justify-center p-8">Loading insurer details...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-destructive">
-        <AlertCircle className="h-8 w-8 mb-2" />
-        <h3 className="text-lg font-semibold">Error loading insurer details</h3>
-        <p>{error.message}</p>
-      </div>
-    );
-  }
-
-  if (!insurer) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8">
-        <AlertCircle className="h-8 w-8 mb-2" />
-        <h3 className="text-lg font-semibold">Insurer not found</h3>
-        <p>The insurance company you're looking for doesn't exist or has been removed.</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate('/codebook/companies')}>
-          Return to Insurance Companies Directory
-        </Button>
-      </div>
-    );
-  }
-
   const handleDelete = async () => {
     try {
       const { error } = await supabase
         .from('insurers')
         .delete()
-        .eq('id', insurer.id);
+        .eq('id', insurer!.id);
       
       if (error) throw error;
       
       toast({
-        title: 'Insurance company deleted',
-        description: `${insurer.name} has been removed from the system`,
+        title: t('insurerDeleted'),
+        description: t('insurerDeletedDescription').replace('{0}', insurer!.name),
       });
       
       navigate('/codebook/companies');
     } catch (err: any) {
       toast({
-        title: 'Error deleting insurance company',
+        title: t('errorDeletingInsurer'),
         description: err.message,
         variant: 'destructive',
       });
@@ -105,15 +83,15 @@ export default function InsurerDetailPage() {
 
   const handleExport = () => {
     try {
-      exportToCSV([insurer], `insurer_${insurer.id}_${new Date().toISOString().split('T')[0]}.csv`);
+      exportToCSV([insurer], `insurer_${insurer!.id}_${new Date().toISOString().split('T')[0]}.csv`);
       
       toast({
-        title: 'Export successful',
-        description: `Insurer data exported to CSV`,
+        title: t('exportSuccessful'),
+        description: t('insurerDataExported'),
       });
     } catch (error: any) {
       toast({
-        title: 'Export failed',
+        title: t('exportFailed'),
         description: error.message,
         variant: 'destructive',
       });
@@ -124,65 +102,71 @@ export default function InsurerDetailPage() {
     setIsEditDialogOpen(false);
     refetch();
     toast({
-      title: 'Insurance company updated',
-      description: 'Company information has been updated successfully',
+      title: t('insurerUpdated'),
+      description: t('insurerUpdatedDescription'),
     });
   };
+
+  const handleAddProduct = () => {
+    setIsAddProductDialogOpen(true);
+  };
+
+  const handleProductAdded = () => {
+    setIsAddProductDialogOpen(false);
+    toast({
+      title: t('productAdded'),
+      description: t('productAddedDescription'),
+    });
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8">{t('loadingInsurerDetails')}</div>;
+  }
+
+  if (error) {
+    return <EntityLoadError entityType={t('insurer')} error={error as Error} />;
+  }
+
+  if (!insurer) {
+    return <EntityNotFound entityType={t('insurer')} backPath="/codebook/companies" backLabel={t('insuranceCompaniesDirectory')} />;
+  }
+
+  const tabs = InsurerDetailTabs({ 
+    insurer, 
+    activityData, 
+    onAddProduct: handleAddProduct 
+  });
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center space-x-2 mb-6">
         <Book className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold tracking-tight">Codebook</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('codebook')}</h1>
         <span className="text-muted-foreground">/</span>
         <div className="flex items-center space-x-1">
           <Building2 className="h-5 w-5" />
-          <span className="font-medium">Insurance Company Details</span>
+          <span className="font-medium">{t('insuranceCompanyDetails')}</span>
         </div>
       </div>
       
       <EntityDetailsCard
         title={insurer.name}
-        subtitle={insurer.contact_person ? `Contact: ${insurer.contact_person}` : undefined}
+        subtitle={insurer.contact_person ? `${t('contact')}: ${insurer.contact_person}` : undefined}
         backLink="/codebook/companies"
-        backLinkLabel="Insurance Companies Directory"
+        backLinkLabel={t('insuranceCompaniesDirectory')}
         onEdit={() => setIsEditDialogOpen(true)}
         onDelete={() => setIsDeleteDialogOpen(true)}
         onExport={handleExport}
-        tabs={[
-          {
-            id: 'details',
-            label: 'Details',
-            content: (
-              <InfoGrid>
-                <InfoItem label="Name" value={insurer.name} />
-                <InfoItem label="Contact Person" value={insurer.contact_person} />
-                <InfoItem label="Email" value={insurer.email} />
-                <InfoItem label="Phone" value={insurer.phone} />
-                <InfoItem label="Address" value={insurer.address} />
-                <InfoItem label="City" value={insurer.city} />
-                <InfoItem label="Postal Code" value={insurer.postal_code} />
-                <InfoItem label="Country" value={insurer.country} />
-                <InfoItem label="Registration Number" value={insurer.registration_number} />
-                <InfoItem label="Active" value={insurer.is_active} />
-              </InfoGrid>
-            )
-          },
-          {
-            id: 'activity',
-            label: 'Activity History',
-            content: <ActivityLog items={activityData} />
-          }
-        ]}
+        tabs={tabs}
       />
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Edit Insurance Company</DialogTitle>
+            <DialogTitle>{t('editInsurer')}</DialogTitle>
             <DialogDescription>
-              Make changes to the insurance company information below.
+              {t('editInsurerDescription')}
             </DialogDescription>
           </DialogHeader>
           {insurer && (
@@ -200,8 +184,6 @@ export default function InsurerDetailPage() {
                 is_active: insurer.is_active,
               }} 
               onSubmit={(values) => {
-                // In a real app, this would update the insurer data
-                console.log("Updated insurer values:", values);
                 handleEditSuccess();
               }}
               onCancel={() => setIsEditDialogOpen(false)}
@@ -211,25 +193,41 @@ export default function InsurerDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+      {/* Add Product Dialog */}
+      <Dialog open={isAddProductDialogOpen} onOpenChange={setIsAddProductDialogOpen}>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Delete Insurance Company</DialogTitle>
+            <DialogTitle>{t('addProduct')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete <span className="font-medium">{insurer.name}</span>? This action cannot be undone.
+              {t('addProductForInsurerDescription')}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
-            </Button>
-          </DialogFooter>
+          <ProductForm 
+            defaultValues={{
+              code: "",
+              name: "",
+              category: "",
+              description: "",
+              is_active: true,
+              insurer_id: insurer.id,
+            }}
+            onSubmit={() => handleProductAdded()}
+            onCancel={() => setIsAddProductDialogOpen(false)}
+            isSubmitting={false}
+            preselectedInsurerId={insurer.id}
+            preselectedInsurerName={insurer.name}
+          />
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onDelete={handleDelete}
+        entityName={t('insuranceCompany')}
+        entityTitle={insurer.name}
+      />
     </div>
   );
 }

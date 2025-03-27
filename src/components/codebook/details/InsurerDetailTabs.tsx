@@ -5,6 +5,7 @@ import { InfoGrid, InfoItem } from "@/components/codebook/details/InfoItem";
 import { ActivityLog } from "@/components/codebook/details/ActivityLog";
 import { InsurerProductsList } from "@/components/codebook/relationships/InsurerProductsList";
 import { TabItem } from "@/types/ui";
+import { useNavigate } from "react-router-dom";
 
 interface ActivityItem {
   id: string;
@@ -25,6 +26,8 @@ const InsurerDetailTabs = ({
   activityData,
   onAddProduct
 }: InsurerDetailTabsProps): TabItem[] => {
+  const navigate = useNavigate();
+  
   return [
     {
       id: 'details',
