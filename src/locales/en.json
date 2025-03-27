@@ -219,5 +219,12 @@
   "productAdded": "Product added",
   "productAddedDescription": "New product has been added successfully.",
   "error": "Error",
-  "errorSavingProduct": "An error occurred while saving the product."
+  "errorSavingProduct": "An error occurred while saving the product.",
+  "showingItemsOf": "Showing {0}-{1} of {2} items",
+  "noItemsToShow": "No items to show",
+  "rowsPerPage": "Rows per page",
+  "page": "Page",
+  "of": "of",
+  "next": "Next",
+  "previous": "Previous"
 }

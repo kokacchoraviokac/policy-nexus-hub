@@ -11,6 +11,7 @@ import {
 import { Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import PaginationController from "./pagination-controller";
 
 interface SortConfig {
   key: string;
@@ -33,9 +34,23 @@ interface DataTableProps<T> {
     description?: string;
     action?: React.ReactNode;
   };
+  pagination?: {
+    pageSize: number;
+    currentPage: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
+    pageSizeOptions?: number[];
+  };
 }
 
-function DataTable<T>({ data, columns, isLoading, emptyState }: DataTableProps<T>) {
+function DataTable<T>({ 
+  data, 
+  columns, 
+  isLoading, 
+  emptyState,
+  pagination 
+}: DataTableProps<T>) {
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   if (isLoading) {
@@ -94,45 +109,64 @@ function DataTable<T>({ data, columns, isLoading, emptyState }: DataTableProps<T
       : <ArrowDown className="ml-2 h-4 w-4" />;
   };
 
+  // Calculate the total number of pages
+  const totalPages = pagination 
+    ? Math.ceil(pagination.totalItems / pagination.pageSize) 
+    : 1;
+
   return (
-    <div className="rounded-md border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column, index) => (
-              <TableHead key={index}>
-                {column.sortable ? (
-                  <Button
-                    variant="ghost"
-                    className="p-0 h-auto font-medium flex items-center"
-                    onClick={() => handleSort(column.accessorKey as string)}
-                  >
-                    {column.header}
-                    {getSortIcon(column.accessorKey as string)}
-                  </Button>
-                ) : (
-                  column.header
-                )}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedData.map((row, rowIndex) => (
-            <TableRow key={rowIndex}>
-              {columns.map((column, colIndex) => (
-                <TableCell key={colIndex}>
-                  {column.cell
-                    ? column.cell(row)
-                    : typeof column.accessorKey === "function"
-                    ? column.accessorKey(row)
-                    : row[column.accessorKey] as unknown as React.ReactNode}
-                </TableCell>
+    <div className="space-y-4">
+      <div className="rounded-md border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((column, index) => (
+                <TableHead key={index}>
+                  {column.sortable ? (
+                    <Button
+                      variant="ghost"
+                      className="p-0 h-auto font-medium flex items-center"
+                      onClick={() => handleSort(column.accessorKey as string)}
+                    >
+                      {column.header}
+                      {getSortIcon(column.accessorKey as string)}
+                    </Button>
+                  ) : (
+                    column.header
+                  )}
+                </TableHead>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {sortedData.map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {columns.map((column, colIndex) => (
+                  <TableCell key={colIndex}>
+                    {column.cell
+                      ? column.cell(row)
+                      : typeof column.accessorKey === "function"
+                      ? column.accessorKey(row)
+                      : row[column.accessorKey] as unknown as React.ReactNode}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {pagination && pagination.totalItems > 0 && (
+        <PaginationController
+          currentPage={pagination.currentPage}
+          totalPages={totalPages}
+          pageSize={pagination.pageSize}
+          totalItems={pagination.totalItems}
+          onPageChange={pagination.onPageChange}
+          onPageSizeChange={pagination.onPageSizeChange}
+          pageSizeOptions={pagination.pageSizeOptions}
+        />
+      )}
     </div>
   );
 }

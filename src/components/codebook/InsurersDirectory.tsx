@@ -27,7 +27,8 @@ const InsurersDirectory = () => {
     handleFilterChange,
     handleClearFilter,
     resetFilters,
-    getActiveFilterCount
+    getActiveFilterCount,
+    pagination
   } = useInsurers();
   
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
@@ -92,6 +93,15 @@ const InsurersDirectory = () => {
     }));
   };
 
+  const handlePageChange = (page: number) => {
+    pagination.setPage(page);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    pagination.setPageSize(pageSize);
+    pagination.setPage(1); // Reset to first page when changing page size
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -129,6 +139,14 @@ const InsurersDirectory = () => {
               isLoading={isLoading}
               onEdit={openEditForm}
               onDelete={handleDelete}
+              pagination={{
+                pageSize: pagination.pageSize,
+                currentPage: pagination.page,
+                totalItems: pagination.totalCount,
+                onPageChange: handlePageChange,
+                onPageSizeChange: handlePageSizeChange,
+                pageSizeOptions: [10, 25, 50, 100]
+              }}
             />
           )}
         </InsurerFormManager>

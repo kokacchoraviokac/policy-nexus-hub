@@ -13,13 +13,22 @@ interface InsurersTableProps {
   isLoading: boolean;
   onEdit: (insurerId: string) => void;
   onDelete: (insurerId: string) => void;
+  pagination?: {
+    pageSize: number;
+    currentPage: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
+    pageSizeOptions?: number[];
+  };
 }
 
 const InsurersTable: React.FC<InsurersTableProps> = ({
   insurers,
   isLoading,
   onEdit,
-  onDelete
+  onDelete,
+  pagination
 }) => {
   const { t } = useLanguage();
   const [insurerToDelete, setInsurerToDelete] = useState<Insurer | null>(null);
@@ -105,6 +114,7 @@ const InsurersTable: React.FC<InsurersTableProps> = ({
         data={insurers || []}
         columns={columns}
         isLoading={isLoading}
+        pagination={pagination}
         emptyState={{
           title: t("noInsuranceCompaniesFound"),
           description: t("noInsuranceCompaniesFound"),

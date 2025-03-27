@@ -11,7 +11,8 @@ export function useInsurers() {
     error, 
     searchTerm, 
     setSearchTerm, 
-    refetch 
+    refetch,
+    pagination
   } = useInsurersFetch();
 
   const {
@@ -45,6 +46,7 @@ export function useInsurers() {
     addInsurer,
     updateInsurer,
     deleteInsurer,
-    refetch
+    refetch,
+    pagination
   };
 }
