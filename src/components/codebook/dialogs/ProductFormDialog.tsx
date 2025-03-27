@@ -5,6 +5,7 @@ import ProductForm from "../forms/ProductForm";
 import { useInsuranceProducts } from "@/hooks/useInsuranceProducts";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProductFormDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { products, addProduct, updateProduct } = useInsuranceProducts();
   
   const currentProduct = productId
@@ -40,8 +42,8 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
           company_id: user?.companyId,
         });
         toast({
-          title: "Product updated",
-          description: "The product has been updated successfully.",
+          title: t("productUpdated"),
+          description: t("productUpdatedDescription"),
         });
       } else {
         await addProduct({
@@ -49,15 +51,15 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
           company_id: user?.companyId,
         });
         toast({
-          title: "Product added",
-          description: "The product has been added successfully.",
+          title: t("productAdded"),
+          description: t("productAddedDescription"),
         });
       }
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "An error occurred while saving the product.",
+        title: t("error"),
+        description: error.message || t("errorSavingProduct"),
         variant: "destructive",
       });
     } finally {
@@ -67,10 +69,10 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[800px]">
         <DialogHeader>
           <DialogTitle>
-            {productId ? "Edit Insurance Product" : "Add Insurance Product"}
+            {productId ? t("editInsuranceProduct") : t("addInsuranceProduct")}
           </DialogTitle>
         </DialogHeader>
         <ProductForm
@@ -83,6 +85,9 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                   description: currentProduct.description || "",
                   is_active: currentProduct.is_active,
                   insurer_id: currentProduct.insurer_id,
+                  name_translations: currentProduct.name_translations || {},
+                  description_translations: currentProduct.description_translations || {},
+                  category_translations: currentProduct.category_translations || {},
                 }
               : preselectedInsurerId 
                 ? {

@@ -4,9 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { InsuranceProduct } from '@/types/codebook';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function useInsuranceProducts(insurerId?: string) {
   const { toast } = useToast();
+  const { language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
 
   const {
@@ -16,7 +18,7 @@ export function useInsuranceProducts(insurerId?: string) {
     error,
     refetch
   } = useQuery({
-    queryKey: ['insurance_products', searchTerm, insurerId],
+    queryKey: ['insurance_products', searchTerm, insurerId, language],
     queryFn: async () => {
       let query = supabase
         .from('insurance_products')
@@ -45,11 +47,28 @@ export function useInsuranceProducts(insurerId?: string) {
         throw error;
       }
       
-      // Transform the data to match our interface
-      return data.map(item => ({
-        ...item,
-        insurer_name: item.insurers.name
-      })) as InsuranceProduct[];
+      // Transform the data to match our interface and apply translations
+      return data.map(item => {
+        const product = {
+          ...item,
+          insurer_name: item.insurers.name
+        } as InsuranceProduct;
+        
+        // Apply translations if available for the current language
+        if (language !== 'en' && product.name_translations && product.name_translations[language]) {
+          product.name = product.name_translations[language];
+        }
+        
+        if (language !== 'en' && product.category_translations && product.category_translations[language]) {
+          product.category = product.category_translations[language];
+        }
+        
+        if (language !== 'en' && product.description_translations && product.description_translations[language]) {
+          product.description = product.description_translations[language];
+        }
+        
+        return product;
+      });
     }
   });
 

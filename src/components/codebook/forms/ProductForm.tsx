@@ -17,6 +17,9 @@ const productFormSchema = z.object({
   description: z.string().optional(),
   is_active: z.boolean().default(true),
   insurer_id: z.string().min(1, "Insurer is required"),
+  name_translations: z.record(z.string()).optional().nullable(),
+  description_translations: z.record(z.string()).optional().nullable(),
+  category_translations: z.record(z.string()).optional().nullable(),
 });
 
 type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -28,6 +31,7 @@ interface ProductFormProps {
   isSubmitting: boolean;
   preselectedInsurerId?: string;
   preselectedInsurerName?: string;
+  enableMultilingual?: boolean;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({
@@ -38,12 +42,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
     description: "",
     is_active: true,
     insurer_id: "",
+    name_translations: {},
+    description_translations: {},
+    category_translations: {},
   },
   onSubmit,
   onCancel,
   isSubmitting,
   preselectedInsurerId,
-  preselectedInsurerName
+  preselectedInsurerName,
+  enableMultilingual = true
 }) => {
   const { user } = useAuth();
 
@@ -64,6 +72,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           form={form} 
           preselectedInsurerId={preselectedInsurerId}
           preselectedInsurerName={preselectedInsurerName}
+          enableMultilingual={enableMultilingual}
         />
         
         <StatusField 

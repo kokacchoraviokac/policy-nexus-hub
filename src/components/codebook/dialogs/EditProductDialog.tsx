@@ -3,6 +3,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ProductForm from "@/components/codebook/forms/ProductForm";
 import { InsuranceProduct } from "@/types/codebook";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EditProductDialogProps {
   open: boolean;
@@ -23,15 +24,17 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
   preselectedInsurerId,
   preselectedInsurerName,
 }) => {
+  const { t } = useLanguage();
+  
   if (!product) return null;
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Edit Insurance Product</DialogTitle>
+          <DialogTitle>{t("editInsuranceProduct")}</DialogTitle>
           <DialogDescription>
-            Make changes to the product information below.
+            {t("editProductDescription")}
           </DialogDescription>
         </DialogHeader>
         <ProductForm 
@@ -42,6 +45,9 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
             description: product.description || "",
             is_active: product.is_active,
             insurer_id: product.insurer_id,
+            name_translations: product.name_translations || {},
+            description_translations: product.description_translations || {},
+            category_translations: product.category_translations || {},
           }}
           onSubmit={onSubmit}
           onCancel={() => onOpenChange(false)}

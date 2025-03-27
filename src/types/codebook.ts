@@ -47,4 +47,10 @@ export interface InsuranceProduct {
   created_at: string;
   updated_at: string;
   insurer_name?: string; // For joining with insurer table
+  // Multilingual fields
+  name_translations?: Record<string, string> | null;
+  description_translations?: Record<string, string> | null;
+  category_translations?: Record<string, string> | null;
 }
+
+export type MultilingualProductField = 'name' | 'description' | 'category';
