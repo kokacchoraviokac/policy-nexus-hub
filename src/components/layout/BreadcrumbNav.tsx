@@ -2,6 +2,7 @@
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,28 +12,44 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-const pathMap: Record<string, string> = {
-  "": "Dashboard",
-  "settings": "Settings",
-  "settings/users": "User Management",
-  "policies": "Policies",
-  "sales": "Sales",
-  "claims": "Claims",
-  "finances": "Finances",
-  "codebook": "Codebook",
-  "agent": "Agent",
-  "reports": "Reports",
-  "profile": "Profile",
-};
-
 const BreadcrumbNav: React.FC = () => {
   const location = useLocation();
+  const { t } = useLanguage();
   const pathnames = location.pathname.split("/").filter((x) => x);
   
   // Don't show breadcrumbs on the main dashboard page
   if (pathnames.length === 0) {
     return null;
   }
+
+  // Function to get translated path names
+  const getTranslatedPathName = (path: string): string => {
+    const pathMap: Record<string, string> = {
+      "": "dashboard",
+      "settings": "settings",
+      "settings/users": "invitationManagement",
+      "policies": "policies",
+      "sales": "sales",
+      "claims": "claims",
+      "finances": "finances",
+      "codebook": "codebook",
+      "agent": "agent",
+      "reports": "reports",
+      "profile": "myProfile",
+    };
+    
+    const translationKey = pathMap[path] || path;
+    // First try to translate with the key directly
+    const translated = t(translationKey);
+    
+    // If translation returned the key itself, it means there's no translation
+    // In that case, just capitalize the first letter
+    if (translated === translationKey && !pathMap[path]) {
+      return path.charAt(0).toUpperCase() + path.slice(1);
+    }
+    
+    return translated;
+  };
 
   return (
     <div className="py-2 px-4">
@@ -52,7 +69,7 @@ const BreadcrumbNav: React.FC = () => {
             const url = `/${pathnames.slice(0, index + 1).join("/")}`;
             const isLast = index === pathnames.length - 1;
             const fullPath = pathnames.slice(0, index + 1).join("/");
-            const displayName = pathMap[fullPath] || value.charAt(0).toUpperCase() + value.slice(1);
+            const displayName = getTranslatedPathName(fullPath);
             
             return (
               <React.Fragment key={url}>

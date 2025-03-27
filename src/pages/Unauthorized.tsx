@@ -3,9 +3,11 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Unauthorized = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
@@ -15,13 +17,13 @@ const Unauthorized = () => {
             <Shield className="h-12 w-12 text-orange-500" />
           </div>
         </div>
-        <h1 className="text-4xl font-bold">Access Denied</h1>
+        <h1 className="text-4xl font-bold">{t("unauthorized")}</h1>
         <p className="text-lg text-gray-600 mt-4">
-          You don't have permission to access this page. Please contact your administrator for assistance.
+          {t("unauthorizedMessage")}
         </p>
         <div className="mt-8 space-x-4">
           <Button onClick={() => navigate("/")}>
-            Return to Dashboard
+            {t("returnToDashboard")}
           </Button>
         </div>
       </div>
