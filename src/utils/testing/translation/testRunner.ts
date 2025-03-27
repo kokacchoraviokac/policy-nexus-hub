@@ -1,0 +1,119 @@
+
+import en from '../../../locales/en.json';
+import sr from '../../../locales/sr.json';
+import mk from '../../../locales/mk.json';
+import es from '../../../locales/es.json';
+import { testTranslationExists } from './existenceTest';
+import { testTranslationParameters } from './parameterTest';
+import { testHtmlTranslations } from './htmlTest';
+import { TestCaseResult, TranslationTestReport } from './types';
+
+/**
+ * Runs all translation tests on every translation key
+ */
+export const runAllTranslationTests = (): TranslationTestReport => {
+  const testCases: TestCaseResult[] = [];
+  let totalTests = 0;
+  let passedTests = 0;
+  let failedTests = 0;
+  
+  // Get all unique keys from all language files
+  const allKeys = new Set([
+    ...Object.keys(en),
+    ...Object.keys(sr),
+    ...Object.keys(mk),
+    ...Object.keys(es)
+  ]);
+  
+  // Test existence for all keys
+  const existenceTestCase: TestCaseResult = {
+    testName: 'Translation Existence',
+    results: []
+  };
+  
+  allKeys.forEach(key => {
+    const results = testTranslationExists(key);
+    existenceTestCase.results.push(...results);
+    
+    totalTests += results.length;
+    passedTests += results.filter(r => r.passed).length;
+    failedTests += results.filter(r => !r.passed).length;
+  });
+  
+  testCases.push(existenceTestCase);
+  
+  // Test parameters for all English keys
+  const parameterTestCase: TestCaseResult = {
+    testName: 'Translation Parameters',
+    results: []
+  };
+  
+  Object.keys(en).forEach(key => {
+    const results = testTranslationParameters(key);
+    parameterTestCase.results.push(...results);
+    
+    totalTests += results.length;
+    passedTests += results.filter(r => r.passed).length;
+    failedTests += results.filter(r => !r.passed).length;
+  });
+  
+  testCases.push(parameterTestCase);
+  
+  // Test HTML tags for all English keys
+  const htmlTestCase: TestCaseResult = {
+    testName: 'HTML Translation',
+    results: []
+  };
+  
+  Object.keys(en).forEach(key => {
+    const results = testHtmlTranslations(key);
+    htmlTestCase.results.push(...results);
+    
+    totalTests += results.length;
+    passedTests += results.filter(r => r.passed).length;
+    failedTests += results.filter(r => !r.passed).length;
+  });
+  
+  testCases.push(htmlTestCase);
+  
+  return {
+    totalTests,
+    passedTests,
+    failedTests,
+    testCases
+  };
+};
+
+// Development utility function to run tests in the browser console
+export const runTranslationTests = () => {
+  if (process.env.NODE_ENV !== 'production') {
+    const report = runAllTranslationTests();
+    
+    console.group('🧪 Translation Test Results');
+    console.log(`Total Tests: ${report.totalTests}`);
+    console.log(`Passed: ${report.passedTests} (${Math.round((report.passedTests / report.totalTests) * 100)}%)`);
+    console.log(`Failed: ${report.failedTests} (${Math.round((report.failedTests / report.totalTests) * 100)}%)`);
+    
+    report.testCases.forEach(testCase => {
+      const failedResults = testCase.results.filter(r => !r.passed);
+      if (failedResults.length > 0) {
+        console.group(`⚠️ ${testCase.testName} - ${failedResults.length} failures`);
+        failedResults.forEach(result => console.log(`❌ ${result.message}`));
+        console.groupEnd();
+      } else {
+        console.log(`✅ ${testCase.testName} - All tests passed`);
+      }
+    });
+    
+    console.groupEnd();
+    return report;
+  }
+  return null;
+};
+
+// Expose test runner globally in development
+if (process.env.NODE_ENV !== 'production') {
+  // @ts-ignore
+  window.__runTranslationTests = runTranslationTests;
+  console.log('Translation test utility available. Run window.__runTranslationTests() to use it.');
+}
