@@ -1,4 +1,3 @@
-
 import en from '../../locales/en.json';
 import sr from '../../locales/sr.json';
 import mk from '../../locales/mk.json';
@@ -82,11 +81,12 @@ const testTranslationParameters = (key: string): TestResult[] => {
     const extraParams = langParams.filter(p => !englishParams.includes(p));
     
     if (missingParams.length > 0 || extraParams.length > 0) {
+      const missingParamsText = missingParams.length > 0 ? `Missing: {${missingParams.join('}, {')}} ` : '';
+      const extraParamsText = extraParams.length > 0 ? `Extra: {${extraParams.join('}, {')}}` : '';
+      
       results.push({
         passed: false,
-        message: `Parameter mismatch in ${lang.toUpperCase()} for "${key}": ` +
-          (missingParams.length > 0 ? `Missing: {${missingParams.join('}, {'}} ` : '') +
-          (extraParams.length > 0 ? `Extra: {${extraParams.join('}, {'}}` : '')
+        message: `Parameter mismatch in ${lang.toUpperCase()} for "${key}": ${missingParamsText}${extraParamsText}`.trim()
       });
     } else {
       results.push({
