@@ -53,7 +53,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   };
 
   const [language, setLanguageState] = useState<Language>(getInitialLanguage);
-  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translations, setTranslations] = useState<Record<string, string>>(en);
   const [isLoading, setIsLoading] = useState(true);
   const [missingTranslationsCount, setMissingTranslationsCount] = useState(0);
 
@@ -66,12 +66,27 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     const loadTranslations = async () => {
       try {
         setIsLoading(true);
-        const module = await import(`../locales/${language}.json`);
-        setTranslations(module.default);
+        
+        let translationData: Record<string, string>;
+        
+        // Load the appropriate translation file based on the selected language
+        if (language === 'en') {
+          translationData = en;
+        } else if (language === 'sr') {
+          translationData = sr;
+        } else if (language === 'mk') {
+          translationData = mk;
+        } else if (language === 'es') {
+          translationData = es;
+        } else {
+          translationData = en; // Fallback to English
+        }
+        
+        setTranslations(translationData);
         
         if (language !== 'en') {
           const englishKeys = Object.keys(en);
-          const currentKeys = Object.keys(module.default);
+          const currentKeys = Object.keys(translationData);
           const missingCount = englishKeys.filter(key => !currentKeys.includes(key)).length;
           setMissingTranslationsCount(missingCount);
         } else {
