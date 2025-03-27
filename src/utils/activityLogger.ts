@@ -141,7 +141,12 @@ export const fetchActivityLogs = async (entityType: EntityType, entityId: string
       action: formatAction(log.action as ActivityAction),
       timestamp: log.created_at,
       user: userNames[log.user_id] || 'Unknown user',
-      details: formatDetails(log.action as ActivityAction, log.details)
+      details: formatDetails(log.action as ActivityAction, 
+        // Make sure we parse the details if it's a string, or use it directly if it's already an object
+        typeof log.details === 'string' 
+          ? JSON.parse(log.details) 
+          : log.details as Record<string, any> | undefined
+      )
     }));
   } catch (error) {
     console.error("Failed to fetch activity logs:", error);
