@@ -19,8 +19,9 @@ interface AdvancedFilterDialogProps {
   onOpenChange: (open: boolean) => void;
   filters: CodebookFilterState;
   onApplyFilters: (filters: CodebookFilterState) => void;
-  onResetFilters: () => void;
-  filterOptions: {
+  onResetFilters?: () => void;
+  entityType: 'insurers' | 'clients' | 'products';
+  filterOptions?: {
     showStatus?: boolean;
     showCity?: boolean;
     showCountry?: boolean;
@@ -36,7 +37,13 @@ const AdvancedFilterDialog: React.FC<AdvancedFilterDialogProps> = ({
   filters,
   onApplyFilters,
   onResetFilters,
-  filterOptions,
+  entityType,
+  filterOptions = {
+    showStatus: true,
+    showCity: true,
+    showCountry: true,
+    showCreatedDates: true
+  }
 }) => {
   const { t } = useLanguage();
   const [localFilters, setLocalFilters] = React.useState<CodebookFilterState>(filters);
@@ -58,7 +65,29 @@ const AdvancedFilterDialog: React.FC<AdvancedFilterDialogProps> = ({
   };
 
   const handleReset = () => {
-    onResetFilters();
+    if (onResetFilters) {
+      onResetFilters();
+    } else {
+      // Default reset behavior if no reset function provided
+      setLocalFilters({
+        status: 'all',
+        city: '',
+        country: '',
+        category: '',
+        insurer: '',
+        createdAfter: null,
+        createdBefore: null
+      });
+      onApplyFilters({
+        status: 'all',
+        city: '',
+        country: '',
+        category: '',
+        insurer: '',
+        createdAfter: null,
+        createdBefore: null
+      });
+    }
     onOpenChange(false);
   };
 

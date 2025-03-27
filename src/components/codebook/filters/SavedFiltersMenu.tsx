@@ -38,7 +38,7 @@ const SavedFiltersMenu: React.FC<SavedFiltersMenuProps> = ({
       await onDeleteFilter(filterId);
       toast({
         title: t("success"),
-        description: t("filterDeletedSuccessfully", { name: "filter" }),
+        description: t("filterDeletedSuccessfully"),
       });
     } catch (error) {
       console.error("Error deleting filter:", error);

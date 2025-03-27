@@ -35,6 +35,7 @@ const InsurersDirectory: React.FC = () => {
     handleClearFilter,
     getActiveFilterCount,
     addInsurer,
+    resetFilters,
     pagination
   } = useInsurers();
   
@@ -45,7 +46,7 @@ const InsurersDirectory: React.FC = () => {
   } = useSavedFilters('insurers');
 
   const handleViewDetails = (id: string) => {
-    navigate(`/codebook/insurers/${id}`);
+    navigate(`/codebook/companies/${id}`);
   };
 
   const handleAddInsurer = async (formData: any) => {
@@ -109,7 +110,7 @@ const InsurersDirectory: React.FC = () => {
         
         <div className="flex flex-wrap gap-2">
           {canImportExport && (
-            <ImportExportButtons<any>
+            <ImportExportButtons
               getData={getExportData}
               entityName={t('insuranceCompanies')}
             />
@@ -171,7 +172,14 @@ const InsurersDirectory: React.FC = () => {
         onOpenChange={setFilterDialogOpen}
         filters={filters}
         onApplyFilters={handleFilterChange}
+        onResetFilters={resetFilters}
         entityType="insurers"
+        filterOptions={{
+          showStatus: true,
+          showCity: true,
+          showCountry: true,
+          showCreatedDates: true
+        }}
       />
       
       <SaveFilterDialog
