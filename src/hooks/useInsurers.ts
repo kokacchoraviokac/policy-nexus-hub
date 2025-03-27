@@ -1,13 +1,18 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Insurer } from '@/types/codebook';
+import type { Insurer, CodebookFilterState } from '@/types/codebook';
 import { useToast } from '@/hooks/use-toast';
 
 export function useInsurers() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<CodebookFilterState>({
+    status: 'all',
+    country: ''
+  });
+  const [filteredInsurers, setFilteredInsurers] = useState<Insurer[]>([]);
 
   const {
     data: insurers,
@@ -41,6 +46,85 @@ export function useInsurers() {
       return data as Insurer[];
     }
   });
+
+  // Apply filters to insurers
+  useEffect(() => {
+    if (!insurers) return;
+    
+    let filtered = [...insurers];
+    
+    // Filter by status
+    if (filters.status !== "all") {
+      const isActive = filters.status === "active";
+      filtered = filtered.filter(insurer => insurer.is_active === isActive);
+    }
+    
+    // Filter by country
+    if (filters.country && filters.country.trim() !== '') {
+      filtered = filtered.filter(insurer => 
+        insurer.country && insurer.country.toLowerCase().includes(filters.country!.toLowerCase())
+      );
+    }
+    
+    // Filter by city
+    if (filters.city && filters.city.trim() !== '') {
+      filtered = filtered.filter(insurer => 
+        insurer.city && insurer.city.toLowerCase().includes(filters.city!.toLowerCase())
+      );
+    }
+    
+    // Filter by date created (after)
+    if (filters.createdAfter) {
+      filtered = filtered.filter(insurer => {
+        const createdAt = new Date(insurer.created_at);
+        return createdAt >= filters.createdAfter!;
+      });
+    }
+    
+    // Filter by date created (before)
+    if (filters.createdBefore) {
+      filtered = filtered.filter(insurer => {
+        const createdAt = new Date(insurer.created_at);
+        return createdAt <= filters.createdBefore!;
+      });
+    }
+    
+    setFilteredInsurers(filtered);
+  }, [insurers, filters, searchTerm]);
+
+  const handleFilterChange = (newFilters: CodebookFilterState) => {
+    setFilters(newFilters);
+  };
+
+  const handleClearFilter = (key: keyof CodebookFilterState) => {
+    setFilters(prev => {
+      const updatedFilters = { ...prev };
+      if (key === 'status') {
+        updatedFilters.status = 'all';
+      } else {
+        updatedFilters[key] = undefined;
+      }
+      return updatedFilters;
+    });
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      status: 'all',
+      country: ''
+    });
+  };
+
+  // Count active filters
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.status && filters.status !== 'all') count++;
+    if (filters.country && filters.country.trim() !== '') count++;
+    if (filters.city && filters.city.trim() !== '') count++;
+    if (filters.createdAfter) count++;
+    if (filters.createdBefore) count++;
+    return count;
+  };
 
   const addInsurer = async (insurer: Omit<Insurer, 'id' | 'created_at' | 'updated_at'>) => {
     try {
@@ -123,12 +207,18 @@ export function useInsurers() {
   };
 
   return {
-    insurers,
+    insurers: filteredInsurers,
+    allInsurers: insurers,
     isLoading,
     isError,
     error,
     searchTerm,
     setSearchTerm,
+    filters,
+    handleFilterChange,
+    handleClearFilter,
+    resetFilters,
+    getActiveFilterCount,
     addInsurer,
     updateInsurer,
     deleteInsurer,

@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useInsurers } from "@/hooks/useInsurers";
-import { useToast } from "@/hooks/use-toast";
-import { Insurer, CodebookFilterState } from "@/types/codebook";
+import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
 import InsurerFormDialog from "./dialogs/InsurerFormDialog";
@@ -13,58 +12,26 @@ import InsurersActionButtons from "./insurers/InsurersActionButtons";
 
 const InsurersDirectory = () => {
   const { t } = useLanguage();
-  const { insurers, isLoading, searchTerm, setSearchTerm, deleteInsurer, addInsurer, updateInsurer } = useInsurers();
-  const { toast } = useToast();
+  const { 
+    insurers, 
+    allInsurers,
+    isLoading, 
+    searchTerm, 
+    setSearchTerm, 
+    deleteInsurer, 
+    addInsurer, 
+    updateInsurer,
+    filters,
+    handleFilterChange,
+    handleClearFilter,
+    resetFilters,
+    getActiveFilterCount
+  } = useInsurers();
+  
   const [insurerToDelete, setInsurerToDelete] = useState<string | null>(null);
   const [isInsurerFormOpen, setIsInsurerFormOpen] = useState(false);
   const [selectedInsurerId, setSelectedInsurerId] = useState<string | undefined>(undefined);
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
-  
-  const [filters, setFilters] = useState<CodebookFilterState>({
-    status: 'all',
-    country: ''
-  });
-  
-  const [filteredInsurers, setFilteredInsurers] = useState<Insurer[]>([]);
-
-  useEffect(() => {
-    if (!insurers) return;
-    
-    let filtered = [...insurers];
-    
-    if (filters.status !== "all") {
-      const isActive = filters.status === "active";
-      filtered = filtered.filter(insurer => insurer.is_active === isActive);
-    }
-    
-    if (filters.country && filters.country.trim() !== '') {
-      filtered = filtered.filter(insurer => 
-        insurer.country && insurer.country.toLowerCase().includes(filters.country!.toLowerCase())
-      );
-    }
-    
-    if (filters.city && filters.city.trim() !== '') {
-      filtered = filtered.filter(insurer => 
-        insurer.city && insurer.city.toLowerCase().includes(filters.city!.toLowerCase())
-      );
-    }
-    
-    if (filters.createdAfter) {
-      filtered = filtered.filter(insurer => {
-        const createdAt = new Date(insurer.created_at);
-        return createdAt >= filters.createdAfter!;
-      });
-    }
-    
-    if (filters.createdBefore) {
-      filtered = filtered.filter(insurer => {
-        const createdAt = new Date(insurer.created_at);
-        return createdAt <= filters.createdBefore!;
-      });
-    }
-    
-    setFilteredInsurers(filtered);
-  }, [insurers, filters, searchTerm]);
 
   const handleDelete = async () => {
     if (!insurerToDelete) return;
@@ -87,47 +54,13 @@ const InsurersDirectory = () => {
     setIsInsurerFormOpen(true);
   };
 
-  const handleFilterChange = (newFilters: CodebookFilterState) => {
-    setFilters(newFilters);
-  };
-
-  const handleClearFilter = (key: keyof CodebookFilterState) => {
-    setFilters(prev => {
-      const updatedFilters = { ...prev };
-      if (key === 'status') {
-        updatedFilters.status = 'all';
-      } else {
-        updatedFilters[key] = undefined;
-      }
-      return updatedFilters;
-    });
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      status: 'all',
-      country: ''
-    });
-  };
-
-  // Count active filters
-  const getActiveFilterCount = () => {
-    let count = 0;
-    if (filters.status && filters.status !== 'all') count++;
-    if (filters.country && filters.country.trim() !== '') count++;
-    if (filters.city && filters.city.trim() !== '') count++;
-    if (filters.createdAfter) count++;
-    if (filters.createdBefore) count++;
-    return count;
-  };
-
   const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
     try {
       let created = 0;
       let updated = 0;
       
       for (const insurerData of importedInsurers) {
-        const existingInsurer = insurers?.find(c => c.name === insurerData.name);
+        const existingInsurer = allInsurers?.find(c => c.name === insurerData.name);
         
         if (existingInsurer) {
           await updateInsurer(existingInsurer.id, insurerData as Partial<Insurer>);
@@ -138,22 +71,15 @@ const InsurersDirectory = () => {
         }
       }
       
-      toast({
-        title: t("importCompleted"),
-        description: t("createdNewInsurers").replace("{0}", created.toString()).replace("{1}", updated.toString()),
-      });
+      return { created, updated };
     } catch (error) {
       console.error("Error during import:", error);
-      toast({
-        title: t("importFailed"),
-        description: t("importFailedDescription"),
-        variant: "destructive"
-      });
+      throw error;
     }
   };
 
   const getExportData = () => {
-    return filteredInsurers.map(insurer => ({
+    return insurers.map(insurer => ({
       name: insurer.name,
       contact_person: insurer.contact_person || '',
       email: insurer.email || '',
@@ -194,7 +120,7 @@ const InsurersDirectory = () => {
         />
         
         <InsurersTable
-          insurers={filteredInsurers}
+          insurers={insurers}
           isLoading={isLoading}
           onEdit={handleEditInsurer}
           onDelete={(id) => {

@@ -5,9 +5,10 @@ import { Plus } from "lucide-react";
 import ImportExportButtons from "@/components/codebook/ImportExportButtons";
 import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface InsurersActionButtonsProps {
-  onImport: (importedInsurers: Partial<Insurer>[]) => Promise<void>;
+  onImport: (importedInsurers: Partial<Insurer>[]) => Promise<{ created: number, updated: number }>;
   getExportData: () => any[];
   onAddInsurer: () => void;
 }
@@ -18,11 +19,30 @@ const InsurersActionButtons: React.FC<InsurersActionButtonsProps> = ({
   onAddInsurer
 }) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+
+  const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
+    try {
+      const { created, updated } = await onImport(importedInsurers);
+      
+      toast({
+        title: t("importCompleted"),
+        description: t("createdNewInsurers").replace("{0}", created.toString()).replace("{1}", updated.toString()),
+      });
+    } catch (error) {
+      console.error("Error during import:", error);
+      toast({
+        title: t("importFailed"),
+        description: t("importFailedDescription"),
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col sm:flex-row gap-2">
       <ImportExportButtons
-        onImport={onImport}
+        onImport={handleImport}
         getData={getExportData}
         entityName={t("insuranceCompanies")}
       />
