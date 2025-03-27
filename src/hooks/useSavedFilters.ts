@@ -55,7 +55,7 @@ export function useSavedFilters(entityType: 'insurers' | 'clients' | 'products')
     const newFilter = {
       name,
       entity_type: entityType,
-      filters: JSON.stringify(filters),
+      filters,
       user_id: user.id,
       company_id: user.companyId || '00000000-0000-0000-0000-000000000000' // Fallback if no company_id
     };
