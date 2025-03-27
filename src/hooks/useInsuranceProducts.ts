@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { InsuranceProduct } from '@/types/codebook';
 import { useToast } from '@/hooks/use-toast';
 
-export function useInsuranceProducts() {
+export function useInsuranceProducts(insurerId?: string) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -16,7 +16,7 @@ export function useInsuranceProducts() {
     error,
     refetch
   } = useQuery({
-    queryKey: ['insurance_products', searchTerm],
+    queryKey: ['insurance_products', searchTerm, insurerId],
     queryFn: async () => {
       let query = supabase
         .from('insurance_products')
@@ -27,6 +27,10 @@ export function useInsuranceProducts() {
       
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,code.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+      }
+      
+      if (insurerId) {
+        query = query.eq('insurer_id', insurerId);
       }
       
       const { data, error } = await query.order('name');

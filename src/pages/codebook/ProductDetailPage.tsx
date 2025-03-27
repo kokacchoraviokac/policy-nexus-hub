@@ -128,6 +128,9 @@ export default function ProductDetailPage() {
     return <EntityNotFound entityType="Product" backPath="/codebook/products" backLabel="Products Directory" />;
   }
 
+  // Create the tabs using the ProductDetailTabs component
+  const tabs = ProductDetailTabs({ product, activityData });
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center space-x-2 mb-6">
@@ -148,7 +151,7 @@ export default function ProductDetailPage() {
         onEdit={() => setIsEditDialogOpen(true)}
         onDelete={() => setIsDeleteDialogOpen(true)}
         onExport={handleExport}
-        tabs={ProductDetailTabs({ product, activityData })}
+        tabs={tabs}
       />
 
       <EditProductDialog 

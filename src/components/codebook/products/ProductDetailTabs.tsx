@@ -18,7 +18,7 @@ interface ProductDetailTabsProps {
 }
 
 const ProductDetailTabs: React.FC<ProductDetailTabsProps> = ({ product, activityData }) => {
-  return [
+  const tabs = [
     {
       id: 'details',
       label: 'Details',
@@ -46,6 +46,8 @@ const ProductDetailTabs: React.FC<ProductDetailTabsProps> = ({ product, activity
       content: <ActivityLog items={activityData} />
     }
   ];
+  
+  return tabs;
 };
 
 export default ProductDetailTabs;
