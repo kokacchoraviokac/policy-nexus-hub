@@ -4,6 +4,7 @@ import { Client } from "@/types/codebook";
 import { InfoGrid, InfoItem } from "@/components/codebook/details/InfoItem";
 import { ActivityLog } from "@/components/codebook/details/ActivityLog";
 import { ClientPoliciesList } from "@/components/codebook/relationships/ClientPoliciesList";
+import { TabItem } from "@/types/ui";
 
 interface ActivityItem {
   id: string;
@@ -18,8 +19,8 @@ interface ClientDetailTabsProps {
   activityData: ActivityItem[];
 }
 
-const ClientDetailTabs: React.FC<ClientDetailTabsProps> = ({ client, activityData }) => {
-  const tabs = [
+const ClientDetailTabs = ({ client, activityData }: ClientDetailTabsProps): TabItem[] => {
+  return [
     {
       id: 'details',
       label: 'Details',
@@ -59,8 +60,6 @@ const ClientDetailTabs: React.FC<ClientDetailTabsProps> = ({ client, activityDat
       content: <ActivityLog items={activityData} />
     }
   ];
-  
-  return tabs;
 };
 
 export default ClientDetailTabs;

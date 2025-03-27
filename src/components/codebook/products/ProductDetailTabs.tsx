@@ -3,6 +3,7 @@ import React from "react";
 import { InsuranceProduct } from "@/types/codebook";
 import { InfoGrid, InfoItem } from "@/components/codebook/details/InfoItem";
 import { ActivityLog } from "@/components/codebook/details/ActivityLog";
+import { TabItem } from "@/types/ui";
 
 interface ActivityItem {
   id: string;
@@ -17,8 +18,8 @@ interface ProductDetailTabsProps {
   activityData: ActivityItem[];
 }
 
-const ProductDetailTabs: React.FC<ProductDetailTabsProps> = ({ product, activityData }) => {
-  const tabs = [
+const ProductDetailTabs = ({ product, activityData }: ProductDetailTabsProps): TabItem[] => {
+  return [
     {
       id: 'details',
       label: 'Details',
@@ -46,8 +47,6 @@ const ProductDetailTabs: React.FC<ProductDetailTabsProps> = ({ product, activity
       content: <ActivityLog items={activityData} />
     }
   ];
-  
-  return tabs;
 };
 
 export default ProductDetailTabs;

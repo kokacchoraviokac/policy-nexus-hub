@@ -128,7 +128,6 @@ export default function ProductDetailPage() {
     return <EntityNotFound entityType="Product" backPath="/codebook/products" backLabel="Products Directory" />;
   }
 
-  // Create the tabs using the ProductDetailTabs component
   const tabs = ProductDetailTabs({ product, activityData });
 
   return (

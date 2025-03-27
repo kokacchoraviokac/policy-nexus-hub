@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash, ArrowLeft, FileDown } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { TabItem } from "@/types/ui";
 
 interface EntityDetailsCardProps {
   title: string;
@@ -15,11 +16,7 @@ interface EntityDetailsCardProps {
   onDelete?: () => void;
   onExport?: () => void;
   children?: React.ReactNode;
-  tabs?: {
-    id: string;
-    label: string;
-    content: React.ReactNode;
-  }[];
+  tabs?: TabItem[];
 }
 
 export function EntityDetailsCard({

@@ -4,6 +4,7 @@ import { Insurer } from "@/types/codebook";
 import { InfoGrid, InfoItem } from "@/components/codebook/details/InfoItem";
 import { ActivityLog } from "@/components/codebook/details/ActivityLog";
 import { InsurerProductsList } from "@/components/codebook/relationships/InsurerProductsList";
+import { TabItem } from "@/types/ui";
 
 interface ActivityItem {
   id: string;
@@ -19,12 +20,12 @@ interface InsurerDetailTabsProps {
   onAddProduct?: () => void;
 }
 
-const InsurerDetailTabs: React.FC<InsurerDetailTabsProps> = ({ 
+const InsurerDetailTabs = ({ 
   insurer, 
   activityData,
   onAddProduct
-}) => {
-  const tabs = [
+}: InsurerDetailTabsProps): TabItem[] => {
+  return [
     {
       id: 'details',
       label: 'Details',
@@ -60,8 +61,6 @@ const InsurerDetailTabs: React.FC<InsurerDetailTabsProps> = ({
       content: <ActivityLog items={activityData} />
     }
   ];
-  
-  return tabs;
 };
 
 export default InsurerDetailTabs;
