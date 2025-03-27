@@ -230,7 +230,7 @@ export default function ClientDetailPage() {
           <DialogHeader>
             <DialogTitle>{t("deleteClient")}</DialogTitle>
             <DialogDescription>
-              {t("deleteClientConfirmationLong").replace("{0}", <span className="font-medium">{client.name}</span>)}
+              {t("deleteClientConfirmationLong").replace("{0}", client.name)}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
