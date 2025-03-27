@@ -19,7 +19,7 @@ interface ProductsFiltersProps {
   activeFilterCount: number;
   // Saved filters props
   savedFilters?: SavedFilter[];
-  onSaveFilter?: (name: string, filters: CodebookFilterState) => void;
+  onSaveFilter?: (name: string) => void;
   onDeleteFilter?: (filterId: string) => void;
   isSaving?: boolean;
   isDeleting?: boolean;
@@ -85,6 +85,7 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
               isSaving={isSaving}
               isDeleting={isDeleting}
               parseFilterData={parseFilterData}
+              entityType="products"
             />
           )}
           
