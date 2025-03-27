@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/utils/format";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Policy {
   id: string;
@@ -39,6 +40,7 @@ interface Policy {
 
 const Policies = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useLanguage();
   
   const { data: policies, isLoading, isError, refetch } = useQuery({
     queryKey: ['policies', searchTerm],
@@ -93,9 +95,9 @@ const Policies = () => {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Policies</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("policies")}</h1>
           <p className="text-muted-foreground">
-            Manage all policy-related activities including creation, updates, renewals, and documentation.
+            {t("policiesDescription")}
           </p>
         </div>
         
@@ -105,7 +107,7 @@ const Policies = () => {
           </Button>
           <Button>
             <FilePlus className="mr-2 h-4 w-4" />
-            New Policy
+            {t("newPolicy")}
           </Button>
         </div>
       </div>
@@ -115,12 +117,12 @@ const Policies = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center">
               <Calendar className="mr-2 h-4 w-4 text-primary" />
-              Upcoming Renewals
+              {t("upcomingRenewals")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">12</p>
-            <p className="text-xs text-muted-foreground">Next 30 days</p>
+            <p className="text-xs text-muted-foreground">{t("nextDays")}</p>
           </CardContent>
         </Card>
         
@@ -128,12 +130,12 @@ const Policies = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center">
               <FileText className="mr-2 h-4 w-4 text-primary" />
-              Active Policies
+              {t("activePolicies")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">128</p>
-            <p className="text-xs text-muted-foreground">Across 42 clients</p>
+            <p className="text-xs text-muted-foreground">{t("acrossClients")}</p>
           </CardContent>
         </Card>
         
@@ -141,23 +143,23 @@ const Policies = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center">
               <Users className="mr-2 h-4 w-4 text-primary" />
-              Unassigned Policies
+              {t("unassignedPolicies")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">3</p>
-            <p className="text-xs text-muted-foreground">Need attention</p>
+            <p className="text-xs text-muted-foreground">{t("needAttention")}</p>
           </CardContent>
         </Card>
       </div>
       
       <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-border">
         <div className="p-4 border-b flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-          <h2 className="font-semibold">Recent Policies</h2>
+          <h2 className="font-semibold">{t("recentPolicies")}</h2>
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search policies..."
+              placeholder={t("searchPolicies")}
               className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -168,23 +170,23 @@ const Policies = () => {
         <div className="overflow-x-auto">
           {isLoading ? (
             <div className="p-8 text-center">
-              <p className="text-muted-foreground">Loading policies...</p>
+              <p className="text-muted-foreground">{t("loadingPolicies")}</p>
             </div>
           ) : isError ? (
             <div className="p-8 text-center">
-              <p className="text-destructive">Error loading policies. Please try again.</p>
+              <p className="text-destructive">{t("errorLoadingPolicies")}</p>
             </div>
           ) : policies && policies.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Policy Number</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Insurer</TableHead>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Expiry Date</TableHead>
-                  <TableHead>Premium</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t("policyNumber")}</TableHead>
+                  <TableHead>{t("client")}</TableHead>
+                  <TableHead>{t("insurer")}</TableHead>
+                  <TableHead>{t("product")}</TableHead>
+                  <TableHead>{t("expiryDate")}</TableHead>
+                  <TableHead>{t("premium")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -203,7 +205,7 @@ const Policies = () => {
             </Table>
           ) : (
             <div className="p-8 text-center">
-              <p className="text-muted-foreground">No policies found. Try modifying your search.</p>
+              <p className="text-muted-foreground">{t("noPoliciesFound")}</p>
             </div>
           )}
         </div>

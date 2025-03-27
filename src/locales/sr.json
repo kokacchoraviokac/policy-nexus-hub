@@ -170,5 +170,45 @@
   "unauthorized": "Neovlašćen pristup",
   "unauthorizedDescription": "Nemate potrebne privilegije za pristup ovoj stranici.",
   "contactAdmin": "Kontaktirajte administratora ako smatrate da je ovo greška.",
-  "passwordRequired": "Lozinka je obavezna"
+  "passwordRequired": "Lozinka je obavezna",
+  
+  "agentManagement": "Upravljanje portalom za agente",
+  "agentPortalModule": "Modul portala za agente",
+  "agentPortalDescription": "Upravljanje provizijama i isplatama agentima",
+  
+  "salesManagement": "Upravljanje prodajom",
+  "salesLeadModule": "Modul za vođenje prodaje",
+  "salesModuleDescription": "Upravljanje potencijalnim klijentima i prodajnim procesima",
+  
+  "claimsManagement": "Upravljanje odštetnim zahtevima",
+  "claimsManagementModule": "Modul za upravljanje odštetnim zahtevima",
+  "claimsModuleDescription": "Registracija i obrada odštetnih zahteva klijenata",
+  
+  "financesManagement": "Upravljanje finansijama",
+  "financialOperationsModule": "Modul za finansijske operacije",
+  "financialModuleDescription": "Upravljanje provizijama, fakturisanjem i platnim prometom",
+  
+  "reportsManagement": "Upravljanje izveštajima",
+  "analyticsReportingModule": "Modul za analitiku i izveštavanje",
+  "analyticsModuleDescription": "Generisanje i pregled izveštaja o poslovanju",
+  
+  "upcomingRenewals": "Predstojeća obnavljanja",
+  "nextDays": "Narednih 30 dana",
+  "activePolicies": "Aktivne polise",
+  "acrossClients": "Kod 42 klijenta",
+  "unassignedPolicies": "Nedodeljene polise",
+  "needAttention": "Zahtevaju pažnju",
+  "recentPolicies": "Nedavne polise",
+  "searchPolicies": "Pretraži polise...",
+  "loadingPolicies": "Učitavanje polisa...",
+  "errorLoadingPolicies": "Greška pri učitavanju polisa. Pokušajte ponovo.",
+  "noPoliciesFound": "Nije pronađena nijedna polisa. Pokušajte da izmenite pretragu.",
+  "policyNumber": "Broj polise",
+  "client": "Klijent",
+  "insurer": "Osiguravač",
+  "product": "Proizvod",
+  "expiryDate": "Datum isteka",
+  "premium": "Premija",
+  "status": "Status",
+  "newPolicy": "Nova polisa"
 }

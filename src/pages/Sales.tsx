@@ -10,7 +10,7 @@ const Sales = () => {
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">{t("sales")}</h1>
         <p className="text-muted-foreground">
-          {t("salesManagement")}
+          {t("salesDescription")}
         </p>
       </div>
       

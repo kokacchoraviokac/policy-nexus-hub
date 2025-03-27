@@ -170,5 +170,45 @@
   "unauthorized": "Acceso no autorizado",
   "unauthorizedDescription": "No tiene los privilegios necesarios para acceder a esta página.",
   "contactAdmin": "Contacte al administrador si cree que esto es un error.",
-  "passwordRequired": "La contraseña es requerida"
+  "passwordRequired": "La contraseña es requerida",
+  
+  "agentManagement": "Gestión de Agentes",
+  "agentPortalModule": "Módulo del Portal de Agentes",
+  "agentPortalDescription": "Gestión de comisiones y pagos a agentes",
+  
+  "salesManagement": "Gestión de Ventas",
+  "salesLeadModule": "Módulo de Gestión de Prospectos",
+  "salesModuleDescription": "Gestión de prospectos y procesos de ventas",
+  
+  "claimsManagement": "Gestión de Reclamaciones",
+  "claimsManagementModule": "Módulo de Gestión de Reclamaciones",
+  "claimsModuleDescription": "Registro y procesamiento de reclamaciones de clientes",
+  
+  "financesManagement": "Gestión de Finanzas",
+  "financialOperationsModule": "Módulo de Operaciones Financieras",
+  "financialModuleDescription": "Gestión de comisiones, facturación y conciliación de pagos",
+  
+  "reportsManagement": "Gestión de Informes",
+  "analyticsReportingModule": "Módulo de Análisis e Informes",
+  "analyticsModuleDescription": "Generación y visualización de informes de negocio",
+  
+  "upcomingRenewals": "Renovaciones Próximas",
+  "nextDays": "Próximos 30 días",
+  "activePolicies": "Pólizas Activas",
+  "acrossClients": "Entre 42 clientes",
+  "unassignedPolicies": "Pólizas No Asignadas",
+  "needAttention": "Requieren atención",
+  "recentPolicies": "Pólizas Recientes",
+  "searchPolicies": "Buscar pólizas...",
+  "loadingPolicies": "Cargando pólizas...",
+  "errorLoadingPolicies": "Error al cargar pólizas. Por favor intente de nuevo.",
+  "noPoliciesFound": "No se encontraron pólizas. Intente modificar su búsqueda.",
+  "policyNumber": "Número de Póliza",
+  "client": "Cliente",
+  "insurer": "Aseguradora",
+  "product": "Producto",
+  "expiryDate": "Fecha de Vencimiento",
+  "premium": "Prima",
+  "status": "Estado",
+  "newPolicy": "Nueva Póliza"
 }

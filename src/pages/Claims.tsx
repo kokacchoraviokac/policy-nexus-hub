@@ -10,7 +10,7 @@ const Claims = () => {
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">{t("claims")}</h1>
         <p className="text-muted-foreground">
-          {t("claimsManagement")}
+          {t("claimsDescription")}
         </p>
       </div>
       

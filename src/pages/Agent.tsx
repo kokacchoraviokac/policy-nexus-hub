@@ -10,7 +10,7 @@ const Agent = () => {
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">{t("agent")}</h1>
         <p className="text-muted-foreground">
-          {t("agentManagement")}
+          {t("agentDescription")}
         </p>
       </div>
       

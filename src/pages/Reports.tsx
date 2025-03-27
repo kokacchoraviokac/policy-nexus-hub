@@ -10,7 +10,7 @@ const Reports = () => {
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight">{t("reports")}</h1>
         <p className="text-muted-foreground">
-          {t("reportsManagement")}
+          {t("reportsDescription")}
         </p>
       </div>
       
