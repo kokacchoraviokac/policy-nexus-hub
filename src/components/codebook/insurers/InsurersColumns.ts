@@ -53,6 +53,9 @@ export function getInsurerColumns(onViewDetails: (id: string) => void): Column<I
         <EntityActionsCell 
           id={row.id} 
           onView={() => onViewDetails(row.id)} 
+          entityType="insurer"
+          onEdit={() => {}} 
+          onDelete={() => {}}
         />
       ),
     },
