@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import InsurersDirectory from "@/components/codebook/InsurersDirectory";
 import { Book, Building2 } from "lucide-react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -16,16 +17,18 @@ const queryClient = new QueryClient({
 });
 
 const InsurersPage = () => {
+  const { t } = useLanguage();
+  
   return (
     <QueryClientProvider client={queryClient}>
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center space-x-2 mb-6">
           <Book className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold tracking-tight">Codebook</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("codebook")}</h1>
           <span className="text-muted-foreground">/</span>
           <div className="flex items-center space-x-1">
             <Building2 className="h-5 w-5" />
-            <span className="font-medium">Insurance Companies</span>
+            <span className="font-medium">{t("insuranceCompanies")}</span>
           </div>
         </div>
         
