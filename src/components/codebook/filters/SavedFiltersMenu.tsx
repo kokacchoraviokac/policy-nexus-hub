@@ -32,13 +32,13 @@ const SavedFiltersMenu: React.FC<SavedFiltersMenuProps> = ({
   const { t } = useLanguage();
   const { toast } = useToast();
 
-  const handleDeleteFilter = async (e: React.MouseEvent, filterId: string, filterName: string) => {
+  const handleDeleteFilter = async (e: React.MouseEvent, filterId: string) => {
     e.stopPropagation();
     try {
       await onDeleteFilter(filterId);
       toast({
         title: t("success"),
-        description: t("filterDeletedSuccessfully", { name: filterName }),
+        description: t("filterDeletedSuccessfully", { name: "filter" }),
       });
     } catch (error) {
       console.error("Error deleting filter:", error);
@@ -76,7 +76,7 @@ const SavedFiltersMenu: React.FC<SavedFiltersMenuProps> = ({
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0 text-destructive"
-                onClick={(e) => handleDeleteFilter(e, filter.id, filter.name)}
+                onClick={(e) => handleDeleteFilter(e, filter.id)}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

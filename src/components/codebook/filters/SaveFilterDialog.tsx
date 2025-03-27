@@ -10,7 +10,7 @@ import { CodebookFilterState } from "@/types/codebook";
 interface SaveFilterDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (name: string, filters: CodebookFilterState) => Promise<void>;
+  onSave: (name: string) => Promise<void>;
   filters: CodebookFilterState;
   entityType: 'insurers' | 'clients' | 'products';
 }
@@ -31,7 +31,7 @@ const SaveFilterDialog: React.FC<SaveFilterDialogProps> = ({
     
     setIsSaving(true);
     try {
-      await onSave(filterName, filters);
+      await onSave(filterName);
       handleClose();
     } finally {
       setIsSaving(false);

@@ -8,13 +8,13 @@ import { usePrivilegeCheck } from "@/hooks/usePrivilegeCheck";
 import { useSavedFilters } from "@/hooks/useSavedFilters";
 import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/data-table";
-import InsurersTable from "@/components/codebook/insurers/InsurersTable";
+import { getInsurerColumns } from "@/components/codebook/insurers/InsurersTable";
 import InsurersFilters from "@/components/codebook/insurers/InsurersFilters";
 import ImportExportButtons from "@/components/codebook/ImportExportButtons";
-import InsurerFormManager from "@/components/codebook/insurers/InsurerFormManager";
+import InsurerFormDialog from "@/components/codebook/dialogs/InsurerFormDialog";
 import AdvancedFilterDialog from "@/components/codebook/filters/AdvancedFilterDialog";
 import SaveFilterDialog from "@/components/codebook/filters/SaveFilterDialog";
-import { CodebookFilterState } from "@/types/codebook";
+import { CodebookFilterState, Insurer } from "@/types/codebook";
 
 const InsurersDirectory: React.FC = () => {
   const navigate = useNavigate();
@@ -72,8 +72,8 @@ const InsurersDirectory: React.FC = () => {
     }
   };
   
-  const handleSaveFilter = async (name: string, filtersToSave: CodebookFilterState) => {
-    await saveFilter(name, filtersToSave);
+  const handleSaveFilter = async (name: string) => {
+    await saveFilter(name, filters);
     setSaveFilterDialogOpen(false);
   };
   
@@ -83,6 +83,19 @@ const InsurersDirectory: React.FC = () => {
 
   const canAddInsurer = hasPrivilege('codebook.insurers.create');
   const canImportExport = hasPrivilege('codebook.insurers.import') || hasPrivilege('codebook.insurers.export');
+
+  const getExportData = () => {
+    return insurers.map(insurer => ({
+      name: insurer.name,
+      contact_person: insurer.contact_person || '',
+      email: insurer.email || '',
+      phone: insurer.phone || '',
+      address: insurer.address || '',
+      city: insurer.city || '',
+      country: insurer.country || '',
+      is_active: insurer.is_active ? 'Active' : 'Inactive'
+    }));
+  };
 
   return (
     <div className="space-y-6">
@@ -96,19 +109,9 @@ const InsurersDirectory: React.FC = () => {
         
         <div className="flex flex-wrap gap-2">
           {canImportExport && (
-            <ImportExportButtons 
-              entityType="insurers" 
-              data={insurers}
-              fields={[
-                { key: 'name', label: t('name') },
-                { key: 'contact_person', label: t('contactPerson') },
-                { key: 'email', label: t('email') },
-                { key: 'phone', label: t('phone') },
-                { key: 'address', label: t('address') },
-                { key: 'city', label: t('city') },
-                { key: 'country', label: t('country') },
-                { key: 'is_active', label: t('status') }
-              ]}
+            <ImportExportButtons<any>
+              getData={getExportData}
+              entityName={t('insuranceCompanies')}
             />
           )}
           
@@ -136,7 +139,7 @@ const InsurersDirectory: React.FC = () => {
       
       <DataTable
         data={insurers}
-        columns={InsurersTable({ onViewDetails: handleViewDetails })}
+        columns={getInsurerColumns((id) => handleViewDetails(id))}
         isLoading={isLoading}
         emptyState={{
           title: t("noInsurersFound"),
@@ -158,17 +161,16 @@ const InsurersDirectory: React.FC = () => {
         }}
       />
       
-      <InsurerFormManager
+      <InsurerFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
-        onSubmit={handleAddInsurer}
       />
       
       <AdvancedFilterDialog
         open={filterDialogOpen}
         onOpenChange={setFilterDialogOpen}
         filters={filters}
-        onFilterChange={handleFilterChange}
+        onApplyFilters={handleFilterChange}
         entityType="insurers"
       />
       

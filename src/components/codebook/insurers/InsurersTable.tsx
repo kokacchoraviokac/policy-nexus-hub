@@ -1,50 +1,17 @@
 
-import React, { useState } from "react";
-import DataTable from "@/components/ui/data-table";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
-import DeleteInsurerDialog from "../dialogs/DeleteInsurerDialog";
+import { Column } from "@/components/ui/data-table";
 
-interface InsurersTableProps {
-  insurers: Insurer[];
-  isLoading: boolean;
-  onEdit: (insurerId: string) => void;
-  onDelete: (insurerId: string) => void;
-  pagination?: {
-    pageSize: number;
-    currentPage: number;
-    totalItems: number;
-    onPageChange: (page: number) => void;
-    onPageSizeChange: (pageSize: number) => void;
-    pageSizeOptions?: number[];
-  };
-}
-
-const InsurersTable: React.FC<InsurersTableProps> = ({
-  insurers,
-  isLoading,
-  onEdit,
-  onDelete,
-  pagination
-}) => {
+// Export the table columns function for reuse across the app
+export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id: string) => void): Column<Insurer>[] => {
   const { t } = useLanguage();
-  const [insurerToDelete, setInsurerToDelete] = useState<Insurer | null>(null);
   
-  const handleDeleteClick = (insurer: Insurer) => {
-    setInsurerToDelete(insurer);
-  };
-  
-  const handleConfirmDelete = () => {
-    if (insurerToDelete) {
-      onDelete(insurerToDelete.id);
-      setInsurerToDelete(null);
-    }
-  };
-  
-  const columns = [
+  return [
     {
       header: t("name"),
       accessorKey: "name" as keyof Insurer,
@@ -83,53 +50,42 @@ const InsurersTable: React.FC<InsurersTableProps> = ({
       ),
       sortable: true
     },
-    {
-      header: t("actions"),
-      accessorKey: (row: Insurer) => (
-        <div className="flex gap-2 justify-end">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 w-8 p-0"
-            onClick={() => onEdit(row.id)}
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 p-0 text-destructive"
-            onClick={() => handleDeleteClick(row)}
-          >
-            <Trash className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
+    ...(onEdit || onDelete ? [
+      {
+        header: t("actions"),
+        accessorKey: "id" as keyof Insurer,
+        cell: (row: Insurer) => (
+          <div className="flex gap-2 justify-end">
+            {onEdit && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 w-8 p-0"
+                onClick={() => onEdit(row.id)}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 text-destructive"
+                onClick={() => onDelete(row.id)}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ),
+      }
+    ] : [])
   ];
+};
 
-  return (
-    <>
-      <DataTable
-        data={insurers || []}
-        columns={columns}
-        isLoading={isLoading}
-        pagination={pagination}
-        emptyState={{
-          title: t("noInsuranceCompaniesFound"),
-          description: t("noInsuranceCompaniesFound"),
-          action: null
-        }}
-      />
-      
-      <DeleteInsurerDialog
-        open={!!insurerToDelete}
-        onOpenChange={(open) => !open && setInsurerToDelete(null)}
-        insurerName={insurerToDelete?.name || ""}
-        onConfirm={handleConfirmDelete}
-      />
-    </>
-  );
+// This is the actual component that renders the insurers table
+const InsurersTable: React.FC = () => {
+  return null; // This component doesn't render anything itself, just exports the columns function
 };
 
 export default InsurersTable;

@@ -5,8 +5,8 @@ import { parseCSV, exportToCSV } from '@/utils/csv';
 import { Files, Import, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-interface ImportExportButtonsProps<T> {
-  onImport: (data: T[]) => Promise<void>;
+export interface ImportExportButtonsProps<T> {
+  onImport?: (data: T[]) => Promise<void>;
   getData: () => T[];
   entityName: string;
   className?: string;
@@ -47,11 +47,13 @@ function ImportExportButtons<T>({
             return;
           }
 
-          await onImport(parsedData);
-          toast({
-            title: "Import successful",
-            description: `Imported ${parsedData.length} ${entityName.toLowerCase()} records`,
-          });
+          if (onImport) {
+            await onImport(parsedData);
+            toast({
+              title: "Import successful",
+              description: `Imported ${parsedData.length} ${entityName.toLowerCase()} records`,
+            });
+          }
           
           // Reset the file input
           if (fileInputRef.current) {
@@ -109,22 +111,26 @@ function ImportExportButtons<T>({
 
   return (
     <div className={`flex gap-2 ${className}`}>
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept=".csv"
-        className="hidden"
-      />
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="flex items-center gap-1"
-        onClick={handleImportClick}
-      >
-        <Import className="h-4 w-4" />
-        Import
-      </Button>
+      {onImport && (
+        <>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept=".csv"
+            className="hidden"
+          />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={handleImportClick}
+          >
+            <Import className="h-4 w-4" />
+            Import
+          </Button>
+        </>
+      )}
       <Button 
         variant="outline" 
         size="sm" 
