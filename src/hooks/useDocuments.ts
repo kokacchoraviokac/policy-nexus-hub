@@ -132,13 +132,16 @@ export const useDocuments = ({
         // Create the field name dynamically based on entity type
         const fieldName = `${entityType}_id`;
         
-        // Using explicit any to avoid TypeScript recursion issues
-        const query = supabase
-          .from(documentTable)
-          .select("*");
+        // Break the chain to avoid deep type recursion - use type assertion
+        const tableQuery = supabase.from(documentTable);
         
-        // Apply the filter using proper casting to avoid type issues
-        const { data, error } = await query.eq(fieldName, entityId)
+        // Need to cast as any to avoid TypeScript recursion
+        const query = tableQuery as any;
+        
+        // Apply the filter with proper type casting
+        const { data, error } = await query
+          .select("*")
+          .eq(fieldName, entityId)
           .order("created_at", { ascending: false });
         
         if (error) {
@@ -148,7 +151,7 @@ export const useDocuments = ({
         if (!data) return [];
         
         // Transform the response to match our Document interface
-        return data.map((doc) => mapDocumentToModel(doc, entityType, entityId));
+        return data.map((doc: any) => mapDocumentToModel(doc, entityType, entityId));
         
       } catch (err) {
         console.error("Error fetching documents:", err);
@@ -163,14 +166,14 @@ export const useDocuments = ({
     mutationFn: async (documentId: string) => {
       try {
         // First, get document details to delete the storage file
-        // Explicitly cast to any to avoid type recursion
-        const fetchQuery = supabase
-          .from(documentTable)
+        const tableQuery = supabase.from(documentTable);
+        const query = tableQuery as any;
+        
+        // Get document details
+        const { data, error: fetchError } = await query
           .select("*")
           .eq("id", documentId)
           .single();
-        
-        const { data, error: fetchError } = await fetchQuery;
           
         if (fetchError || !data) {
           throw new Error("Document not found");
@@ -187,13 +190,13 @@ export const useDocuments = ({
           }
         }
         
-        // Delete document record
-        const deleteQuery = supabase
-          .from(documentTable)
+        // Delete document record - avoid deep type recursion with intermediate variable
+        const deleteQueryBase = supabase.from(documentTable);
+        const deleteQuery = deleteQueryBase as any;
+        
+        const { error: dbError } = await deleteQuery
           .delete()
           .eq("id", documentId);
-          
-        const { error: dbError } = await deleteQuery;
           
         if (dbError) {
           throw dbError;
