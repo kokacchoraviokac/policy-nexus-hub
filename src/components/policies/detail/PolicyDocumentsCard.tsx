@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import DocumentUploadDialog from "./DocumentUploadDialog";
+import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
 
 interface PolicyDocumentsCardProps {
   policyId: string;
@@ -73,9 +73,10 @@ const PolicyDocumentsCard: React.FC<PolicyDocumentsCardProps> = ({
 
       {showUploadDialog && (
         <DocumentUploadDialog
-          policyId={policyId}
           open={showUploadDialog}
-          onClose={() => setShowUploadDialog(false)}
+          onOpenChange={setShowUploadDialog}
+          entityType="policy"
+          entityId={policyId}
         />
       )}
     </Card>
