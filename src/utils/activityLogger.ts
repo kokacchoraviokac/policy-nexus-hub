@@ -1,10 +1,15 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-export type ActivityAction = "create" | "update" | "delete" | "view" | "export" | "import";
+export type ActivityAction = 
+  "create" | "update" | "delete" | "view" | "export" | "import" | 
+  "document_uploaded" | "document_deleted" | "document_download";
 
-export type EntityType = "client" | "insurer" | "product" | "policy" | "claim" | "agent";
+export type EntityType = 
+  "client" | "insurer" | "product" | "policy" | "claim" | "agent" | 
+  "sales_process";
 
 export interface LogActivityParams {
   entityType: EntityType;

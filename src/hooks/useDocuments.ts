@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { EntityType } from "@/utils/activityLogger";
 
-export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
+export { EntityType };
 
 export interface Document {
   id: string;
@@ -14,8 +15,8 @@ export interface Document {
   document_type: string;
   created_at: string;
   file_path: string;
-  entity_type: EntityType;
-  entity_id: string;
+  entity_type?: EntityType;
+  entity_id?: string;
   uploaded_by_id?: string;
   uploaded_by_name?: string;
   version?: number;
@@ -42,6 +43,22 @@ export const useDocuments = ({
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLogger();
   
+  // Map entity type to appropriate document table
+  const getDocumentTable = () => {
+    switch (entityType) {
+      case "policy":
+        return "policy_documents";
+      case "claim":
+        return "claim_documents";
+      case "sales_process":
+        return "sales_documents";
+      default:
+        return "policy_documents"; // fallback to policy_documents
+    }
+  };
+  
+  const documentTable = getDocumentTable();
+  
   // Fetch documents for a specific entity
   const {
     data: documents,
@@ -52,21 +69,31 @@ export const useDocuments = ({
     queryKey: ["documents", entityType, entityId],
     queryFn: async () => {
       try {
-        // This is a placeholder query. In a real implementation,
-        // you would need to ensure the documents table exists in your database
+        // Use the appropriate table based on entity type
         const { data, error: fetchError } = await supabase
-          .from("documents")
+          .from(documentTable)
           .select("*")
-          .eq("entity_type", entityType)
-          .eq("entity_id", entityId)
-          .eq("is_latest_version", true)
+          .eq(entityType + "_id", entityId)
           .order("created_at", { ascending: false });
         
         if (fetchError) {
           throw fetchError;
         }
         
-        return data as Document[];
+        // Transform the response to match our Document interface
+        return data.map((doc: any) => ({
+          id: doc.id,
+          document_name: doc.document_name,
+          document_type: doc.document_type,
+          created_at: doc.created_at,
+          file_path: doc.file_path,
+          entity_type: entityType,
+          entity_id: entityId,
+          uploaded_by_id: doc.uploaded_by,
+          uploaded_by_name: doc.uploaded_by_name || "Unknown",
+          version: doc.version || 1,
+          is_latest_version: true
+        })) as Document[];
       } catch (err) {
         console.error("Error fetching documents:", err);
         throw err;
@@ -80,13 +107,13 @@ export const useDocuments = ({
     mutationFn: async (documentId: string) => {
       try {
         // First, get document details to delete the storage file
-        const { data: documentData } = await supabase
-          .from("documents")
+        const { data: documentData, error: docError } = await supabase
+          .from(documentTable)
           .select("*")
           .eq("id", documentId)
           .single();
           
-        if (!documentData) {
+        if (docError || !documentData) {
           throw new Error("Document not found");
         }
         
@@ -103,7 +130,7 @@ export const useDocuments = ({
         
         // Delete document record
         const { error: dbError } = await supabase
-          .from("documents")
+          .from(documentTable)
           .delete()
           .eq("id", documentId);
           
@@ -115,8 +142,9 @@ export const useDocuments = ({
         await logActivity({
           entityType,
           entityId,
-          action: "document_deleted",
+          action: "delete",
           details: {
+            action_type: "document_deleted",
             document_id: documentId,
             document_name: documentData.document_name
           }

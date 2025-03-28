@@ -29,12 +29,29 @@ export const useDocumentUpload = ({
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLogger();
   
-  const handleFileChange = (file: File | null) => {
-    if (file) {
-      setFile(file);
+  // Map entity type to appropriate document table
+  const getDocumentTable = () => {
+    switch (entityType) {
+      case "policy":
+        return "policy_documents";
+      case "claim":
+        return "claim_documents";
+      case "sales_process":
+        return "sales_documents";
+      default:
+        return "policy_documents"; // fallback to policy_documents
+    }
+  };
+  
+  const documentTable = getDocumentTable();
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
       // If no document name is set yet, use the file name
       if (!documentName) {
-        setDocumentName(file.name.split('.')[0]);
+        setDocumentName(selectedFile.name.split('.')[0]);
       }
     }
   };
@@ -68,23 +85,27 @@ export const useDocumentUpload = ({
           throw uploadError;
         }
         
-        // Create document record in database
+        // Create record in the appropriate document table
+        const insertData: any = {
+          id: documentId,
+          document_name: documentName,
+          document_type: documentType,
+          file_path: filePath,
+          uploaded_by: userId,
+          version: 1
+        };
+        
+        // Add the entity ID field based on the entity type
+        insertData[`${entityType}_id`] = entityId;
+        
+        // Get company ID from user metadata
+        if (user.data.user?.user_metadata?.company_id) {
+          insertData.company_id = user.data.user.user_metadata.company_id;
+        }
+        
         const { error: insertError } = await supabase
-          .from('documents')
-          .insert({
-            id: documentId,
-            document_name: documentName,
-            document_type: documentType,
-            entity_type: entityType,
-            entity_id: entityId,
-            file_path: filePath,
-            uploaded_by_id: userId,
-            uploaded_by_name: userName,
-            version: 1,
-            is_latest_version: true,
-            mime_type: file.type,
-            file_size: file.size
-          });
+          .from(documentTable)
+          .insert(insertData);
           
         if (insertError) {
           // If record creation fails, delete uploaded file
@@ -98,8 +119,9 @@ export const useDocumentUpload = ({
         await logActivity({
           entityType,
           entityId,
-          action: "document_uploaded",
+          action: "update",
           details: {
+            action_type: "document_uploaded",
             document_id: documentId,
             document_name: documentName,
             document_type: documentType
