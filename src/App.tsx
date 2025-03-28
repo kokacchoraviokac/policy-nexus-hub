@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,6 +8,7 @@ import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Policies from "./pages/Policies";
 import NewPolicy from "./pages/policies/NewPolicy";
+import PolicyDetailPage from "./pages/policies/PolicyDetailPage";
 import Sales from "./pages/Sales";
 import Claims from "./pages/Claims";
 import Finances from "./pages/Finances";
@@ -77,7 +79,7 @@ const App = () => (
       <Route path="/policies/:policyId" element={
         <ProtectedRoute requiredPrivilege="policies:view">
           <AppLayout>
-            <div>Policy Details Page - To be implemented</div>
+            <PolicyDetailPage />
           </AppLayout>
         </ProtectedRoute>
       } />
