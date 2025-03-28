@@ -87,10 +87,10 @@ export const useDocuments = ({
         // Create the field name dynamically based on entity type
         const fieldName = `${entityType}_id`;
         
-        // Use the appropriate table based on entity type and explicitly specify the return type
+        // Use the appropriate table based on entity type
         const { data: docsData, error: fetchError } = await supabase
           .from(documentTable)
-          .select<string, DocumentDbRow>("*")
+          .select("*")
           .eq(fieldName, entityId)
           .order("created_at", { ascending: false });
         
@@ -101,7 +101,7 @@ export const useDocuments = ({
         if (!docsData) return [];
         
         // Transform the response to match our Document interface with explicit typing
-        const transformedData = docsData.map((doc: DocumentDbRow): Document => {
+        const transformedData: Document[] = docsData.map((doc): Document => {
           return {
             id: doc.id,
             document_name: doc.document_name,
@@ -133,7 +133,7 @@ export const useDocuments = ({
       try {
         // First, get document details to delete the storage file
         const { data: documentData, error: docError } = await supabase
-          .from<DocumentDbRow>(documentTable)
+          .from(documentTable)
           .select("*")
           .eq("id", documentId)
           .single();
