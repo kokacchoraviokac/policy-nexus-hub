@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { EntityType } from "@/utils/activityLogger";
+import type { EntityType } from "@/utils/activityLogger";
 
-// Export the EntityType as a type for proper isolated modules support
+// Export the type for proper isolated modules support
 export type { EntityType };
 
 export interface Document {
@@ -70,19 +70,24 @@ export const useDocuments = ({
     queryKey: ["documents", entityType, entityId],
     queryFn: async () => {
       try {
+        // Create the field name dynamically based on entity type
+        const fieldName = `${entityType}_id`;
+        
         // Use the appropriate table based on entity type
-        const { data, error: fetchError } = await supabase
+        const { data: docsData, error: fetchError } = await supabase
           .from(documentTable)
           .select("*")
-          .eq(`${entityType}_id`, entityId)
+          .eq(fieldName, entityId)
           .order("created_at", { ascending: false });
         
         if (fetchError) {
           throw fetchError;
         }
         
+        if (!docsData) return [];
+        
         // Transform the response to match our Document interface
-        return (data || []).map((doc) => ({
+        return docsData.map((doc: any) => ({
           id: doc.id,
           document_name: doc.document_name,
           document_type: doc.document_type,
@@ -91,9 +96,11 @@ export const useDocuments = ({
           entity_type: entityType,
           entity_id: entityId,
           uploaded_by_id: doc.uploaded_by,
-          uploaded_by_name: doc.uploaded_by_name || "Unknown",
+          // Handle missing properties safely
+          uploaded_by_name: "Unknown", // We'll fetch this separately if needed
           version: doc.version || 1,
-          is_latest_version: true
+          is_latest_version: true,
+          mime_type: doc.mime_type
         })) as Document[];
       } catch (err) {
         console.error("Error fetching documents:", err);

@@ -11,7 +11,8 @@ import {
   Calendar, 
   MoreVertical, 
   Download, 
-  Trash2 
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import { Document } from "@/hooks/useDocuments";
@@ -25,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface DocumentListItemProps {
@@ -90,12 +90,12 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
       const url = URL.createObjectURL(data);
       
       // Create a link and trigger the download
-      const link = document.createElement('a');
+      const link = window.document.createElement('a');
       link.href = url;
       link.download = document.document_name;
-      document.body.appendChild(link);
+      window.document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      window.document.body.removeChild(link);
       
       // Clean up the object URL
       setTimeout(() => URL.revokeObjectURL(url), 100);

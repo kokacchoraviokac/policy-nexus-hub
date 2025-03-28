@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { EntityType } from "@/utils/activityLogger";
+import type { EntityType } from "@/utils/activityLogger";
 
 export interface UseDocumentUploadProps {
   entityType: EntityType;
@@ -85,8 +85,7 @@ export const useDocumentUpload = ({
           throw uploadError;
         }
         
-        // Define required fields explicitly based on the document table structure
-        // This avoids TypeScript errors related to Record<string, any>
+        // Define base document data
         const baseData = {
           id: documentId,
           document_name: documentName,
@@ -114,8 +113,15 @@ export const useDocumentUpload = ({
             ...baseData,
             sales_process_id: entityId
           };
+        } else {
+          // Fallback to policy_id if entityType is not one of the above
+          insertData = {
+            ...baseData,
+            policy_id: entityId
+          };
         }
         
+        // Insert document record
         const { error: insertError } = await supabase
           .from(documentTable)
           .insert(insertData);
