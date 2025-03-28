@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,22 +157,22 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
     setUploadDialogOpen(true);
   };
 
-  const handleDownloadDocument = async (document: PolicyDocument) => {
+  const handleDownloadDocument = async (docItem: PolicyDocument) => {
     try {
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(document.file_path);
+        .download(docItem.file_path);
         
       if (error) throw error;
       
       // Create a download link and click it
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.document_name;
-      document.body.appendChild(a);
+      a.download = docItem.document_name;
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       
       // Log activity
       logActivity({
@@ -182,8 +181,8 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
         action: "update",
         details: { 
           action_type: "document_download",
-          document_name: document.document_name,
-          document_id: document.id
+          document_name: docItem.document_name,
+          document_id: docItem.id
         }
       });
       
