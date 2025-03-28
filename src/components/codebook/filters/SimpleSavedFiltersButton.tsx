@@ -41,7 +41,7 @@ const SimpleSavedFiltersButton: React.FC<SimpleSavedFiltersButtonProps> = ({
   const { t } = useLanguage();
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
 
-  const handleSave = async (name: string) => {
+  const handleSave = async (name: string): Promise<void> => {
     onSaveFilter(name);
     return Promise.resolve();
   };
