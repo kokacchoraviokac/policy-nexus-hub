@@ -125,8 +125,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
                 key={index}
                 to={subItem.path}
                 className={cn(
-                  "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent rounded-md py-1.5 px-2 text-sm flex items-center",
-                  window.location.pathname === subItem.path && "bg-sidebar-accent text-sidebar-accent-foreground"
+                  "text-sidebar-foreground hover:text-sidebar-primary-foreground hover:bg-sidebar-accent rounded-md py-1.5 px-2 text-sm flex items-center transition-colors duration-200",
+                  window.location.pathname === subItem.path && "bg-sidebar-primary text-sidebar-primary-foreground"
                 )}
               >
                 {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}

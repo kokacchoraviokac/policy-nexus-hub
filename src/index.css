@@ -104,9 +104,9 @@
     @apply z-50 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border;
   }
   
-  /* Sidebar hover card styles */
+  /* Sidebar hover card styles - Updated to match the sidebar color scheme */
   .sidebar-hover-card {
-    @apply z-50 bg-sidebar-accent border-sidebar-border shadow-glass-md;
+    @apply z-50 bg-sidebar-background text-sidebar-foreground border-sidebar-border shadow-glass-md;
   }
 }
 
