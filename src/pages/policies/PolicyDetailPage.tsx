@@ -1,82 +1,23 @@
 
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Edit, FileDown, Repeat } from "lucide-react";
-import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
+import { usePolicyDetail } from "@/hooks/usePolicyDetail";
+import BackToPoliciesButton from "@/components/policies/detail/BackToPoliciesButton";
 import PolicyDetailHeader from "@/components/policies/detail/PolicyDetailHeader";
 import PolicyDetailSummary from "@/components/policies/detail/PolicyDetailSummary";
-import PolicyDocumentsTab from "@/components/policies/detail/PolicyDocumentsTab";
-import PolicyClaimsTab from "@/components/policies/detail/PolicyClaimsTab";
-import PolicyFinancialsTab from "@/components/policies/detail/PolicyFinancialsTab";
-import PolicyHistoryTab from "@/components/policies/detail/PolicyHistoryTab";
-import { useActivityLogger } from "@/utils/activityLogger";
+import PolicyDetailTabs from "@/components/policies/detail/PolicyDetailTabs";
+import PolicyDetailLoading from "@/components/policies/detail/PolicyDetailLoading";
+import PolicyDetailError from "@/components/policies/detail/PolicyDetailError";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PolicyDetailPage = () => {
   const { policyId } = useParams<{ policyId: string }>();
   const navigate = useNavigate();
-  const { t, formatDate, formatCurrency } = useLanguage();
+  const { t } = useLanguage();
   const { toast } = useToast();
-  const { logActivity } = useActivityLogger();
 
-  const { data: policy, isLoading, isError, error } = useQuery({
-    queryKey: ['policy', policyId],
-    queryFn: async () => {
-      if (!policyId) throw new Error("Policy ID is required");
-      
-      // Get policy details
-      const { data: policyData, error: policyError } = await supabase
-        .from('policies')
-        .select(`
-          *
-        `)
-        .eq('id', policyId)
-        .single();
-      
-      if (policyError) throw policyError;
-      
-      // Count documents
-      const { count: documentsCount, error: documentsError } = await supabase
-        .from('policy_documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('policy_id', policyId);
-      
-      // Count claims
-      const { count: claimsCount, error: claimsError } = await supabase
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-        .eq('policy_id', policyId);
-      
-      return {
-        ...policyData,
-        documents_count: documentsCount || 0,
-        claims_count: claimsCount || 0
-      };
-    },
-    meta: {
-      callbacks: {
-        onSuccess: () => {
-          // Log the view activity
-          if (policyId) {
-            logActivity({
-              entityType: "policy",
-              entityId: policyId,
-              action: "view",
-              details: { timestamp: new Date().toISOString() }
-            });
-          }
-        }
-      }
-    }
-  });
+  const { data: policy, isLoading, isError, error } = usePolicyDetail(policyId);
 
   const handleEditPolicy = () => {
     if (policyId) {
@@ -104,101 +45,28 @@ const PolicyDetailPage = () => {
     navigate("/policies");
   };
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto py-6 space-y-6">
-        <Button variant="ghost" onClick={handleBackToList}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t("backToPolicies")}
-        </Button>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-[250px]" />
-          <Skeleton className="h-6 w-[350px]" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
-            <Skeleton className="h-32" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (isError || !policy) {
-    return (
-      <div className="container mx-auto py-6">
-        <Button variant="ghost" onClick={handleBackToList}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t("backToPolicies")}
-        </Button>
-        
-        <Card className="mt-6">
-          <CardContent className="pt-6">
-            <div className="text-center py-10">
-              <h3 className="text-lg font-medium">{t("policyNotFound")}</h3>
-              <p className="text-muted-foreground mt-2">
-                {error instanceof Error ? error.message : t("errorLoadingPolicy")}
-              </p>
-              <Button className="mt-4" onClick={handleBackToList}>
-                {t("backToPolicies")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <Button variant="ghost" onClick={handleBackToList} className="group">
-        <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-        {t("backToPolicies")}
-      </Button>
+      <BackToPoliciesButton onClick={handleBackToList} />
       
-      <PolicyDetailHeader 
-        policy={policy}
-        onEdit={handleEditPolicy}
-        onRenew={handleRenewPolicy}
-        onExport={handleExportPolicy}
-      />
-      
-      <PolicyDetailSummary policy={policy} />
-      
-      <Tabs defaultValue="documents" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="documents">
-            {t("documents")}
-            {policy.documents_count > 0 && (
-              <Badge variant="secondary" className="ml-2">{policy.documents_count}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="claims">
-            {t("claims")}
-            {policy.claims_count > 0 && (
-              <Badge variant="secondary" className="ml-2">{policy.claims_count}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="financials">{t("financials")}</TabsTrigger>
-          <TabsTrigger value="history">{t("history")}</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="documents">
-          <PolicyDocumentsTab policyId={policy.id} />
-        </TabsContent>
-        
-        <TabsContent value="claims">
-          <PolicyClaimsTab policyId={policy.id} />
-        </TabsContent>
-        
-        <TabsContent value="financials">
-          <PolicyFinancialsTab policyId={policy.id} />
-        </TabsContent>
-        
-        <TabsContent value="history">
-          <PolicyHistoryTab policyId={policy.id} />
-        </TabsContent>
-      </Tabs>
+      {isLoading ? (
+        <PolicyDetailLoading />
+      ) : isError || !policy ? (
+        <PolicyDetailError error={error instanceof Error ? error : undefined} onBackToList={handleBackToList} />
+      ) : (
+        <>
+          <PolicyDetailHeader 
+            policy={policy}
+            onEdit={handleEditPolicy}
+            onRenew={handleRenewPolicy}
+            onExport={handleExportPolicy}
+          />
+          
+          <PolicyDetailSummary policy={policy} />
+          
+          <PolicyDetailTabs policy={policy} />
+        </>
+      )}
     </div>
   );
 };
