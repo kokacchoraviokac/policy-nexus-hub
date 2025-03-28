@@ -87,7 +87,7 @@ export const useDocuments = ({
         if (!docsData) return [];
         
         // Transform the response to match our Document interface
-        return docsData.map((doc: any) => ({
+        return docsData.map((doc: any): Document => ({
           id: doc.id,
           document_name: doc.document_name,
           document_type: doc.document_type,
@@ -96,12 +96,11 @@ export const useDocuments = ({
           entity_type: entityType,
           entity_id: entityId,
           uploaded_by_id: doc.uploaded_by,
-          // Handle missing properties safely
           uploaded_by_name: "Unknown", // We'll fetch this separately if needed
           version: doc.version || 1,
           is_latest_version: true,
           mime_type: doc.mime_type
-        })) as Document[];
+        }));
       } catch (err) {
         console.error("Error fetching documents:", err);
         throw err;

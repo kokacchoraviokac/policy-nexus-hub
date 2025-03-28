@@ -90,12 +90,12 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
       const url = URL.createObjectURL(data);
       
       // Create a link and trigger the download
-      const link = window.document.createElement('a');
+      const link = document.createElement('a');
       link.href = url;
       link.download = document.document_name;
-      window.document.body.appendChild(link);
+      document.body.appendChild(link);
       link.click();
-      window.document.body.removeChild(link);
+      document.body.removeChild(link);
       
       // Clean up the object URL
       setTimeout(() => URL.revokeObjectURL(url), 100);
