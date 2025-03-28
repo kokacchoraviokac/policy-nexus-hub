@@ -1,11 +1,12 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useFileInput, validateUploadFields } from "@/utils/fileHandlingUtils";
+import { getDocumentTable, uploadFileToStorage, insertDocumentRecord, createDocumentData } from "@/utils/documentUploadUtils";
 import type { EntityType } from "@/utils/activityLogger";
 
 export interface UseDocumentUploadProps {
@@ -19,71 +20,44 @@ export const useDocumentUpload = ({
   entityId,
   onSuccess
 }: UseDocumentUploadProps) => {
-  const [documentName, setDocumentName] = useState("");
   const [documentType, setDocumentType] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLogger();
+  const { 
+    file, 
+    setFile, 
+    documentName, 
+    setDocumentName, 
+    handleFileChange 
+  } = useFileInput();
   
-  // Map entity type to appropriate document table
-  const getDocumentTable = () => {
-    switch (entityType) {
-      case "policy":
-        return "policy_documents";
-      case "claim":
-        return "claim_documents";
-      case "sales_process":
-        return "sales_documents";
-      default:
-        return "policy_documents"; // fallback to policy_documents
-    }
-  };
-  
-  const documentTable = getDocumentTable();
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const selectedFile = e.target.files[0];
-      setFile(selectedFile);
-      // If no document name is set yet, use the file name
-      if (!documentName) {
-        setDocumentName(selectedFile.name.split('.')[0]);
-      }
-    }
-  };
+  // Get appropriate document table name
+  const documentTable = getDocumentTable(entityType);
   
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      if (!file || !documentName || !documentType) {
-        throw new Error("Missing required fields");
+      // Validate required fields
+      const validation = validateUploadFields(file, documentName, documentType);
+      if (!validation.isValid) {
+        throw new Error(`Missing required field: ${validation.missingField}`);
       }
       
       setUploading(true);
       try {
         const user = await supabase.auth.getUser();
         const userId = user.data.user?.id;
+        if (!userId) {
+          throw new Error("User not authenticated");
+        }
+        
         const userName = user.data.user?.email || user.data.user?.user_metadata?.name || userId;
         
-        // Generate unique ID and file path
-        const documentId = uuidv4();
-        const fileExt = file.name.split('.').pop();
-        const filePath = `${entityType}/${entityId}/${documentId}.${fileExt}`;
-        
         // Upload file to storage
-        const { error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-          
-        if (uploadError) {
-          throw uploadError;
-        }
+        const { documentId, filePath } = await uploadFileToStorage(file!, entityType, entityId);
         
         // Define base document data
         const baseData = {
@@ -96,43 +70,11 @@ export const useDocumentUpload = ({
           version: 1
         };
         
-        // Add the entity ID field based on the entity type
-        let insertData;
-        if (entityType === "policy") {
-          insertData = {
-            ...baseData,
-            policy_id: entityId
-          };
-        } else if (entityType === "claim") {
-          insertData = {
-            ...baseData,
-            claim_id: entityId
-          };
-        } else if (entityType === "sales_process") {
-          insertData = {
-            ...baseData,
-            sales_process_id: entityId
-          };
-        } else {
-          // Fallback to policy_id if entityType is not one of the above
-          insertData = {
-            ...baseData,
-            policy_id: entityId
-          };
-        }
+        // Create entity-specific document data
+        const insertData = createDocumentData(baseData, entityType, entityId);
         
         // Insert document record
-        const { error: insertError } = await supabase
-          .from(documentTable)
-          .insert(insertData);
-          
-        if (insertError) {
-          // If record creation fails, delete uploaded file
-          await supabase.storage
-            .from('documents')
-            .remove([filePath]);
-          throw insertError;
-        }
+        await insertDocumentRecord(documentTable, insertData);
         
         // Log activity
         await logActivity({
@@ -181,28 +123,31 @@ export const useDocumentUpload = ({
   });
   
   const handleUpload = () => {
-    if (!file) {
-      toast({
-        title: t("noFileSelected"),
-        description: t("pleaseSelectFile"),
-        variant: "destructive",
-      });
-      return;
-    }
+    // Validate client-side before mutation
+    const validation = validateUploadFields(file, documentName, documentType);
     
-    if (!documentName) {
+    if (!validation.isValid) {
+      let errorTitle = "";
+      let errorDescription = "";
+      
+      switch (validation.missingField) {
+        case "file":
+          errorTitle = t("noFileSelected");
+          errorDescription = t("pleaseSelectFile");
+          break;
+        case "documentName":
+          errorTitle = t("noDocumentName");
+          errorDescription = t("pleaseEnterDocumentName");
+          break;
+        case "documentType":
+          errorTitle = t("noDocumentType");
+          errorDescription = t("pleaseSelectDocumentType");
+          break;
+      }
+      
       toast({
-        title: t("noDocumentName"),
-        description: t("pleaseEnterDocumentName"),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!documentType) {
-      toast({
-        title: t("noDocumentType"),
-        description: t("pleaseSelectDocumentType"),
+        title: errorTitle,
+        description: errorDescription,
         variant: "destructive",
       });
       return;
