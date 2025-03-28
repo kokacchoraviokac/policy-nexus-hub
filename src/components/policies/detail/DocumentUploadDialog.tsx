@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
 import { FileUp, Loader2 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,13 +16,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  policyId: string;
 }
 
 const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   open,
-  onOpenChange
+  onOpenChange,
+  policyId
 }) => {
-  const { policyId } = useParams<{ policyId: string }>();
   const { t } = useLanguage();
   const { toast } = useToast();
   const { logActivity } = useActivityLogger();
