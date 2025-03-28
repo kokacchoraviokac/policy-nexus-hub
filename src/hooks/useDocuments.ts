@@ -87,7 +87,7 @@ export const useDocuments = ({
         if (!docsData) return [];
         
         // Transform the response to match our Document interface
-        return docsData.map((doc: any): Document => ({
+        const transformedData: Document[] = docsData.map((doc: any): Document => ({
           id: doc.id,
           document_name: doc.document_name,
           document_type: doc.document_type,
@@ -101,6 +101,8 @@ export const useDocuments = ({
           is_latest_version: true,
           mime_type: doc.mime_type
         }));
+        
+        return transformedData;
       } catch (err) {
         console.error("Error fetching documents:", err);
         throw err;
