@@ -6,9 +6,13 @@ import AppLayout from "@/components/layout/AppLayout";
 import Policies from "@/pages/Policies";
 import NewPolicy from "@/pages/policies/NewPolicy";
 import PolicyDetailPage from "@/pages/policies/PolicyDetailPage";
+import PolicyWorkflow from "@/pages/policies/PolicyWorkflow";
+import PolicyAddendums from "@/pages/policies/PolicyAddendums";
+import UnlinkedPayments from "@/pages/policies/UnlinkedPayments";
+import PolicyDocuments from "@/pages/policies/PolicyDocuments";
 
 export const PolicyRoutes = [
-  // Policies Module
+  // Policies Module - Main Page (All Policies)
   <Route
     key="policies"
     path="/policies" 
@@ -16,6 +20,58 @@ export const PolicyRoutes = [
       <ProtectedRoute requiredPrivilege="policies:view">
         <AppLayout>
           <Policies />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // Policies Workflow
+  <Route 
+    key="policies-workflow"
+    path="/policies/workflow" 
+    element={
+      <ProtectedRoute requiredPrivilege="policies:view">
+        <AppLayout>
+          <PolicyWorkflow />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // Policy Addendums (List)
+  <Route 
+    key="policy-addendums"
+    path="/policies/addendums" 
+    element={
+      <ProtectedRoute requiredPrivilege="policies:view">
+        <AppLayout>
+          <PolicyAddendums />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // Unlinked Payments
+  <Route 
+    key="unlinked-payments"
+    path="/policies/unlinked-payments" 
+    element={
+      <ProtectedRoute requiredPrivilege="policies:view">
+        <AppLayout>
+          <UnlinkedPayments />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // Policy Documents
+  <Route 
+    key="policy-documents"
+    path="/policies/documents" 
+    element={
+      <ProtectedRoute requiredPrivilege="policies:view">
+        <AppLayout>
+          <PolicyDocuments />
         </AppLayout>
       </ProtectedRoute>
     }

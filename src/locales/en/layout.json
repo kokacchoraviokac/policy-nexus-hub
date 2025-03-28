@@ -1,0 +1,26 @@
+
+{
+  "dashboard": "Dashboard",
+  "policies": "Policies",
+  "policyManagement": "Manage policies, addendums and related documents",
+  "allPolicies": "All Policies",
+  "policiesWorkflow": "Policies Workflow",
+  "policyAddendums": "Policy Addendums",
+  "unlinkedPayments": "Unlinked Payments",
+  "documents": "Documents",
+  "sales": "Sales",
+  "salesManagement": "Manage leads, sales processes and track the entire sales cycle",
+  "claims": "Claims",
+  "claimsManagement": "Register, track and manage claims throughout their lifecycle",
+  "finances": "Finances",
+  "financesManagement": "Manage commissions, invoicing and financial statement processing",
+  "codebook": "Codebook",
+  "codebookManagement": "Manage master data for clients, insurance companies and product codes",
+  "agent": "Agent",
+  "agentManagement": "Manage agent commissions, calculate payouts and generate reports",
+  "reports": "Reports",
+  "reportsManagement": "Generate customized reports for production, clients, agents and claims",
+  "settings": "Settings",
+  "settingsManagement": "Configure system settings, user access and company information",
+  "returnToDashboard": "Return to Dashboard"
+}

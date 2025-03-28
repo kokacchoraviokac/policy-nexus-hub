@@ -1,0 +1,24 @@
+
+{
+  "policiesDescription": "Manage insurance policies across their entire lifecycle",
+  "policiesWorkflowDescription": "Policies that require attention or are in a processing state",
+  "policyAddendumsDescription": "Manage amendments and changes to policies",
+  "unlinkedPaymentsDescription": "Manage payments that have not been associated with a policy",
+  "policyDocumentsDescription": "View and manage documents associated with policies",
+  
+  "newPolicy": "New Policy",
+  "createNewPolicy": "Create New Policy",
+  "viewPolicies": "View Policies",
+  
+  "noPoliciesInWorkflow": "No policies in workflow",
+  "noPoliciesInWorkflowDescription": "There are no policies that require attention or are in a processing state",
+  
+  "noPolicyAddendums": "No policy addendums",
+  "noPolicyAddendumsDescription": "There are no addendums for any policies yet",
+  
+  "noUnlinkedPayments": "No unlinked payments",
+  "allPaymentsLinked": "All payments have been successfully linked to policies",
+  
+  "noPolicyDocuments": "No policy documents",
+  "noPolicyDocumentsDescription": "There are no documents attached to any policies yet"
+}

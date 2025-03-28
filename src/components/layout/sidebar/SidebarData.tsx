@@ -1,4 +1,3 @@
-
 import {
   Book,
   DollarSign,
@@ -10,7 +9,12 @@ import {
   Users,
   Building2,
   ClipboardList,
-  Tag
+  Tag,
+  FileBox,
+  Workflow,
+  FileArchive,
+  CreditCard,
+  FileImage
 } from "lucide-react";
 
 export const sidebarItems = [
@@ -24,7 +28,39 @@ export const sidebarItems = [
     icon: FileText,
     label: "policies",
     path: "/policies",
-    requiredPrivilege: "policies:view"
+    requiredPrivilege: "policies:view",
+    subItems: [
+      {
+        label: "allPolicies",
+        path: "/policies",
+        requiredPrivilege: "policies:view",
+        icon: FileBox
+      },
+      {
+        label: "policiesWorkflow",
+        path: "/policies/workflow",
+        requiredPrivilege: "policies:view",
+        icon: Workflow
+      },
+      {
+        label: "policyAddendums",
+        path: "/policies/addendums",
+        requiredPrivilege: "policies:view",
+        icon: FileArchive
+      },
+      {
+        label: "unlinkedPayments",
+        path: "/policies/unlinked-payments",
+        requiredPrivilege: "policies:view",
+        icon: CreditCard
+      },
+      {
+        label: "documents",
+        path: "/policies/documents",
+        requiredPrivilege: "policies:view",
+        icon: FileImage
+      }
+    ]
   },
   {
     icon: Briefcase,
