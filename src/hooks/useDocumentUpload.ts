@@ -85,22 +85,35 @@ export const useDocumentUpload = ({
           throw uploadError;
         }
         
-        // Create record in the appropriate document table
-        const insertData: Record<string, any> = {
+        // Define required fields explicitly based on the document table structure
+        // This avoids TypeScript errors related to Record<string, any>
+        const baseData = {
           id: documentId,
           document_name: documentName,
           document_type: documentType,
           file_path: filePath,
           uploaded_by: userId,
+          company_id: user.data.user?.user_metadata?.company_id,
           version: 1
         };
         
         // Add the entity ID field based on the entity type
-        insertData[`${entityType}_id`] = entityId;
-        
-        // Get company ID from user metadata
-        if (user.data.user?.user_metadata?.company_id) {
-          insertData.company_id = user.data.user.user_metadata.company_id;
+        let insertData;
+        if (entityType === "policy") {
+          insertData = {
+            ...baseData,
+            policy_id: entityId
+          };
+        } else if (entityType === "claim") {
+          insertData = {
+            ...baseData,
+            claim_id: entityId
+          };
+        } else if (entityType === "sales_process") {
+          insertData = {
+            ...baseData,
+            sales_process_id: entityId
+          };
         }
         
         const { error: insertError } = await supabase

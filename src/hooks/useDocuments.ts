@@ -74,7 +74,7 @@ export const useDocuments = ({
         const { data, error: fetchError } = await supabase
           .from(documentTable)
           .select("*")
-          .eq(entityType + "_id", entityId)
+          .eq(`${entityType}_id`, entityId)
           .order("created_at", { ascending: false });
         
         if (fetchError) {
@@ -82,7 +82,7 @@ export const useDocuments = ({
         }
         
         // Transform the response to match our Document interface
-        return (data as any[]).map((doc: any) => ({
+        return (data || []).map((doc) => ({
           id: doc.id,
           document_name: doc.document_name,
           document_type: doc.document_type,
