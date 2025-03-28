@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { EntityType } from "./useDocuments";
+import { EntityType } from "@/utils/activityLogger";
 
 export interface UseDocumentUploadProps {
   entityType: EntityType;
@@ -86,7 +86,7 @@ export const useDocumentUpload = ({
         }
         
         // Create record in the appropriate document table
-        const insertData: any = {
+        const insertData: Record<string, any> = {
           id: documentId,
           document_name: documentName,
           document_type: documentType,

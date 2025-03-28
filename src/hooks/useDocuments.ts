@@ -7,7 +7,8 @@ import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { EntityType } from "@/utils/activityLogger";
 
-export { EntityType };
+// Export the EntityType as a type for proper isolated modules support
+export type { EntityType };
 
 export interface Document {
   id: string;
@@ -81,7 +82,7 @@ export const useDocuments = ({
         }
         
         // Transform the response to match our Document interface
-        return data.map((doc: any) => ({
+        return (data as any[]).map((doc: any) => ({
           id: doc.id,
           document_name: doc.document_name,
           document_type: doc.document_type,
@@ -142,7 +143,7 @@ export const useDocuments = ({
         await logActivity({
           entityType,
           entityId,
-          action: "delete",
+          action: "update",
           details: {
             action_type: "document_deleted",
             document_id: documentId,

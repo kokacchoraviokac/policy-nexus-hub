@@ -167,7 +167,10 @@ const formatAction = (action: ActivityAction): string => {
     delete: "Deleted record",
     view: "Viewed record",
     export: "Exported record",
-    import: "Imported record"
+    import: "Imported record",
+    document_uploaded: "Uploaded document",
+    document_deleted: "Deleted document",
+    document_download: "Downloaded document"
   };
   
   return actionMap[action] || action;
@@ -187,10 +190,10 @@ const formatDetails = (action: ActivityAction, details?: Record<string, any>): s
   
   // Handle document-related actions
   if (action === 'update' && details.action_type) {
-    if (details.action_type === 'document_upload') {
+    if (details.action_type === 'document_uploaded') {
       return `Uploaded document: ${details.document_name}`;
     }
-    if (details.action_type === 'document_delete') {
+    if (details.action_type === 'document_deleted') {
       return `Deleted document: ${details.document_name}`;
     }
     if (details.action_type === 'document_download') {
