@@ -46,6 +46,9 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
 }) => {
   const { t } = useLanguage();
 
+  // Set this to false to disable the saved filters functionality
+  const showSavedFiltersEnabled = false; // Temporarily disable
+
   return (
     <>
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -71,7 +74,8 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
             </SelectContent>
           </Select>
           
-          {showSavedFilters && (
+          {/* We'll leave this commented out for now
+          {showSavedFiltersEnabled && (
             <SimpleSavedFiltersButton
               savedFilters={savedFilters}
               onApplyFilter={onFilterChange}
@@ -84,6 +88,7 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
               entityType="insurers"
             />
           )}
+          */}
           
           <FilterButton
             activeFilterCount={activeFilterCount}

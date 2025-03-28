@@ -45,10 +45,8 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  const canShowSavedFilters = showSavedFilters && 
-    onSaveFilter && 
-    onDeleteFilter && 
-    parseFilterData;
+  // Since we've disabled the save functionality, we'll set this to false for now
+  const canShowSavedFilters = false; // Temporarily disable saved filters
 
   return (
     <>
@@ -75,6 +73,7 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
             </SelectContent>
           </Select>
           
+          {/* We'll just leave this commented out for now
           {canShowSavedFilters && (
             <SimpleSavedFiltersButton
               savedFilters={savedFilters}
@@ -88,6 +87,7 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
               entityType="products"
             />
           )}
+          */}
           
           <FilterButton
             activeFilterCount={activeFilterCount}
