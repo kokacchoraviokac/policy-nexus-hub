@@ -132,12 +132,13 @@ export const useDocuments = ({
         // Create the field name dynamically based on entity type
         const fieldName = `${entityType}_id`;
         
-        // Using any type here to avoid TypeScript errors
-        // This is necessary because the table name is dynamically determined
-        const { data, error } = await supabase
+        // Using explicit any to avoid TypeScript recursion issues
+        const query = supabase
           .from(documentTable)
-          .select("*")
-          .eq(fieldName, entityId)
+          .select("*");
+        
+        // Apply the filter using proper casting to avoid type issues
+        const { data, error } = await query.eq(fieldName, entityId)
           .order("created_at", { ascending: false });
         
         if (error) {
@@ -162,12 +163,14 @@ export const useDocuments = ({
     mutationFn: async (documentId: string) => {
       try {
         // First, get document details to delete the storage file
-        // Using any type here to avoid TypeScript errors
-        const { data, error: fetchError } = await supabase
+        // Explicitly cast to any to avoid type recursion
+        const fetchQuery = supabase
           .from(documentTable)
           .select("*")
           .eq("id", documentId)
           .single();
+        
+        const { data, error: fetchError } = await fetchQuery;
           
         if (fetchError || !data) {
           throw new Error("Document not found");
@@ -185,10 +188,12 @@ export const useDocuments = ({
         }
         
         // Delete document record
-        const { error: dbError } = await supabase
+        const deleteQuery = supabase
           .from(documentTable)
           .delete()
           .eq("id", documentId);
+          
+        const { error: dbError } = await deleteQuery;
           
         if (dbError) {
           throw dbError;
