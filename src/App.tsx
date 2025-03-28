@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,6 +6,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Policies from "./pages/Policies";
+import NewPolicy from "./pages/policies/NewPolicy";
 import Sales from "./pages/Sales";
 import Claims from "./pages/Claims";
 import Finances from "./pages/Finances";
@@ -64,7 +64,16 @@ const App = () => (
         </ProtectedRoute>
       } />
       
-      {/* New Policy Routes */}
+      {/* Policy Creation Route */}
+      <Route path="/policies/new" element={
+        <ProtectedRoute requiredPrivilege="policies:create">
+          <AppLayout>
+            <NewPolicy />
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+      
+      {/* Policy Detail Route */}
       <Route path="/policies/:policyId" element={
         <ProtectedRoute requiredPrivilege="policies:view">
           <AppLayout>
@@ -77,14 +86,6 @@ const App = () => (
         <ProtectedRoute requiredPrivilege="policies:edit">
           <AppLayout>
             <div>Policy Edit Page - To be implemented</div>
-          </AppLayout>
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/policies/new" element={
-        <ProtectedRoute requiredPrivilege="policies:create">
-          <AppLayout>
-            <div>New Policy Page - To be implemented</div>
           </AppLayout>
         </ProtectedRoute>
       } />
