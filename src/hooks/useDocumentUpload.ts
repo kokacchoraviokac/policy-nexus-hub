@@ -1,198 +1,173 @@
 
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from "uuid";
-import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { EntityType } from "./useDocuments";
 
-export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
-
-interface UseDocumentUploadProps {
+export interface UseDocumentUploadProps {
   entityType: EntityType;
   entityId: string;
   onSuccess?: () => void;
 }
 
-export const useDocumentUpload = ({ 
-  entityType, 
-  entityId, 
-  onSuccess 
+export const useDocumentUpload = ({
+  entityType,
+  entityId,
+  onSuccess
 }: UseDocumentUploadProps) => {
-  const { t } = useLanguage();
-  const { toast } = useToast();
-  const { logActivity } = useActivityLogger();
-  const queryClient = useQueryClient();
-  
   const [documentName, setDocumentName] = useState("");
-  const [documentType, setDocumentType] = useState("document");
+  const [documentType, setDocumentType] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   
-  // Generate document types based on entity type
-  const getDocumentTypes = () => {
-    const commonTypes = [
-      { value: "document", label: t("document") },
-      { value: "contract", label: t("contract") },
-      { value: "other", label: t("other") }
-    ];
-    
-    const entitySpecificTypes: Record<EntityType, Array<{value: string, label: string}>> = {
-      policy: [
-        { value: "policy", label: t("policyDocument") },
-        { value: "invoice", label: t("invoice") },
-        { value: "certificate", label: t("certificate") },
-        { value: "endorsement", label: t("endorsement") }
-      ],
-      claim: [
-        { value: "claim_form", label: t("claimForm") },
-        { value: "damage_report", label: t("damageReport") },
-        { value: "invoice", label: t("invoice") },
-        { value: "medical_report", label: t("medicalReport") }
-      ],
-      client: [
-        { value: "id", label: t("identificationDocument") },
-        { value: "contract", label: t("contract") },
-        { value: "agreement", label: t("agreement") }
-      ],
-      insurer: [
-        { value: "agreement", label: t("agreement") },
-        { value: "contract", label: t("contract") },
-        { value: "product_info", label: t("productInformation") }
-      ],
-      sales_process: [
-        { value: "proposal", label: t("proposal") },
-        { value: "quote", label: t("quote") },
-        { value: "authorization", label: t("authorization") }
-      ],
-      agent: [
-        { value: "contract", label: t("contract") },
-        { value: "commission_agreement", label: t("commissionAgreement") }
-      ]
-    };
-    
-    // Combine common types with entity-specific types
-    return [...entitySpecificTypes[entityType], ...commonTypes];
-  };
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { logActivity } = useActivityLogger();
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const selectedFile = e.target.files[0];
-      setFile(selectedFile);
-      
-      // Set document name to file name if not already set
+  const handleFileChange = (file: File | null) => {
+    if (file) {
+      setFile(file);
+      // If no document name is set yet, use the file name
       if (!documentName) {
-        setDocumentName(selectedFile.name.split('.')[0]);
+        setDocumentName(file.name.split('.')[0]);
       }
     }
   };
   
-  const handleUpload = async () => {
-    if (!file || !documentName || !documentType || !entityId || !entityType) {
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
+      if (!file || !documentName || !documentType) {
+        throw new Error("Missing required fields");
+      }
+      
+      setUploading(true);
+      try {
+        const user = await supabase.auth.getUser();
+        const userId = user.data.user?.id;
+        const userName = user.data.user?.email || user.data.user?.user_metadata?.name || userId;
+        
+        // Generate unique ID and file path
+        const documentId = uuidv4();
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${entityType}/${entityId}/${documentId}.${fileExt}`;
+        
+        // Upload file to storage
+        const { error: uploadError } = await supabase.storage
+          .from('documents')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (uploadError) {
+          throw uploadError;
+        }
+        
+        // Create document record in database
+        const { error: insertError } = await supabase
+          .from('documents')
+          .insert({
+            id: documentId,
+            document_name: documentName,
+            document_type: documentType,
+            entity_type: entityType,
+            entity_id: entityId,
+            file_path: filePath,
+            uploaded_by_id: userId,
+            uploaded_by_name: userName,
+            version: 1,
+            is_latest_version: true,
+            mime_type: file.type,
+            file_size: file.size
+          });
+          
+        if (insertError) {
+          // If record creation fails, delete uploaded file
+          await supabase.storage
+            .from('documents')
+            .remove([filePath]);
+          throw insertError;
+        }
+        
+        // Log activity
+        await logActivity({
+          entityType,
+          entityId,
+          action: "document_uploaded",
+          details: {
+            document_id: documentId,
+            document_name: documentName,
+            document_type: documentType
+          }
+        });
+        
+        return { documentId, documentName };
+      } finally {
+        setUploading(false);
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["documents", entityType, entityId] });
+      
       toast({
-        title: t("missingInformation"),
-        description: t("pleaseProvideAllRequiredFields"),
+        title: t("documentUploaded"),
+        description: t("documentUploadedSuccess", { name: data.documentName }),
+      });
+      
+      // Reset form
+      setDocumentName("");
+      setDocumentType("");
+      setFile(null);
+      
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+    },
+    onError: (error) => {
+      console.error("Error in upload mutation:", error);
+      toast({
+        title: t("documentUploadError"),
+        description: t("documentUploadErrorMessage"),
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleUpload = () => {
+    if (!file) {
+      toast({
+        title: t("noFileSelected"),
+        description: t("pleaseSelectFile"),
         variant: "destructive",
       });
       return;
     }
     
-    setUploading(true);
-    
-    try {
-      // Get user info for company_id
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-      const companyId = userData.user?.user_metadata?.company_id;
-      
-      if (!userId || !companyId) {
-        throw new Error("User authentication information missing");
-      }
-      
-      // Generate document ID
-      const documentId = uuidv4();
-      
-      // Step 1: Upload file to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      
-      // Use entity type and ID in the file path for better organization
-      const filePath = `${entityType}/${entityId}/${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file);
-      
-      if (uploadError) throw uploadError;
-      
-      // Step 2: Create record in appropriate documents table
-      let tableError;
-      if (entityType === 'policy') {
-        // Use existing policy_documents table
-        const { error } = await supabase
-          .from('policy_documents')
-          .insert({
-            policy_id: entityId,
-            document_name: documentName,
-            document_type: documentType,
-            file_path: filePath,
-            uploaded_by: userId,
-            company_id: companyId,
-            version: 1
-          });
-        tableError = error;
-      } else {
-        // For other entity types, use their respective document tables
-        // This is a placeholder - you would need to create these tables if they don't exist
-        console.error("Document upload for entity type not yet implemented:", entityType);
-        throw new Error(`Document upload for ${entityType} is not yet fully implemented`);
-      }
-      
-      if (tableError) throw tableError;
-      
-      // Log activity
-      logActivity({
-        entityType: entityType as "policy" | "claim" | "client" | "insurer" | "agent",
-        entityId: entityId,
-        action: "update",
-        details: { 
-          action_type: "document_upload",
-          document_name: documentName,
-          document_type: documentType
-        }
-      });
-      
-      // Refresh documents list
-      if (entityType === 'policy') {
-        queryClient.invalidateQueries({ queryKey: ['policy-documents', entityId] });
-      }
-      
+    if (!documentName) {
       toast({
-        title: t("uploadSuccessful"),
-        description: t("documentUploadedSuccessfully"),
-      });
-      
-      // Reset state
-      setDocumentName("");
-      setDocumentType("document");
-      setFile(null);
-      
-      // Call onSuccess if provided
-      if (onSuccess) {
-        onSuccess();
-      }
-      
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: t("uploadFailed"),
-        description: error instanceof Error ? error.message : t("somethingWentWrong"),
+        title: t("noDocumentName"),
+        description: t("pleaseEnterDocumentName"),
         variant: "destructive",
       });
-    } finally {
-      setUploading(false);
+      return;
     }
+    
+    if (!documentType) {
+      toast({
+        title: t("noDocumentType"),
+        description: t("pleaseSelectDocumentType"),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    uploadMutation.mutate();
   };
   
   return {
@@ -201,12 +176,8 @@ export const useDocumentUpload = ({
     documentType,
     setDocumentType,
     file,
-    setFile,
-    tags: [], // Added for compatibility with future implementations
-    setTags: (tags: string[]) => {}, // Added for compatibility with future implementations
-    uploading,
     handleFileChange,
-    handleUpload,
-    documentTypes: getDocumentTypes()
+    uploading,
+    handleUpload
   };
 };

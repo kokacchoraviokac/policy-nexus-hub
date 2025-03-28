@@ -13,13 +13,15 @@ import FileUploadField from "./FileUploadField";
 interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  policyId: string;
+  entityType: "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
+  entityId: string;
 }
 
 const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   open,
   onOpenChange,
-  policyId
+  entityType,
+  entityId
 }) => {
   const { t } = useLanguage();
   
@@ -33,8 +35,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     uploading,
     handleUpload
   } = useDocumentUpload({ 
-    entityType: "policy",
-    entityId: policyId,
+    entityType,
+    entityId,
     onSuccess: () => onOpenChange(false)
   });
   
