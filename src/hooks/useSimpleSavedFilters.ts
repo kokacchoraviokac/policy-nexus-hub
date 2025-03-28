@@ -111,7 +111,7 @@ export function useSimpleSavedFilters(
   // Helper function to parse filter data
   const parseFilterData = (filterData: SavedFilter): CodebookFilterState => {
     try {
-      return JSON.parse(filterData.filters) as CodebookFilterState;
+      return JSON.parse(filterData.filters as string) as CodebookFilterState;
     } catch (error) {
       console.error("Error parsing filter data:", error);
       return {};
