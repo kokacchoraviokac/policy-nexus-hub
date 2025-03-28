@@ -41,8 +41,8 @@ export const uploadFileToStorage = async (file: File, entityType: EntityType, en
 };
 
 // Function to insert document metadata into database
-export const insertDocumentRecord = async <T extends DocumentTableName>(
-  documentTable: T,
+export const insertDocumentRecord = async (
+  documentTable: DocumentTableName,
   documentData: {
     id: string;
     document_name: string;
@@ -56,7 +56,7 @@ export const insertDocumentRecord = async <T extends DocumentTableName>(
 ) => {
   const { error: insertError } = await supabase
     .from(documentTable)
-    .insert(documentData);
+    .insert(documentData as any); // Use type assertion to bypass type checking
     
   if (insertError) {
     throw insertError;
