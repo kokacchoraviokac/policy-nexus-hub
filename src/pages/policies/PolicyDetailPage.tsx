@@ -18,31 +18,60 @@ import PolicyDocumentsTab from "@/components/policies/detail/PolicyDocumentsTab"
 import PolicyClaimsTab from "@/components/policies/detail/PolicyClaimsTab";
 import PolicyFinancialsTab from "@/components/policies/detail/PolicyFinancialsTab";
 import PolicyHistoryTab from "@/components/policies/detail/PolicyHistoryTab";
+import { useActivityLogger } from "@/utils/activityLogger";
 
 const PolicyDetailPage = () => {
   const { policyId } = useParams<{ policyId: string }>();
   const navigate = useNavigate();
   const { t, formatDate, formatCurrency } = useLanguage();
   const { toast } = useToast();
+  const { logActivity } = useActivityLogger();
 
   const { data: policy, isLoading, isError, error } = useQuery({
     queryKey: ['policy', policyId],
     queryFn: async () => {
       if (!policyId) throw new Error("Policy ID is required");
       
-      const { data, error } = await supabase
+      // Get policy details
+      const { data: policyData, error: policyError } = await supabase
         .from('policies')
         .select(`
-          *,
-          policy_documents(count),
-          claims(count)
+          *
         `)
         .eq('id', policyId)
         .single();
       
-      if (error) throw error;
-      return data;
+      if (policyError) throw policyError;
+      
+      // Count documents
+      const { count: documentsCount, error: documentsError } = await supabase
+        .from('policy_documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('policy_id', policyId);
+      
+      // Count claims
+      const { count: claimsCount, error: claimsError } = await supabase
+        .from('claims')
+        .select('*', { count: 'exact', head: true })
+        .eq('policy_id', policyId);
+      
+      return {
+        ...policyData,
+        documents_count: documentsCount || 0,
+        claims_count: claimsCount || 0
+      };
     },
+    onSuccess: () => {
+      // Log the view activity
+      if (policyId) {
+        logActivity({
+          entityType: "policy",
+          entityId: policyId,
+          action: "view",
+          details: { timestamp: new Date().toISOString() }
+        });
+      }
+    }
   });
 
   const handleEditPolicy = () => {
@@ -136,8 +165,8 @@ const PolicyDetailPage = () => {
         <TabsList className="mb-6">
           <TabsTrigger value="documents">
             {t("documents")}
-            {policy.policy_documents_count > 0 && (
-              <Badge variant="secondary" className="ml-2">{policy.policy_documents_count}</Badge>
+            {policy.documents_count > 0 && (
+              <Badge variant="secondary" className="ml-2">{policy.documents_count}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="claims">

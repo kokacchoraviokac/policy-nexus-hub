@@ -5,6 +5,7 @@ import { Calendar, Users, Building, CreditCard, FileText } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { InfoGrid, InfoItem } from "@/components/codebook/details/InfoItem";
+import PolicyWorkflowCard from "./PolicyWorkflowCard";
 
 interface PolicyDetailSummaryProps {
   policy: any; // Will be properly typed when we have the full schema
@@ -87,6 +88,11 @@ const PolicyDetailSummary: React.FC<PolicyDetailSummaryProps> = ({ policy }) => 
           </InfoGrid>
         </CardContent>
       </Card>
+      
+      {/* Add the Policy Workflow Card */}
+      <div className="md:col-span-3">
+        <PolicyWorkflowCard policy={policy} />
+      </div>
     </div>
   );
 };

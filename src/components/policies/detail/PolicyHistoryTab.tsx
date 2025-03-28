@@ -32,7 +32,7 @@ const PolicyHistoryTab: React.FC<PolicyHistoryTabProps> = ({ policyId }) => {
           action,
           created_at,
           details,
-          profiles:user_id (name)
+          user_id
         `)
         .eq('entity_id', policyId)
         .eq('entity_type', 'policy')
@@ -40,12 +40,30 @@ const PolicyHistoryTab: React.FC<PolicyHistoryTabProps> = ({ policyId }) => {
       
       if (error) throw error;
 
+      // Get user names for all user IDs
+      const userIds = data.map(log => log.user_id).filter(Boolean);
+      let userNames: Record<string, string> = {};
+      
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', userIds);
+          
+        if (!profilesError && profiles) {
+          userNames = profiles.reduce((acc, profile) => {
+            acc[profile.id] = profile.name;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
+
       // Map to ActivityItem format
       return data.map(log => ({
         id: log.id,
         action: log.action,
         timestamp: log.created_at,
-        user: log.profiles?.name || t("unknownUser"),
+        user: userNames[log.user_id] || t("unknownUser"),
         details: log.details ? JSON.stringify(log.details) : undefined
       })) as ActivityItem[];
     },

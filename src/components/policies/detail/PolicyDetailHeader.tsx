@@ -28,6 +28,7 @@ const PolicyDetailHeader: React.FC<PolicyDetailHeaderProps> = ({
         variant = "default";
         break;
       case 'expired':
+      case 'cancelled':
         variant = "destructive";
         break;
       case 'pending':
@@ -38,7 +39,32 @@ const PolicyDetailHeader: React.FC<PolicyDetailHeaderProps> = ({
     }
     
     return (
-      <Badge variant={variant}>
+      <Badge variant={variant} className="px-3 py-1 text-sm">
+        {status}
+      </Badge>
+    );
+  };
+
+  const getWorkflowBadge = (status: string) => {
+    let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+    
+    switch (status.toLowerCase()) {
+      case 'complete':
+        variant = "default";
+        break;
+      case 'in_review':
+      case 'ready':
+        variant = "secondary";
+        break;
+      case 'draft':
+        variant = "outline";
+        break;
+      default:
+        variant = "outline";
+    }
+    
+    return (
+      <Badge variant={variant} className="ml-2">
         {status}
       </Badge>
     );
@@ -52,6 +78,7 @@ const PolicyDetailHeader: React.FC<PolicyDetailHeaderProps> = ({
             {policy.policy_number}
           </h1>
           {getStatusBadge(policy.status)}
+          {getWorkflowBadge(policy.workflow_status)}
         </div>
         <p className="text-muted-foreground">
           {policy.insurer_name} - {policy.product_name || t("notSpecified")}
@@ -63,7 +90,12 @@ const PolicyDetailHeader: React.FC<PolicyDetailHeaderProps> = ({
           <FileDown className="mr-2 h-4 w-4" />
           {t("export")}
         </Button>
-        <Button variant="outline" size="sm" onClick={onRenew}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRenew}
+          disabled={policy.status === 'active'}
+        >
           <Repeat className="mr-2 h-4 w-4" />
           {t("renew")}
         </Button>
