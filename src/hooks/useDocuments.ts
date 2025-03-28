@@ -10,6 +10,9 @@ import type { EntityType } from "@/utils/activityLogger";
 // Export the type for proper isolated modules support
 export type { EntityType };
 
+// Define specific table names to avoid type inference issues
+export type DocumentTableName = "policy_documents" | "claim_documents" | "sales_documents";
+
 // Define a base document interface with common fields
 export interface DocumentBase {
   id: string;
@@ -81,8 +84,8 @@ export const useDocuments = ({
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLogger();
   
-  // Map entity type to appropriate document table
-  const getDocumentTable = () => {
+  // Map entity type to appropriate document table with literal return type
+  const getDocumentTable = (): DocumentTableName => {
     switch (entityType) {
       case "policy":
         return "policy_documents";
@@ -111,9 +114,12 @@ export const useDocuments = ({
         const fieldName = `${entityType}_id`;
         
         // Use the appropriate table based on entity type
-        const { data: docsData, error: fetchError } = await supabase
+        // Breaking this into steps to help TypeScript with type inference
+        const query = supabase
           .from(documentTable)
-          .select("*")
+          .select("*");
+        
+        const { data: docsData, error: fetchError } = await query
           .eq(fieldName, entityId)
           .order("created_at", { ascending: false });
         
@@ -124,7 +130,7 @@ export const useDocuments = ({
         if (!docsData) return [];
         
         // Transform the response to match our Document interface
-        const transformedData: Document[] = docsData.map((doc: any): Document => {
+        const transformedData = docsData.map((doc: any): Document => {
           return {
             id: doc.id,
             document_name: doc.document_name,
@@ -155,9 +161,12 @@ export const useDocuments = ({
     mutationFn: async (documentId: string) => {
       try {
         // First, get document details to delete the storage file
-        const { data: documentData, error: docError } = await supabase
+        // Breaking down the query to help TypeScript
+        const query = supabase
           .from(documentTable)
-          .select("*")
+          .select("*");
+        
+        const { data: documentData, error: docError } = await query
           .eq("id", documentId)
           .single();
           
