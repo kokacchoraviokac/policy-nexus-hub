@@ -105,10 +105,15 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
 
   const createPolicyMutation = useMutation({
     mutationFn: async (data: PolicyFormValues) => {
+      // Convert Date objects to ISO strings for Supabase
+      const { start_date, expiry_date, ...rest } = data;
+      
       const { data: policy, error } = await supabase
         .from("policies")
         .insert({
-          ...data,
+          ...rest,
+          start_date: start_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+          expiry_date: expiry_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
           company_id: user?.companyId,
           created_by: user?.id,
           commission_amount: data.premium * (data.commission_percentage || 0) / 100,
@@ -138,10 +143,15 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
 
   const updatePolicyMutation = useMutation({
     mutationFn: async (data: PolicyFormValues) => {
+      // Convert Date objects to ISO strings for Supabase
+      const { start_date, expiry_date, ...rest } = data;
+      
       const { data: policy, error } = await supabase
         .from("policies")
         .update({
-          ...data,
+          ...rest,
+          start_date: start_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+          expiry_date: expiry_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
           updated_at: new Date().toISOString(),
           commission_amount: data.premium * (data.commission_percentage || 0) / 100,
         })

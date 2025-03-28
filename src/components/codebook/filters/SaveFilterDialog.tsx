@@ -12,21 +12,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CodebookFilterState } from "@/types/codebook";
+import { EntityType } from "@/types/savedFilters";
 
 interface SaveFilterDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (name: string) => void;
-  isSaving: boolean;
+  isSaving?: boolean;
   filterCount?: number;
+  // Add the missing props
+  filters?: CodebookFilterState;
+  entityType?: EntityType;
 }
 
 const SaveFilterDialog: React.FC<SaveFilterDialogProps> = ({
   open,
   onOpenChange,
   onSave,
-  isSaving,
+  isSaving = false,
   filterCount,
+  filters,
+  entityType
 }) => {
   const { t } = useLanguage();
   const [name, setName] = useState("");

@@ -100,6 +100,8 @@ const SimpleSavedFiltersButton: React.FC<SimpleSavedFiltersButtonProps> = ({
         open={isSaveDialogOpen}
         onOpenChange={setIsSaveDialogOpen}
         onSave={handleSave}
+        isSaving={isSaving}
+        filterCount={Object.keys(currentFilters).length}
         filters={currentFilters}
         entityType={entityType}
       />
