@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -105,19 +104,20 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
 
   const createPolicyMutation = useMutation({
     mutationFn: async (data: PolicyFormValues) => {
-      // Convert Date objects to ISO strings for Supabase
       const { start_date, expiry_date, ...rest } = data;
       
+      const policyData = {
+        ...rest,
+        start_date: start_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        expiry_date: expiry_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        company_id: user?.companyId,
+        created_by: user?.id,
+        commission_amount: data.premium * (data.commission_percentage || 0) / 100,
+      };
+
       const { data: policy, error } = await supabase
         .from("policies")
-        .insert({
-          ...rest,
-          start_date: start_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-          expiry_date: expiry_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-          company_id: user?.companyId,
-          created_by: user?.id,
-          commission_amount: data.premium * (data.commission_percentage || 0) / 100,
-        })
+        .insert(policyData)
         .select("id")
         .single();
 
@@ -143,18 +143,19 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
 
   const updatePolicyMutation = useMutation({
     mutationFn: async (data: PolicyFormValues) => {
-      // Convert Date objects to ISO strings for Supabase
       const { start_date, expiry_date, ...rest } = data;
       
+      const policyData = {
+        ...rest,
+        start_date: start_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        expiry_date: expiry_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        updated_at: new Date().toISOString(),
+        commission_amount: data.premium * (data.commission_percentage || 0) / 100,
+      };
+
       const { data: policy, error } = await supabase
         .from("policies")
-        .update({
-          ...rest,
-          start_date: start_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-          expiry_date: expiry_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-          updated_at: new Date().toISOString(),
-          commission_amount: data.premium * (data.commission_percentage || 0) / 100,
-        })
+        .update(policyData)
         .eq("id", initialData.id)
         .select("id")
         .single();
@@ -190,13 +191,11 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
   const handleInsurerChange = (insurerId: string) => {
     setSelectedInsurerId(insurerId);
     
-    // Find the insurer name
     const selectedInsurer = insurers.find(insurer => insurer.id === insurerId);
     if (selectedInsurer) {
       form.setValue("insurer_name", selectedInsurer.name);
     }
     
-    // Reset product selection when insurer changes
     form.setValue("product_id", undefined);
     form.setValue("product_name", undefined);
     form.setValue("product_code", undefined);
@@ -214,7 +213,6 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
     const selectedClient = clients.find(client => client.id === clientId);
     if (selectedClient) {
       form.setValue("policyholder_name", selectedClient.name);
-      // If insured is same as policyholder
       form.setValue("insured_id", clientId);
       form.setValue("insured_name", selectedClient.name);
     }
@@ -521,12 +519,10 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                         {...field} 
                         onChange={(e) => {
                           field.onChange(e);
-                          // Recalculate commission amount if percentage exists
                           const percentage = form.getValues("commission_percentage");
                           if (percentage) {
                             const premium = parseFloat(e.target.value);
                             const commission = premium * percentage / 100;
-                            // No form field for commission_amount, it will be calculated on submit
                           }
                         }}
                       />
@@ -633,12 +629,10 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
                         value={field.value || ""} 
                         onChange={(e) => {
                           field.onChange(e);
-                          // Recalculate commission amount
                           const premium = form.getValues("premium");
                           const percentage = parseFloat(e.target.value);
                           if (premium && percentage) {
                             const commission = premium * percentage / 100;
-                            // No form field for commission_amount, it will be calculated on submit
                           }
                         }}
                       />

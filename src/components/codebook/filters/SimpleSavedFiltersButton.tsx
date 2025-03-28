@@ -43,7 +43,7 @@ const SimpleSavedFiltersButton: React.FC<SimpleSavedFiltersButtonProps> = ({
 
   const handleSave = async (name: string) => {
     await onSaveFilter(name);
-    return;
+    setIsSaveDialogOpen(false);
   };
 
   return (
