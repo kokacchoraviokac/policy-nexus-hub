@@ -181,6 +181,19 @@ const formatDetails = (action: ActivityAction, details?: Record<string, any>): s
     return changeText;
   }
   
+  // Handle document-related actions
+  if (action === 'update' && details.action_type) {
+    if (details.action_type === 'document_upload') {
+      return `Uploaded document: ${details.document_name}`;
+    }
+    if (details.action_type === 'document_delete') {
+      return `Deleted document: ${details.document_name}`;
+    }
+    if (details.action_type === 'document_download') {
+      return `Downloaded document: ${details.document_name}`;
+    }
+  }
+  
   if (action === 'create' && details.fields) {
     return `Created with ${Object.keys(details.fields).length} fields`;
   }

@@ -131,8 +131,9 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
       logActivity({
         entityType: "policy",
         entityId: policyId,
-        action: "document_delete",
+        action: "update",
         details: { 
+          action_type: "document_delete",
           document_name: document.document_name,
           document_id: document.id
         }
@@ -167,19 +168,20 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
       
       // Create a download link and click it
       const url = URL.createObjectURL(data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = document.document_name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = document.document_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       
       // Log activity
       logActivity({
         entityType: "policy",
         entityId: policyId,
-        action: "document_download",
+        action: "update",
         details: { 
+          action_type: "document_download",
           document_name: document.document_name,
           document_id: document.id
         }

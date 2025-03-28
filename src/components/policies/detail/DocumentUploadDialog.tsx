@@ -67,6 +67,15 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     setUploading(true);
     
     try {
+      // Get user info for company_id
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      const companyId = userData.user?.user_metadata?.company_id;
+      
+      if (!userId || !companyId) {
+        throw new Error("User authentication information missing");
+      }
+      
       // Step 1: Upload file to storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${uuidv4()}.${fileExt}`;
@@ -86,7 +95,9 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           document_name: documentName,
           document_type: documentType,
           file_path: filePath,
-          uploaded_by: (await supabase.auth.getUser()).data.user?.id
+          uploaded_by: userId,
+          company_id: companyId,
+          version: 1
         });
       
       if (dbError) throw dbError;
@@ -95,8 +106,9 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
       logActivity({
         entityType: "policy",
         entityId: policyId,
-        action: "document_upload",
+        action: "update",
         details: { 
+          action_type: "document_upload",
           document_name: documentName,
           document_type: documentType
         }
