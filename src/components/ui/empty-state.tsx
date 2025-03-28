@@ -1,26 +1,49 @@
 
 import React from "react";
-import { Info } from "lucide-react";
+import { AlertCircle, FileText, FilePlus, FileEdit, FileSearch } from "lucide-react";
+import { Button, ButtonProps } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
   title: string;
-  description?: string;
-  icon?: React.ReactNode;
+  description: string;
+  icon?: "file" | "file-plus" | "file-edit" | "file-search" | "alert";
   action?: React.ReactNode;
+  className?: string;
 }
 
-const EmptyState = ({ 
-  title, 
-  description, 
-  icon = <Info className="h-12 w-12 text-muted-foreground" />, 
-  action 
+const EmptyState = ({
+  title,
+  description,
+  icon = "file",
+  action,
+  className,
 }: EmptyStateProps) => {
+  const IconComponent = {
+    file: FileText,
+    "file-plus": FilePlus,
+    "file-edit": FileEdit,
+    "file-search": FileSearch,
+    alert: AlertCircle,
+  }[icon];
+
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center">
-      <div className="mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold">{title}</h3>
-      {description && <p className="mt-2 text-muted-foreground">{description}</p>}
-      {action && <div className="mt-6">{action}</div>}
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center text-center p-8 h-full min-h-[240px]",
+        className
+      )}
+    >
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+        <IconComponent className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <h3 className="mt-4 font-semibold tracking-tight text-foreground">
+        {title}
+      </h3>
+      <p className="mb-4 mt-2 text-sm text-muted-foreground max-w-sm">
+        {description}
+      </p>
+      {action}
     </div>
   );
 };

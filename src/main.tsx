@@ -13,16 +13,16 @@ const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <LanguageProvider>
-          <AuthProvider>
-            <BrowserRouter>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <LanguageProvider>
+            <AuthProvider>
               <App />
-            </BrowserRouter>
-          </AuthProvider>
-        </LanguageProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );

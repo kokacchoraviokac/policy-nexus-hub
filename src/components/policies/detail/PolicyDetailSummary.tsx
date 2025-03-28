@@ -37,9 +37,7 @@ const PolicyDetailSummary: React.FC<PolicyDetailSummaryProps> = ({ policy }) => 
       />
       
       <PolicyWorkflowCard
-        status={policy.status}
-        workflowStatus={policy.workflow_status}
-        updatedAt={policy.updated_at}
+        policy={policy}
       />
       
       <PolicyAddendumCard
