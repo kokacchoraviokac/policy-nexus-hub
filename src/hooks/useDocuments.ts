@@ -10,6 +10,20 @@ import type { EntityType } from "@/utils/activityLogger";
 // Export the type for proper isolated modules support
 export type { EntityType };
 
+// Define types for database rows to avoid recursive type inference
+export interface DocumentDbRow {
+  id: string;
+  document_name: string;
+  document_type: string;
+  created_at: string;
+  file_path: string;
+  uploaded_by?: string;
+  version?: number;
+  mime_type?: string;
+  file_size?: number;
+  tags?: string[];
+}
+
 export interface Document {
   id: string;
   document_name: string;
@@ -73,7 +87,7 @@ export const useDocuments = ({
         // Create the field name dynamically based on entity type
         const fieldName = `${entityType}_id`;
         
-        // Use the appropriate table based on entity type
+        // Use the appropriate table based on entity type and explicitly specify the return type
         const { data: docsData, error: fetchError } = await supabase
           .from(documentTable)
           .select("*")
@@ -87,20 +101,22 @@ export const useDocuments = ({
         if (!docsData) return [];
         
         // Transform the response to match our Document interface with explicit typing
-        const transformedData: Document[] = docsData.map((doc: any): Document => ({
-          id: doc.id,
-          document_name: doc.document_name,
-          document_type: doc.document_type,
-          created_at: doc.created_at,
-          file_path: doc.file_path,
-          entity_type: entityType,
-          entity_id: entityId,
-          uploaded_by_id: doc.uploaded_by,
-          uploaded_by_name: "Unknown", // We'll fetch this separately if needed
-          version: doc.version || 1,
-          is_latest_version: true,
-          mime_type: doc.mime_type
-        }));
+        const transformedData = docsData.map((doc: DocumentDbRow): Document => {
+          return {
+            id: doc.id,
+            document_name: doc.document_name,
+            document_type: doc.document_type,
+            created_at: doc.created_at,
+            file_path: doc.file_path,
+            entity_type: entityType,
+            entity_id: entityId,
+            uploaded_by_id: doc.uploaded_by,
+            uploaded_by_name: "Unknown", // We'll fetch this separately if needed
+            version: doc.version || 1,
+            is_latest_version: true,
+            mime_type: doc.mime_type
+          };
+        });
         
         return transformedData;
       } catch (err) {
