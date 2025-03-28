@@ -68,7 +68,7 @@ export const useDocuments = ({
     refetch
   } = useQuery({
     queryKey: ["documents", entityType, entityId],
-    queryFn: async () => {
+    queryFn: async (): Promise<Document[]> => {
       try {
         // Create the field name dynamically based on entity type
         const fieldName = `${entityType}_id`;
@@ -86,7 +86,7 @@ export const useDocuments = ({
         
         if (!docsData) return [];
         
-        // Transform the response to match our Document interface
+        // Transform the response to match our Document interface with explicit typing
         const transformedData: Document[] = docsData.map((doc: any): Document => ({
           id: doc.id,
           document_name: doc.document_name,
