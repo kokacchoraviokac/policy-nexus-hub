@@ -64,7 +64,30 @@ const App = () => (
         </ProtectedRoute>
       } />
       
-      {/* Sub-routes for Policies would be defined here */}
+      {/* New Policy Routes */}
+      <Route path="/policies/:policyId" element={
+        <ProtectedRoute requiredPrivilege="policies:view">
+          <AppLayout>
+            <div>Policy Details Page - To be implemented</div>
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/policies/:policyId/edit" element={
+        <ProtectedRoute requiredPrivilege="policies:edit">
+          <AppLayout>
+            <div>Policy Edit Page - To be implemented</div>
+          </AppLayout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/policies/new" element={
+        <ProtectedRoute requiredPrivilege="policies:create">
+          <AppLayout>
+            <div>New Policy Page - To be implemented</div>
+          </AppLayout>
+        </ProtectedRoute>
+      } />
       
       {/* Sales Module */}
       <Route path="/sales" element={
