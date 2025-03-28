@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { EmptyState } from "@/components/ui/empty-state";
+import EmptyState from "@/components/ui/empty-state";
 import AddendumList from "@/components/policies/addendums/AddendumList";
 import AddendumFormDialog from "@/components/policies/addendums/AddendumFormDialog";
 
