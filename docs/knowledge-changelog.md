@@ -15,52 +15,50 @@ Each entry should include:
 
 ## Change Log Entries
 
-### May 2024
+### March 2025
 
-#### [2024-05-06] Initial Knowledge Base Creation
+#### [2025-03-25] Initial Knowledge Base Creation
 - **Author**: Team
 - **Type**: Addition
 - **Sections**: All
 - **Summary**: Created comprehensive Policy Hub knowledge documentation including system architecture, module descriptions, user flows, and technical guidelines
 
-#### [2024-05-06] Document Management System Documentation
+#### [2025-03-25] Document Management System Documentation
 - **Author**: Team
 - **Type**: Addition
 - **Sections**: Document Management
 - **Summary**: Defined document upload, storage, and retrieval system design
 - **Related Code**: src/utils/documentUploadUtils.ts, src/hooks/useDocumentUpload.ts, src/hooks/useDocuments.ts
 
-#### [2024-05-06] Role-Based Access Control Documentation
+#### [2025-03-25] Role-Based Access Control Documentation
 - **Author**: Team
 - **Type**: Addition
 - **Sections**: Security, User Management
 - **Summary**: Documented RBAC system with Super Admin, Admin, and Employee roles
 - **Related Code**: src/contexts/AuthContext.tsx
 
-#### [2024-05-06] Localization Framework Documentation
+#### [2025-03-25] Localization Framework Documentation
 - **Author**: Team
 - **Type**: Addition
 - **Sections**: Localization
 - **Summary**: Documented i18n framework supporting English, Serbian, Macedonian, and Spanish
 - **Related Code**: src/contexts/LanguageContext.tsx, src/locales/
 
-#### [2024-05-06] Module Structure Documentation
+#### [2025-03-25] Module Structure Documentation
 - **Author**: Team
 - **Type**: Addition
 - **Sections**: System Architecture
 - **Summary**: Documented the complete module structure including Dashboard, Policies, Sales, Claims, Finances, Codebook, Agent, and Reports
 - **Related Code**: src/components/layout/sidebar/SidebarData.tsx
 
-#### [2024-05-06] Initial Knowledge Changelog Creation
+#### [2025-03-25] Initial Knowledge Changelog Creation
 - **Author**: Team with AI assistance
 - **Type**: Addition
 - **Sections**: Documentation Process
 - **Summary**: Created knowledge changelog structure to track documentation changes
 - **Related Code**: docs/knowledge-changelog.md
 
-### May 2024 (Continued)
-
-#### [2024-05-07] Document System Documentation Review
+#### [2025-03-28] Document System Documentation Review
 - **Author**: Team with AI assistance
 - **Type**: Verification
 - **Sections**: Document Management
