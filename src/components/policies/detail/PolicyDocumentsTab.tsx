@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { FileUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,7 +9,7 @@ import DocumentListItem from "./document/DocumentListItem";
 import EmptyDocumentList from "./document/EmptyDocumentList";
 import DocumentsLoadError from "./document/DocumentsLoadError";
 import DeleteDocumentDialog from "./document/DeleteDocumentDialog";
-import DocumentUploadDialog from "./DocumentUploadDialog";
+import DocumentUploadDialog from "./document/DocumentUploadDialog";
 
 interface PolicyDocumentsTabProps {
   policyId: string;
