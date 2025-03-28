@@ -7,14 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useDocumentUpload } from "@/hooks/useDocumentUpload";
-import { EntityType } from "@/hooks/useDocuments";
 import { Badge } from "@/components/ui/badge";
+
+// This is a placeholder component for future implementation of a unified document upload dialog
+// Currently, we're using policy-specific document upload functionality
 
 interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entityType: EntityType;
+  entityType: string;
   entityId: string;
   originalDocumentId?: string;
   currentVersion?: number;
@@ -31,34 +32,19 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   documentName: initialDocumentName
 }) => {
   const { t } = useLanguage();
+  const [documentName, setDocumentName] = React.useState("");
+  const [documentType, setDocumentType] = React.useState("document");
+  const [file, setFile] = React.useState<File | null>(null);
+  const [tags, setTags] = React.useState<string[]>([]);
   const [tagInput, setTagInput] = React.useState("");
-  
-  const {
-    documentName,
-    setDocumentName,
-    documentType, 
-    setDocumentType,
-    file,
-    tags,
-    setTags,
-    uploading,
-    handleFileChange,
-    handleUpload,
-    documentTypes
-  } = useDocumentUpload({ 
-    entityType,
-    entityId,
-    onSuccess: () => onOpenChange(false),
-    originalDocumentId,
-    currentVersion
-  });
-  
+  const [uploading, setUploading] = React.useState(false);
+
   // Set initial document name when dialog opens
   React.useEffect(() => {
     if (open && initialDocumentName) {
       setDocumentName(initialDocumentName);
     }
-  }, [open, initialDocumentName, setDocumentName]);
+  }, [open, initialDocumentName]);
   
   const addTag = () => {
     if (tagInput && !tags.includes(tagInput)) {
@@ -77,8 +63,31 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
       addTag();
     }
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      
+      // Set document name to file name if not already set
+      if (!documentName) {
+        setDocumentName(selectedFile.name.split('.')[0]);
+      }
+    }
+  };
+
+  const handleUpload = () => {
+    // This will be implemented in the future
+    console.log("Upload functionality not implemented yet in the unified document system");
+  };
   
   const isVersionUpdate = !!originalDocumentId;
+  
+  const documentTypes = [
+    { value: "document", label: t("document") },
+    { value: "contract", label: t("contract") },
+    { value: "other", label: t("other") }
+  ];
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

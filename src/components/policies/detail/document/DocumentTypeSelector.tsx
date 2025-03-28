@@ -7,21 +7,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface DocumentTypeSelectorProps {
   value: string;
   onValueChange: (value: string) => void;
+  documentTypes?: Array<{value: string, label: string}>;
 }
 
 const DocumentTypeSelector: React.FC<DocumentTypeSelectorProps> = ({
   value,
-  onValueChange
+  onValueChange,
+  documentTypes
 }) => {
   const { t } = useLanguage();
   
-  const documentTypes = [
+  const defaultDocumentTypes = [
     { value: "policy", label: t("policyDocument") },
     { value: "invoice", label: t("invoice") },
     { value: "certificate", label: t("certificate") },
     { value: "endorsement", label: t("endorsement") },
     { value: "other", label: t("other") }
   ];
+  
+  const types = documentTypes || defaultDocumentTypes;
   
   return (
     <div className="grid gap-2">
@@ -31,7 +35,7 @@ const DocumentTypeSelector: React.FC<DocumentTypeSelectorProps> = ({
           <SelectValue placeholder={t("selectDocumentType")} />
         </SelectTrigger>
         <SelectContent>
-          {documentTypes.map((type) => (
+          {types.map((type) => (
             <SelectItem key={type.value} value={type.value}>
               {type.label}
             </SelectItem>

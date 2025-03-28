@@ -6,22 +6,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { EntityType } from "./useDocuments";
+
+export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
 
 interface UseDocumentUploadProps {
   entityType: EntityType;
   entityId: string;
   onSuccess?: () => void;
-  originalDocumentId?: string; // For creating new versions of existing documents
-  currentVersion?: number; // For versioning
 }
 
 export const useDocumentUpload = ({ 
   entityType, 
   entityId, 
-  onSuccess,
-  originalDocumentId,
-  currentVersion
+  onSuccess 
 }: UseDocumentUploadProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -31,7 +28,6 @@ export const useDocumentUpload = ({
   const [documentName, setDocumentName] = useState("");
   const [documentType, setDocumentType] = useState("document");
   const [file, setFile] = useState<File | null>(null);
-  const [tags, setTags] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   
   // Generate document types based on entity type
@@ -114,11 +110,8 @@ export const useDocumentUpload = ({
         throw new Error("User authentication information missing");
       }
       
-      // Generate new document ID
-      const documentId = originalDocumentId || uuidv4();
-      
-      // Determine the new version number
-      const version = originalDocumentId ? (currentVersion || 0) + 1 : 1;
+      // Generate document ID
+      const documentId = uuidv4();
       
       // Step 1: Upload file to storage
       const fileExt = file.name.split('.').pop();
@@ -133,67 +126,57 @@ export const useDocumentUpload = ({
       
       if (uploadError) throw uploadError;
       
-      // If this is a new version, update any existing latest version
-      if (originalDocumentId) {
-        const { error: updateError } = await supabase
-          .from('documents')
-          .update({ is_latest_version: false })
-          .eq('original_document_id', originalDocumentId)
-          .eq('is_latest_version', true);
-          
-        if (updateError) throw updateError;
+      // Step 2: Create record in appropriate documents table
+      let tableError;
+      if (entityType === 'policy') {
+        // Use existing policy_documents table
+        const { error } = await supabase
+          .from('policy_documents')
+          .insert({
+            policy_id: entityId,
+            document_name: documentName,
+            document_type: documentType,
+            file_path: filePath,
+            uploaded_by: userId,
+            company_id: companyId,
+            version: 1
+          });
+        tableError = error;
+      } else {
+        // For other entity types, use their respective document tables
+        // This is a placeholder - you would need to create these tables if they don't exist
+        console.error("Document upload for entity type not yet implemented:", entityType);
+        throw new Error(`Document upload for ${entityType} is not yet fully implemented`);
       }
       
-      // Step 2: Create record in documents table
-      const { error: dbError } = await supabase
-        .from('documents')
-        .insert({
-          id: version === 1 ? documentId : uuidv4(),
-          original_document_id: version === 1 ? null : documentId,
-          entity_type: entityType,
-          entity_id: entityId,
-          document_name: documentName,
-          document_type: documentType,
-          file_path: filePath,
-          uploaded_by: userId,
-          company_id: companyId,
-          version: version,
-          is_latest_version: true,
-          mime_type: file.type,
-          file_size: file.size,
-          tags: tags.length > 0 ? tags : null
-        });
-      
-      if (dbError) throw dbError;
+      if (tableError) throw tableError;
       
       // Log activity
       logActivity({
-        entityType: entityType,
+        entityType: entityType as "policy" | "claim" | "client" | "insurer" | "agent",
         entityId: entityId,
         action: "update",
         details: { 
-          action_type: originalDocumentId ? "document_version_upload" : "document_upload",
+          action_type: "document_upload",
           document_name: documentName,
-          document_type: documentType,
-          version: version
+          document_type: documentType
         }
       });
       
       // Refresh documents list
-      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
+      if (entityType === 'policy') {
+        queryClient.invalidateQueries({ queryKey: ['policy-documents', entityId] });
+      }
       
       toast({
         title: t("uploadSuccessful"),
-        description: originalDocumentId 
-          ? t("documentVersionUploadedSuccessfully", { version })
-          : t("documentUploadedSuccessfully"),
+        description: t("documentUploadedSuccessfully"),
       });
       
       // Reset state
       setDocumentName("");
       setDocumentType("document");
       setFile(null);
-      setTags([]);
       
       // Call onSuccess if provided
       if (onSuccess) {
@@ -219,8 +202,8 @@ export const useDocumentUpload = ({
     setDocumentType,
     file,
     setFile,
-    tags,
-    setTags,
+    tags: [], // Added for compatibility with future implementations
+    setTags: (tags: string[]) => {}, // Added for compatibility with future implementations
     uploading,
     handleFileChange,
     handleUpload,

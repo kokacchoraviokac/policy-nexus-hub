@@ -33,7 +33,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     uploading,
     handleUpload
   } = useDocumentUpload({ 
-    policyId,
+    entityType: "policy",
+    entityId: policyId,
     onSuccess: () => onOpenChange(false)
   });
   
