@@ -2,9 +2,10 @@
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
 import type { EntityType } from "@/utils/activityLogger";
+import type { DocumentTableName } from "@/types/documents";
 
 // Map entity type to appropriate document table
-export const getDocumentTable = (entityType: EntityType) => {
+export const getDocumentTable = (entityType: EntityType): DocumentTableName => {
   switch (entityType) {
     case "policy":
       return "policy_documents";
@@ -40,8 +41,8 @@ export const uploadFileToStorage = async (file: File, entityType: EntityType, en
 };
 
 // Function to insert document metadata into database
-export const insertDocumentRecord = async (
-  documentTable: string,
+export const insertDocumentRecord = async <T extends DocumentTableName>(
+  documentTable: T,
   documentData: {
     id: string;
     document_name: string;
