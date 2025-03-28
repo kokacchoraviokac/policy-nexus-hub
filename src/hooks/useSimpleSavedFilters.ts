@@ -49,7 +49,7 @@ export function useSimpleSavedFilters(
       const newFilter = {
         name,
         entity_type: entityType,
-        filters: JSON.stringify(currentFilters), // Use the current filters
+        filters: JSON.stringify(currentFilters), // Convert to JSON string
         user_id: userId,
         company_id: companyId || '00000000-0000-0000-0000-000000000000'
       };
