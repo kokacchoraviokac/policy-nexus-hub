@@ -74,6 +74,38 @@ export interface UseDocumentsProps {
   enabled?: boolean;
 }
 
+// Helper function to get document table name
+const getDocumentTableName = (entityType: EntityType): DocumentTableName => {
+  switch (entityType) {
+    case "policy":
+      return "policy_documents";
+    case "claim":
+      return "claim_documents";
+    case "sales_process":
+      return "sales_documents";
+    default:
+      return "policy_documents"; // fallback
+  }
+};
+
+// Helper function to map DB row to Document interface
+const mapDocumentToModel = (doc: any, entityType: EntityType, entityId: string): Document => {
+  return {
+    id: doc.id,
+    document_name: doc.document_name,
+    document_type: doc.document_type,
+    created_at: doc.created_at,
+    file_path: doc.file_path,
+    entity_type: entityType,
+    entity_id: entityId,
+    uploaded_by_id: doc.uploaded_by,
+    uploaded_by_name: "Unknown", // We'll fetch this separately if needed
+    version: doc.version || 1,
+    is_latest_version: true,
+    mime_type: doc.mime_type
+  };
+};
+
 export const useDocuments = ({
   entityType,
   entityId,
@@ -84,21 +116,8 @@ export const useDocuments = ({
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLogger();
   
-  // Map entity type to appropriate document table with literal return type
-  const getDocumentTable = (): DocumentTableName => {
-    switch (entityType) {
-      case "policy":
-        return "policy_documents";
-      case "claim":
-        return "claim_documents";
-      case "sales_process":
-        return "sales_documents";
-      default:
-        return "policy_documents"; // fallback to policy_documents
-    }
-  };
-  
-  const documentTable = getDocumentTable();
+  // Get the appropriate document table name
+  const documentTable = getDocumentTableName(entityType);
   
   // Fetch documents for a specific entity
   const {
@@ -113,41 +132,23 @@ export const useDocuments = ({
         // Create the field name dynamically based on entity type
         const fieldName = `${entityType}_id`;
         
-        // Use the appropriate table based on entity type
-        // Breaking this into steps to help TypeScript with type inference
-        const query = supabase
+        // Using any type here to avoid TypeScript errors
+        // This is necessary because the table name is dynamically determined
+        const { data, error } = await supabase
           .from(documentTable)
-          .select("*");
-        
-        const { data: docsData, error: fetchError } = await query
+          .select("*")
           .eq(fieldName, entityId)
           .order("created_at", { ascending: false });
         
-        if (fetchError) {
-          throw fetchError;
+        if (error) {
+          throw error;
         }
         
-        if (!docsData) return [];
+        if (!data) return [];
         
         // Transform the response to match our Document interface
-        const transformedData = docsData.map((doc: any): Document => {
-          return {
-            id: doc.id,
-            document_name: doc.document_name,
-            document_type: doc.document_type,
-            created_at: doc.created_at,
-            file_path: doc.file_path,
-            entity_type: entityType,
-            entity_id: entityId,
-            uploaded_by_id: doc.uploaded_by,
-            uploaded_by_name: "Unknown", // We'll fetch this separately if needed
-            version: doc.version || 1,
-            is_latest_version: true,
-            mime_type: doc.mime_type
-          };
-        });
+        return data.map((doc) => mapDocumentToModel(doc, entityType, entityId));
         
-        return transformedData;
       } catch (err) {
         console.error("Error fetching documents:", err);
         throw err;
@@ -161,24 +162,22 @@ export const useDocuments = ({
     mutationFn: async (documentId: string) => {
       try {
         // First, get document details to delete the storage file
-        // Breaking down the query to help TypeScript
-        const query = supabase
+        // Using any type here to avoid TypeScript errors
+        const { data, error: fetchError } = await supabase
           .from(documentTable)
-          .select("*");
-        
-        const { data: documentData, error: docError } = await query
+          .select("*")
           .eq("id", documentId)
           .single();
           
-        if (docError || !documentData) {
+        if (fetchError || !data) {
           throw new Error("Document not found");
         }
         
         // Delete file from storage
-        if (documentData.file_path) {
+        if (data.file_path) {
           const { error: storageError } = await supabase.storage
             .from("documents")
-            .remove([documentData.file_path]);
+            .remove([data.file_path]);
             
           if (storageError) {
             throw storageError;
@@ -203,7 +202,7 @@ export const useDocuments = ({
           details: {
             action_type: "document_deleted",
             document_id: documentId,
-            document_name: documentData.document_name
+            document_name: data.document_name
           }
         });
         
