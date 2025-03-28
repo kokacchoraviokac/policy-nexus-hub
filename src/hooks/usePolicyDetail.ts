@@ -34,10 +34,17 @@ export const usePolicyDetail = (policyId: string | undefined) => {
         .select('*', { count: 'exact', head: true })
         .eq('policy_id', policyId);
       
+      // Count addendums
+      const { count: addendumsCount, error: addendumsError } = await supabase
+        .from('policy_addendums')
+        .select('*', { count: 'exact', head: true })
+        .eq('policy_id', policyId);
+      
       return {
         ...policyData,
         documents_count: documentsCount || 0,
-        claims_count: claimsCount || 0
+        claims_count: claimsCount || 0,
+        addendums_count: addendumsCount || 0
       };
     },
     meta: {

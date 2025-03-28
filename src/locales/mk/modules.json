@@ -1,13 +1,83 @@
 
 {
-  "agentPortalModule": "Модул за агенти",
-  "agentPortalDescription": "Овој дел ќе содржи функционалност за управување со агенти.",
-  "claimsManagementModule": "Модул за управување со оштетни барања",
-  "claimsModuleDescription": "Овој дел ќе обезбеди функционалност за обработка на оштетни барања.",
-  "financialOperationsModule": "Модул за финансиски операции",
-  "financialModuleDescription": "Овој дел ќе содржи алатки за финансиско управување.",
-  "analyticsReportingModule": "Модул за аналитика и известување",
-  "analyticsModuleDescription": "Овој дел ќе обезбеди алатки за известување и аналитика.",
-  "salesLeadModule": "Модул за управување со продажба и потенцијални клиенти",
-  "salesModuleDescription": "Овој дел ќе обезбеди алатки за управување со продажниот процес."
+  "policiesDescription": "Управување со полиси за осигурување, вклучително и креирање, модификации и управување со документи.",
+  "allPolicies": "Сите Полиси",
+  "policiesWorkflow": "Тек на Работа со Полиси",
+  "policyAddendums": "Адендуми на Полиси",
+  "unlinkedPayments": "Неповрзани Плаќања",
+  "documents": "Документи",
+  
+  "salesDescription": "Управување со продажниот циклус од потенцијални клиенти до потпишани полиси.",
+  "pipelineOverview": "Преглед на Продажниот Канал",
+  "leads": "Потенцијални Клиенти",
+  "salesProcesses": "Продажни Процеси",
+  "responsiblePersons": "Одговорни Лица",
+  
+  "claimsDescription": "Управување со целосниот циклус на оштетни барања.",
+  "claimsRegistration": "Регистрација на Оштетни Барања",
+  "claimsProcessing": "Обработка на Оштетни Барања",
+  "claimsStatistics": "Статистика за Оштетни Барања",
+  
+  "financesDescription": "Управување со финансиски операции, вклучувајќи провизии, фактурирање и обработка на изводи.",
+  "commissions": "Провизии",
+  "invoicing": "Фактурирање",
+  "statementProcessing": "Обработка на Изводи",
+  
+  "agentDescription": "Портал за функции специфични за агенти, вклучувајќи провизии и исплати.",
+  "fixedCommissions": "Фиксни Провизии",
+  "clientCommissions": "Провизии за Клиенти",
+  "manualCommissions": "Рачни Провизии",
+  "calculatePayouts": "Пресметка на Исплати",
+  "payoutReports": "Извештаи за Исплати",
+  
+  "reportsDescription": "Генерирање и извоз на прилагодени извештаи врз основа на податоци од сите модули.",
+  "productionReport": "Извештај за Продукција",
+  "clientsReport": "Извештај за Клиенти",
+  "agentsReport": "Извештај за Агенти",
+  "claimsReport": "Извештај за Оштетни Барања",
+  
+  "agentPortalModule": "Модул за Портал на Агенти",
+  "agentPortalDescription": "Управување со провизии и исплати на агенти",
+  
+  "salesLeadModule": "Модул за Управување со Потенцијални Клиенти",
+  "salesModuleDescription": "Управување со потенцијални клиенти и продажни процеси",
+  
+  "claimsManagementModule": "Модул за Управување со Оштетни Барања",
+  "claimsModuleDescription": "Регистрација и обработка на оштетни барања на клиенти",
+  
+  "financialOperationsModule": "Модул за Финансиски Операции",
+  "financialModuleDescription": "Управување со провизии, фактурирање и усогласување на плаќања",
+  
+  "analyticsReportingModule": "Модул за Анализа и Извештаи",
+  "analyticsModuleDescription": "Генерирање и визуелизација на деловни извештаи",
+  
+  "policyNumber": "Број на Полиса",
+  "client": "Клиент",
+  "insurer": "Осигурувач",
+  "product": "Производ",
+  "expiryDate": "Датум на Истекување",
+  "premium": "Премија",
+  "newPolicy": "Нова Полиса",
+  
+  "addendums": "Адендуми",
+  "createAddendum": "Креирај Адендум",
+  "createFirstAddendum": "Креирај Прв Адендум",
+  "noAddendums": "Нема Адендуми",
+  "noAddendumsDescription": "Сè уште нема адендуми поврзани со оваа полиса.",
+  "addendumNumber": "Број на Адендум",
+  "effectiveDate": "Датум на Стапување во Сила",
+  "description": "Опис",
+  "premiumAdjustment": "Корекција на Премија",
+  "lienStatus": "Статус на Залог",
+  "lienStatusDescription": "Активирајте ја оваа опција ако постои залог поврзан со овој адендум.",
+  "addendumCreated": "Адендумот е Креиран",
+  "addendumCreatedSuccess": "Адендумот е успешно креиран.",
+  "addendumCreateError": "Грешка при Креирање на Адендум",
+  "addendumDeleted": "Адендумот е Избришан",
+  "addendumDeletedSuccess": "Адендумот е успешно избришан.",
+  "addendumDeleteError": "Грешка при Бришење на Адендум",
+  "creating": "Креирање...",
+  "latestAddendum": "Последен Адендум",
+  "totalAddendums": "Вкупно Адендуми",
+  "effective": "Во Сила"
 }

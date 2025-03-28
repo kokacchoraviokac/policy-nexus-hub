@@ -57,5 +57,27 @@
   "product": "Producto",
   "expiryDate": "Fecha de Vencimiento",
   "premium": "Prima",
-  "newPolicy": "Nueva Póliza"
+  "newPolicy": "Nueva Póliza",
+  
+  "addendums": "Adendas",
+  "createAddendum": "Crear Adenda",
+  "createFirstAddendum": "Crear Primera Adenda",
+  "noAddendums": "Sin Adendas",
+  "noAddendumsDescription": "No hay adendas asociadas a esta póliza todavía.",
+  "addendumNumber": "Número de Adenda",
+  "effectiveDate": "Fecha Efectiva",
+  "description": "Descripción",
+  "premiumAdjustment": "Ajuste de Prima",
+  "lienStatus": "Estado de Gravamen",
+  "lienStatusDescription": "Active esta opción si hay un gravamen asociado con esta adenda.",
+  "addendumCreated": "Adenda Creada",
+  "addendumCreatedSuccess": "La adenda ha sido creada exitosamente.",
+  "addendumCreateError": "Error al Crear Adenda",
+  "addendumDeleted": "Adenda Eliminada",
+  "addendumDeletedSuccess": "La adenda ha sido eliminada exitosamente.",
+  "addendumDeleteError": "Error al Eliminar Adenda",
+  "creating": "Creando...",
+  "latestAddendum": "Última Adenda",
+  "totalAddendums": "Total de Adendas",
+  "effective": "Efectivo"
 }

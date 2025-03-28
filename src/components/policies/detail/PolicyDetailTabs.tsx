@@ -7,9 +7,11 @@ import PolicyDocumentsTab from "./PolicyDocumentsTab";
 import PolicyClaimsTab from "./PolicyClaimsTab";
 import PolicyFinancialsTab from "./PolicyFinancialsTab";
 import PolicyHistoryTab from "./PolicyHistoryTab";
+import PolicyAddendumTab from "./PolicyAddendumTab";
+import { Policy } from "@/types/policies";
 
 interface PolicyDetailTabsProps {
-  policy: any; // Will be properly typed when we have the full schema
+  policy: Policy;
 }
 
 const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
@@ -24,6 +26,12 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
             <Badge variant="secondary" className="ml-2">{policy.documents_count}</Badge>
           )}
         </TabsTrigger>
+        <TabsTrigger value="addendums">
+          {t("addendums")}
+          {policy.addendums_count > 0 && (
+            <Badge variant="secondary" className="ml-2">{policy.addendums_count}</Badge>
+          )}
+        </TabsTrigger>
         <TabsTrigger value="claims">
           {t("claims")}
           {policy.claims_count > 0 && (
@@ -36,6 +44,10 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
       
       <TabsContent value="documents">
         <PolicyDocumentsTab policyId={policy.id} />
+      </TabsContent>
+      
+      <TabsContent value="addendums">
+        <PolicyAddendumTab policyId={policy.id} policyNumber={policy.policy_number} />
       </TabsContent>
       
       <TabsContent value="claims">
