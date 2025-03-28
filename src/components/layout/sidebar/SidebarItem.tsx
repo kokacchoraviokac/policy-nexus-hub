@@ -118,15 +118,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           align="start" 
           className="w-52 p-2 sidebar-hover-card border-sidebar-border z-50"
         >
-          <div className="font-medium text-sm mb-2 border-b border-sidebar-border pb-1">{t(label)}</div>
+          <div className="font-medium text-sm mb-2 border-b border-gray-200 pb-1">{t(label)}</div>
           <div className="space-y-1">
             {authorizedSubItems?.map((subItem, index) => (
               <Link
                 key={index}
                 to={subItem.path}
                 className={cn(
-                  "text-sidebar-foreground hover:text-sidebar-primary-foreground hover:bg-sidebar-accent rounded-md py-1.5 px-2 text-sm flex items-center transition-colors duration-200",
-                  window.location.pathname === subItem.path && "bg-sidebar-primary text-sidebar-primary-foreground"
+                  "text-foreground hover:bg-muted rounded-md py-1.5 px-2 text-sm flex items-center transition-colors duration-200",
+                  window.location.pathname === subItem.path && "bg-primary/10 font-medium"
                 )}
               >
                 {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}

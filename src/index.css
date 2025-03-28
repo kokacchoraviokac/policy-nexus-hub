@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -104,9 +103,8 @@
     @apply z-50 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border;
   }
   
-  /* Sidebar hover card styles - Updated to match the sidebar color scheme */
+  /* Sidebar hover card styles - Updated to use white background with dark text */
   .sidebar-hover-card {
-    @apply z-50 bg-sidebar text-sidebar-foreground border-sidebar-border shadow-glass-md;
+    @apply z-50 bg-white text-foreground border border-sidebar-border shadow-glass-md;
   }
 }
-
