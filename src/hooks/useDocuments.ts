@@ -10,20 +10,43 @@ import type { EntityType } from "@/utils/activityLogger";
 // Export the type for proper isolated modules support
 export type { EntityType };
 
-// Define types for database rows to avoid recursive type inference
-export interface DocumentDbRow {
+// Define a base document interface with common fields
+export interface DocumentBase {
   id: string;
   document_name: string;
   document_type: string;
   created_at: string;
   file_path: string;
-  uploaded_by?: string;
-  version?: number;
-  mime_type?: string;
-  file_size?: number;
-  tags?: string[];
+  uploaded_by: string;
 }
 
+// Define specific document types for different tables
+export interface PolicyDocument extends DocumentBase {
+  policy_id?: string;
+  addendum_id?: string;
+  version: number;
+  company_id: string;
+  updated_at: string;
+  mime_type?: string;
+}
+
+export interface ClaimDocument extends DocumentBase {
+  claim_id: string;
+  company_id: string;
+  updated_at: string;
+}
+
+export interface SalesDocument extends DocumentBase {
+  sales_process_id: string;
+  company_id: string;
+  updated_at: string;
+  step?: string;
+}
+
+// Union type for all document types from DB
+export type DocumentDbRow = PolicyDocument | ClaimDocument | SalesDocument;
+
+// Frontend document model
 export interface Document {
   id: string;
   document_name: string;
@@ -100,8 +123,8 @@ export const useDocuments = ({
         
         if (!docsData) return [];
         
-        // Transform the response to match our Document interface with explicit typing
-        const transformedData: Document[] = docsData.map((doc): Document => {
+        // Transform the response to match our Document interface
+        const transformedData: Document[] = docsData.map((doc: any): Document => {
           return {
             id: doc.id,
             document_name: doc.document_name,
