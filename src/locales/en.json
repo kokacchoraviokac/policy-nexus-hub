@@ -1,3 +1,4 @@
+
 {
   "welcome": "Welcome",
   "signInDescription": "Sign in to your account or create a new one",
@@ -98,12 +99,12 @@
   "policyManagement": "Policy Management",
   "allPolicies": "Policy Directory",
   "policiesWorkflow": "Policy Processing",
-  "policyAddendums": "Policy Amendments",
+  "policyAddendums": "Policy Addendums",
   "unlinkedPayments": "Unmatched Payments",
   "documents": "Policy Documents",
   "policyDirectory": "Policy Directory",
   "policyProcessing": "Policy Processing",
-  "policyAmendments": "Policy Amendments",
+  "policyAddendums": "Policy Addendums",
   "unmatchedPayments": "Unmatched Payments",
   "policyDocuments": "Policy Documents",
 

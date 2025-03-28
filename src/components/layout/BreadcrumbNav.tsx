@@ -30,7 +30,7 @@ const BreadcrumbNav: React.FC = () => {
       "settings/users": "invitationManagement",
       "policies": "policyDirectory",
       "policies/workflow": "policyProcessing",
-      "policies/addendums": "policyAmendments",
+      "policies/addendums": "policyAddendums",
       "policies/unlinked-payments": "unmatchedPayments",
       "policies/documents": "policyDocuments",
       "sales": "sales",
