@@ -4,10 +4,9 @@ import { FileUp, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { useDocumentUpload } from "@/hooks/useDocumentUpload";
-import DocumentTypeSelector from "./DocumentTypeSelector";
+import DocumentTypeSelector from "@/components/documents/DocumentTypeSelector";
+import FileUploadField from "@/components/documents/FileUploadField";
 
 interface DocumentUploadDialogProps {
   open: boolean;
@@ -48,9 +47,10 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
         
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="documentName">{t("documentName")} *</Label>
-            <Input
+            <label htmlFor="documentName" className="text-sm font-medium">{t("documentName")} *</label>
+            <input
               id="documentName"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={documentName}
               onChange={(e) => setDocumentName(e.target.value)}
               placeholder={t("enterDocumentName")}
@@ -62,20 +62,10 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
             onValueChange={setDocumentType} 
           />
           
-          <div className="grid gap-2">
-            <Label htmlFor="file">{t("selectFile")} *</Label>
-            <Input
-              id="file"
-              type="file"
-              onChange={handleFileChange}
-              className="cursor-pointer"
-            />
-            {file && (
-              <p className="text-xs text-muted-foreground">
-                {file.name} ({(file.size / 1024).toFixed(1)} KB)
-              </p>
-            )}
-          </div>
+          <FileUploadField 
+            onChange={handleFileChange}
+            file={file}
+          />
         </div>
         
         <DialogFooter>
