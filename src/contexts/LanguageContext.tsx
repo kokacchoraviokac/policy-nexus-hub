@@ -9,10 +9,12 @@ import es from '../locales/es/index';
 
 export type Language = 'en' | 'sr' | 'mk' | 'es';
 
+type TranslationParams = Record<string, any>;
+
 type LanguageContextType = {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: TranslationParams) => string;
   formatDate: (date: Date | string | number) => string;
   formatNumber: (number: number, options?: Intl.NumberFormatOptions) => string;
   formatCurrency: (amount: number, currencyCode?: string) => string;
@@ -105,13 +107,21 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     loadTranslations();
   }, [language]);
 
-  const t = (key: string): string => {
+  // Updated to support interpolation parameters
+  const t = (key: string, params?: TranslationParams): string => {
     if (isLoading) return key;
     
-    const translation = translations[key];
+    let translation = translations[key];
     if (!translation) {
       logMissingTranslation(key, language);
       return formatMissingTranslation(key);
+    }
+    
+    // Handle interpolation if params are provided
+    if (params) {
+      Object.entries(params).forEach(([paramKey, paramValue]) => {
+        translation = translation.replace(new RegExp(`{${paramKey}}`, 'g'), String(paramValue));
+      });
     }
     
     return translation;
