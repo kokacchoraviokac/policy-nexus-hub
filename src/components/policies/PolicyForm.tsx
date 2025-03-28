@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -104,12 +105,33 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
 
   const createPolicyMutation = useMutation({
     mutationFn: async (data: PolicyFormValues) => {
-      const { start_date, expiry_date, ...rest } = data;
+      // Format the dates for Supabase
+      const startDate = data.start_date.toISOString().split('T')[0];
+      const expiryDate = data.expiry_date.toISOString().split('T')[0];
       
+      // Prepare policy data with correctly typed fields and make sure all required fields are present
       const policyData = {
-        ...rest,
-        start_date: start_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        expiry_date: expiry_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        policy_number: data.policy_number,
+        policy_type: data.policy_type,
+        insurer_id: data.insurer_id,
+        insurer_name: data.insurer_name,
+        product_id: data.product_id,
+        product_name: data.product_name,
+        product_code: data.product_code,
+        client_id: data.client_id,
+        policyholder_name: data.policyholder_name,
+        insured_id: data.insured_id,
+        insured_name: data.insured_name,
+        start_date: startDate,
+        expiry_date: expiryDate,
+        premium: data.premium,
+        currency: data.currency,
+        payment_frequency: data.payment_frequency,
+        commission_type: data.commission_type,
+        commission_percentage: data.commission_percentage,
+        status: data.status,
+        workflow_status: data.workflow_status,
+        notes: data.notes,
         company_id: user?.companyId,
         created_by: user?.id,
         commission_amount: data.premium * (data.commission_percentage || 0) / 100,
@@ -143,12 +165,33 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
 
   const updatePolicyMutation = useMutation({
     mutationFn: async (data: PolicyFormValues) => {
-      const { start_date, expiry_date, ...rest } = data;
+      // Format the dates for Supabase
+      const startDate = data.start_date.toISOString().split('T')[0];
+      const expiryDate = data.expiry_date.toISOString().split('T')[0];
       
+      // Prepare policy data with correctly typed fields
       const policyData = {
-        ...rest,
-        start_date: start_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        expiry_date: expiry_date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        policy_number: data.policy_number,
+        policy_type: data.policy_type,
+        insurer_id: data.insurer_id,
+        insurer_name: data.insurer_name,
+        product_id: data.product_id,
+        product_name: data.product_name,
+        product_code: data.product_code,
+        client_id: data.client_id,
+        policyholder_name: data.policyholder_name,
+        insured_id: data.insured_id,
+        insured_name: data.insured_name,
+        start_date: startDate,
+        expiry_date: expiryDate,
+        premium: data.premium,
+        currency: data.currency,
+        payment_frequency: data.payment_frequency,
+        commission_type: data.commission_type,
+        commission_percentage: data.commission_percentage,
+        status: data.status,
+        workflow_status: data.workflow_status,
+        notes: data.notes,
         updated_at: new Date().toISOString(),
         commission_amount: data.premium * (data.commission_percentage || 0) / 100,
       };

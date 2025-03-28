@@ -12,7 +12,7 @@ import {
 import { Bookmark, Save, Trash2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CodebookFilterState } from "@/types/codebook";
-import { SavedFilter } from "@/types/savedFilters";
+import { SavedFilter, EntityType } from "@/types/savedFilters";
 import SaveFilterDialog from "./SaveFilterDialog";
 
 interface SimpleSavedFiltersButtonProps {
@@ -24,7 +24,7 @@ interface SimpleSavedFiltersButtonProps {
   isSaving?: boolean;
   isDeleting?: boolean;
   parseFilterData: (filter: SavedFilter) => CodebookFilterState;
-  entityType: 'insurers' | 'clients' | 'products';
+  entityType: EntityType;
 }
 
 const SimpleSavedFiltersButton: React.FC<SimpleSavedFiltersButtonProps> = ({
@@ -41,8 +41,8 @@ const SimpleSavedFiltersButton: React.FC<SimpleSavedFiltersButtonProps> = ({
   const { t } = useLanguage();
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
 
-  const handleSave = async (name: string) => {
-    await onSaveFilter(name);
+  const handleSave = (name: string) => {
+    onSaveFilter(name);
     setIsSaveDialogOpen(false);
   };
 

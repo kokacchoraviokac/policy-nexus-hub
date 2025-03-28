@@ -21,7 +21,6 @@ interface SaveFilterDialogProps {
   onSave: (name: string) => void;
   isSaving?: boolean;
   filterCount?: number;
-  // Add the missing props
   filters?: CodebookFilterState;
   entityType?: EntityType;
 }
