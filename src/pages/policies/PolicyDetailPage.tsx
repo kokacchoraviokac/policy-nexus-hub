@@ -61,15 +61,19 @@ const PolicyDetailPage = () => {
         claims_count: claimsCount || 0
       };
     },
-    onSuccess: () => {
-      // Log the view activity
-      if (policyId) {
-        logActivity({
-          entityType: "policy",
-          entityId: policyId,
-          action: "view",
-          details: { timestamp: new Date().toISOString() }
-        });
+    meta: {
+      callbacks: {
+        onSuccess: () => {
+          // Log the view activity
+          if (policyId) {
+            logActivity({
+              entityType: "policy",
+              entityId: policyId,
+              action: "view",
+              details: { timestamp: new Date().toISOString() }
+            });
+          }
+        }
       }
     }
   });
