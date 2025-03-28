@@ -90,7 +90,7 @@ export const useDocuments = ({
         // Use the appropriate table based on entity type and explicitly specify the return type
         const { data: docsData, error: fetchError } = await supabase
           .from(documentTable)
-          .select("*")
+          .select<string, DocumentDbRow>("*")
           .eq(fieldName, entityId)
           .order("created_at", { ascending: false });
         
@@ -133,7 +133,7 @@ export const useDocuments = ({
       try {
         // First, get document details to delete the storage file
         const { data: documentData, error: docError } = await supabase
-          .from(documentTable)
+          .from<DocumentDbRow>(documentTable)
           .select("*")
           .eq("id", documentId)
           .single();
