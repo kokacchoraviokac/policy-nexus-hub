@@ -1,4 +1,3 @@
-
 {
   "policiesDescription": "Manage insurance policies throughout their lifecycle",
   "policiesWorkflowDescription": "Policies requiring attention or in processing stage",
@@ -83,5 +82,22 @@
   
   "documentsCheck": "Documents Check",
   "documentsAttached": "{count} document(s) attached",
-  "noDocuments": "No documents"
+  "noDocuments": "No documents",
+  
+  "importInstructions": "Import Instructions",
+  "policyImportInstructionsDescription": "Please review requirements before importing policies",
+  "fileRequirements": "File Requirements",
+  "csvFileFormat": "CSV file format with header row",
+  "requiredColumns": "Required Columns",
+  "optionalColumns": "Optional Columns",
+  "dateFormat": "Date Format",
+  "maxPolicyCount": "Maximum Policy Count",
+  "perImport": "per import",
+  "downloadTemplate": "Download Template",
+  "continue": "Continue",
+  "importSteps": "Import Steps",
+  "downloadTemplateStep": "Download template CSV file",
+  "fillTemplateStep": "Fill in template with policy data",
+  "uploadFileStep": "Upload completed CSV file",
+  "reviewResultsStep": "Review import results and finalize"
 }
