@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import SidebarItem from "./SidebarItem";
@@ -18,18 +18,28 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   
   // Check if current path matches any submenu item to auto-expand parent
-  React.useEffect(() => {
+  useEffect(() => {
+    const parentPathsToExpand: string[] = [];
+    
     sidebarItems.forEach(item => {
       if (item.subItems) {
         const hasActiveSubItem = item.subItems.some(subItem => 
           currentPath === subItem.path || currentPath.startsWith(`${subItem.path}/`)
         );
         
-        if (hasActiveSubItem && !expandedItems.includes(item.path)) {
-          setExpandedItems(prev => [...prev, item.path]);
+        if (hasActiveSubItem) {
+          parentPathsToExpand.push(item.path);
         }
       }
     });
+    
+    if (parentPathsToExpand.length > 0) {
+      setExpandedItems(prev => {
+        // Create a new array with unique values
+        const combined = [...prev, ...parentPathsToExpand];
+        return [...new Set(combined)];
+      });
+    }
   }, [currentPath]);
 
   // Toggle expand/collapse of an item

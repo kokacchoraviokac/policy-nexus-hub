@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -40,6 +40,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
 }) => {
   const { hasPrivilege } = useAuth();
   const { t } = useLanguage();
+  const location = useLocation();
   
   // Filter sub-items based on user privileges
   const authorizedSubItems = subItems?.filter(item => 
@@ -94,19 +95,23 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   // Render sub-items if not collapsed and expanded
   const subItemsComponent = !collapsed && isExpanded && hasSubItems && (
     <div className="pl-9 mt-1 space-y-1">
-      {authorizedSubItems?.map((subItem, index) => (
-        <Link
-          key={index}
-          to={subItem.path}
-          className={cn(
-            "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent rounded-md py-1.5 px-2 text-sm flex items-center",
-            window.location.pathname === subItem.path && "bg-sidebar-accent text-sidebar-accent-foreground"
-          )}
-        >
-          {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}
-          <span>{t(subItem.label)}</span>
-        </Link>
-      ))}
+      {authorizedSubItems?.map((subItem, index) => {
+        const isSubItemActive = location.pathname === subItem.path || location.pathname.startsWith(`${subItem.path}/`);
+        
+        return (
+          <Link
+            key={index}
+            to={subItem.path}
+            className={cn(
+              "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent rounded-md py-1.5 px-2 text-sm flex items-center",
+              isSubItemActive && "bg-sidebar-accent text-sidebar-accent-foreground"
+            )}
+          >
+            {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}
+            <span>{t(subItem.label)}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 
@@ -126,19 +131,23 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         >
           <div className="font-medium text-sm mb-2 border-b border-gray-200 pb-1">{t(label)}</div>
           <div className="space-y-1">
-            {authorizedSubItems?.map((subItem, index) => (
-              <Link
-                key={index}
-                to={subItem.path}
-                className={cn(
-                  "text-foreground hover:bg-muted rounded-md py-1.5 px-2 text-sm flex items-center transition-colors duration-200",
-                  window.location.pathname === subItem.path && "bg-primary/10 font-medium"
-                )}
-              >
-                {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}
-                <span>{t(subItem.label)}</span>
-              </Link>
-            ))}
+            {authorizedSubItems?.map((subItem, index) => {
+              const isSubItemActive = location.pathname === subItem.path || location.pathname.startsWith(`${subItem.path}/`);
+              
+              return (
+                <Link
+                  key={index}
+                  to={subItem.path}
+                  className={cn(
+                    "text-foreground hover:bg-muted rounded-md py-1.5 px-2 text-sm flex items-center transition-colors duration-200",
+                    isSubItemActive && "bg-primary/10 font-medium"
+                  )}
+                >
+                  {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}
+                  <span>{t(subItem.label)}</span>
+                </Link>
+              );
+            })}
           </div>
         </HoverCardContent>
       </HoverCard>
