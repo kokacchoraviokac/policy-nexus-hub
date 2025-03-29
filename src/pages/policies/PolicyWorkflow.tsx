@@ -1,30 +1,30 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FileText, FileUp, ArrowRight, AlertTriangle, CheckCircle } from "lucide-react";
+import { FileText, FileUp, ArrowRight, AlertTriangle, CheckCircle, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WorkflowPoliciesList from "@/components/policies/workflow/WorkflowPoliciesList";
 import WorkflowFilters from "@/components/policies/workflow/WorkflowFilters";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import PolicyImportDialog from "@/components/policies/import/PolicyImportDialog";
 
 const PolicyWorkflow = () => {
   const { t } = useLanguage();
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   
   const handleRefresh = () => {
     // Will be triggered by the WorkflowPoliciesList component
   };
   
   const handleImportPolicies = () => {
-    // This functionality would be implemented in a future update
-    toast({
-      title: t("featureNotAvailable"),
-      description: t("policyImportFeatureComingSoon"),
-    });
+    setIsImportDialogOpen(true);
+  };
+  
+  const handleImportSuccess = () => {
+    handleRefresh();
   };
 
   return (
@@ -39,7 +39,7 @@ const PolicyWorkflow = () => {
         
         <div className="flex items-center gap-2">
           <Button onClick={handleImportPolicies}>
-            <FileUp className="mr-2 h-4 w-4" />
+            <Upload className="mr-2 h-4 w-4" />
             {t("importPolicies")}
           </Button>
         </div>
@@ -125,6 +125,12 @@ const PolicyWorkflow = () => {
           />
         </div>
       </div>
+      
+      <PolicyImportDialog 
+        isOpen={isImportDialogOpen}
+        onClose={() => setIsImportDialogOpen(false)}
+        onSuccess={handleImportSuccess}
+      />
     </div>
   );
 };

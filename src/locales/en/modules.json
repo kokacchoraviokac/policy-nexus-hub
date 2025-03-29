@@ -23,6 +23,7 @@
   "noPolicyDocumentsDescription": "There are no documents attached to any policies yet",
   
   "importPolicies": "Import Policies",
+  "importPoliciesDescription": "Import policies from insurance companies by uploading a CSV file",
   "featureNotAvailable": "Feature not available",
   "policyImportFeatureComingSoon": "The policy import feature will be available soon",
   
@@ -85,5 +86,44 @@
   "readyForFinalization": "Ready for finalization",
   "missingInformation": "Missing information",
   "validationErrors": "Validation errors",
-  "importSource": "Import source"
+  "importSource": "Import source",
+  
+  "importInstructions": "Import Instructions",
+  "policyImportInstructionsDescription": "Please review the requirements below before importing policies",
+  "fileRequirements": "File Requirements",
+  "csvFileFormat": "CSV file format with header row",
+  "requiredColumns": "Required columns",
+  "optionalColumns": "Optional columns",
+  "dateFormat": "Date format",
+  "maxPolicyCount": "Maximum policy count",
+  "perImport": "per import",
+  "downloadTemplate": "Download Template",
+  "continue": "Continue",
+  
+  "selectPolicyImportFile": "Select Policy Import File",
+  "selectCSVFileWithPolicyData": "Select a CSV file containing policy data from an insurance company",
+  "dragAndDropOrClick": "Drag and drop or click to browse",
+  "supportedFormatCSV": "Supported format: CSV",
+  "changeFile": "Change File",
+  "browseFiles": "Browse Files",
+  "importedPoliciesWillBeInDraft": "Imported policies will be in 'Draft' status and will need to be reviewed before finalization",
+  "back": "Back",
+  
+  "noFileSelected": "No File Selected",
+  "pleaseSelectFileToImport": "Please select a CSV file to import",
+  "noPoliciesFoundInFile": "No valid policies found in the file",
+  "importSuccessful": "Import Successful",
+  "policiesImportedSuccessfully": "{count} policies imported successfully",
+  "importFailed": "Import Failed",
+  "noPoliciesImported": "No policies were imported",
+  "importingPolicies": "Importing Policies",
+  "pleaseDoNotCloseThisWindow": "Please do not close this window while the import is in progress",
+  "importComplete": "Import Complete",
+  "totalPolicies": "Total Policies",
+  "successful": "Successful",
+  "failed": "Failed",
+  "importErrors": "Import Errors",
+  "andMoreErrors": "And {count} more errors",
+  "importedPoliciesInDraft": "Successfully imported policies are now in 'Draft' status and ready for review",
+  "done": "Done"
 }

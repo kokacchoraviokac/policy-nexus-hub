@@ -23,6 +23,7 @@
   "noPolicyDocumentsDescription": "Još uvek nema dokumenata priloženih ni uz jednu polisu",
   
   "importPolicies": "Uvoz polisa",
+  "importPoliciesDescription": "Uvezite polise od osiguravajućih kompanija postavljanjem CSV datoteke",
   "featureNotAvailable": "Funkcija nije dostupna",
   "policyImportFeatureComingSoon": "Funkcija uvoza polisa će uskoro biti dostupna",
   
@@ -85,5 +86,44 @@
   "readyForFinalization": "Spremno za finalizaciju",
   "missingInformation": "Nedostajuće informacije",
   "validationErrors": "Greške validacije",
-  "importSource": "Izvor uvoza"
+  "importSource": "Izvor uvoza",
+  
+  "importInstructions": "Uputstva za uvoz",
+  "policyImportInstructionsDescription": "Molimo pregledajte zahteve pre uvoza polisa",
+  "fileRequirements": "Zahtevi za datoteku",
+  "csvFileFormat": "CSV format datoteke sa redom zaglavlja",
+  "requiredColumns": "Obavezne kolone",
+  "optionalColumns": "Opcione kolone",
+  "dateFormat": "Format datuma",
+  "maxPolicyCount": "Maksimalan broj polisa",
+  "perImport": "po uvozu",
+  "downloadTemplate": "Preuzmi šablon",
+  "continue": "Nastavi",
+  
+  "selectPolicyImportFile": "Izaberite datoteku za uvoz polisa",
+  "selectCSVFileWithPolicyData": "Izaberite CSV datoteku koja sadrži podatke o polisama od osiguravajuće kompanije",
+  "dragAndDropOrClick": "Prevucite i otpustite ili kliknite za pregled",
+  "supportedFormatCSV": "Podržani format: CSV",
+  "changeFile": "Promeni datoteku",
+  "browseFiles": "Pretraži datoteke",
+  "importedPoliciesWillBeInDraft": "Uvezene polise će biti u statusu 'Nacrt' i potrebno ih je pregledati pre finalizacije",
+  "back": "Nazad",
+  
+  "noFileSelected": "Nije izabrana datoteka",
+  "pleaseSelectFileToImport": "Molimo izaberite CSV datoteku za uvoz",
+  "noPoliciesFoundInFile": "Nisu pronađene validne polise u datoteci",
+  "importSuccessful": "Uvoz uspešan",
+  "policiesImportedSuccessfully": "{count} polisa uspešno uvezeno",
+  "importFailed": "Uvoz nije uspeo",
+  "noPoliciesImported": "Nijedna polisa nije uvezena",
+  "importingPolicies": "Uvoz polisa",
+  "pleaseDoNotCloseThisWindow": "Molimo ne zatvarajte ovaj prozor dok je uvoz u toku",
+  "importComplete": "Uvoz završen",
+  "totalPolicies": "Ukupno polisa",
+  "successful": "Uspešno",
+  "failed": "Neuspešno",
+  "importErrors": "Greške pri uvozu",
+  "andMoreErrors": "I još {count} grešaka",
+  "importedPoliciesInDraft": "Uspešno uvezene polise su sada u statusu 'Nacrt' i spremne su za pregled",
+  "done": "Gotovo"
 }
