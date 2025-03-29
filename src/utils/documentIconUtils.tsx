@@ -1,6 +1,6 @@
 
 import React from "react";
-import { FileText, FileImage, FileSpreadsheet, FilePdf2 as FilePdf, FileCode, FileArchive, File } from "lucide-react";
+import { FileText, FileImage, FileSpreadsheet, FilePdf, FileCode, FileArchive, File } from "lucide-react";
 
 export const getDocumentIcon = (filePath: string, mimeType?: string) => {
   const path = filePath.toLowerCase();
