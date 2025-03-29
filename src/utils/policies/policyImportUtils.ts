@@ -136,7 +136,6 @@ const transformPolicyData = async (policy: ImportedPolicy): Promise<Policy> => {
     insured_id: null,
     product_id: null,
     client_id: null,
-    policy_type_id: null,
     assigned_to: null
   };
 };
