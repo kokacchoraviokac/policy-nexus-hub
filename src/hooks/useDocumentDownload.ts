@@ -24,14 +24,14 @@ export const useDocumentDownload = () => {
       
       // Create a download link
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.document_name;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       
       // Clean up
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
       toast({

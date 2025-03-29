@@ -52,7 +52,7 @@ export const useDocuments = ({ entityType, entityId, enabled = true }: UseDocume
     mutationFn: async (documentId: string) => {
       setIsDeletingDocument(true);
       try {
-        return await deleteDocument(documentId, entityType, entityId);
+        return await deleteDocument(documentId);
       } finally {
         setIsDeletingDocument(false);
       }

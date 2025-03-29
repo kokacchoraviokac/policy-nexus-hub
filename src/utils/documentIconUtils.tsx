@@ -1,6 +1,6 @@
 
 import React from "react";
-import { FileText, FileImage, FileSpreadsheet, FilePdf, FileCode, FileZip, FileArchive, File } from "lucide-react";
+import { FileText, FileImage, FileSpreadsheet, FilePdf2 as FilePdf, FileCode, FileArchive, File } from "lucide-react";
 
 export const getDocumentIcon = (filePath: string, mimeType?: string) => {
   const path = filePath.toLowerCase();
@@ -17,7 +17,7 @@ export const getDocumentIcon = (filePath: string, mimeType?: string) => {
   } else if (path.endsWith('.html') || path.endsWith('.css') || path.endsWith('.js') || path.endsWith('.json')) {
     return <FileCode className="h-5 w-5 text-violet-500" />;
   } else if (path.endsWith('.zip') || path.endsWith('.rar') || path.endsWith('.7z')) {
-    return <FileZip className="h-5 w-5 text-amber-500" />;
+    return <FileArchive className="h-5 w-5 text-amber-500" />;
   }
   
   // If no match by extension, try MIME type if available

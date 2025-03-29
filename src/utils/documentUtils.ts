@@ -78,49 +78,82 @@ export const fetchDocuments = async (
 
 // Function to delete a document and its associated file
 export const deleteDocument = async (
-  documentId: string,
-  entityType: EntityType,
-  entityId: string
+  documentId: string
 ): Promise<string> => {
   try {
-    // Get the appropriate document table name
-    const tableName = entityTypeToTable(entityType);
-    
     // First, get document details to delete the storage file
-    const tableQuery = supabase.from(tableName);
-    const query = tableQuery as any;
-    
-    // Get document details
-    const { data, error: fetchError } = await query
+    const { data, error: fetchError } = await supabase
+      .from('policy_documents')  // We'll check policy_documents first
       .select("*")
       .eq("id", documentId)
       .single();
       
-    if (fetchError || !data) {
-      throw new Error("Document not found");
-    }
-    
-    // Delete file from storage
-    if (data.file_path) {
-      const { error: storageError } = await supabase.storage
-        .from("documents")
-        .remove([data.file_path]);
-        
-      if (storageError) {
-        throw storageError;
-      }
-    }
-    
-    // Delete document record - avoid deep type recursion
-    const deleteQueryBase = supabase.from(tableName);
-    const deleteQuery = deleteQueryBase as any;
-    
-    const { error: dbError } = await deleteQuery
-      .delete()
-      .eq("id", documentId);
+    if (fetchError) {
+      // If not found in policy_documents, try other document tables
+      const tables: DocumentTableName[] = ['claim_documents', 'sales_documents'];
+      let foundData = null;
       
-    if (dbError) {
-      throw dbError;
+      for (const table of tables) {
+        const { data: tableData, error: tableError } = await supabase
+          .from(table)
+          .select("*")
+          .eq("id", documentId)
+          .single();
+          
+        if (!tableError && tableData) {
+          foundData = tableData;
+          break;
+        }
+      }
+      
+      if (!foundData) {
+        throw new Error("Document not found");
+      }
+      
+      // Use the found data
+      if (foundData.file_path) {
+        const { error: storageError } = await supabase.storage
+          .from("documents")
+          .remove([foundData.file_path]);
+          
+        if (storageError) {
+          console.error("Storage deletion error:", storageError);
+        }
+      }
+      
+      // Determine the table the document was found in and delete it
+      for (const table of ['policy_documents', 'claim_documents', 'sales_documents'] as const) {
+        const { error: deleteError } = await supabase
+          .from(table)
+          .delete()
+          .eq("id", documentId);
+          
+        if (!deleteError) {
+          // Successfully deleted
+          break;
+        }
+      }
+    } else {
+      // Document found in policy_documents
+      if (data.file_path) {
+        const { error: storageError } = await supabase.storage
+          .from("documents")
+          .remove([data.file_path]);
+          
+        if (storageError) {
+          console.error("Storage deletion error:", storageError);
+        }
+      }
+      
+      // Delete document record
+      const { error: dbError } = await supabase
+        .from('policy_documents')
+        .delete()
+        .eq("id", documentId);
+        
+      if (dbError) {
+        throw dbError;
+      }
     }
     
     return documentId;
