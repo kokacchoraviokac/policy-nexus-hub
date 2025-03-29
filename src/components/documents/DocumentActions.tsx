@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Download, Trash2, Loader2, MoreVertical } from "lucide-react";
+import { Download, Trash2, Loader2, Eye, MoreVertical } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,12 +16,14 @@ interface DocumentActionsProps {
   document: Document;
   onDelete: () => void;
   isDeleting?: boolean;
+  onView?: () => void;
 }
 
 const DocumentActions: React.FC<DocumentActionsProps> = ({
   document,
   onDelete,
-  isDeleting = false
+  isDeleting = false,
+  onView
 }) => {
   const { t } = useLanguage();
   const { isDownloading, downloadDocument } = useDocumentDownload();
@@ -35,11 +37,21 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {onView && (
+          <DropdownMenuItem onClick={onView}>
+            <Eye className="mr-2 h-4 w-4" />
+            {t("view")}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem 
           onClick={() => downloadDocument(document)} 
           disabled={isDownloading}
         >
-          <Download className="mr-2 h-4 w-4" />
+          {isDownloading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
           {isDownloading ? t("downloading") : t("download")}
         </DropdownMenuItem>
         <DropdownMenuItem 

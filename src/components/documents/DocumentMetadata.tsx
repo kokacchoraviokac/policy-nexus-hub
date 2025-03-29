@@ -1,26 +1,27 @@
 
 import React from "react";
-import { Calendar } from "lucide-react";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 import { Document } from "@/hooks/useDocuments";
+import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DocumentMetadataProps {
   document: Document;
 }
 
 const DocumentMetadata: React.FC<DocumentMetadataProps> = ({ document }) => {
+  const { formatDate } = useLanguage();
+  
   return (
     <div className="flex-1 min-w-0">
-      <h4 className="text-sm font-medium truncate">{document.document_name}</h4>
-      
-      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-        <Badge variant="outline">{document.document_type}</Badge>
-        <div className="flex items-center">
-          <Calendar className="h-3.5 w-3.5 mr-1" />
-          {document.created_at ? format(new Date(document.created_at), 'MMM d, yyyy') : 'Unknown date'}
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+        <h4 className="font-medium truncate">{document.document_name}</h4>
+        <Badge variant="outline" className="w-fit">
+          {document.document_type}
+        </Badge>
       </div>
+      <p className="text-sm text-muted-foreground mt-1">
+        {formatDate(document.created_at)}
+      </p>
     </div>
   );
 };

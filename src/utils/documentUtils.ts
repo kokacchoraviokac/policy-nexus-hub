@@ -1,10 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { EntityType } from "@/utils/activityLogger";
-import { Document, DocumentTableName } from "@/types/documents";
+import { Document } from "@/hooks/useDocuments";
 
-// Helper function to get document table name
-export const getDocumentTableName = (entityType: EntityType): DocumentTableName => {
+export type DocumentTableName = "policy_documents" | "claim_documents" | "sales_documents";
+
+// Helper function to map entity type to table name
+export const entityTypeToTable = (entityType: EntityType): DocumentTableName => {
   switch (entityType) {
     case "policy":
       return "policy_documents";
@@ -42,13 +44,13 @@ export const fetchDocuments = async (
 ): Promise<Document[]> => {
   try {
     // Get the appropriate document table name
-    const documentTable = getDocumentTableName(entityType);
+    const tableName = entityTypeToTable(entityType);
     
     // Create the field name dynamically based on entity type
     const fieldName = `${entityType}_id`;
     
-    // Break the chain to avoid deep type recursion
-    const tableQuery = supabase.from(documentTable);
+    // Break the chain to avoid deep type recursion issues
+    const tableQuery = supabase.from(tableName);
     
     // Need to cast as any to avoid TypeScript recursion
     const query = tableQuery as any;
@@ -82,10 +84,10 @@ export const deleteDocument = async (
 ): Promise<string> => {
   try {
     // Get the appropriate document table name
-    const documentTable = getDocumentTableName(entityType);
+    const tableName = entityTypeToTable(entityType);
     
     // First, get document details to delete the storage file
-    const tableQuery = supabase.from(documentTable);
+    const tableQuery = supabase.from(tableName);
     const query = tableQuery as any;
     
     // Get document details
@@ -110,7 +112,7 @@ export const deleteDocument = async (
     }
     
     // Delete document record - avoid deep type recursion
-    const deleteQueryBase = supabase.from(documentTable);
+    const deleteQueryBase = supabase.from(tableName);
     const deleteQuery = deleteQueryBase as any;
     
     const { error: dbError } = await deleteQuery

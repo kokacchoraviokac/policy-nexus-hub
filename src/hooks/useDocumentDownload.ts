@@ -1,46 +1,54 @@
 
-import { useState } from 'react';
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Document } from "@/hooks/useDocuments";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const useDocumentDownload = () => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const { toast } = useToast();
+  const { t } = useLanguage();
   
   const downloadDocument = async (document: Document) => {
-    setIsDownloading(true);
-    
     try {
-      const { data, error } = await supabase.storage
+      setIsDownloading(true);
+      
+      // Get document download URL
+      const { data, error } = await supabase
+        .storage
         .from('documents')
         .download(document.file_path);
-        
-      if (error) {
-        throw error;
-      }
       
-      // Create a local URL for the downloaded file
+      if (error) throw error;
+      
+      // Create a download link
       const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = document.document_name;
+      document.body.appendChild(a);
+      a.click();
       
-      // Create a link and trigger the download
-      const link = window.document.createElement('a');
-      link.href = url;
-      link.download = document.document_name;
-      window.document.body.appendChild(link);
-      link.click();
-      window.document.body.removeChild(link);
+      // Clean up
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       
-      // Clean up the object URL
-      setTimeout(() => URL.revokeObjectURL(url), 100);
-      
+      toast({
+        title: t("downloadComplete"),
+        description: t("documentDownloadedSuccess"),
+      });
     } catch (error) {
-      console.error('Error downloading document:', error);
+      console.error("Error downloading document:", error);
+      toast({
+        title: t("downloadError"),
+        description: t("documentDownloadErrorMessage"),
+        variant: "destructive",
+      });
     } finally {
       setIsDownloading(false);
     }
   };
   
-  return {
-    isDownloading,
-    downloadDocument
-  };
+  return { isDownloading, downloadDocument };
 };

@@ -1,85 +1,88 @@
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchDocuments, deleteDocument } from "@/utils/documentUtils";
 import { useToast } from "@/hooks/use-toast";
-import { useActivityLogger } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Document, UseDocumentsProps } from "@/types/documents";
-import { fetchDocuments, deleteDocument as deleteDocumentUtil } from "@/utils/documentUtils";
+import type { EntityType } from "@/utils/activityLogger";
 
-// Re-export EntityType for proper isolated modules support
-export type { EntityType } from "@/utils/activityLogger";
-export type { DocumentTableName, Document } from "@/types/documents";
+export interface Document {
+  id: string;
+  document_name: string;
+  document_type: string;
+  created_at: string;
+  file_path: string;
+  entity_type?: EntityType;
+  entity_id?: string;
+  uploaded_by_id?: string;
+  uploaded_by_name?: string;
+  version?: number;
+  is_latest_version?: boolean;
+  original_document_id?: string;
+  mime_type?: string;
+  file_size?: number;
+  tags?: string[];
+}
 
-export const useDocuments = ({
-  entityType,
-  entityId,
-  enabled = true
-}: UseDocumentsProps) => {
-  const { t } = useLanguage();
+export interface UseDocumentsProps {
+  entityType: EntityType;
+  entityId: string;
+  enabled?: boolean;
+}
+
+export const useDocuments = ({ entityType, entityId, enabled = true }: UseDocumentsProps) => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const { logActivity } = useActivityLogger();
+  const [isDeletingDocument, setIsDeletingDocument] = useState(false);
   
-  // Fetch documents for a specific entity
+  // Query to fetch documents
   const {
-    data: documents,
+    data: documents = [],
     isLoading,
-    error,
-    refetch
+    error
   } = useQuery({
-    queryKey: ["documents", entityType, entityId],
+    queryKey: ['documents', entityType, entityId],
     queryFn: () => fetchDocuments(entityType, entityId),
-    enabled: enabled && !!entityType && !!entityId
+    enabled
   });
   
-  // Delete document mutation
-  const deleteDocumentMutation = useMutation({
+  // Mutation to delete document
+  const deleteMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      const result = await deleteDocumentUtil(documentId, entityType, entityId);
-      
-      // Log activity
-      await logActivity({
-        entityType,
-        entityId,
-        action: "update",
-        details: {
-          action_type: "document_deleted",
-          document_id: documentId,
-          document_name: documents?.find(doc => doc.id === documentId)?.document_name || "Unknown"
-        }
-      });
-      
-      return result;
+      setIsDeletingDocument(true);
+      try {
+        return await deleteDocument(documentId, entityType, entityId);
+      } finally {
+        setIsDeletingDocument(false);
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents", entityType, entityId] });
       toast({
         title: t("documentDeleted"),
         description: t("documentDeletedSuccess"),
       });
+      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
     },
     onError: (error) => {
-      console.error("Error in delete mutation:", error);
+      console.error("Error deleting document:", error);
       toast({
         title: t("documentDeleteError"),
         description: t("documentDeleteErrorMessage"),
         variant: "destructive",
       });
-    },
+    }
   });
   
-  // Handle document deletion
   const deleteDocument = async (documentId: string) => {
-    if (!documentId) return;
-    await deleteDocumentMutation.mutateAsync(documentId);
+    return deleteMutation.mutate(documentId);
   };
   
   return {
     documents,
     isLoading,
     error,
-    refetch,
     deleteDocument,
-    isDeletingDocument: deleteDocumentMutation.isPending
+    isDeletingDocument
   };
 };
