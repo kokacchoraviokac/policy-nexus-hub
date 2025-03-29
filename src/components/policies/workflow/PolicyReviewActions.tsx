@@ -191,7 +191,7 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
       </div>
       
       {!isComplete && policy.workflow_status !== 'draft' && (
-        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+        <Alert variant="destructive" className="bg-amber-50 border-amber-200">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800 text-sm ml-2">
             {t("completeAllRequiredFieldsToProgress")}
