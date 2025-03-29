@@ -5,6 +5,7 @@ import { FileText, Search, FileUp, Filter, Download, Trash2 } from "lucide-react
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import SearchInput from "@/components/ui/search-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,8 +22,8 @@ const PolicyDocuments = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState("all");
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
   };
 
   const handleDocumentTypeChange = (value: string) => {
@@ -68,12 +69,11 @@ const PolicyDocuments = () => {
 
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="flex-1">
-                <Input
+                <SearchInput
                   placeholder={t("searchDocuments")}
                   value={searchTerm}
                   onChange={handleSearchChange}
                   className="w-full"
-                  icon={<Search className="h-4 w-4" />}
                 />
               </div>
               <div className="w-full md:w-64">
