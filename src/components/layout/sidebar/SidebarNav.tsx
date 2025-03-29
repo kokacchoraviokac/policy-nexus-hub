@@ -23,11 +23,15 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
     
     sidebarItems.forEach(item => {
       if (item.subItems) {
+        // Check if the current path matches any submenu's path or starts with it
         const hasActiveSubItem = item.subItems.some(subItem => 
           currentPath === subItem.path || currentPath.startsWith(`${subItem.path}/`)
         );
         
-        if (hasActiveSubItem) {
+        // Also check if the path starts with the parent path directly
+        const isParentPath = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
+        
+        if (hasActiveSubItem || isParentPath) {
           parentPathsToExpand.push(item.path);
         }
       }
@@ -60,6 +64,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
     <div className="py-4 px-2">
       <nav className="space-y-1">
         {authorizedSidebarItems.map((item, index) => {
+          // Check if the current path matches this item's path or starts with it
           const isActiveParent = currentPath === item.path || 
                               currentPath.startsWith(`${item.path}/`);
           
@@ -81,7 +86,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
               active={isActiveParent || !!hasActiveChild}
               requiredPrivilege={item.requiredPrivilege}
               subItems={item.subItems}
-              isExpanded={isExpanded}
+              isExpanded={isExpanded || isActiveParent || !!hasActiveChild}
               onToggleExpand={() => toggleExpand(item.path)}
             />
           );
