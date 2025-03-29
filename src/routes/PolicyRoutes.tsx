@@ -10,16 +10,17 @@ import UnlinkedPayments from "@/pages/policies/UnlinkedPayments";
 import PolicyDocuments from "@/pages/policies/PolicyDocuments";
 import PolicyReviewPage from "@/pages/policies/PolicyReviewPage";
 
-export const PolicyRoutes = (
-  <>
-    <Route path="/policies" element={<Policies />} />
-    <Route path="/policies/new" element={<NewPolicy />} />
-    <Route path="/policies/:policyId" element={<PolicyDetailPage />} />
-    <Route path="/policies/:policyId/edit" element={<NewPolicy />} />
-    <Route path="/policies/:policyId/review" element={<PolicyReviewPage />} />
-    <Route path="/policies/workflow" element={<PolicyWorkflow />} />
-    <Route path="/policies/addendums" element={<PolicyAddendums />} />
-    <Route path="/policies/unlinked-payments" element={<UnlinkedPayments />} />
-    <Route path="/policies/documents" element={<PolicyDocuments />} />
-  </>
-);
+export const PolicyRoutes = {
+  path: "policies",
+  children: [
+    { index: true, element: <Policies /> },
+    { path: "new", element: <NewPolicy /> },
+    { path: ":policyId", element: <PolicyDetailPage /> },
+    { path: ":policyId/edit", element: <NewPolicy /> },
+    { path: ":policyId/review", element: <PolicyReviewPage /> },
+    { path: "workflow", element: <PolicyWorkflow /> },
+    { path: "addendums", element: <PolicyAddendums /> },
+    { path: "unlinked-payments", element: <UnlinkedPayments /> },
+    { path: "documents", element: <PolicyDocuments /> }
+  ]
+};

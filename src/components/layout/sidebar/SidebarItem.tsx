@@ -41,6 +41,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   const { hasPrivilege } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
+  const currentPath = location.pathname;
+  
+  // Extract the base path for more reliable matching
+  const baseCurrentPath = currentPath.split("/").filter(Boolean)[0] || "";
+  const baseItemPath = path.split("/").filter(Boolean)[0] || "";
+  
+  // Check if the current path is in the same section as this item
+  const isInSameSection = baseCurrentPath === baseItemPath;
   
   // Filter sub-items based on user privileges
   const authorizedSubItems = subItems?.filter(item => 
@@ -61,6 +69,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       onToggleExpand();
     }
   };
+  
+  // Debug logging
+  console.log(`Sidebar Item: ${label}, Path: ${path}, Active: ${active}, IsExpanded: ${isExpanded}, CurrentPath: ${currentPath}, IsInSameSection: ${isInSameSection}`);
   
   const item = (
     <Link 
@@ -96,7 +107,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   const subItemsComponent = !collapsed && isExpanded && hasSubItems && (
     <div className="pl-9 mt-1 space-y-1">
       {authorizedSubItems?.map((subItem, index) => {
-        const isSubItemActive = location.pathname === subItem.path || location.pathname.startsWith(`${subItem.path}/`);
+        // More robust path matching for subitems
+        const isSubItemActive = 
+          currentPath === subItem.path || 
+          currentPath.startsWith(`${subItem.path}/`) ||
+          (subItem.path !== "/" && 
+           currentPath.includes(subItem.path.split("/").filter(Boolean)[0]));
         
         return (
           <Link
@@ -132,7 +148,11 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           <div className="font-medium text-sm mb-2 border-b border-gray-200 pb-1">{t(label)}</div>
           <div className="space-y-1">
             {authorizedSubItems?.map((subItem, index) => {
-              const isSubItemActive = location.pathname === subItem.path || location.pathname.startsWith(`${subItem.path}/`);
+              const isSubItemActive = 
+                currentPath === subItem.path || 
+                currentPath.startsWith(`${subItem.path}/`) ||
+                (subItem.path !== "/" && 
+                 currentPath.includes(subItem.path.split("/").filter(Boolean)[0]));
               
               return (
                 <Link

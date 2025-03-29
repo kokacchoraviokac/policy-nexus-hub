@@ -25,11 +25,16 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
       if (item.subItems) {
         // Check if the current path matches any submenu's path or starts with it
         const hasActiveSubItem = item.subItems.some(subItem => 
-          currentPath === subItem.path || currentPath.startsWith(`${subItem.path}/`)
+          currentPath === subItem.path || 
+          currentPath.startsWith(`${subItem.path}/`) ||
+          // Also check if the current path contains the submenu path segment
+          (subItem.path !== "/" && currentPath.includes(subItem.path.split("/").filter(Boolean)[0]))
         );
         
         // Also check if the path starts with the parent path directly
-        const isParentPath = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
+        const isParentPath = currentPath === item.path || 
+                           currentPath.startsWith(`${item.path}/`) ||
+                           (item.path !== "/" && currentPath.includes(item.path.split("/").filter(Boolean)[0]));
         
         if (hasActiveSubItem || isParentPath) {
           parentPathsToExpand.push(item.path);
@@ -64,17 +69,31 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
     <div className="py-4 px-2">
       <nav className="space-y-1">
         {authorizedSidebarItems.map((item, index) => {
+          // Extract the base path for comparison (e.g., "policies" from "/policies/workflow")
+          const baseCurrentPath = currentPath.split("/").filter(Boolean)[0] || "";
+          const baseItemPath = item.path.split("/").filter(Boolean)[0] || "";
+          
+          // Check if the current path matches this item's base path
+          const isMatchingBase = baseCurrentPath === baseItemPath;
+          
           // Check if the current path matches this item's path or starts with it
           const isActiveParent = currentPath === item.path || 
-                              currentPath.startsWith(`${item.path}/`);
+                               currentPath.startsWith(`${item.path}/`) ||
+                               isMatchingBase;
           
           // Also check if any subitem path matches the current path
           const hasActiveChild = item.subItems?.some(
-            subItem => currentPath === subItem.path || currentPath.startsWith(`${subItem.path}/`)
+            subItem => currentPath === subItem.path || 
+                      currentPath.startsWith(`${subItem.path}/`) ||
+                      (subItem.path !== "/" && 
+                       currentPath.includes(subItem.path.split("/").filter(Boolean)[0]))
           );
           
           // Check if this item is expanded
           const isExpanded = expandedItems.includes(item.path);
+          
+          // Console logs for debugging
+          console.log(`Item: ${item.label}, Path: ${item.path}, IsActiveParent: ${isActiveParent}, HasActiveChild: ${hasActiveChild}, IsExpanded: ${isExpanded}, CurrentPath: ${currentPath}`);
           
           return (
             <SidebarItem
