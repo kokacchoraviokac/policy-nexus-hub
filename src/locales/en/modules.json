@@ -20,5 +20,56 @@
   "allPaymentsLinked": "All payments have been successfully linked to policies",
   
   "noPolicyDocuments": "No policy documents",
-  "noPolicyDocumentsDescription": "There are no documents attached to any policies yet"
+  "noPolicyDocumentsDescription": "There are no documents attached to any policies yet",
+  
+  "importPolicies": "Import Policies",
+  "featureNotAvailable": "Feature not available",
+  "policyImportFeatureComingSoon": "The policy import feature will be available soon",
+  
+  "workflowStages": "Workflow Stages",
+  "policyWorkflowStagesDescription": "Policies go through these stages before being finalized",
+  "draft": "Draft",
+  "draftStageDescription": "Initial stage for imported policies",
+  "inReview": "In Review",
+  "inReviewStageDescription": "Policies being reviewed for accuracy",
+  "ready": "Ready",
+  "readyStageDescription": "Policies ready for finalization",
+  "complete": "Complete",
+  "completeStageDescription": "Finalized policies",
+  
+  "workflowStatus": "Workflow Status",
+  "allWorkflowStatuses": "All Workflow Statuses",
+  "policiesRequiringAction": "Policies Requiring Action",
+  
+  "review": "Review",
+  "reviewPolicy": "Review Policy",
+  "reviewImportedPolicyAndFinalizeIt": "Review the imported policy and finalize it when ready",
+  "policyDetails": "Policy Details",
+  "basicInformationAboutPolicy": "Basic information about the policy",
+  
+  "workflowActions": "Workflow Actions",
+  "manageWorkflowStatusOfPolicy": "Manage the workflow status of this policy",
+  
+  "moveToReview": "Move to Review",
+  "markAsReady": "Mark as Ready",
+  "finalizePolicy": "Finalize Policy",
+  "backToWorkflow": "Back to Workflow",
+  
+  "missingRequiredFields": "Missing Required Fields",
+  "followingFieldsAreRequired": "The following fields are required to proceed",
+  
+  "statusUpdated": "Status Updated",
+  "policyWorkflowStatusUpdated": "Policy workflow status has been updated to {status}",
+  "errorUpdatingStatus": "Error Updating Status",
+  
+  "reviewChecklist": "Review Checklist",
+  "ensureAllRequiredInformationIsComplete": "Ensure all required information is complete before proceeding",
+  "complete": "Complete",
+  "required": "Required",
+  "missing": "Missing",
+  "optional": "optional",
+  
+  "documentsCheck": "Documents Check",
+  "documentsAttached": "{count} document(s) attached",
+  "noDocuments": "No Documents"
 }

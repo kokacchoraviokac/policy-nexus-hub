@@ -20,5 +20,56 @@
   "allPaymentsLinked": "Сите плаќања се успешно поврзани со полиси",
   
   "noPolicyDocuments": "Нема документи за полиси",
-  "noPolicyDocumentsDescription": "Сѐ уште нема документи прикачени за ниедна полиса"
+  "noPolicyDocumentsDescription": "Сѐ уште нема документи прикачени за ниедна полиса",
+  
+  "importPolicies": "Увоз на полиси",
+  "featureNotAvailable": "Функцијата не е достапна",
+  "policyImportFeatureComingSoon": "Функцијата за увоз на полиси наскоро ќе биде достапна",
+  
+  "workflowStages": "Фази на работниот тек",
+  "policyWorkflowStagesDescription": "Полисите минуваат низ овие фази пред да бидат финализирани",
+  "draft": "Нацрт",
+  "draftStageDescription": "Почетна фаза за увезени полиси",
+  "inReview": "Во преглед",
+  "inReviewStageDescription": "Полиси кои се прегледуваат за точност",
+  "ready": "Подготвено",
+  "readyStageDescription": "Полиси подготвени за финализација",
+  "complete": "Завршено",
+  "completeStageDescription": "Финализирани полиси",
+  
+  "workflowStatus": "Статус на работниот тек",
+  "allWorkflowStatuses": "Сите статуси на работниот тек",
+  "policiesRequiringAction": "Полиси кои бараат акција",
+  
+  "review": "Преглед",
+  "reviewPolicy": "Преглед на полиса",
+  "reviewImportedPolicyAndFinalizeIt": "Прегледајте ја увезената полиса и финализирајте ја кога е подготвена",
+  "policyDetails": "Детали за полисата",
+  "basicInformationAboutPolicy": "Основни информации за полисата",
+  
+  "workflowActions": "Акции на работниот тек",
+  "manageWorkflowStatusOfPolicy": "Управувајте со статусот на работниот тек на оваа полиса",
+  
+  "moveToReview": "Премести во преглед",
+  "markAsReady": "Означи како подготвено",
+  "finalizePolicy": "Финализирај полиса",
+  "backToWorkflow": "Назад кон работниот тек",
+  
+  "missingRequiredFields": "Недостасуваат задолжителни полиња",
+  "followingFieldsAreRequired": "Следниве полиња се задолжителни за да продолжите",
+  
+  "statusUpdated": "Статусот е ажуриран",
+  "policyWorkflowStatusUpdated": "Статусот на работниот тек на полисата е ажуриран на {status}",
+  "errorUpdatingStatus": "Грешка при ажурирање на статусот",
+  
+  "reviewChecklist": "Листа за проверка",
+  "ensureAllRequiredInformationIsComplete": "Осигурајте се дека сите потребни информации се целосни пред да продолжите",
+  "complete": "Завршено",
+  "required": "Задолжително",
+  "missing": "Недостасува",
+  "optional": "опционално",
+  
+  "documentsCheck": "Проверка на документи",
+  "documentsAttached": "{count} документ(и) прикачени",
+  "noDocuments": "Нема документи"
 }
