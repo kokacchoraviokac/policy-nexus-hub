@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FilePlus, FileBox, Workflow, FileArchive, CreditCard, FileImage } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -25,6 +25,14 @@ const Policies = () => {
     queryFn: async () => null,
     enabled: false,
   });
+  
+  useEffect(() => {
+    // Log that the Policies component is mounted
+    console.log("Policies component mounted");
+    return () => {
+      console.log("Policies component unmounted");
+    };
+  }, []);
   
   const handleRefresh = () => {
     refetch();

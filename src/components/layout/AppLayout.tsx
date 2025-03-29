@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import TopBar from "./TopBar";
@@ -9,7 +9,7 @@ import BreadcrumbNav from "./BreadcrumbNav";
 import Footer from "./Footer";
 
 interface AppLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
@@ -45,7 +45,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           sidebarCollapsed ? "lg:pl-24" : "lg:pl-6"
         )}>
           <div className="p-6 flex-1">
-            {children}
+            {children || <Outlet />}
           </div>
         </main>
         

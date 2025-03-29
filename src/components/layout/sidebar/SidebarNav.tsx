@@ -65,6 +65,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
     hasPrivilege(item.requiredPrivilege)
   );
 
+  console.log("Current path:", currentPath);
+  console.log("Sidebar items:", authorizedSidebarItems);
+
   return (
     <div className="py-4 px-2">
       <nav className="space-y-1">
@@ -93,7 +96,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
           const isExpanded = expandedItems.includes(item.path);
           
           // Console logs for debugging
-          console.log(`Item: ${item.label}, Path: ${item.path}, IsActiveParent: ${isActiveParent}, HasActiveChild: ${hasActiveChild}, IsExpanded: ${isExpanded}, CurrentPath: ${currentPath}`);
+          console.log(`Item: ${item.label}, Path: ${item.path}, IsActiveParent: ${isActiveParent}, HasActiveChild: ${hasActiveChild}, IsExpanded: ${isExpanded}, CurrentPath: ${currentPath}, BaseCurrentPath: ${baseCurrentPath}, BaseItemPath: ${baseItemPath}`);
           
           return (
             <SidebarItem
