@@ -67,9 +67,13 @@
   "complete": "Complete",
   "required": "Required",
   "missing": "Missing",
-  "optional": "optional",
+  "optional": "Optional",
   
   "documentsCheck": "Documents Check",
   "documentsAttached": "{count} document(s) attached",
-  "noDocuments": "No Documents"
+  "noDocuments": "No Documents",
+  
+  "notProvided": "Not provided",
+  "completeAllRequiredFieldsToProgress": "Complete all required fields to progress",
+  "updatingStatus": "Updating status"
 }

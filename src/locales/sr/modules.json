@@ -71,5 +71,9 @@
   
   "documentsCheck": "Provera dokumenata",
   "documentsAttached": "{count} dokument(a) priloženo",
-  "noDocuments": "Nema dokumenata"
+  "noDocuments": "Nema dokumenata",
+  
+  "notProvided": "Nije navedeno",
+  "completeAllRequiredFieldsToProgress": "Popunite sva obavezna polja da biste nastavili",
+  "updatingStatus": "Ažuriranje statusa"
 }
