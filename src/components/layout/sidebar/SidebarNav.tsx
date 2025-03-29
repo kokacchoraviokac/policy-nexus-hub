@@ -65,8 +65,15 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
     hasPrivilege(item.requiredPrivilege)
   );
 
-  console.log("Current path:", currentPath);
-  console.log("Sidebar items:", authorizedSidebarItems);
+  // Always auto-expand the policies section when on a policies page
+  useEffect(() => {
+    if (currentPath.includes('/policies')) {
+      const policiesPath = sidebarItems.find(item => item.label === 'policies')?.path;
+      if (policiesPath && !expandedItems.includes(policiesPath)) {
+        setExpandedItems(prev => [...prev, policiesPath]);
+      }
+    }
+  }, [currentPath, expandedItems]);
 
   return (
     <div className="py-4 px-2">
@@ -94,9 +101,6 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
           
           // Check if this item is expanded
           const isExpanded = expandedItems.includes(item.path);
-          
-          // Console logs for debugging
-          console.log(`Item: ${item.label}, Path: ${item.path}, IsActiveParent: ${isActiveParent}, HasActiveChild: ${hasActiveChild}, IsExpanded: ${isExpanded}, CurrentPath: ${currentPath}, BaseCurrentPath: ${baseCurrentPath}, BaseItemPath: ${baseItemPath}`);
           
           return (
             <SidebarItem
