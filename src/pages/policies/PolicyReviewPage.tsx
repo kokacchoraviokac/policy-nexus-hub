@@ -18,6 +18,7 @@ const PolicyReviewPage = () => {
   const { t } = useLanguage();
   const { data: policy, isLoading, isError, error } = usePolicyDetail(policyId);
   const [isFormComplete, setIsFormComplete] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   
   useEffect(() => {
     if (policy) {
@@ -38,6 +39,10 @@ const PolicyReviewPage = () => {
   
   const handleBackToList = () => {
     navigate("/policies/workflow");
+  };
+  
+  const handleUploadDocument = () => {
+    setUploadDialogOpen(true);
   };
   
   return (
@@ -160,6 +165,15 @@ const PolicyReviewPage = () => {
             
             <Card>
               <CardContent className="pt-6">
+                <PolicyDocumentsCheck 
+                  policy={policy} 
+                  onUploadClick={handleUploadDocument}
+                />
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="pt-6">
                 <PolicyReviewActions 
                   policy={policy} 
                   isComplete={isFormComplete}
@@ -168,6 +182,15 @@ const PolicyReviewPage = () => {
             </Card>
           </div>
         </div>
+      )}
+      
+      {policy && (
+        <DocumentUploadDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          entityType="policy"
+          entityId={policy.id}
+        />
       )}
     </div>
   );
