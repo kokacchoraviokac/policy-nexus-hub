@@ -1,7 +1,7 @@
 
 {
   "policiesDescription": "Manage insurance policies across their entire lifecycle",
-  "policiesWorkflowDescription": "Policies that require attention or are in a processing state",
+  "policiesWorkflowDescription": "Review imported policies through the workflow process",
   "policyAddendumsDescription": "Manage amendments and changes to policies",
   "unlinkedPaymentsDescription": "Manage payments that have not been associated with a policy",
   "policyDocumentsDescription": "View and manage documents associated with policies",
@@ -26,31 +26,31 @@
   "featureNotAvailable": "Feature not available",
   "policyImportFeatureComingSoon": "The policy import feature will be available soon",
   
-  "workflowStages": "Workflow Stages",
-  "policyWorkflowStagesDescription": "Policies go through these stages before being finalized",
+  "workflowStages": "Policy Review Workflow",
+  "policyWorkflowStagesDescription": "Imported policies go through these stages before being finalized",
   "draft": "Draft",
-  "draftStageDescription": "Initial stage for imported policies",
+  "draftStageDescription": "Newly imported policies awaiting initial review",
   "inReview": "In Review",
-  "inReviewStageDescription": "Policies being reviewed for accuracy",
+  "inReviewStageDescription": "Policies being reviewed for accuracy and completeness",
   "ready": "Ready",
-  "readyStageDescription": "Policies ready for finalization",
+  "readyStageDescription": "Policies verified and ready for finalization",
   "complete": "Complete",
   "completeStageDescription": "Finalized policies",
   
   "workflowStatus": "Workflow Status",
   "allWorkflowStatuses": "All Workflow Statuses",
-  "policiesRequiringAction": "Policies Requiring Action",
+  "policiesRequiringAction": "Imported Policies Requiring Review",
   
   "review": "Review",
   "reviewPolicy": "Review Policy",
-  "reviewImportedPolicyAndFinalizeIt": "Review the imported policy and finalize it when ready",
+  "reviewImportedPolicyAndFinalizeIt": "Review the imported policy data and finalize it when all required information is complete",
   "policyDetails": "Policy Details",
-  "basicInformationAboutPolicy": "Basic information about the policy",
+  "basicInformationAboutPolicy": "Basic information about the imported policy",
   
   "workflowActions": "Workflow Actions",
-  "manageWorkflowStatusOfPolicy": "Manage the workflow status of this policy",
+  "manageWorkflowStatusOfPolicy": "Move this policy through the review workflow",
   
-  "moveToReview": "Move to Review",
+  "moveToReview": "Start Review",
   "markAsReady": "Mark as Ready",
   "finalizePolicy": "Finalize Policy",
   "backToWorkflow": "Back to Workflow",
@@ -63,7 +63,7 @@
   "errorUpdatingStatus": "Error Updating Status",
   
   "reviewChecklist": "Review Checklist",
-  "ensureAllRequiredInformationIsComplete": "Ensure all required information is complete before proceeding",
+  "ensureAllRequiredInformationIsComplete": "Verify all required information is present in the imported policy before proceeding",
   "complete": "Complete",
   "required": "Required",
   "missing": "Missing",
@@ -74,6 +74,16 @@
   "noDocuments": "No Documents",
   
   "notProvided": "Not provided",
-  "completeAllRequiredFieldsToProgress": "Complete all required fields to progress",
-  "updatingStatus": "Updating status"
+  "completeAllRequiredFieldsToProgress": "Complete all required fields to progress. Some data from the imported policy may need manual verification or correction.",
+  "updatingStatus": "Updating status",
+  
+  "policyImportInfo": "Policies are imported from insurance companies and require review before finalization",
+  "policyImportNote": "After import, verify all information for accuracy and completeness",
+  "importAndReviewProcess": "Import & Review Process",
+  "importedFrom": "Imported from",
+  "importDate": "Import date",
+  "readyForFinalization": "Ready for finalization",
+  "missingInformation": "Missing information",
+  "validationErrors": "Validation errors",
+  "importSource": "Import source"
 }

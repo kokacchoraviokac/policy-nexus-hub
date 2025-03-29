@@ -12,8 +12,10 @@ import {
   CheckCircle, 
   ClipboardList, 
   FileCheck, 
-  ArrowLeft 
+  ArrowLeft,
+  AlertTriangle 
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PolicyReviewActionsProps {
   policy: Policy;
@@ -124,7 +126,39 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
         );
       case 'complete':
         // Policy is already complete
+        return (
+          <Button 
+            disabled
+            variant="outline" 
+            className="w-full bg-green-50"
+          >
+            <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+            {t("complete")}
+          </Button>
+        );
+      default:
         return null;
+    }
+  };
+
+  const getStatusExplanation = () => {
+    switch (policy.workflow_status) {
+      case 'draft':
+        return <p className="text-sm text-muted-foreground">
+          {t("draftStageDescription")}. {t("moveToReview")} {t("toBeginTheProcess")}.
+        </p>;
+      case 'in_review':
+        return <p className="text-sm text-muted-foreground">
+          {t("inReviewStageDescription")}. {isComplete ? t("readyForFinalization") : t("missingInformation")}.
+        </p>;
+      case 'ready':
+        return <p className="text-sm text-muted-foreground">
+          {t("readyStageDescription")}. {isComplete ? t("readyForFinalization") : t("missingInformation")}.
+        </p>;
+      case 'complete':
+        return <p className="text-sm text-green-600">
+          {t("completeStageDescription")}.
+        </p>;
       default:
         return null;
     }
@@ -134,6 +168,14 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
     <div className="space-y-4">
       <h3 className="font-medium text-lg">{t("workflowActions")}</h3>
       <p className="text-sm text-muted-foreground">{t("manageWorkflowStatusOfPolicy")}</p>
+      
+      <Alert className="bg-blue-50 border-blue-200">
+        <AlertDescription className="text-blue-800 text-sm">
+          {t("policyImportInfo")}
+        </AlertDescription>
+      </Alert>
+      
+      {getStatusExplanation()}
       
       <div className="flex flex-col gap-3">
         {getActionButton()}
@@ -149,9 +191,12 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
       </div>
       
       {!isComplete && policy.workflow_status !== 'draft' && (
-        <p className="text-sm text-amber-600">
-          {t("completeAllRequiredFieldsToProgress")}
-        </p>
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 text-sm ml-2">
+            {t("completeAllRequiredFieldsToProgress")}
+          </AlertDescription>
+        </Alert>
       )}
       
       {updateWorkflowStatus.isPending && (

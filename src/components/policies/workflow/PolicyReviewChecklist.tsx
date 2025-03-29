@@ -1,9 +1,10 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 import { Policy } from "@/types/policies";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 
 interface PolicyReviewChecklistProps {
   policy: Policy;
@@ -77,15 +78,31 @@ const PolicyReviewChecklist: React.FC<PolicyReviewChecklistProps> = ({ policy })
   const missingFields = requiredFields.filter(field => !field.complete);
   const isComplete = missingFields.length === 0;
   
+  // Calculate completion percentage
+  const completedRequired = requiredFields.filter(field => field.complete).length;
+  const completionPercentage = Math.round((completedRequired / requiredFields.length) * 100);
+  
+  const completedOptional = optionalFields.filter(field => field.complete).length;
+  const optionalCompletionPercentage = optionalFields.length > 0 ? 
+    Math.round((completedOptional / optionalFields.length) * 100) : 0;
+  
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-lg">{t("reviewChecklist")}</h3>
       <p className="text-sm text-muted-foreground">{t("ensureAllRequiredInformationIsComplete")}</p>
       
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">{t("required")}</span>
+          <span className="text-sm text-muted-foreground">{completedRequired}/{requiredFields.length}</span>
+        </div>
+        <Progress value={completionPercentage} className={isComplete ? "bg-green-100" : "bg-amber-100"} />
+      </div>
+      
       {!isComplete && (
         <Alert variant="destructive" className="mt-2">
           <AlertTitle className="flex items-center">
-            <XCircle className="h-4 w-4 mr-2" />
+            <AlertTriangle className="h-4 w-4 mr-2" />
             {t("missingRequiredFields")}
           </AlertTitle>
           <AlertDescription>
@@ -118,6 +135,12 @@ const PolicyReviewChecklist: React.FC<PolicyReviewChecklistProps> = ({ policy })
         
         <div className="p-4">
           <h4 className="font-medium mb-2">{t("optional")}</h4>
+          <div className="mb-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{completedOptional}/{optionalFields.length}</span>
+            </div>
+            <Progress value={optionalCompletionPercentage} className="bg-slate-100" />
+          </div>
           <ul className="space-y-2">
             {optionalFields.map((field) => (
               <li key={field.key} className="flex items-center justify-between">

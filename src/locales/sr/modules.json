@@ -1,7 +1,7 @@
 
 {
   "policiesDescription": "Upravljanje polisama osiguranja tokom celokupnog životnog ciklusa",
-  "policiesWorkflowDescription": "Polise koje zahtevaju pažnju ili su u stanju obrade",
+  "policiesWorkflowDescription": "Pregled uvezenih polisa kroz proces radnog toka",
   "policyAddendumsDescription": "Upravljanje izmenama i dopunama polisa",
   "unlinkedPaymentsDescription": "Upravljanje uplatama koje nisu povezane sa polisom",
   "policyDocumentsDescription": "Pregledajte i upravljajte dokumentima povezanim sa polisama",
@@ -26,31 +26,31 @@
   "featureNotAvailable": "Funkcija nije dostupna",
   "policyImportFeatureComingSoon": "Funkcija uvoza polisa će uskoro biti dostupna",
   
-  "workflowStages": "Faze toka rada",
-  "policyWorkflowStagesDescription": "Polise prolaze kroz ove faze pre nego što budu finalizovane",
+  "workflowStages": "Tok pregleda polisa",
+  "policyWorkflowStagesDescription": "Uvezene polise prolaze kroz ove faze pre nego što budu finalizovane",
   "draft": "Nacrt",
-  "draftStageDescription": "Početna faza za uvezene polise",
+  "draftStageDescription": "Novo uvezene polise koje čekaju početni pregled",
   "inReview": "U pregledu",
-  "inReviewStageDescription": "Polise koje se pregledaju radi tačnosti",
+  "inReviewStageDescription": "Polise koje se pregledaju radi tačnosti i potpunosti",
   "ready": "Spremno",
-  "readyStageDescription": "Polise spremne za finalizaciju",
+  "readyStageDescription": "Polise proverene i spremne za finalizaciju",
   "complete": "Završeno",
   "completeStageDescription": "Finalizovane polise",
   
   "workflowStatus": "Status toka rada",
   "allWorkflowStatuses": "Svi statusi toka rada",
-  "policiesRequiringAction": "Polise koje zahtevaju akciju",
+  "policiesRequiringAction": "Uvezene polise koje zahtevaju pregled",
   
   "review": "Pregled",
   "reviewPolicy": "Pregled polise",
-  "reviewImportedPolicyAndFinalizeIt": "Pregledajte uvezenu polisu i finalizujte je kada bude spremna",
+  "reviewImportedPolicyAndFinalizeIt": "Pregledajte podatke uvezene polise i finalizujte je kada su sve potrebne informacije kompletne",
   "policyDetails": "Detalji polise",
-  "basicInformationAboutPolicy": "Osnovne informacije o polisi",
+  "basicInformationAboutPolicy": "Osnovne informacije o uvezenoj polisi",
   
   "workflowActions": "Akcije toka rada",
-  "manageWorkflowStatusOfPolicy": "Upravljajte statusom toka rada ove polise",
+  "manageWorkflowStatusOfPolicy": "Pomerite ovu polisu kroz tok pregleda",
   
-  "moveToReview": "Prebaci u pregled",
+  "moveToReview": "Započni pregled",
   "markAsReady": "Označi kao spremno",
   "finalizePolicy": "Finalizuj polisu",
   "backToWorkflow": "Nazad na tok rada",
@@ -63,7 +63,7 @@
   "errorUpdatingStatus": "Greška pri ažuriranju statusa",
   
   "reviewChecklist": "Kontrolna lista za pregled",
-  "ensureAllRequiredInformationIsComplete": "Proverite da li su sve potrebne informacije potpune pre nastavka",
+  "ensureAllRequiredInformationIsComplete": "Proverite da li su sve potrebne informacije prisutne u uvezenoj polisi pre nastavka",
   "complete": "Završeno",
   "required": "Obavezno",
   "missing": "Nedostaje",
@@ -74,6 +74,16 @@
   "noDocuments": "Nema dokumenata",
   
   "notProvided": "Nije navedeno",
-  "completeAllRequiredFieldsToProgress": "Popunite sva obavezna polja da biste nastavili",
-  "updatingStatus": "Ažuriranje statusa"
+  "completeAllRequiredFieldsToProgress": "Popunite sva obavezna polja da biste nastavili. Neki podaci iz uvezene polise možda zahtevaju ručnu verifikaciju ili korekciju.",
+  "updatingStatus": "Ažuriranje statusa",
+  
+  "policyImportInfo": "Polise se uvoze od osiguravajućih kompanija i zahtevaju pregled pre finalizacije",
+  "policyImportNote": "Nakon uvoza, proverite sve informacije radi tačnosti i potpunosti",
+  "importAndReviewProcess": "Proces uvoza i pregleda",
+  "importedFrom": "Uvezeno iz",
+  "importDate": "Datum uvoza",
+  "readyForFinalization": "Spremno za finalizaciju",
+  "missingInformation": "Nedostajuće informacije",
+  "validationErrors": "Greške validacije",
+  "importSource": "Izvor uvoza"
 }

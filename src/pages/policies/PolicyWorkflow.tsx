@@ -1,12 +1,13 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FileText, FileUp, ArrowRight } from "lucide-react";
+import { FileText, FileUp, ArrowRight, AlertTriangle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WorkflowPoliciesList from "@/components/policies/workflow/WorkflowPoliciesList";
 import WorkflowFilters from "@/components/policies/workflow/WorkflowFilters";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const PolicyWorkflow = () => {
   const { t } = useLanguage();
@@ -44,6 +45,12 @@ const PolicyWorkflow = () => {
         </div>
       </div>
       
+      <Alert className="bg-blue-50 border-blue-200">
+        <AlertDescription className="text-blue-800">
+          {t("policyImportInfo")}. {t("policyImportNote")}.
+        </AlertDescription>
+      </Alert>
+      
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>{t("workflowStages")}</CardTitle>
@@ -51,9 +58,9 @@ const PolicyWorkflow = () => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center max-w-[150px]">
               <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-2">
-                <FileText className="h-6 w-6 text-muted-foreground" />
+                <FileUp className="h-6 w-6 text-muted-foreground" />
               </div>
               <h3 className="text-sm font-medium">{t("draft")}</h3>
               <p className="text-xs text-muted-foreground">{t("draftStageDescription")}</p>
@@ -62,9 +69,9 @@ const PolicyWorkflow = () => {
             <ArrowRight className="hidden md:block h-4 w-4 text-muted-foreground" />
             <div className="w-0.5 h-6 bg-muted md:hidden"></div>
             
-            <div className="flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-2">
-                <FileUp className="h-6 w-6 text-muted-foreground" />
+            <div className="flex flex-col items-center text-center max-w-[150px]">
+              <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-2">
+                <AlertTriangle className="h-6 w-6 text-amber-600" />
               </div>
               <h3 className="text-sm font-medium">{t("inReview")}</h3>
               <p className="text-xs text-muted-foreground">{t("inReviewStageDescription")}</p>
@@ -73,7 +80,7 @@ const PolicyWorkflow = () => {
             <ArrowRight className="hidden md:block h-4 w-4 text-muted-foreground" />
             <div className="w-0.5 h-6 bg-muted md:hidden"></div>
             
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center max-w-[150px]">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-2">
                 <FileText className="h-6 w-6 text-primary" />
               </div>
@@ -84,15 +91,18 @@ const PolicyWorkflow = () => {
             <ArrowRight className="hidden md:block h-4 w-4 text-muted-foreground" />
             <div className="w-0.5 h-6 bg-muted md:hidden"></div>
             
-            <div className="flex flex-col items-center text-center">
+            <div className="flex flex-col items-center text-center max-w-[150px]">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
-                <FileText className="h-6 w-6 text-green-600" />
+                <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <h3 className="text-sm font-medium">{t("complete")}</h3>
               <p className="text-xs text-muted-foreground">{t("completeStageDescription")}</p>
             </div>
           </div>
         </CardContent>
+        <CardFooter className="bg-slate-50 text-sm text-muted-foreground">
+          <p>{t("importAndReviewProcess")}: {t("policyImportNote")}</p>
+        </CardFooter>
       </Card>
       
       <div className="bg-white/80 backdrop-blur-sm rounded-lg border border-border">
