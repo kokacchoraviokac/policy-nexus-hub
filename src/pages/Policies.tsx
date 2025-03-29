@@ -1,11 +1,12 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FilePlus } from "lucide-react";
+import { FilePlus, FileBox, Workflow, FileArchive, CreditCard, FileImage } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
 
 import PoliciesTable from "@/components/policies/PoliciesTable";
 import PoliciesFilters from "@/components/policies/PoliciesFilters";
@@ -44,13 +45,46 @@ const Policies = () => {
     navigate("/policies/new");
   };
 
+  const policyModules = [
+    {
+      title: "allPolicies",
+      description: "allPoliciesDescription",
+      path: "/policies",
+      icon: FileBox
+    },
+    {
+      title: "policiesWorkflow",
+      description: "policiesWorkflowDescription",
+      path: "/policies/workflow",
+      icon: Workflow
+    },
+    {
+      title: "policyAddendums",
+      description: "policyAddendumsDescription",
+      path: "/policies/addendums",
+      icon: FileArchive
+    },
+    {
+      title: "unlinkedPayments",
+      description: "unlinkedPaymentsDescription",
+      path: "/policies/unlinked-payments",
+      icon: CreditCard
+    },
+    {
+      title: "documents",
+      description: "documentsDescription",
+      path: "/policies/documents",
+      icon: FileImage
+    }
+  ];
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("policies")}</h1>
           <p className="text-muted-foreground">
-            {t("policiesDescription")}
+            {t("policyManagement")}
           </p>
         </div>
         
@@ -60,6 +94,27 @@ const Policies = () => {
             {t("newPolicy")}
           </Button>
         </div>
+      </div>
+      
+      {/* Policy Modules Navigation Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {policyModules.map((module, index) => (
+          <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow duration-200">
+            <CardContent className="p-0">
+              <Button 
+                variant="ghost" 
+                className="w-full h-full p-4 flex items-start justify-start text-left space-x-4"
+                onClick={() => navigate(module.path)}
+              >
+                <module.icon className="h-8 w-8 text-primary" />
+                <div>
+                  <h3 className="font-medium">{t(module.title)}</h3>
+                  <p className="text-sm text-muted-foreground">{t(module.description)}</p>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
       </div>
       
       <PolicyStatistics />

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
@@ -23,6 +23,8 @@ interface SidebarItemProps {
   collapsed: boolean;
   requiredPrivilege: string;
   subItems?: SubItem[];
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -32,11 +34,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   active,
   collapsed,
   requiredPrivilege,
-  subItems
+  subItems,
+  isExpanded = false,
+  onToggleExpand
 }) => {
   const { hasPrivilege } = useAuth();
   const { t } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
   
   // Filter sub-items based on user privileges
   const authorizedSubItems = subItems?.filter(item => 
@@ -51,18 +54,21 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   // If no authorized sub-items exist for this item, render it as a simple link
   const hasSubItems = authorizedSubItems && authorizedSubItems.length > 0;
   
+  const handleItemClick = (e: React.MouseEvent) => {
+    if (hasSubItems && onToggleExpand) {
+      e.preventDefault();
+      onToggleExpand();
+    }
+  };
+  
   const item = (
     <Link 
       to={path}
       className={cn(
-        "sidebar-item group flex items-center w-full",
-        active && "active"
+        "sidebar-item group flex items-center w-full p-2 rounded-md transition-colors duration-200",
+        active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
       )}
-      onClick={() => {
-        if (hasSubItems) {
-          setIsOpen(!isOpen);
-        }
-      }}
+      onClick={handleItemClick}
     >
       <Icon className="h-5 w-5 flex-shrink-0" />
       {!collapsed && (
@@ -72,7 +78,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         <svg 
           className={cn(
             "w-3 h-3 ml-auto transform transition-transform",
-            isOpen ? "rotate-90" : "rotate-0"
+            isExpanded ? "rotate-90" : "rotate-0"
           )} 
           fill="none" 
           stroke="currentColor" 
@@ -85,8 +91,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     </Link>
   );
 
-  // Render sub-items if not collapsed
-  const subItemsComponent = !collapsed && isOpen && hasSubItems && (
+  // Render sub-items if not collapsed and expanded
+  const subItemsComponent = !collapsed && isExpanded && hasSubItems && (
     <div className="pl-9 mt-1 space-y-1">
       {authorizedSubItems?.map((subItem, index) => (
         <Link
