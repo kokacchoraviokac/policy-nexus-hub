@@ -1,8 +1,21 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Routes, Route } from "react-router-dom";
 import { AppRoutes } from "./routes";
+
+// Define types for our route structure
+interface RouteChild {
+  index?: boolean;
+  path?: string;
+  element: React.ReactElement;
+}
+
+interface RouteConfig {
+  path: string;
+  children: RouteChild[];
+}
 
 const App = () => (
   <>
@@ -18,9 +31,10 @@ const App = () => (
         // Otherwise, it's a route configuration object
         // Recursively render its children
         if ('path' in route && 'children' in route) {
+          const routeConfig = route as RouteConfig;
           return (
-            <Route key={index} path={route.path}>
-              {route.children.map((child, childIndex) => {
+            <Route key={index} path={routeConfig.path}>
+              {routeConfig.children.map((child, childIndex) => {
                 if ('index' in child && child.index) {
                   return <Route index key={`${index}-${childIndex}`} element={child.element} />;
                 }
