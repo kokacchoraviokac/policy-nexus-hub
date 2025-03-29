@@ -10,7 +10,7 @@ import { SettingsRoutes } from "./SettingsRoutes";
 export const AppRoutes = [
   ...AuthRoutes,
   ...DashboardRoutes,
-  ...PolicyRoutes,
+  PolicyRoutes,
   ...ModuleRoutes,
   ...CodebookRoutes,
   ...SettingsRoutes

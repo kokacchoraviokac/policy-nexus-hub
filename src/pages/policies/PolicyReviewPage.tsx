@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/utils/format";
-import { CheckCircle, AlertTriangle, Save, X, ArrowLeft, Check } from "lucide-react";
+import { CheckCircle, AlertTriangle, Save, X, ArrowLeft, Check, Edit } from "lucide-react";
 
 const PolicyReviewPage = () => {
   const { policyId } = useParams<{ policyId: string }>();
