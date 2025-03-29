@@ -73,7 +73,7 @@ const validatePolicy = (policy: any, index: number): { valid: boolean; error?: s
 /**
  * Transform imported policy data to match database schema
  */
-const transformPolicyData = async (policy: ImportedPolicy): Promise<Partial<Policy>> => {
+const transformPolicyData = async (policy: ImportedPolicy): Promise<Required<Pick<Policy, 'policy_number' | 'insurer_name' | 'policyholder_name' | 'start_date' | 'expiry_date' | 'premium' | 'currency' | 'status' | 'workflow_status' | 'company_id'>> & Partial<Policy>> => {
   // Get the current user
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
@@ -86,6 +86,10 @@ const transformPolicyData = async (policy: ImportedPolicy): Promise<Partial<Poli
     .single();
   
   const companyId = profile?.company_id;
+  
+  if (!companyId) {
+    throw new Error("User's company ID not found");
+  }
   
   // Ensure premium and commission are numbers
   const premium = typeof policy.premium === 'string' 
@@ -140,7 +144,7 @@ export const importPolicies = async (policies: any[]): Promise<ImportResult> => 
     failed: []
   };
   
-  const validPolicies: Partial<Policy>[] = [];
+  const validPolicies: Array<Required<Pick<Policy, 'policy_number' | 'insurer_name' | 'policyholder_name' | 'start_date' | 'expiry_date' | 'premium' | 'currency' | 'status' | 'workflow_status' | 'company_id'>> & Partial<Policy>> = [];
   
   // Validate each policy and transform valid ones
   for (let i = 0; i < policies.length; i++) {
