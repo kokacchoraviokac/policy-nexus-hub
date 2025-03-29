@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -42,7 +41,7 @@ const PolicyImportInstructions: React.FC<PolicyImportInstructionsProps> = ({ onC
         </p>
       </div>
       
-      <Alert variant="info" className="bg-blue-50 border-blue-200">
+      <Alert className="bg-blue-50 border-blue-200">
         <AlertCircle className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-800 text-sm">
           {t("importedPoliciesWillBeInDraft")}

@@ -1,9 +1,8 @@
-
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy } from "@/types/policies";
 import { Button } from "@/components/ui/button";
-import { Edit, Rotate, FileDown } from "lucide-react";
+import { Edit, Rotate3D, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { exportPoliciesToCSV } from "@/utils/policies/policyExportUtils";
 
@@ -76,7 +75,7 @@ const PolicyDetailHeader: React.FC<PolicyDetailHeaderProps> = ({
         </Button>
         
         <Button variant="outline" size="sm" onClick={onRenew}>
-          <Rotate className="mr-2 h-4 w-4" />
+          <Rotate3D className="mr-2 h-4 w-4" />
           {t("renew")}
         </Button>
         

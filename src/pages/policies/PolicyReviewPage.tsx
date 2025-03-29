@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +10,8 @@ import PolicyReviewChecklist from "@/components/policies/workflow/PolicyReviewCh
 import PolicyReviewActions from "@/components/policies/workflow/PolicyReviewActions";
 import PolicyDocumentsTab from "@/components/policies/detail/PolicyDocumentsTab";
 import PolicyStatusWorkflow from "@/components/policies/workflow/PolicyStatusWorkflow";
+import PolicyDocumentsCheck from "@/components/policies/workflow/PolicyDocumentsCheck";
+import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
 
 const PolicyReviewPage = () => {
   const { policyId } = useParams<{ policyId: string }>();
