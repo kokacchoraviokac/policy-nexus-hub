@@ -73,7 +73,7 @@ const validatePolicy = (policy: any, index: number): { valid: boolean; error?: s
 /**
  * Transform imported policy data to match database schema
  */
-const transformPolicyData = async (policy: ImportedPolicy): Promise<Required<Pick<Policy, 'policy_number' | 'insurer_name' | 'policyholder_name' | 'start_date' | 'expiry_date' | 'premium' | 'currency' | 'status' | 'workflow_status' | 'company_id'>> & Partial<Policy>> => {
+const transformPolicyData = async (policy: ImportedPolicy): Promise<Policy> => {
   // Get the current user
   const { data: { user } } = await supabase.auth.getUser();
   const userId = user?.id;
@@ -107,31 +107,37 @@ const transformPolicyData = async (policy: ImportedPolicy): Promise<Required<Pic
     ? (premium * commissionPercentage / 100) 
     : null;
   
-  // Create the transformed policy object
+  // Create the transformed policy object with all required fields
   return {
     id: uuidv4(),
     policy_number: policy.policy_number,
     policy_type: policy.policy_type || 'Unknown',
     insurer_name: policy.insurer_name,
-    product_name: policy.product_name,
-    product_code: policy.product_code,
+    product_name: policy.product_name || null,
+    product_code: policy.product_code || null,
     policyholder_name: policy.policyholder_name,
-    insured_name: policy.insured_name,
+    insured_name: policy.insured_name || null,
     start_date: policy.start_date,
     expiry_date: policy.expiry_date,
     premium,
     currency: policy.currency,
-    payment_frequency: policy.payment_frequency,
+    payment_frequency: policy.payment_frequency || null,
     commission_type: policy.commission_type || 'automatic',
     commission_percentage: commissionPercentage,
     commission_amount: commissionAmount,
-    notes: policy.notes,
+    notes: policy.notes || null,
     status: 'active',
     workflow_status: 'draft',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     created_by: userId,
-    company_id: companyId
+    company_id: companyId,
+    insurer_id: null,
+    insured_id: null,
+    product_id: null,
+    client_id: null,
+    policy_type_id: null,
+    assigned_to: null
   };
 };
 
@@ -144,7 +150,7 @@ export const importPolicies = async (policies: any[]): Promise<ImportResult> => 
     failed: []
   };
   
-  const validPolicies: Array<Required<Pick<Policy, 'policy_number' | 'insurer_name' | 'policyholder_name' | 'start_date' | 'expiry_date' | 'premium' | 'currency' | 'status' | 'workflow_status' | 'company_id'>> & Partial<Policy>> = [];
+  const validPolicies: Policy[] = [];
   
   // Validate each policy and transform valid ones
   for (let i = 0; i < policies.length; i++) {
