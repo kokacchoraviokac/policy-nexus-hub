@@ -1,13 +1,13 @@
 
 import React from "react";
-import { FileText, FileImage, FileSpreadsheet, FilePdf, FileCode, FileArchive, File } from "lucide-react";
+import { FileText, FileImage, FileSpreadsheet, File, FileX, FileCode, FileArchive } from "lucide-react";
 
 export const getDocumentIcon = (filePath: string, mimeType?: string) => {
   const path = filePath.toLowerCase();
   
   // Check file extension first
   if (path.endsWith('.pdf')) {
-    return <FilePdf className="h-5 w-5 text-red-500" />;
+    return <FileText className="h-5 w-5 text-red-500" />;
   } else if (path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.png') || path.endsWith('.gif') || path.endsWith('.svg')) {
     return <FileImage className="h-5 w-5 text-blue-500" />;
   } else if (path.endsWith('.xls') || path.endsWith('.xlsx') || path.endsWith('.csv')) {
@@ -23,7 +23,7 @@ export const getDocumentIcon = (filePath: string, mimeType?: string) => {
   // If no match by extension, try MIME type if available
   if (mimeType) {
     if (mimeType.includes('pdf')) {
-      return <FilePdf className="h-5 w-5 text-red-500" />;
+      return <FileText className="h-5 w-5 text-red-500" />;
     } else if (mimeType.includes('image')) {
       return <FileImage className="h-5 w-5 text-blue-500" />;
     } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType.includes('csv')) {
