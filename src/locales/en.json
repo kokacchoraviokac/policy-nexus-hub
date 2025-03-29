@@ -244,5 +244,10 @@
   "tryDifferentFilters": "Try different filters or upload a new document",
   "allStatus": "All Status",
   "renew": "Renew",
-  "edit": "Edit"
+  "edit": "Edit",
+  "documentPathMissing": "Document path is missing",
+  "downloadStarted": "Download Started",
+  "documentDownloadStarted": "Document download has started",
+  "downloading": "Downloading...",
+  "errorOccurred": "An error occurred"
 }

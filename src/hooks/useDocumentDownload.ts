@@ -33,19 +33,19 @@ export const useDocumentDownload = () => {
       
       // Create a download link and click it
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.document_name;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       
       // Log activity if entity information is available
       if (document.entity_type && document.entity_id) {
         logActivity({
           entityType: document.entity_type,
           entityId: document.entity_id,
-          action: "download",
+          action: "document_download", // Changed from "download" to "document_download"
           details: {
             document_id: document.id,
             document_name: document.document_name
