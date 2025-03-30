@@ -125,8 +125,8 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
                 <p className="text-sm">
                   <span className="font-medium">{t("status")}: </span>
                   <Badge 
-                    variant={process.status === "active" ? "default" : process.status === "completed" ? "success" : "destructive"}
-                    className="text-xs"
+                    variant={process.status === "active" ? "default" : process.status === "completed" ? "secondary" : "destructive"}
+                    className={process.status === "completed" ? "bg-green-100 text-green-800 hover:bg-green-100 text-xs" : "text-xs"}
                   >
                     {t(process.status)}
                   </Badge>
@@ -184,3 +184,4 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
 };
 
 export default SalesProcessDetailsDialog;
+

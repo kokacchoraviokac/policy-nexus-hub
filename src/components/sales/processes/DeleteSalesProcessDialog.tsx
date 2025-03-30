@@ -13,6 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface DeleteSalesProcessDialogProps {
   process: SalesProcess;
@@ -30,17 +31,29 @@ const DeleteSalesProcessDialog: React.FC<DeleteSalesProcessDialogProps> = ({
   const { t } = useLanguage();
 
   const handleDelete = async () => {
-    // In a real application, this would make an API call to delete a sales process
-    console.log("Deleting sales process:", process.id);
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Call callback function
-    onProcessDeleted();
-    
-    // Close dialog
-    onOpenChange(false);
+    try {
+      // In a real application, this would make an API call to delete a sales process
+      console.log("Deleting sales process:", process.id);
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Call callback function
+      onProcessDeleted();
+      
+      // Show success toast
+      toast.success(t("processDeleted"), {
+        description: t("processDeletedDescription", { title: process.title }),
+      });
+      
+      // Close dialog
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error deleting sales process:", error);
+      toast.error(t("errorDeletingProcess"), {
+        description: t("tryAgainLater"),
+      });
+    }
   };
 
   return (
@@ -67,3 +80,4 @@ const DeleteSalesProcessDialog: React.FC<DeleteSalesProcessDialogProps> = ({
 };
 
 export default DeleteSalesProcessDialog;
+
