@@ -17,7 +17,7 @@ import { BankStatement } from "@/types/finances";
 interface BankStatementsListProps {
   statements: BankStatement[];
   isLoading: boolean;
-  onViewStatement: (statementId: string) => void;
+  onStatementClick: (statementId: string) => void;
   onProcessStatement: (statementId: string) => void;
   onConfirmStatement: (statementId: string) => void;
   isProcessing: boolean;
@@ -40,7 +40,7 @@ const getBadgeVariant = (status: string) => {
 const BankStatementsList: React.FC<BankStatementsListProps> = ({
   statements,
   isLoading,
-  onViewStatement,
+  onStatementClick,
   onProcessStatement,
   onConfirmStatement,
   isProcessing,
@@ -98,7 +98,7 @@ const BankStatementsList: React.FC<BankStatementsListProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onViewStatement(statement.id)}
+                    onClick={() => onStatementClick(statement.id)}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>

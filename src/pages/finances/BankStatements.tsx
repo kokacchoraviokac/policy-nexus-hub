@@ -9,14 +9,16 @@ import { FileText, Plus, Download, ArrowUpDown, Filter } from "lucide-react";
 import BankStatementsFilters from "@/components/finances/statements/BankStatementsFilters";
 import BankStatementsList from "@/components/finances/statements/BankStatementsList";
 import BankStatementUploadDialog from "@/components/finances/statements/BankStatementUploadDialog";
+import { BankStatement } from "@/types/finances";
+import { UseMutateFunction } from "@tanstack/react-query";
 
 // Add a type definition for the needed props to avoid TypeScript errors
 interface BankStatementsListProps {
-  statements: any[];
+  statements: BankStatement[];
   isLoading: boolean;
   onStatementClick: (statementId: string) => void;
-  onProcess: (statementId: string) => void;
-  onConfirm: (statementId: string) => void;
+  onProcessStatement: UseMutateFunction<{ statementId: string; }, Error, string, unknown>;
+  onConfirmStatement: UseMutateFunction<{ statementId: string; }, Error, string, unknown>;
   isProcessing: boolean;
   isConfirming: boolean;
 }
@@ -120,8 +122,8 @@ const BankStatements = () => {
             statements={statements}
             isLoading={isLoading}
             onStatementClick={handleStatementClick}
-            onProcess={processStatement}
-            onConfirm={confirmStatement}
+            onProcessStatement={processStatement}
+            onConfirmStatement={confirmStatement}
             isProcessing={isProcessing}
             isConfirming={isConfirming}
           />
