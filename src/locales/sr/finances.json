@@ -1,4 +1,3 @@
-
 {
   "finances": "Finansije",
   "financesDescription": "Upravljanje finansijskim operacijama uključujući provizije, fakturisanje i obradu plaćanja",
@@ -52,7 +51,12 @@
   "commissionCalculationCompleted": "Fajl obračuna provizije uspešno obrađen",
   "validationError": "Greška validacije",
   "pleaseSelectFileAndInsurer": "Molimo izaberite fajl i odaberite osiguravača",
-
+  
+  "resetStatus": "Resetuj status",
+  "statusReset": "Status resetovan",
+  "transactionStatusResetSuccess": "Status transakcije je resetovan na nepovezan.",
+  "errorResettingStatus": "Greška pri resetovanju statusa",
+  
   "invoicing": "Fakturisanje",
   "invoicingDescription": "Generisanje i upravljanje fakturama",
   "invoicingModuleDescription": "Kreiranje, praćenje i upravljanje fakturama za klijente i polise",

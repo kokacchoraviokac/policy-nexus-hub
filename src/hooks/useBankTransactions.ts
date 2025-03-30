@@ -95,6 +95,38 @@ export const useBankTransactions = (statementId: string) => {
     },
   });
 
+  const resetStatusMutation = useMutation({
+    mutationFn: async (transactionId: string) => {
+      const { error } = await supabase
+        .from('bank_transactions')
+        .update({
+          status: 'unmatched',
+          matched_policy_id: null,
+          matched_at: null,
+          matched_by: null
+        })
+        .eq('id', transactionId);
+      
+      if (error) throw error;
+      return { transactionId };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bank-transactions', statementId] });
+      toast({
+        title: t("statusReset"),
+        description: t("transactionStatusResetSuccess"),
+      });
+    },
+    onError: (error) => {
+      console.error('Error resetting transaction status:', error);
+      toast({
+        title: t("errorResettingStatus"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     transactions: transactions || [],
     isLoading,
@@ -104,6 +136,8 @@ export const useBankTransactions = (statementId: string) => {
     matchTransaction: matchTransactionMutation.mutate,
     isMatching: matchTransactionMutation.isPending,
     ignoreTransaction: ignoreTransactionMutation.mutate,
-    isIgnoring: ignoreTransactionMutation.isPending
+    isIgnoring: ignoreTransactionMutation.isPending,
+    resetStatus: resetStatusMutation.mutate,
+    isResetting: resetStatusMutation.isPending
   };
 };

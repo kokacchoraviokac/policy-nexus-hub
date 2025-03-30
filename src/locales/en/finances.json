@@ -1,4 +1,3 @@
-
 {
   "finances": "Finances",
   "financesDescription": "Manage financial operations including commissions, invoicing, and payment processing",
@@ -52,7 +51,7 @@
   "commissionCalculationCompleted": "Commission calculation file successfully processed",
   "validationError": "Validation Error",
   "pleaseSelectFileAndInsurer": "Please select a file and select an insurer",
-
+  
   "invoicing": "Invoicing",
   "invoicingDescription": "Generate and manage invoices",
   "invoicingModuleDescription": "Create, track, and manage invoices for clients and policies",
@@ -142,6 +141,9 @@
   "ignore": "Ignore",
   "viewPolicy": "View Policy",
   "resetStatus": "Reset Status",
+  "statusReset": "Status Reset",
+  "transactionStatusResetSuccess": "The transaction status has been reset to unmatched.",
+  "errorResettingStatus": "Error Resetting Status",
   "backToStatements": "Back to Statements",
   "selectDateRange": "Select Date Range",
   "clearDates": "Clear Dates",

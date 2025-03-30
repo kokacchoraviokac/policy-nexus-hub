@@ -42,7 +42,9 @@ const BankStatementDetail = () => {
     matchTransaction, 
     isMatching, 
     ignoreTransaction, 
-    isIgnoring 
+    isIgnoring,
+    resetStatus,
+    isResetting
   } = useBankTransactions(statementId || "");
   
   const handleDownloadStatement = () => {
@@ -116,8 +118,10 @@ const BankStatementDetail = () => {
             isLoading={isLoading}
             onMatchTransaction={handleMatchTransaction}
             onIgnoreTransaction={ignoreTransaction}
+            onResetStatus={resetStatus}
             isMatching={isMatching}
             isIgnoring={isIgnoring}
+            isResetting={isResetting}
             searchTerm={searchTerm}
             statusFilter={statusFilter}
           />
