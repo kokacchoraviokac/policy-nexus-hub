@@ -25,14 +25,105 @@ export const PolicyRoutes = [
         </AppLayout>
       </ProtectedRoute>
     }
-  >
-    <Route index element={<AllPolicies />} />
-    <Route path="new" element={<NewPolicy />} />
-    <Route path="detail/:id" element={<PolicyDetail />} />
-    <Route path="workflow" element={<PolicyWorkflow />} />
-    <Route path="workflow/review/:id" element={<PolicyReview />} />
-    <Route path="addendums" element={<PolicyAddendums />} />
-    <Route path="documents" element={<PolicyDocuments />} />
-    <Route path="import" element={<PolicyImportPage />} />
-  </Route>
+  />,
+  <Route
+    key="policies-index"
+    path="/policies"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <AllPolicies />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+    index
+  />,
+  <Route
+    key="policies-new"
+    path="/policies/new"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <NewPolicy />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-detail"
+    path="/policies/detail/:id"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <PolicyDetail />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-workflow"
+    path="/policies/workflow"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <PolicyWorkflow />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-workflow-review"
+    path="/policies/workflow/review/:id"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <PolicyReview />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-addendums"
+    path="/policies/addendums"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <PolicyAddendums />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-documents"
+    path="/policies/documents"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <PolicyDocuments />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-import"
+    path="/policies/import"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <PolicyImportPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-unlinked-payments"
+    path="/policies/unlinked-payments"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <UnlinkedPayments />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />
 ];

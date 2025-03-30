@@ -11,5 +11,15 @@
   "allCompanies": "All Companies",
   "noPaymentsFound": "No unlinked payments found",
   "paymentSuccessfullyLinked": "Payment successfully linked to policy",
-  "errorLinkingPayment": "Error linking payment to policy"
+  "errorLinkingPayment": "Error linking payment to policy",
+  "refreshList": "Refresh list",
+  "insuranceCompany": "Insurance Company",
+  "policyholder": "Policyholder",
+  "paymentReference": "Payment Reference",
+  "baseAmount": "Base Amount",
+  "commission": "Commission %",
+  "paymentAmount": "Payment Amount",
+  "paymentDate": "Payment Date",
+  "invoiceReference": "Invoice Reference",
+  "actions": "Actions"
 }

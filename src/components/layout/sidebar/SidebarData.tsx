@@ -67,6 +67,12 @@ export const sidebarItems = [
         path: "/policies/documents",
         requiredPrivilege: "policies:view",
         icon: FileImage
+      },
+      {
+        label: "unlinkedPayments",
+        path: "/policies/unlinked-payments",
+        requiredPrivilege: "policies:view",
+        icon: CreditCard
       }
     ]
   },
