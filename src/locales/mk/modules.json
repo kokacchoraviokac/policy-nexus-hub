@@ -209,5 +209,6 @@
   "uploadFirstDocument": "Прикачете го вашиот прв документ",
   "errorLoadingDocuments": "Грешка при вчитување на документи",
   "tryRefreshingPage": "Обидете се да ја освежите страницата",
-  "selectFile": "Изберете датотека"
+  "selectFile": "Изберете датотека",
+  "policiesWorkflow": "Обработка на полиси"
 }

@@ -208,5 +208,7 @@
   "uploadFirstDocument": "Otpremite vaš prvi dokument",
   "errorLoadingDocuments": "Greška pri učitavanju dokumenata",
   "tryRefreshingPage": "Pokušajte da osvežite stranicu",
-  "selectFile": "Izaberite datoteku"
+  "selectFile": "Izaberite datoteku",
+  "policiesWorkflow": "Obrada polisa",
+  "exportPolicies": "Izvoz polisa"
 }

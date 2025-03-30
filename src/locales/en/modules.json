@@ -209,5 +209,6 @@
   "uploadFirstDocument": "Upload your first document",
   "errorLoadingDocuments": "Error loading documents",
   "tryRefreshingPage": "Try refreshing the page",
-  "selectFile": "Select file"
+  "selectFile": "Select file",
+  "policiesWorkflow": "Policy Processing"
 }
