@@ -8,19 +8,25 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useFileInput, validateUploadFields } from "@/utils/fileHandlingUtils";
 import { getDocumentTable, uploadFileToStorage, insertDocumentRecord, createDocumentData } from "@/utils/documentUploadUtils";
 import type { EntityType } from "@/utils/activityLogger";
+import type { DocumentCategory } from "@/types/documents";
 
 export interface UseDocumentUploadProps {
   entityType: EntityType;
   entityId: string;
   onSuccess?: () => void;
+  originalDocumentId?: string; // For version control
+  currentVersion?: number; // For version control
 }
 
 export const useDocumentUpload = ({
   entityType,
   entityId,
-  onSuccess
+  onSuccess,
+  originalDocumentId,
+  currentVersion = 0
 }: UseDocumentUploadProps) => {
   const [documentType, setDocumentType] = useState("");
+  const [documentCategory, setDocumentCategory] = useState<DocumentCategory | "">("");
   const [uploading, setUploading] = useState(false);
   
   const { t } = useLanguage();
@@ -59,6 +65,18 @@ export const useDocumentUpload = ({
         // Upload file to storage
         const { documentId, filePath } = await uploadFileToStorage(file!, entityType, entityId);
         
+        // Define version information
+        const isNewVersion = !!originalDocumentId;
+        const version = isNewVersion ? currentVersion + 1 : 1;
+        
+        // If this is a new version, mark previous versions as not latest
+        if (isNewVersion) {
+          await supabase
+            .from(documentTable)
+            .update({ is_latest_version: false })
+            .or(`id.eq.${originalDocumentId},original_document_id.eq.${originalDocumentId}`);
+        }
+        
         // Define base document data
         const baseData = {
           id: documentId,
@@ -67,7 +85,11 @@ export const useDocumentUpload = ({
           file_path: filePath,
           uploaded_by: userId,
           company_id: user.data.user?.user_metadata?.company_id,
-          version: 1
+          version: version,
+          is_latest_version: true,
+          original_document_id: isNewVersion ? originalDocumentId : null,
+          category: documentCategory || undefined,
+          approval_status: "pending"
         };
         
         // Create entity-specific document data
@@ -82,14 +104,16 @@ export const useDocumentUpload = ({
           entityId,
           action: "update",
           details: {
-            action_type: "document_uploaded",
+            action_type: isNewVersion ? "document_version_uploaded" : "document_uploaded",
             document_id: documentId,
             document_name: documentName,
-            document_type: documentType
+            document_type: documentType,
+            version: version,
+            original_document_id: originalDocumentId
           }
         });
         
-        return { documentId, documentName };
+        return { documentId, documentName, version };
       } finally {
         setUploading(false);
       }
@@ -98,14 +122,21 @@ export const useDocumentUpload = ({
       queryClient.invalidateQueries({ queryKey: ["documents", entityType, entityId] });
       queryClient.invalidateQueries({ queryKey: ["policy-documents", entityId] });
       
+      if (originalDocumentId) {
+        queryClient.invalidateQueries({ queryKey: ["document-versions", originalDocumentId] });
+      }
+      
       toast({
-        title: t("documentUploaded"),
-        description: t("documentUploadedSuccess", { name: data.documentName }),
+        title: originalDocumentId ? t("documentVersionUploaded") : t("documentUploaded"),
+        description: originalDocumentId 
+          ? t("documentVersionUploadedSuccess", { name: data.documentName, version: data.version }) 
+          : t("documentUploadedSuccess", { name: data.documentName }),
       });
       
       // Reset form
       setDocumentName("");
       setDocumentType("");
+      setDocumentCategory("");
       setFile(null);
       
       // Call success callback if provided
@@ -162,9 +193,13 @@ export const useDocumentUpload = ({
     setDocumentName,
     documentType,
     setDocumentType,
+    documentCategory,
+    setDocumentCategory,
     file,
     handleFileChange,
     uploading,
-    handleUpload
+    handleUpload,
+    isNewVersion: !!originalDocumentId,
+    currentVersion
   };
 };

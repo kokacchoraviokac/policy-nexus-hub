@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
 import type { EntityType } from "@/utils/activityLogger";
-import type { DocumentTableName } from "@/types/documents";
+import type { DocumentTableName, DocumentCategory } from "@/types/documents";
 
 // Map entity type to appropriate document table
 export const getDocumentTable = (entityType: EntityType): DocumentTableName => {
@@ -51,6 +51,10 @@ export const insertDocumentRecord = async (
     uploaded_by: string;
     company_id: string;
     version: number;
+    is_latest_version: boolean;
+    original_document_id?: string | null;
+    category?: DocumentCategory;
+    approval_status?: string;
     [key: string]: any; // For entity-specific fields
   }
 ) => {
@@ -75,6 +79,10 @@ export const createDocumentData = (
     uploaded_by: string;
     company_id: string;
     version: number;
+    is_latest_version: boolean;
+    original_document_id?: string | null;
+    category?: DocumentCategory;
+    approval_status?: string;
   },
   entityType: EntityType,
   entityId: string

@@ -1,26 +1,33 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useDocuments } from "@/hooks/useDocuments";
 import { Loader2, FileX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DocumentListItem from "./DocumentListItem";
+import DocumentUploadDialog from "./DocumentUploadDialog";
+import { Document } from "@/types/documents";
 
 interface DocumentListProps {
   entityType: "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
   entityId: string;
   onUploadClick?: () => void;
   showUploadButton?: boolean;
+  showApproval?: boolean;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ 
   entityType, 
   entityId,
   onUploadClick,
-  showUploadButton = true
+  showUploadButton = true,
+  showApproval = true
 }) => {
   const { t } = useLanguage();
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
+  
   const { 
     documents, 
     isLoading, 
@@ -31,6 +38,20 @@ const DocumentList: React.FC<DocumentListProps> = ({
     entityType,
     entityId
   });
+
+  const handleUploadClick = () => {
+    if (onUploadClick) {
+      onUploadClick();
+    } else {
+      setSelectedDocument(undefined);
+      setUploadDialogOpen(true);
+    }
+  };
+  
+  const handleUploadVersion = (document: Document) => {
+    setSelectedDocument(document);
+    setUploadDialogOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -65,8 +86,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
             <p className="text-sm text-muted-foreground mt-1">
               {t("noDocumentsUploaded")}
             </p>
-            {showUploadButton && onUploadClick && (
-              <Button onClick={onUploadClick} className="mt-4">
+            {showUploadButton && (
+              <Button onClick={handleUploadClick} className="mt-4">
                 {t("uploadDocument")}
               </Button>
             )}
@@ -84,15 +105,25 @@ const DocumentList: React.FC<DocumentListProps> = ({
           document={document}
           onDelete={() => deleteDocument(document.id)}
           isDeleting={isDeletingDocument}
+          showApproval={showApproval}
+          onUploadVersion={handleUploadVersion}
         />
       ))}
-      {showUploadButton && onUploadClick && (
+      {showUploadButton && (
         <div className="mt-4 flex justify-end">
-          <Button onClick={onUploadClick}>
+          <Button onClick={handleUploadClick}>
             {t("uploadDocument")}
           </Button>
         </div>
       )}
+      
+      <DocumentUploadDialog 
+        open={uploadDialogOpen} 
+        onOpenChange={setUploadDialogOpen} 
+        entityType={entityType}
+        entityId={entityId}
+        selectedDocument={selectedDocument}
+      />
     </div>
   );
 };

@@ -1,20 +1,22 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Upload, Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { FileUp, Loader2, Plus } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useDocumentUpload } from "@/hooks/useDocumentUpload";
+import DocumentTypeSelector from "@/components/documents/DocumentTypeSelector";
+import DocumentCategorySelector from "@/components/documents/DocumentCategorySelector";
+import FileUploadField from "@/components/documents/FileUploadField";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Document } from "@/types/documents";
 
-export interface DocumentUploadDialogProps {
+interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entityType: string;
+  entityType: "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
   entityId: string;
-  onUploadComplete?: () => void;
+  selectedDocument?: Document; // For version control
 }
 
 const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
@@ -22,113 +24,113 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   onOpenChange,
   entityType,
   entityId,
-  onUploadComplete,
+  selectedDocument
 }) => {
   const { t } = useLanguage();
-  const [documentType, setDocumentType] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile || !documentType) return;
-
-    setIsUploading(true);
-    
-    try {
-      // Mock file upload for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (onUploadComplete) {
-        onUploadComplete();
+  const [uploadMode, setUploadMode] = useState<"new" | "version">(selectedDocument ? "version" : "new");
+  
+  const isNewVersion = uploadMode === "version" && !!selectedDocument;
+  
+  const {
+    documentName,
+    setDocumentName,
+    documentType, 
+    setDocumentType,
+    documentCategory,
+    setDocumentCategory,
+    file,
+    handleFileChange,
+    uploading,
+    handleUpload
+  } = useDocumentUpload({ 
+    entityType,
+    entityId,
+    onSuccess: () => onOpenChange(false),
+    originalDocumentId: isNewVersion ? (selectedDocument?.original_document_id || selectedDocument?.id) : undefined,
+    currentVersion: isNewVersion ? (selectedDocument?.version || 1) : 0
+  });
+  
+  // Pre-fill form if uploading a new version
+  React.useEffect(() => {
+    if (isNewVersion && selectedDocument) {
+      setDocumentName(selectedDocument.document_name);
+      setDocumentType(selectedDocument.document_type);
+      if (selectedDocument.category) {
+        setDocumentCategory(selectedDocument.category);
       }
-      
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Upload error:", error);
-    } finally {
-      setIsUploading(false);
     }
-  };
-
+  }, [isNewVersion, selectedDocument, setDocumentName, setDocumentType, setDocumentCategory]);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t("uploadDocument")}</DialogTitle>
+          <DialogTitle>
+            {isNewVersion ? t("uploadNewVersion") : t("uploadDocument")}
+          </DialogTitle>
         </DialogHeader>
         
+        {selectedDocument && (
+          <Tabs value={uploadMode} onValueChange={(value) => setUploadMode(value as "new" | "version")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="new">{t("newDocument")}</TabsTrigger>
+              <TabsTrigger value="version">{t("newVersion")}</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+        
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="documentType" className="text-right">
-              {t("documentType")}
-            </Label>
-            <Select 
-              value={documentType} 
-              onValueChange={setDocumentType}
-            >
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder={t("selectDocumentType")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="policy">{t("policy")}</SelectItem>
-                <SelectItem value="addendum">{t("addendum")}</SelectItem>
-                <SelectItem value="invoice">{t("invoice")}</SelectItem>
-                <SelectItem value="claim">{t("claim")}</SelectItem>
-                <SelectItem value="other">{t("other")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="documentFile" className="text-right">
-              {t("file")}
-            </Label>
-            <Input
-              id="documentFile"
-              type="file"
-              className="col-span-3"
-              onChange={handleFileChange}
+          <div className="grid gap-2">
+            <label htmlFor="documentName" className="text-sm font-medium">{t("documentName")} *</label>
+            <input
+              id="documentName"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              value={documentName}
+              onChange={(e) => setDocumentName(e.target.value)}
+              placeholder={t("enterDocumentName")}
+              disabled={isNewVersion}
             />
           </div>
           
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="description" className="text-right pt-2">
-              {t("description")}
-            </Label>
-            <Textarea
-              id="description"
-              className="col-span-3"
-              placeholder={t("enterDocumentDescription")}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
+          <DocumentTypeSelector 
+            value={documentType} 
+            onValueChange={setDocumentType}
+            disabled={isNewVersion}
+          />
+          
+          <DocumentCategorySelector
+            value={documentCategory}
+            onValueChange={setDocumentCategory}
+            disabled={isNewVersion}
+          />
+          
+          <FileUploadField 
+            onChange={handleFileChange}
+            file={file}
+          />
+          
+          {isNewVersion && (
+            <div className="bg-blue-50 p-3 rounded-md text-sm text-blue-800">
+              <p className="font-medium">{t("uploadingNewVersion")}:</p>
+              <p className="mt-1">{t("documentVersionInfo", { current: selectedDocument?.version || 1, new: (selectedDocument?.version || 1) + 1 })}</p>
+            </div>
+          )}
         </div>
         
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={uploading}>
             {t("cancel")}
           </Button>
-          <Button 
-            onClick={handleUpload} 
-            disabled={isUploading || !selectedFile || !documentType}
-          >
-            {isUploading ? (
+          <Button onClick={handleUpload} disabled={!file || uploading || !documentName}>
+            {uploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("uploading")}
               </>
             ) : (
               <>
-                <Upload className="mr-2 h-4 w-4" />
-                {t("upload")}
+                <FileUp className="mr-2 h-4 w-4" />
+                {isNewVersion ? t("uploadVersion") : t("upload")}
               </>
             )}
           </Button>

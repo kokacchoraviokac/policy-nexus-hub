@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Download, Trash2, Loader2, Eye, MoreVertical } from "lucide-react";
+import { Download, Trash2, Loader2, Eye, MoreVertical, History, Shield } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,8 +8,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { Document } from "@/hooks/useDocuments";
+import { Document } from "@/types/documents";
 import { useDocumentDownload } from "@/hooks/useDocumentDownload";
 
 interface DocumentActionsProps {
@@ -17,13 +18,17 @@ interface DocumentActionsProps {
   onDelete: () => void;
   isDeleting?: boolean;
   onView?: () => void;
+  onUploadVersion?: (document: Document) => void;
+  hideDelete?: boolean;
 }
 
 const DocumentActions: React.FC<DocumentActionsProps> = ({
   document,
   onDelete,
   isDeleting = false,
-  onView
+  onView,
+  onUploadVersion,
+  hideDelete = false
 }) => {
   const { t } = useLanguage();
   const { isDownloading, downloadDocument } = useDocumentDownload();
@@ -43,6 +48,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
             {t("view")}
           </DropdownMenuItem>
         )}
+        
         <DropdownMenuItem 
           onClick={() => downloadDocument(document)} 
           disabled={isDownloading}
@@ -54,18 +60,31 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
           )}
           {isDownloading ? t("downloading") : t("download")}
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={onDelete}
-          disabled={isDeleting}
-          className="text-destructive focus:text-destructive"
-        >
-          {isDeleting ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Trash2 className="mr-2 h-4 w-4" />
-          )}
-          {t("delete")}
-        </DropdownMenuItem>
+        
+        {onUploadVersion && (
+          <DropdownMenuItem onClick={() => onUploadVersion(document)}>
+            <History className="mr-2 h-4 w-4" />
+            {t("uploadNewVersion")}
+          </DropdownMenuItem>
+        )}
+        
+        {!hideDelete && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={onDelete}
+              disabled={isDeleting}
+              className="text-destructive focus:text-destructive"
+            >
+              {isDeleting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
+              {t("delete")}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
