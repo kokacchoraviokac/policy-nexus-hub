@@ -100,7 +100,7 @@ const PolicyProductionFilters: React.FC<PolicyProductionFiltersProps> = ({
   const handleSelectChange = (field: string, value: string) => {
     onFiltersChange({
       ...filters,
-      [field]: value
+      [field]: value === "all" ? "" : value // Convert "all" to empty string for filtering
     });
   };
 
@@ -133,14 +133,14 @@ const PolicyProductionFilters: React.FC<PolicyProductionFiltersProps> = ({
         <div className="space-y-2">
           <Label htmlFor="client">{t("client")}</Label>
           <Select
-            value={filters.clientId || ""}
+            value={filters.clientId || "all"}
             onValueChange={(value) => handleSelectChange("clientId", value)}
           >
             <SelectTrigger id="client">
               <SelectValue placeholder={t("allClients")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allClients")}</SelectItem>
+              <SelectItem value="all">{t("allClients")}</SelectItem>
               {clients?.map((client) => (
                 <SelectItem key={client.id} value={client.id}>
                   {client.name}
@@ -153,14 +153,14 @@ const PolicyProductionFilters: React.FC<PolicyProductionFiltersProps> = ({
         <div className="space-y-2">
           <Label htmlFor="insurer">{t("insurer")}</Label>
           <Select
-            value={filters.insurerId || ""}
+            value={filters.insurerId || "all"}
             onValueChange={(value) => handleSelectChange("insurerId", value)}
           >
             <SelectTrigger id="insurer">
               <SelectValue placeholder={t("allInsurers")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allInsurers")}</SelectItem>
+              <SelectItem value="all">{t("allInsurers")}</SelectItem>
               {insurers?.map((insurer) => (
                 <SelectItem key={insurer.id} value={insurer.id}>
                   {insurer.name}
@@ -173,14 +173,14 @@ const PolicyProductionFilters: React.FC<PolicyProductionFiltersProps> = ({
         <div className="space-y-2">
           <Label htmlFor="agent">{t("agent")}</Label>
           <Select
-            value={filters.agentId || ""}
+            value={filters.agentId || "all"}
             onValueChange={(value) => handleSelectChange("agentId", value)}
           >
             <SelectTrigger id="agent">
               <SelectValue placeholder={t("allAgents")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allAgents")}</SelectItem>
+              <SelectItem value="all">{t("allAgents")}</SelectItem>
               {agents?.map((agent) => (
                 <SelectItem key={agent.id} value={agent.id}>
                   {agent.name}
@@ -193,14 +193,14 @@ const PolicyProductionFilters: React.FC<PolicyProductionFiltersProps> = ({
         <div className="space-y-2">
           <Label htmlFor="status">{t("commissionStatus")}</Label>
           <Select
-            value={filters.commissionStatus || ""}
+            value={filters.commissionStatus || "all"}
             onValueChange={(value) => handleSelectChange("commissionStatus", value)}
           >
             <SelectTrigger id="status">
               <SelectValue placeholder={t("allStatuses")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("allStatuses")}</SelectItem>
+              <SelectItem value="all">{t("allStatuses")}</SelectItem>
               <SelectItem value="paid">{t("paid")}</SelectItem>
               <SelectItem value="pending">{t("pending")}</SelectItem>
               <SelectItem value="calculated">{t("calculated")}</SelectItem>

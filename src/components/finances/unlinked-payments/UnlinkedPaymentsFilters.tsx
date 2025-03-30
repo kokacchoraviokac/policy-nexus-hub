@@ -54,14 +54,14 @@ export const UnlinkedPaymentsFilters: React.FC<UnlinkedPaymentsFiltersProps> = (
         <div>
           <Label htmlFor="status">{t("status")}</Label>
           <Select 
-            value={filters.status || ""} 
+            value={filters.status || "all"} 
             onValueChange={handleStatusChange}
           >
             <SelectTrigger id="status" className="mt-1">
               <SelectValue placeholder={t("all")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">{t("all")}</SelectItem>
+              <SelectItem value="all">{t("all")}</SelectItem>
               <SelectItem value="unlinked">{t("unlinked")}</SelectItem>
               <SelectItem value="linked">{t("linked")}</SelectItem>
             </SelectContent>
@@ -69,21 +69,19 @@ export const UnlinkedPaymentsFilters: React.FC<UnlinkedPaymentsFiltersProps> = (
         </div>
         
         <div>
-          <Label htmlFor="startDate">{t("from")}</Label>
+          <Label>{t("from")}</Label>
           <DatePicker
-            id="startDate"
             date={filters.dateFrom || filters.startDate}
-            onSelect={handleStartDateChange}
+            setDate={handleStartDateChange}
             className="mt-1"
           />
         </div>
         
         <div>
-          <Label htmlFor="endDate">{t("to")}</Label>
+          <Label>{t("to")}</Label>
           <DatePicker
-            id="endDate"
             date={filters.dateTo || filters.endDate}
-            onSelect={handleEndDateChange}
+            setDate={handleEndDateChange}
             className="mt-1"
           />
         </div>
