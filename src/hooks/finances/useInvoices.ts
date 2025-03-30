@@ -1,176 +1,164 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useContext } from "react";
-import { AuthContext } from "@/contexts/auth/AuthContext";
-import { InvoiceType } from "@/types/finances";
+import { useState, useContext } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { AuthContext } from '@/contexts/auth/AuthContext';
+import { InvoiceType } from '@/types/finances';
 
-export type InvoiceFilterOptions = {
-  status: string;
-  searchTerm: string;
-  startDate: Date | null;
-  endDate: Date | null;
-  entityType?: string;
-  entityId?: string;
-  invoiceType?: string;
-  invoiceCategory?: string;
-};
+export interface InvoiceFilterOptions {
+  search?: string;
+  status?: 'draft' | 'issued' | 'paid' | 'cancelled' | '';
+  dateFrom?: Date;
+  dateTo?: Date;
+  invoiceType?: 'domestic' | 'foreign' | '';
+  invoiceCategory?: 'automatic' | 'manual' | '';
+}
+
+export interface InvoicePaginationOptions {
+  pageIndex: number;
+  pageSize: number;
+}
 
 export const useInvoices = () => {
   const { user } = useContext(AuthContext);
   const companyId = user?.companyId;
   
-  const [filters, setFilters] = useState<InvoiceFilterOptions>({
-    status: "all",
-    searchTerm: "",
-    startDate: null,
-    endDate: null,
+  const [filters, setFilters] = useState<InvoiceFilterOptions>({});
+  const [pagination, setPagination] = useState<InvoicePaginationOptions>({
+    pageIndex: 0,
+    pageSize: 10
   });
   
-  const [pagination, setPagination] = useState({
-    page: 1,
-    pageSize: 10,
-    totalCount: 0,
-  });
-
-  const buildQuery = () => {
-    // Cast the query builder to 'any' to prevent deep type instantiation
-    let query: any = supabase
-      .from('invoices')
-      .select('*', { count: 'exact' });
-    
-    // Apply company filter if available
-    if (companyId) {
-      query = query.eq('company_id', companyId);
-    }
-    
-    // Apply status filter
-    if (filters.status && filters.status !== 'all') {
-      query = query.eq('status', filters.status);
-    }
-    
-    // Apply search term filter to invoice number or entity name
-    if (filters.searchTerm) {
-      query = query.or(
-        `invoice_number.ilike.%${filters.searchTerm}%,entity_name.ilike.%${filters.searchTerm}%`
-      );
-    }
-    
-    // Apply date range filters
-    if (filters.startDate) {
-      query = query.gte('issue_date', filters.startDate.toISOString().split('T')[0]);
-    }
-    
-    if (filters.endDate) {
-      // Add one day to include the end date fully
-      const endDate = new Date(filters.endDate);
-      endDate.setDate(endDate.getDate() + 1);
-      query = query.lt('issue_date', endDate.toISOString().split('T')[0]);
-    }
-    
-    // Apply entity type filter if provided
-    if (filters.entityType) {
-      query = query.eq('entity_type', filters.entityType);
-    }
-    
-    // Apply entity id filter if provided
-    if (filters.entityId) {
-      query = query.eq('entity_id', filters.entityId);
-    }
-    
-    // Apply invoice type filter if provided
-    if (filters.invoiceType) {
-      query = query.eq('invoice_type', filters.invoiceType);
-    }
-    
-    // Apply invoice category filter if provided
-    if (filters.invoiceCategory) {
-      query = query.eq('invoice_category', filters.invoiceCategory);
-    }
-    
-    return query;
-  };
-
-  const fetchInvoices = async () => {
-    try {
-      const pageIndex = pagination.page - 1;
-      const { pageSize } = pagination;
+  // Query to fetch invoices
+  const {
+    data: fetchResult,
+    isLoading,
+    isError,
+    refetch
+  } = useQuery({
+    queryKey: ['invoices', filters, pagination, companyId],
+    queryFn: async () => {
+      if (!companyId) return { data: [], count: 0 };
       
-      const query = buildQuery();
+      // Start building the query
+      let query = supabase
+        .from('invoices')
+        .select('*', { count: 'exact' })
+        .eq('company_id', companyId);
+      
+      // Apply filters
+      if (filters.search) {
+        query = query.or(`invoice_number.ilike.%${filters.search}%,entity_name.ilike.%${filters.search}%`);
+      }
+      
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+      
+      if (filters.dateFrom) {
+        query = query.gte('issue_date', filters.dateFrom.toISOString());
+      }
+      
+      if (filters.dateTo) {
+        query = query.lte('issue_date', filters.dateTo.toISOString());
+      }
+      
+      if (filters.invoiceType) {
+        query = query.eq('invoice_type', filters.invoiceType);
+      }
+      
+      if (filters.invoiceCategory) {
+        query = query.eq('invoice_category', filters.invoiceCategory);
+      }
       
       // Apply pagination
-      const from = pageIndex * pageSize;
-      const to = from + pageSize - 1;
+      const from = pagination.pageIndex * pagination.pageSize;
+      const to = from + pagination.pageSize - 1;
       
-      const { data, error, count } = await query
-        .order('issue_date', { ascending: false })
+      // Add range and ordering
+      query = query
+        .order('created_at', { ascending: false })
         .range(from, to);
+      
+      // Execute the query
+      const { data, error, count } = await query;
       
       if (error) throw error;
       
       return {
         data: data as InvoiceType[],
-        totalCount: count || 0
+        count: count || 0
       };
-    } catch (error) {
-      console.error("Error fetching invoices:", error);
-      throw error;
-    }
-  };
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['invoices', pagination, filters],
-    queryFn: fetchInvoices,
+    },
+    enabled: !!companyId
   });
   
-  const exportAllInvoices = async (): Promise<InvoiceType[]> => {
-    try {
-      const query = buildQuery();
-      
-      const { data, error } = await query
-        .order('issue_date', { ascending: false });
-      
-      if (error) throw error;
-      
-      return data as InvoiceType[];
-    } catch (error) {
-      console.error("Error fetching invoices for export:", error);
-      throw error;
+  // Function to export all invoices (not just the current page)
+  const exportAllInvoices = async () => {
+    if (!companyId) return [];
+    
+    // Start building the query
+    let query = supabase
+      .from('invoices')
+      .select('*')
+      .eq('company_id', companyId);
+    
+    // Apply filters (same as above but without pagination)
+    if (filters.search) {
+      query = query.or(`invoice_number.ilike.%${filters.search}%,entity_name.ilike.%${filters.search}%`);
     }
+    
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    }
+    
+    if (filters.dateFrom) {
+      query = query.gte('issue_date', filters.dateFrom.toISOString());
+    }
+    
+    if (filters.dateTo) {
+      query = query.lte('issue_date', filters.dateTo.toISOString());
+    }
+    
+    if (filters.invoiceType) {
+      query = query.eq('invoice_type', filters.invoiceType);
+    }
+    
+    if (filters.invoiceCategory) {
+      query = query.eq('invoice_category', filters.invoiceCategory);
+    }
+    
+    // Order by created_at descending
+    query = query.order('created_at', { ascending: false });
+    
+    // Execute the query
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    
+    return data as InvoiceType[];
   };
   
-  const setPage = (page: number) => {
-    setPagination(prev => ({ ...prev, page }));
-  };
-  
-  const setPageSize = (pageSize: number) => {
-    setPagination(prev => ({ ...prev, pageSize, page: 1 })); // Reset to first page when changing page size
-  };
-  
+  // Function to clear all filters
   const clearFilters = () => {
-    setFilters({
-      status: "all",
-      searchTerm: "",
-      startDate: null,
-      endDate: null,
+    setFilters({});
+    setPagination({
+      ...pagination,
+      pageIndex: 0
     });
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page when clearing filters
   };
   
   return {
-    invoices: data?.data || [],
-    totalCount: data?.totalCount || 0,
+    invoices: fetchResult?.data || [],
+    totalCount: fetchResult?.count || 0,
     isLoading,
     isError,
-    error,
     filters,
     setFilters,
     pagination: {
-      ...pagination, 
-      setPage,
-      setPageSize,
-      totalPages: Math.ceil((data?.totalCount || 0) / pagination.pageSize)
+      ...pagination,
+      onPageChange: (pageIndex: number) => setPagination({ ...pagination, pageIndex }),
+      onPageSizeChange: (pageSize: number) => setPagination({ pageIndex: 0, pageSize })
     },
     refetch,
     clearFilters,

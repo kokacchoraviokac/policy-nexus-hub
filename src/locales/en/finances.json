@@ -1,4 +1,3 @@
-
 {
   "finances": "Finances",
   "financesDescription": "Manage financial operations, invoices, and payments",
@@ -265,5 +264,30 @@
   "errorCreatingInvoiceFromCommissionDescription": "There was an error creating the invoice from the commission",
   "selectInvoiceType": "Select invoice type",
   "selectInvoiceCategory": "Select invoice category",
-  "generatingPdf": "Generating PDF"
+  "generatingPdf": "Generating PDF",
+  "bulkInvoiceGeneration": "Bulk Invoice Generation",
+  "bulkInvoiceGenerationDescription": "Generate multiple invoices at once from eligible commissions",
+  "bulkGenerateInvoices": "Bulk Generate Invoices",
+  "invoiceSettings": "Invoice Settings",
+  "commissionFilters": "Commission Filters",
+  "eligibleCommissions": "Eligible Commissions",
+  "noEligibleCommissions": "No eligible commissions found",
+  "selectedCommissions": "Selected Commissions",
+  "selectAll": "Select All",
+  "deselectAll": "Deselect All",
+  "generating": "Generating...",
+  "generateInvoices": "Generate Invoices",
+  "invoicesCreated": "Invoices Created",
+  "bulkInvoicesCreatedSuccess": "Bulk invoices have been created successfully",
+  "errorCreatingInvoices": "Error Creating Invoices",
+  "errorCreatingBulkInvoicesDescription": "There was an error creating bulk invoices. Please try again.",
+  "noCommissionsSelected": "No Commissions Selected",
+  "selectAtLeastOneCommission": "Please select at least one commission to generate an invoice",
+  "linkToPolicy": "Link to Policy",
+  "searchPolicyNumberOrPolicyholder": "Search by policy number or policyholder name",
+  "searching": "Searching...",
+  "typeToSearch": "Type to search for policies",
+  "noInvoiceItems": "No invoice items. Add at least one item.",
+  "item": "Item",
+  "activeFilters": "Active filters"
 }

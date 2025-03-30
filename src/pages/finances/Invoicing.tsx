@@ -10,6 +10,7 @@ import InvoicesFilters from "@/components/finances/invoices/InvoicesFilters";
 import { useInvoices } from "@/hooks/finances/useInvoices";
 import CreateInvoiceDialog from "@/components/finances/invoices/CreateInvoiceDialog";
 import { exportInvoicesToExcel } from "@/utils/invoices/excelExport";
+import BulkInvoiceGenerator from "@/components/finances/invoices/BulkInvoiceGenerator";
 
 const Invoicing = () => {
   const { t } = useLanguage();
@@ -110,6 +111,9 @@ const Invoicing = () => {
             <FileDown className="h-4 w-4 mr-2" />
             {isExporting ? t("exporting") : t("exportInvoices")}
           </Button>
+          
+          <BulkInvoiceGenerator onGenerationComplete={refetch} />
+          
           <Button 
             size="sm" 
             className="h-9"

@@ -1,153 +1,261 @@
 
-import React, { useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Search, X, Filter } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
+import React from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { 
+  Card, 
+  CardContent, 
+  CardFooter 
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Search, CalendarIcon, X } from 'lucide-react';
+import { format } from 'date-fns';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { InvoiceFilterOptions } from "@/hooks/finances/useInvoices";
+  SelectValue 
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+
+interface InvoiceFilterOptionsType {
+  search?: string;
+  status?: 'draft' | 'issued' | 'paid' | 'cancelled' | '';
+  dateFrom?: Date;
+  dateTo?: Date;
+  invoiceType?: 'domestic' | 'foreign' | '';
+  invoiceCategory?: 'automatic' | 'manual' | '';
+}
 
 interface InvoicesFiltersProps {
-  filters: InvoiceFilterOptions;
-  onFilterChange: (filters: InvoiceFilterOptions) => void;
+  filters: InvoiceFilterOptionsType;
+  onFilterChange: (filters: InvoiceFilterOptionsType) => void;
   onClearFilters: () => void;
 }
 
-const InvoicesFilters: React.FC<InvoicesFiltersProps> = ({
+const InvoicesFilters = ({
   filters,
   onFilterChange,
-  onClearFilters,
-}) => {
+  onClearFilters
+}: InvoicesFiltersProps) => {
   const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState(filters.searchTerm || "");
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    onFilterChange({ ...filters, searchTerm });
+
+  const handleFilterChange = (key: keyof InvoiceFilterOptionsType, value: any) => {
+    onFilterChange({
+      ...filters,
+      [key]: value
+    });
   };
-  
-  const handleStatusChange = (status: string) => {
-    onFilterChange({ ...filters, status });
-  };
-  
-  const handleStartDateChange = (date: Date | undefined) => {
-    onFilterChange({ ...filters, startDate: date || null });
-  };
-  
-  const handleEndDateChange = (date: Date | undefined) => {
-    onFilterChange({ ...filters, endDate: date || null });
-  };
-  
-  const activeFilterCount = [
-    filters.status !== "all",
-    !!filters.startDate,
-    !!filters.endDate,
-  ].filter(Boolean).length;
-  
+
+  // Count active filters excluding empty strings
+  const activeFiltersCount = Object.values(filters).filter(val => 
+    val !== undefined && val !== '' && val !== null
+  ).length;
+
   return (
-    <div className="space-y-3">
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="relative flex-grow">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder={t("searchInvoices")}
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Button type="submit">{t("search")}</Button>
-      </form>
-      
-      <div className="flex items-center flex-wrap gap-2">
-        <Select
-          value={filters.status}
-          onValueChange={handleStatusChange}
-        >
-          <SelectTrigger className="h-9 w-[180px]">
-            <SelectValue placeholder={t("selectStatus")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("all")}</SelectItem>
-            <SelectItem value="draft">{t("draft")}</SelectItem>
-            <SelectItem value="issued">{t("issued")}</SelectItem>
-            <SelectItem value="paid">{t("paid")}</SelectItem>
-            <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
-          </SelectContent>
-        </Select>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9">
-              <Filter className="h-4 w-4 mr-2" />
-              {t("advancedFilters")}
-              {activeFilterCount > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="ml-2 h-5 px-1.5 text-xs"
+    <Card>
+      <CardContent className="p-4 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("searchInvoices")}
+                value={filters.search || ''}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className="pl-8"
+              />
+              {filters.search && (
+                <button
+                  className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                  onClick={() => handleFilterChange('search', '')}
                 >
-                  {activeFilterCount}
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Select
+              value={filters.status || ''}
+              onValueChange={(value) => handleFilterChange('status', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("status")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t("all")}</SelectItem>
+                <SelectItem value="draft">{t("draft")}</SelectItem>
+                <SelectItem value="issued">{t("issued")}</SelectItem>
+                <SelectItem value="paid">{t("paid")}</SelectItem>
+                <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Select
+              value={filters.invoiceType || ''}
+              onValueChange={(value) => handleFilterChange('invoiceType', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("invoiceType")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t("all")}</SelectItem>
+                <SelectItem value="domestic">{t("domestic")}</SelectItem>
+                <SelectItem value="foreign">{t("foreign")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Select
+              value={filters.invoiceCategory || ''}
+              onValueChange={(value) => handleFilterChange('invoiceCategory', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("invoiceCategory")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t("all")}</SelectItem>
+                <SelectItem value="automatic">{t("automatic")}</SelectItem>
+                <SelectItem value="manual">{t("manual")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className="w-full justify-start text-left font-normal"
+                >
+                  {filters.dateFrom ? (
+                    format(filters.dateFrom, "PPP")
+                  ) : (
+                    <span>{t("from")}</span>
+                  )}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={filters.dateFrom}
+                  onSelect={(date) => handleFilterChange('dateFrom', date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className="w-full justify-start text-left font-normal"
+                >
+                  {filters.dateTo ? (
+                    format(filters.dateTo, "PPP")
+                  ) : (
+                    <span>{t("to")}</span>
+                  )}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={filters.dateTo}
+                  onSelect={(date) => handleFilterChange('dateTo', date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </div>
+      </CardContent>
+
+      {activeFiltersCount > 0 && (
+        <CardFooter className="px-4 py-3 border-t flex justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{t("activeFilters")}:</span>
+            <div className="flex flex-wrap gap-2">
+              {filters.search && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {t("search")}: {filters.search}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => handleFilterChange('search', '')} 
+                  />
                 </Badge>
               )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[220px]">
-            <DropdownMenuLabel>{t("dateRange")}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem className="flex flex-col items-start">
-                <span className="text-xs mb-1">{t("from")}</span>
-                <DatePicker
-                  date={filters.startDate || undefined}
-                  setDate={handleStartDateChange}
-                  className="w-full"
-                />
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start mt-2">
-                <span className="text-xs mb-1">{t("to")}</span>
-                <DatePicker
-                  date={filters.endDate || undefined}
-                  setDate={handleEndDateChange}
-                  className="w-full"
-                />
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        
-        {(filters.status !== "all" ||
-          filters.startDate ||
-          filters.endDate) && (
-          <Button
-            variant="ghost"
+              {filters.status && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {t("status")}: {t(filters.status)}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => handleFilterChange('status', '')} 
+                  />
+                </Badge>
+              )}
+              {filters.dateFrom && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {t("from")}: {format(filters.dateFrom, "P")}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => handleFilterChange('dateFrom', undefined)} 
+                  />
+                </Badge>
+              )}
+              {filters.dateTo && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {t("to")}: {format(filters.dateTo, "P")}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => handleFilterChange('dateTo', undefined)} 
+                  />
+                </Badge>
+              )}
+              {filters.invoiceType && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {t("invoiceType")}: {t(filters.invoiceType)}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => handleFilterChange('invoiceType', '')} 
+                  />
+                </Badge>
+              )}
+              {filters.invoiceCategory && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  {t("invoiceCategory")}: {t(filters.invoiceCategory)}
+                  <X 
+                    className="h-3 w-3 cursor-pointer" 
+                    onClick={() => handleFilterChange('invoiceCategory', '')} 
+                  />
+                </Badge>
+              )}
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
             size="sm"
-            className="h-9"
             onClick={onClearFilters}
           >
-            <X className="h-4 w-4 mr-2" />
             {t("clearFilters")}
           </Button>
-        )}
-      </div>
-    </div>
+        </CardFooter>
+      )}
+    </Card>
   );
 };
 
