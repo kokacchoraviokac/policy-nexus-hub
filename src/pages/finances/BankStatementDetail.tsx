@@ -1,19 +1,16 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useBankTransactions } from "@/hooks/useBankTransactions";
-import { supabase } from "@/integrations/supabase/client";
-import { BankStatement } from "@/types/finances";
+import { useBankStatement } from "@/hooks/useBankStatement";
 
 // Imported components
 import BankStatementHeader from "@/components/finances/statements/BankStatementHeader";
 import BankStatementDetailsCard from "@/components/finances/statements/BankStatementDetailsCard";
-import BankTransactionsFilters from "@/components/finances/statements/BankTransactionsFilters";
-import BankTransactionsTable from "@/components/finances/statements/BankTransactionsTable";
+import TransactionsSection from "@/components/finances/statements/TransactionsSection";
+import BankStatementLoadingState from "@/components/finances/statements/BankStatementLoadingState";
+import BankStatementNotFound from "@/components/finances/statements/BankStatementNotFound";
 
 const BankStatementDetail = () => {
   const { statementId } = useParams<{ statementId: string }>();
@@ -21,57 +18,12 @@ const BankStatementDetail = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [statement, setStatement] = useState<BankStatement | null>(null);
-  const [isLoadingStatement, setIsLoadingStatement] = useState(true);
-  
-  useEffect(() => {
-    const fetchStatement = async () => {
-      if (!statementId) return;
-      
-      try {
-        setIsLoadingStatement(true);
-        const { data, error } = await supabase
-          .from('bank_statements')
-          .select('*')
-          .eq('id', statementId)
-          .single();
-        
-        if (error) throw error;
-        
-        // Ensure we're setting a valid BankStatement object with the correct status type
-        const validStatus = data.status as "in_progress" | "processed" | "confirmed";
-        setStatement({
-          ...data,
-          status: validStatus
-        });
-      } catch (error) {
-        console.error('Error fetching statement:', error);
-        toast({
-          title: t("errorFetchingStatement"),
-          description: t("errorFetchingStatementDetails"),
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingStatement(false);
-      }
-    };
-    
-    fetchStatement();
-  }, [statementId, toast, t]);
-  
   const { 
-    transactions, 
-    isLoading: isLoadingTransactions, 
-    matchTransaction, 
-    isMatching, 
-    ignoreTransaction, 
-    isIgnoring,
-    resetStatus,
-    isResetting,
-    refetch: refetchTransactions
-  } = useBankTransactions(statementId || "");
+    statement, 
+    isLoading: isLoadingStatement, 
+    processStatement, 
+    confirmStatement 
+  } = useBankStatement(statementId);
   
   const handleDownloadStatement = () => {
     if (!statement || !statement.file_path) {
@@ -92,12 +44,8 @@ const BankStatementDetail = () => {
   
   const handleProcessStatement = async () => {
     if (!statementId) return;
-    
     try {
       await processStatement(statementId);
-      if (statement) {
-        setStatement({ ...statement, status: 'processed' });
-      }
     } catch (error) {
       console.error("Error processing statement:", error);
     }
@@ -105,121 +53,19 @@ const BankStatementDetail = () => {
   
   const handleConfirmStatement = async () => {
     if (!statementId) return;
-    
     try {
       await confirmStatement(statementId);
-      if (statement) {
-        setStatement({ ...statement, status: 'confirmed' });
-      }
     } catch (error) {
       console.error("Error confirming statement:", error);
     }
   };
   
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-  
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value);
-  };
-  
-  const processStatement = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('bank_statements')
-        .update({
-          status: 'processed',
-          processed_by: (await supabase.auth.getUser()).data.user?.id,
-          processed_at: new Date().toISOString()
-        })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: t("statementProcessed"),
-        description: t("statementProcessedSuccess"),
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Error processing statement:', error);
-      toast({
-        title: t("errorProcessingStatement"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  const confirmStatement = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('bank_statements')
-        .update({
-          status: 'confirmed'
-        })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: t("statementConfirmed"),
-        description: t("statementConfirmedSuccess"),
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Error confirming statement:', error);
-      toast({
-        title: t("errorConfirmingStatement"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
-  
-  // Helper function to handle matching transactions with proper parameter forwarding
-  const handleMatchTransaction = (transactionId: string, policyId: string) => {
-    matchTransaction({ transactionId, policyId });
-  };
-  
   if (isLoadingStatement) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="h-10 w-40 bg-muted rounded animate-pulse" />
-          <div className="h-10 w-32 bg-muted rounded animate-pulse" />
-        </div>
-        <div className="h-40 bg-muted rounded animate-pulse" />
-        <div className="h-60 bg-muted rounded animate-pulse" />
-      </div>
-    );
+    return <BankStatementLoadingState />;
   }
   
   if (!statement) {
-    return (
-      <div className="space-y-6">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate("/finances/statements")}
-        >
-          {t("backToStatements")}
-        </Button>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <h2 className="text-xl font-semibold mb-2">{t("statementNotFound")}</h2>
-            <p className="text-muted-foreground mb-4">{t("statementNotFoundDescription")}</p>
-            <Button onClick={() => navigate("/finances/statements")}>
-              {t("backToStatements")}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <BankStatementNotFound />;
   }
   
   return (
@@ -236,35 +82,10 @@ const BankStatementDetail = () => {
       
       <BankStatementDetailsCard 
         statement={statement}
-        transactionCount={transactions.length}
+        transactionCount={0} // This will be populated by the TransactionsSection
       />
       
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>{t("transactions")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <BankTransactionsFilters 
-            searchTerm={searchTerm}
-            onSearchChange={handleSearchChange}
-            statusFilter={statusFilter}
-            onStatusFilterChange={handleStatusFilterChange}
-          />
-          
-          <BankTransactionsTable 
-            transactions={transactions}
-            isLoading={isLoadingTransactions}
-            onMatchTransaction={handleMatchTransaction}
-            onIgnoreTransaction={ignoreTransaction}
-            onResetStatus={resetStatus}
-            isMatching={isMatching}
-            isIgnoring={isIgnoring}
-            isResetting={isResetting}
-            searchTerm={searchTerm}
-            statusFilter={statusFilter}
-          />
-        </CardContent>
-      </Card>
+      {statementId && <TransactionsSection statementId={statementId} />}
     </div>
   );
 };
