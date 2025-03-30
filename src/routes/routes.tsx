@@ -2,7 +2,7 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { DashboardRoutes } from "./DashboardRoutes";
-import { PolicyRoutes } from "./PolicyRoutes"; // Fixed import
+import { PolicyRoutes } from "./PolicyRoutes"; 
 import { SalesRoutes } from "./SalesRoutes";
 import { ClaimsRoutes } from "./ClaimsRoutes";
 import { FinancesRoutes } from "./FinancesRoutes";
@@ -11,7 +11,7 @@ import { ReportsRoutes } from "./ReportsRoutes";
 import { SettingsRoutes } from "./SettingsRoutes";
 import { AuthRoutes } from "./AuthRoutes";
 import AppLayout from "@/components/layout/AppLayout";
-import NotFound from "@/pages/NotFound"; // Fixed import
+import NotFound from "@/pages/NotFound";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const AppRoutes = () => {

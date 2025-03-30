@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { User } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { User } from "lucide-react";
 
 interface PolicyAssignmentCardProps {
   policy: any;
@@ -12,52 +12,28 @@ interface PolicyAssignmentCardProps {
 const PolicyAssignmentCard: React.FC<PolicyAssignmentCardProps> = ({ policy }) => {
   const { t } = useLanguage();
   
-  // This could be fetched from an API in a real implementation
-  const assignedUser = policy.assigned_to ? {
-    name: "John Doe", // Placeholder
-    role: "Agent", // Placeholder
-    avatar: null
-  } : null;
-  
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-start mb-4">
-          <User className="h-5 w-5 text-muted-foreground mr-2" />
-          <h3 className="font-semibold">{t("assignment")}</h3>
-        </div>
-        
-        {assignedUser ? (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                {assignedUser.avatar ? (
-                  <img 
-                    src={assignedUser.avatar}
-                    alt={assignedUser.name}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="h-5 w-5 text-primary" />
-                )}
-              </div>
-              <div>
-                <p className="font-medium">{assignedUser.name}</p>
-                <p className="text-sm text-muted-foreground">{assignedUser.role}</p>
-              </div>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">{t("policyAssignment")}</CardTitle>
+        <CardDescription className="text-xs">{t("policyAssignmentDescription")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {policy.assigned_to ? (
+          <div className="flex items-center mt-2">
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mr-2">
+              <User className="h-4 w-4 text-primary" />
             </div>
-            
-            <Button variant="outline" size="sm" className="w-full">
-              {t("changeAssignment")}
-            </Button>
+            <div>
+              <p className="text-sm font-medium">John Doe</p>
+              <p className="text-xs text-muted-foreground">Assigned on {new Date().toLocaleDateString()}</p>
+            </div>
           </div>
         ) : (
-          <div className="text-center p-4 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {t("noUserAssigned")}
-            </p>
-            <Button variant="default" size="sm" className="w-full">
-              {t("assignUser")}
+          <div className="flex flex-col items-center justify-center py-3">
+            <p className="text-sm text-muted-foreground mb-2">{t("noAssignedUser")}</p>
+            <Button size="sm" variant="outline">
+              {t("assign")}
             </Button>
           </div>
         )}

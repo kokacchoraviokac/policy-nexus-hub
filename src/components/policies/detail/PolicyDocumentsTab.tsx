@@ -1,11 +1,9 @@
 
-import React, { useState } from "react";
-import { FileUp } from "lucide-react";
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import DocumentList from "@/components/documents/DocumentList";
-import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
+import { Upload } from "lucide-react";
 
 interface PolicyDocumentsTabProps {
   policyId: string;
@@ -13,39 +11,28 @@ interface PolicyDocumentsTabProps {
 
 const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => {
   const { t } = useLanguage();
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   
-  const handleUploadDocument = () => {
-    setUploadDialogOpen(true);
-  };
-
+  // This is a placeholder component - will be implemented fully later
   return (
-    <>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold">{t("policyDocuments")}</h3>
-            <Button onClick={handleUploadDocument}>
-              <FileUp className="mr-2 h-4 w-4" />
-              {t("uploadDocument")}
-            </Button>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>{t("policyDocuments")}</CardTitle>
+            <CardDescription>{t("documentsAttachedToPolicy")}</CardDescription>
           </div>
-          
-          <DocumentList 
-            entityType="policy"
-            entityId={policyId}
-            onUploadClick={handleUploadDocument}
-          />
-        </CardContent>
-      </Card>
-      
-      <DocumentUploadDialog 
-        open={uploadDialogOpen} 
-        onOpenChange={setUploadDialogOpen} 
-        entityType="policy"
-        entityId={policyId}
-      />
-    </>
+          <Button>
+            <Upload className="h-4 w-4 mr-2" />
+            {t("uploadDocument")}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-center p-6 text-muted-foreground">
+          <p>{t("noDocumentsForPolicy")}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

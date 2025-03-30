@@ -2,18 +2,18 @@
 import { useState } from "react";
 
 export interface PaginationState {
-  pageIndex: number;
+  page: number;
   pageSize: number;
 }
 
 export const useUnlinkedPaymentsPagination = () => {
   const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10
+    page: 1,
+    pageSize: 10,
   });
 
   return {
     pagination,
-    setPagination
+    setPagination,
   };
 };
