@@ -131,7 +131,7 @@ const BankStatementDetail = () => {
             {t("downloadStatement")}
           </Button>
           
-          {mockStatement.status === 'in_progress' && (
+          {mockStatement.status === "in_progress" && (
             <Button
               size="sm"
             >
@@ -140,7 +140,7 @@ const BankStatementDetail = () => {
             </Button>
           )}
           
-          {mockStatement.status === 'processed' && (
+          {mockStatement.status === "processed" && (
             <Button
               size="sm"
             >
@@ -156,8 +156,8 @@ const BankStatementDetail = () => {
           <div className="flex items-center justify-between">
             <CardTitle>{t("statementDetails")}</CardTitle>
             <Badge variant={
-              mockStatement.status === 'in_progress' ? 'secondary' : 
-              mockStatement.status === 'processed' ? 'outline' : 
+              mockStatement.status === "in_progress" ? 'secondary' : 
+              mockStatement.status === "processed" ? 'outline' : 
               'default'
             }>
               {t(mockStatement.status)}
