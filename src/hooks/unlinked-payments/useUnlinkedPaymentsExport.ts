@@ -64,7 +64,7 @@ export const useUnlinkedPaymentsExport = (filters: FilterOptions) => {
         [t("paymentDate")]: formatDate(payment.payment_date),
         [t("status")]: payment.linked_policy_id ? t("linked") : t("unlinked"),
         [t("linkedPolicy")]: payment.policies?.policy_number || "-",
-        [t("linkedAt")]: payment.linked_at ? formatDate(payment.linked_at, "PP p") : "-"
+        [t("linkedAt")]: payment.linked_at ? formatDate(payment.linked_at) : "-"
       }));
       
       // Convert to CSV

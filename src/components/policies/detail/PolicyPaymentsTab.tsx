@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
@@ -85,7 +84,6 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
   };
 
   const handleExportPayments = () => {
-    // Create CSV of payments
     if (!paymentsData || paymentsData.length === 0) return;
     
     const csvContent = [
@@ -236,7 +234,7 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
                           {formatCurrency(payment.amount, payment.currency)}
                         </td>
                         <td className="px-4 py-3 text-sm text-right">
-                          {payment.linked_at ? formatDate(payment.linked_at, "PP p") : "-"}
+                          {payment.linked_at ? formatDate(payment.linked_at) : "-"}
                         </td>
                       </tr>
                     ))}
