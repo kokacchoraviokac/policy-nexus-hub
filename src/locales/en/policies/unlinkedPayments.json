@@ -1,0 +1,7 @@
+
+{
+  "unlinkedPayments": "Unlinked Payments",
+  "unlinkedPaymentsDescription": "Manage payments not linked to a policy",
+  "noUnlinkedPayments": "No unlinked payments",
+  "allPaymentsLinked": "All payments have been successfully linked to policies"
+}

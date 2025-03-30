@@ -1,8 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { formatDate, formatNumber, formatCurrency, formatRelativeTime } from '../utils/formatters';
 import { logMissingTranslation, formatMissingTranslation } from '../utils/translationValidator';
-import en from '../locales/en.json';
+import en from '../locales/en/index';
 import sr from '../locales/sr/index';
 import mk from '../locales/mk/index';
 import es from '../locales/es/index';
@@ -71,7 +70,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
         
         let translationData: Record<string, string>;
         
-        // Load the appropriate translation file based on the selected language
         if (language === 'en') {
           translationData = en;
         } else if (language === 'sr') {
@@ -107,7 +105,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
     loadTranslations();
   }, [language]);
 
-  // Updated to support interpolation parameters
   const t = (key: string, params?: TranslationParams): string => {
     if (isLoading) return key;
     
@@ -117,7 +114,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
       return formatMissingTranslation(key);
     }
     
-    // Handle interpolation if params are provided
     if (params) {
       Object.entries(params).forEach(([paramKey, paramValue]) => {
         translation = translation.replace(new RegExp(`{${paramKey}}`, 'g'), String(paramValue));

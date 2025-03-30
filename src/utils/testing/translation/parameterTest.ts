@@ -1,5 +1,5 @@
 
-import en from '../../../locales/en.json';
+import en from '../../../locales/en/index';
 import sr from '../../../locales/sr/index';
 import mk from '../../../locales/mk/index';
 import es from '../../../locales/es/index';
@@ -20,7 +20,7 @@ export const testTranslationParameters = (key: string): TestResult[] => {
     return [{ passed: false, message: `Key "${key}" does not exist in English` }];
   }
   
-  const paramRegex = /\{(\d+)\}/g;
+  const paramRegex = /\{(\d+|[a-zA-Z]+)\}/g;
   const englishParams = [...englishText.matchAll(paramRegex)].map(match => match[1]);
   
   if (englishParams.length === 0) {
@@ -30,6 +30,8 @@ export const testTranslationParameters = (key: string): TestResult[] => {
   
   // Check if all other languages have the same parameters
   languages.forEach(lang => {
+    if (lang === 'en') return; // Skip English as it's our reference
+    
     const text = translations[lang][key];
     if (!text) {
       results.push({

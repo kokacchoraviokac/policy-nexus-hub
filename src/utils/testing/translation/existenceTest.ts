@@ -1,4 +1,5 @@
 
+import en from '../../../locales/en/index';
 import sr from '../../../locales/sr/index';
 import mk from '../../../locales/mk/index';
 import es from '../../../locales/es/index';
