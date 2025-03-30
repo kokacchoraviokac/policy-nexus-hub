@@ -23,12 +23,11 @@ const SidebarSubItems: React.FC<SidebarSubItemsProps> = ({ subItems, currentPath
   return (
     <div className="pl-9 mt-1 space-y-1">
       {subItems.map((subItem, index) => {
-        // More robust path matching for subitems
+        // More precise path matching for subitems - exact match or direct child routes only
         const isSubItemActive = 
           currentPath === subItem.path || 
-          currentPath.startsWith(`${subItem.path}/`) ||
-          (subItem.path !== "/" && 
-           currentPath.includes(subItem.path.split("/").filter(Boolean)[0]));
+          (currentPath.startsWith(`${subItem.path}/`) && 
+           !currentPath.substring(subItem.path.length + 1).includes('/'));
         
         return (
           <Link

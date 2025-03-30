@@ -26,15 +26,13 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
         // Check if the current path matches any submenu's path or starts with it
         const hasActiveSubItem = item.subItems.some(subItem => 
           currentPath === subItem.path || 
-          currentPath.startsWith(`${subItem.path}/`) ||
-          // Also check if the current path contains the submenu path segment
-          (subItem.path !== "/" && currentPath.includes(subItem.path.split("/").filter(Boolean)[0]))
+          currentPath.startsWith(`${subItem.path}/`)
         );
         
         // Also check if the path starts with the parent path directly
-        const isParentPath = currentPath === item.path || 
-                           currentPath.startsWith(`${item.path}/`) ||
-                           (item.path !== "/" && currentPath.includes(item.path.split("/").filter(Boolean)[0]));
+        const isParentPath = 
+          currentPath === item.path || 
+          currentPath.startsWith(`${item.path}/`);
         
         if (hasActiveSubItem || isParentPath) {
           parentPathsToExpand.push(item.path);
@@ -65,16 +63,6 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
     hasPrivilege(item.requiredPrivilege)
   );
 
-  // Always auto-expand the policies section when on a policies page
-  useEffect(() => {
-    if (currentPath.includes('/policies')) {
-      const policiesPath = sidebarItems.find(item => item.label === 'policies')?.path;
-      if (policiesPath && !expandedItems.includes(policiesPath)) {
-        setExpandedItems(prev => [...prev, policiesPath]);
-      }
-    }
-  }, [currentPath, expandedItems]);
-
   return (
     <div className="py-4 px-2">
       <nav className="space-y-1">
@@ -86,20 +74,26 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
           // Check if the current path matches this item's base path
           const isMatchingBase = baseCurrentPath === baseItemPath;
           
-          // Check if the current path matches this item's path or starts with it
-          const isActiveParent = currentPath === item.path || 
-                               currentPath.startsWith(`${item.path}/`) ||
-                               isMatchingBase;
+          // Check if the current path matches this item's path exactly
+          const isExactMatch = currentPath === item.path;
           
-          // Also check if any subitem path matches the current path
-          const hasActiveChild = item.subItems?.some(
-            subItem => currentPath === subItem.path || 
-                      currentPath.startsWith(`${subItem.path}/`) ||
-                      (subItem.path !== "/" && 
-                       currentPath.includes(subItem.path.split("/").filter(Boolean)[0]))
+          // Check if any subitem path matches the current path exactly
+          const hasExactSubMatch = item.subItems?.some(
+            subItem => currentPath === subItem.path
           );
           
-          // Check if this item is expanded
+          // Check if current path starts with this item's path (for parent paths)
+          const isParentPath = !isExactMatch && currentPath.startsWith(`${item.path}/`);
+          
+          // Check if current path starts with any subitem's path
+          const hasSubItemParentPath = item.subItems?.some(
+            subItem => !hasExactSubMatch && currentPath.startsWith(`${subItem.path}/`)
+          );
+          
+          // Active state is when the path is an exact match, parent path, or has an active subitem
+          const isActive = isExactMatch || isParentPath || hasExactSubMatch || hasSubItemParentPath;
+          
+          // Check if this item is expanded - this should be controlled by the expand/collapse state
           const isExpanded = expandedItems.includes(item.path);
           
           return (
@@ -109,10 +103,10 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
               label={item.label}
               path={item.path}
               collapsed={collapsed}
-              active={isActiveParent || !!hasActiveChild}
+              active={isActive}
               requiredPrivilege={item.requiredPrivilege}
               subItems={item.subItems}
-              isExpanded={isExpanded || isActiveParent || !!hasActiveChild}
+              isExpanded={isExpanded}
               onToggleExpand={() => toggleExpand(item.path)}
             />
           );

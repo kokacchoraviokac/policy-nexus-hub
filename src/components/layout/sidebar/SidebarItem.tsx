@@ -44,13 +44,6 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   const location = useLocation();
   const currentPath = location.pathname;
   
-  // Extract the base path for more reliable matching
-  const baseCurrentPath = currentPath.split("/").filter(Boolean)[0] || "";
-  const baseItemPath = path.split("/").filter(Boolean)[0] || "";
-  
-  // Check if the current path is in the same section as this item
-  const isInSameSection = baseCurrentPath === baseItemPath;
-  
   // Filter sub-items based on user privileges
   const authorizedSubItems = subItems?.filter(item => 
     hasPrivilege(item.requiredPrivilege)
@@ -64,9 +57,10 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   // If no authorized sub-items exist for this item, render it as a simple link
   const hasSubItems = authorizedSubItems && authorizedSubItems.length > 0;
   
+  // Handle item click - for items with sub-items, toggle expand/collapse
   const handleItemClick = (e: React.MouseEvent) => {
     if (hasSubItems && onToggleExpand) {
-      e.preventDefault();
+      e.preventDefault(); // Prevent navigation when toggling
       onToggleExpand();
     }
   };

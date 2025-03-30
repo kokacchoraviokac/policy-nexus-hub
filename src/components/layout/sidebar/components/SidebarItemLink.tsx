@@ -2,17 +2,17 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SidebarItemLinkProps {
-  icon: LucideIcon;
+  icon: React.ElementType;
   label: string;
   path: string;
   active: boolean;
   collapsed: boolean;
   hasSubItems: boolean;
-  isExpanded?: boolean;
+  isExpanded: boolean;
   onClick: (e: React.MouseEvent) => void;
 }
 
@@ -23,38 +23,39 @@ const SidebarItemLink: React.FC<SidebarItemLinkProps> = ({
   active,
   collapsed,
   hasSubItems,
-  isExpanded = false,
+  isExpanded,
   onClick
 }) => {
   const { t } = useLanguage();
+  
+  const linkContent = (
+    <>
+      <Icon className={cn("h-5 w-5 mr-2 flex-shrink-0", collapsed && "mx-auto")} />
+      {!collapsed && <span className="flex-1">{t(label)}</span>}
+      {!collapsed && hasSubItems && (
+        <span className="ml-auto flex-shrink-0">
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </span>
+      )}
+    </>
+  );
 
   return (
-    <Link 
-      to={path}
-      className={cn(
-        "sidebar-item group flex items-center w-full p-2 rounded-md transition-colors duration-200",
-        active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"
-      )}
+    <Link
+      to={hasSubItems ? "#" : path} // Use # for items with subitems to allow toggle without navigation
       onClick={onClick}
+      className={cn(
+        "flex items-center p-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+        active && !hasSubItems && "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
+        hasSubItems && isExpanded && "bg-sidebar-accent text-sidebar-accent-foreground",
+        collapsed && "justify-center"
+      )}
     >
-      <Icon className="h-5 w-5 flex-shrink-0" />
-      {!collapsed && (
-        <span className="ml-3 truncate">{t(label)}</span>
-      )}
-      {!collapsed && hasSubItems && (
-        <svg 
-          className={cn(
-            "w-3 h-3 ml-auto transform transition-transform",
-            isExpanded ? "rotate-90" : "rotate-0"
-          )} 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      )}
+      {linkContent}
     </Link>
   );
 };
