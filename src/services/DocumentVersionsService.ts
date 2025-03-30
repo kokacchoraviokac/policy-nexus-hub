@@ -34,12 +34,14 @@ export interface DocumentEntityInfo {
 // Helper function to find the document table and entity information
 export async function findDocumentInfo(documentId: string): Promise<DocumentEntityInfo | null> {
   // Check policy_documents
-  const { data: policyDoc, error: policyError } = await supabase
+  // Break the chain with intermediate variables to avoid deep type instantiation
+  const policyQuery = supabase
     .from('policy_documents')
     .select('id, policy_id')
     .eq('id', documentId)
-    .limit(1)
-    .single();
+    .limit(1);
+    
+  const { data: policyDoc, error: policyError } = await policyQuery.single();
     
   if (!policyError && policyDoc) {
     return {
@@ -50,12 +52,13 @@ export async function findDocumentInfo(documentId: string): Promise<DocumentEnti
   }
   
   // Check claim_documents
-  const { data: claimDoc, error: claimError } = await supabase
+  const claimQuery = supabase
     .from('claim_documents')
     .select('id, claim_id')
     .eq('id', documentId)
-    .limit(1)
-    .single();
+    .limit(1);
+    
+  const { data: claimDoc, error: claimError } = await claimQuery.single();
     
   if (!claimError && claimDoc) {
     return {
@@ -66,12 +69,13 @@ export async function findDocumentInfo(documentId: string): Promise<DocumentEnti
   }
   
   // Check sales_documents
-  const { data: salesDoc, error: salesError } = await supabase
+  const salesQuery = supabase
     .from('sales_documents')
     .select('id, sales_process_id')
     .eq('id', documentId)
-    .limit(1)
-    .single();
+    .limit(1);
+    
+  const { data: salesDoc, error: salesError } = await salesQuery.single();
     
   if (!salesError && salesDoc) {
     return {
@@ -86,11 +90,13 @@ export async function findDocumentInfo(documentId: string): Promise<DocumentEnti
 
 // Helper function to find the original document ID
 export async function findOriginalDocumentId(documentId: string, tableName: DocumentTableName): Promise<string | null> {
-  const { data: docInfo } = await supabase
+  // Break the chain with intermediate variables
+  const query = supabase
     .from(tableName)
     .select('original_document_id')
-    .eq('id', documentId)
-    .single();
+    .eq('id', documentId);
+    
+  const { data: docInfo } = await query.single();
     
   return docInfo?.original_document_id || null;
 }
@@ -108,12 +114,19 @@ export async function fetchAllVersions(documentId: string, info: DocumentEntityI
     idColumn = 'sales_process_id';
   }
   
-  const { data } = await supabase
-    .from(tableName)
+  // Break the chain by using intermediate variables and type assertions
+  // This prevents TypeScript from trying to infer the full chain depth
+  const baseQuery = supabase.from(tableName);
+  
+  // Use type assertion to prevent deep type instantiation
+  const query = baseQuery as any;
+  
+  const { data } = await query
     .select('*')
     .eq(idColumn, entityId)
     .or(`original_document_id.eq.${documentId},id.eq.${documentId}`);
     
+  // Explicitly cast the result to our expected type
   return (data || []) as DocumentDbRow[];
 }
 
