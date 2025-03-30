@@ -32,6 +32,16 @@ interface ApprovalDetails {
   document_id?: string;
   action_type?: string;
   notes?: string;
+  approved_by?: string;
+  approved_at?: string;
+}
+
+// Define a type for activity log row
+interface ActivityLogRow {
+  id: string;
+  user_id: string;
+  created_at: string;
+  details: ApprovalDetails;
 }
 
 const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
@@ -57,35 +67,39 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
     const fetchApprovalInfo = async () => {
       if (!document.entity_type || !document.entity_id || !document.id) return;
       
-      const { data, error } = await supabase
-        .from('activity_logs')
-        .select('*')
-        .eq('entity_type', document.entity_type)
-        .eq('entity_id', document.entity_id)
-        .eq('details->document_id', document.id)
-        .eq('details->action_type', 'document_approval')
-        .order('created_at', { ascending: false })
-        .limit(1);
-        
-      if (error) {
-        console.error("Error fetching approval info:", error);
-        return;
-      }
-      
-      if (data && data.length > 0) {
-        const latestApproval = data[0];
-        const details = latestApproval.details as ApprovalDetails;
-        
-        setApprovalInfo({
-          status: details.approval_status || "pending",
-          approved_by: latestApproval.user_id,
-          approved_at: latestApproval.created_at,
-          notes: details.notes
-        });
-        
-        if (details.notes) {
-          setNotes(details.notes);
+      try {
+        const { data, error } = await supabase
+          .from('activity_logs')
+          .select('*')
+          .eq('entity_type', document.entity_type)
+          .eq('entity_id', document.entity_id)
+          .eq('details->document_id', document.id)
+          .eq('details->action_type', 'document_approval')
+          .order('created_at', { ascending: false })
+          .limit(1);
+          
+        if (error) {
+          console.error("Error fetching approval info:", error);
+          return;
         }
+        
+        if (data && data.length > 0) {
+          const latestApproval = data[0] as ActivityLogRow;
+          const details = latestApproval.details;
+          
+          setApprovalInfo({
+            status: details.approval_status || "pending",
+            approved_by: latestApproval.user_id,
+            approved_at: latestApproval.created_at,
+            notes: details.notes
+          });
+          
+          if (details.notes) {
+            setNotes(details.notes);
+          }
+        }
+      } catch (error) {
+        console.error("Error in fetchApprovalInfo:", error);
       }
     };
     

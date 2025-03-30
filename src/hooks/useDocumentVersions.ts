@@ -9,7 +9,7 @@ export interface UseDocumentVersionsProps {
   enabled?: boolean;
 }
 
-// Define a type for document database row
+// Define a type for document database row with only the fields we need
 interface DocumentDbRow {
   id: string;
   document_name: string;
@@ -22,7 +22,10 @@ interface DocumentDbRow {
   original_document_id?: string | null;
   category?: string | null;
   mime_type?: string | null;
-  [key: string]: any; // For other fields
+  // Using indexed access type instead of string index signature
+  policy_id?: string;
+  claim_id?: string;
+  sales_process_id?: string;
 }
 
 export const useDocumentVersions = ({ 
@@ -42,9 +45,9 @@ export const useDocumentVersions = ({
     queryFn: async () => {
       try {
         // First determine the document table and entity information
-        let documentData;
-        let entityType;
-        let entityId;
+        let documentData: Record<string, any> | null = null;
+        let entityType: string = '';
+        let entityId: string = '';
         
         // Check policy_documents
         const { data: policyDoc, error: policyError } = await supabase
@@ -125,41 +128,43 @@ export const useDocumentVersions = ({
           }
         }
         
-        // Build the query for OR condition
-        let query = supabase
+        // Avoid deep type issues with query construction
+        const { data: allVersions, error: versionsError } = await supabase
           .from(tableName)
           .select('*')
-          .eq(entityField, entityId);
-          
-        // Add OR condition for original_document_id or being the original
-        if (originalId) {
-          query = query.or(`original_document_id.eq.${originalId},id.eq.${originalId}`);
-        } else {
-          query = query.or(`id.eq.${documentId}`);
-        }
-          
-        const { data: allVersions, error: versionsError } = await query.order('version', { ascending: false });
+          .eq(entityField, entityId)
+          .or(`original_document_id.eq.${originalId},id.eq.${originalId}`)
+          .order('version', { ascending: false });
         
         if (versionsError) throw versionsError;
         
         // Transform to Document type, safely handling potentially missing properties
-        return (allVersions || []).map((doc: DocumentDbRow) => ({
-          id: doc.id,
-          document_name: doc.document_name,
-          document_type: doc.document_type,
-          created_at: doc.created_at,
-          file_path: doc.file_path,
-          entity_type: entityType,
-          entity_id: doc[entityField],
-          uploaded_by_id: doc.uploaded_by,
-          // Handle potentially missing properties with default values
-          version: doc.version || 1,
-          is_latest_version: doc.is_latest_version || false,
-          original_document_id: doc.original_document_id || null,
-          category: doc.category || null,
-          approval_status: 'pending', // Default, will be fetched from activity logs if needed
-          mime_type: doc.mime_type || null
-        })) as Document[];
+        return (allVersions || []).map((doc: DocumentDbRow) => {
+          // Get the entity ID from the appropriate field
+          const docEntityId = entityType === 'policy' 
+            ? doc.policy_id 
+            : entityType === 'claim' 
+              ? doc.claim_id 
+              : doc.sales_process_id;
+          
+          return {
+            id: doc.id,
+            document_name: doc.document_name,
+            document_type: doc.document_type,
+            created_at: doc.created_at,
+            file_path: doc.file_path,
+            entity_type: entityType,
+            entity_id: docEntityId,
+            uploaded_by_id: doc.uploaded_by,
+            // Handle potentially missing properties with default values
+            version: doc.version || 1,
+            is_latest_version: doc.is_latest_version || false,
+            original_document_id: doc.original_document_id || null,
+            category: doc.category || null,
+            approval_status: 'pending', // Default, will be fetched from activity logs if needed
+            mime_type: doc.mime_type || null
+          };
+        }) as Document[];
       } catch (error) {
         console.error("Error fetching document versions:", error);
         return [];
