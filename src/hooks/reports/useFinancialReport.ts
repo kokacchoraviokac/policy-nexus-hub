@@ -5,7 +5,7 @@ import {
   FinancialTransaction, 
   FinancialReportFilters, 
   exportFinancialReportToCsv,
-  calculateFinancialSummary
+  filterTransactions
 } from "@/utils/reports/financialReportUtils";
 
 interface FinancialReportData {
@@ -95,6 +95,50 @@ export const useFinancialReport = (filters: FinancialReportFilters) => {
           reference: 'EXP-002',
           status: 'completed',
           currency: 'EUR'
+        },
+        {
+          id: '7',
+          date: '2023-02-05',
+          description: 'Rent payment for office space',
+          amount: 1200,
+          type: 'expense',
+          category: 'rent',
+          reference: 'RENT-001',
+          status: 'completed',
+          currency: 'EUR'
+        },
+        {
+          id: '8',
+          date: '2023-02-10',
+          description: 'Marketing campaign expenses',
+          amount: 750,
+          type: 'expense',
+          category: 'marketing',
+          reference: 'MKT-001',
+          status: 'completed',
+          currency: 'EUR'
+        },
+        {
+          id: '9',
+          date: '2023-02-15',
+          description: 'Commission payment for policy DEF456',
+          amount: 980,
+          type: 'income',
+          category: 'commission',
+          reference: 'COM-003',
+          status: 'completed',
+          currency: 'EUR'
+        },
+        {
+          id: '10',
+          date: '2023-02-20',
+          description: 'Employee salary payments',
+          amount: 3500,
+          type: 'expense',
+          category: 'salary',
+          reference: 'SAL-001',
+          status: 'completed',
+          currency: 'EUR'
         }
       ];
       
@@ -108,8 +152,12 @@ export const useFinancialReport = (filters: FinancialReportFilters) => {
       }
       
       if (filters.endDate) {
+        // Add 1 day to include the end date
+        const endDate = new Date(filters.endDate);
+        endDate.setDate(endDate.getDate() + 1);
+        
         filteredTransactions = filteredTransactions.filter(
-          t => new Date(t.date) <= filters.endDate!
+          t => new Date(t.date) < endDate
         );
       }
       
@@ -164,7 +212,7 @@ export const useFinancialReport = (filters: FinancialReportFilters) => {
     
     setIsExporting(true);
     try {
-      await exportFinancialReportToCsv(query.data.transactions);
+      await exportFinancialReportToCsv(query.data.transactions, 'financial_report');
     } finally {
       setTimeout(() => setIsExporting(false), 1000);
     }

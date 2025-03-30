@@ -81,9 +81,21 @@ export const filterTransactions = (
     type?: string | null;
     categories?: string[];
     statuses?: string[];
+    searchTerm?: string;
   }
 ): FinancialTransaction[] => {
   return transactions.filter(transaction => {
+    // Search term filter
+    if (filters.searchTerm) {
+      const searchLower = filters.searchTerm.toLowerCase();
+      if (
+        !transaction.description.toLowerCase().includes(searchLower) &&
+        !(transaction.reference?.toLowerCase().includes(searchLower) || false)
+      ) {
+        return false;
+      }
+    }
+    
     // Date range filter
     if (filters.dateRange && filters.dateRange[0] && filters.dateRange[1]) {
       const transactionDate = new Date(transaction.date);
@@ -131,7 +143,15 @@ export const exportToCSV = (transactions: FinancialTransaction[], filename = 'fi
   
   const csvContent = [
     headers.join(','),
-    ...rows.map(row => row.join(','))
+    ...rows.map(row => {
+      // Escape commas and quotes in csv values
+      return row.map(cell => {
+        if (cell.includes(',') || cell.includes('"')) {
+          return `"${cell.replace(/"/g, '""')}"`;
+        }
+        return cell;
+      }).join(',');
+    })
   ].join('\n');
   
   // Create download link
@@ -146,7 +166,22 @@ export const exportToCSV = (transactions: FinancialTransaction[], filename = 'fi
   document.body.removeChild(link);
 };
 
-// Add the missing export function
 export const exportFinancialReportToCsv = (transactions: FinancialTransaction[], filename = 'financial_report'): void => {
   exportToCSV(transactions, filename);
+};
+
+export const getCategoryLabel = (category: string): string => {
+  const categoryMap: Record<string, string> = {
+    'commission': 'Commission',
+    'invoice': 'Invoice',
+    'office': 'Office Expenses',
+    'salary': 'Salaries',
+    'software': 'Software & IT',
+    'rent': 'Rent & Utilities',
+    'marketing': 'Marketing',
+    'travel': 'Travel & Entertainment',
+    'other': 'Other'
+  };
+  
+  return categoryMap[category] || category;
 };

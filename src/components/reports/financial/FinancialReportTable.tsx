@@ -17,11 +17,13 @@ import { formatCurrency, formatDate } from "@/utils/formatters";
 interface FinancialReportTableProps {
   data: FinancialTransaction[];
   isLoading: boolean;
+  visibleColumns?: string[];
 }
 
 const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
   data,
-  isLoading
+  isLoading,
+  visibleColumns = ["date", "description", "type", "category", "reference", "status", "amount"]
 }) => {
   const { t, language } = useLanguage();
   
@@ -60,45 +62,61 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
     );
   }
   
+  const columnMap = {
+    date: { header: t("date"), render: (transaction: FinancialTransaction) => formatDate(new Date(transaction.date), language) },
+    description: { header: t("description"), render: (transaction: FinancialTransaction) => transaction.description },
+    type: { 
+      header: t("type"), 
+      render: (transaction: FinancialTransaction) => (
+        <Badge variant={transaction.type === 'income' ? 'outline' : 'secondary'}>
+          {t(transaction.type)}
+        </Badge>
+      )
+    },
+    category: { header: t("category"), render: (transaction: FinancialTransaction) => t(transaction.category) },
+    reference: { header: t("reference"), render: (transaction: FinancialTransaction) => transaction.reference || "-" },
+    status: { 
+      header: t("status"), 
+      render: (transaction: FinancialTransaction) => (
+        <Badge variant={getStatusBadgeVariant(transaction.status)}>
+          {t(transaction.status)}
+        </Badge>
+      )
+    },
+    amount: { 
+      header: t("amount"), 
+      render: (transaction: FinancialTransaction) => (
+        <span className={transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}>
+          {transaction.type === 'income' ? '+' : '-'} 
+          {formatCurrency(transaction.amount, language, transaction.currency)}
+        </span>
+      ),
+      className: "text-right font-medium"
+    }
+  };
+  
+  const visibleColumnData = visibleColumns.map(col => columnMap[col as keyof typeof columnMap]);
+  
   return (
     <div className="border rounded-md">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>{t("date")}</TableHead>
-            <TableHead>{t("description")}</TableHead>
-            <TableHead>{t("type")}</TableHead>
-            <TableHead>{t("category")}</TableHead>
-            <TableHead>{t("reference")}</TableHead>
-            <TableHead>{t("status")}</TableHead>
-            <TableHead className="text-right">{t("amount")}</TableHead>
+            {visibleColumnData.map((column, index) => (
+              <TableHead key={index} className={column.className}>
+                {column.header}
+              </TableHead>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((transaction) => (
             <TableRow key={transaction.id}>
-              <TableCell>
-                {formatDate(new Date(transaction.date), language)}
-              </TableCell>
-              <TableCell>{transaction.description}</TableCell>
-              <TableCell>
-                <Badge variant={transaction.type === 'income' ? 'outline' : 'secondary'}>
-                  {t(transaction.type)}
-                </Badge>
-              </TableCell>
-              <TableCell>{t(transaction.category)}</TableCell>
-              <TableCell>{transaction.reference || "-"}</TableCell>
-              <TableCell>
-                <Badge variant={getStatusBadgeVariant(transaction.status)}>
-                  {t(transaction.status)}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right font-medium">
-                <span className={transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}>
-                  {transaction.type === 'income' ? '+' : '-'} 
-                  {formatCurrency(transaction.amount, language, transaction.currency)}
-                </span>
-              </TableCell>
+              {visibleColumnData.map((column, index) => (
+                <TableCell key={index} className={column.className}>
+                  {column.render(transaction)}
+                </TableCell>
+              ))}
             </TableRow>
           ))}
         </TableBody>

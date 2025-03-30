@@ -15,31 +15,36 @@ const Reports = () => {
       title: "policyProductionReport",
       description: "policyProductionReportDescription",
       path: "/reports/policies",
-      icon: FileBarChart
+      icon: FileBarChart,
+      enabled: true
     },
     {
       title: "clientsReport",
       description: "clientsReportDescription",
       path: "/reports/clients",
-      icon: Users
+      icon: Users,
+      enabled: false
     },
     {
       title: "agentsReport",
       description: "agentsReportDescription",
       path: "/reports/agents",
-      icon: UserCog
+      icon: UserCog,
+      enabled: false
     },
     {
       title: "claimsReport",
       description: "claimsReportDescription",
       path: "/reports/claims",
-      icon: FileText
+      icon: FileText,
+      enabled: false
     },
     {
       title: "financialReport",
       description: "financialReportDescription",
       path: "/reports/financial",
-      icon: DollarSign
+      icon: DollarSign,
+      enabled: true
     }
   ];
 
@@ -52,9 +57,9 @@ const Reports = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {reportModules.map((module, index) => (
-          <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow duration-200">
+          <Card key={index} className={`overflow-hidden transition-all duration-200 ${!module.enabled ? 'opacity-70' : 'hover:shadow-md'}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center space-x-2">
                 <module.icon className="h-5 w-5 text-primary" />
@@ -67,7 +72,7 @@ const Reports = () => {
                 variant="outline" 
                 className="w-full"
                 onClick={() => navigate(module.path)}
-                disabled={module.path !== "/reports/policies" && module.path !== "/reports/financial"}
+                disabled={!module.enabled}
               >
                 {t("viewReport")}
               </Button>
