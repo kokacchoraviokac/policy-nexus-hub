@@ -25,13 +25,6 @@ import { generateInvoicePdf } from "@/utils/invoices/pdfGenerator";
 
 interface InvoiceWithItems extends InvoiceType {
   items: InvoiceItem[];
-  entity?: {
-    name?: string;
-    address?: string;
-    city?: string;
-    postal_code?: string;
-    country?: string;
-  };
 }
 
 const InvoiceDetail = () => {
@@ -69,10 +62,11 @@ const InvoiceDetail = () => {
       
       if (itemsError) throw itemsError;
       
-      return { 
+      // Combine the data with proper type casting
+      return {
         ...invoiceData,
         items: itemsData || []
-      } as InvoiceWithItems;
+      } as unknown as InvoiceWithItems;
     },
   });
   

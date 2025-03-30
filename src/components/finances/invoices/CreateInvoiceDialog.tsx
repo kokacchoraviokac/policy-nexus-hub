@@ -120,7 +120,12 @@ const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInv
       total_amount: totalAmount,
       notes: values.notes,
       status: 'draft',
-      invoice_items: values.items,
+      invoice_items: values.items.map(item => ({
+        id: item.id,
+        description: item.description,
+        amount: item.amount,
+        policy_id: item.policy_id
+      })),
       invoice_type: values.invoice_type,
       invoice_category: values.invoice_category,
       calculation_reference: values.calculation_reference
