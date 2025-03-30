@@ -2,10 +2,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { formatDate, formatNumber, formatCurrency, formatRelativeTime } from '../utils/formatters';
 import { logMissingTranslation, formatMissingTranslation } from '../utils/translationValidator';
-import en from '../locales/en/index';
-import sr from '../locales/sr/index';
-import mk from '../locales/mk/index';
-import es from '../locales/es/index';
+import en from '../locales/en';
+import sr from '../locales/sr';
+import mk from '../locales/mk';
+import es from '../locales/es';
 
 export type Language = 'en' | 'sr' | 'mk' | 'es';
 

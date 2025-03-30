@@ -1,6 +1,11 @@
 
 // Import policy-related translations
-// For now we'll create a placeholder since we don't have the actual translation files yet
-const policies = {};
+import importExport from './importExport.json';
+
+// Merge all policy-related translations
+const policies = {
+  ...importExport,
+  // Add other policy-related imports as they are created
+};
 
 export default policies;

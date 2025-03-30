@@ -1,54 +1,38 @@
 
-import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Routes, Route } from "react-router-dom";
-import { AppRoutes } from "./routes";
-import AppLayout from "./components/layout/AppLayout";
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
+import AppRoutes from '@/routes/AppRoutes';
 
-// Define types for our route structure
-interface RouteChild {
-  index?: boolean;
-  path?: string;
-  element: React.ReactElement;
+// Create a React Query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <Router>
+              <Toaster position="top-right" />
+              <AppRoutes />
+            </Router>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
 }
-
-interface RouteConfig {
-  path: string;
-  children: RouteChild[];
-}
-
-const App = () => (
-  <>
-    <Toaster />
-    <Sonner />
-    <Routes>
-      {AppRoutes.map((route, index) => {
-        // If the route is a simple Route element, return it directly
-        if (React.isValidElement(route)) {
-          return route;
-        }
-        
-        // Otherwise, it's a route configuration object
-        // Recursively render its children
-        if ('path' in route && 'children' in route) {
-          const routeConfig = route as RouteConfig;
-          return (
-            <Route key={index} path={routeConfig.path} element={<AppLayout />}>
-              {routeConfig.children.map((child, childIndex) => {
-                if ('index' in child && child.index) {
-                  return <Route index key={`${index}-${childIndex}`} element={child.element} />;
-                }
-                return <Route key={`${index}-${childIndex}`} path={child.path} element={child.element} />;
-              })}
-            </Route>
-          );
-        }
-        
-        return null;
-      })}
-    </Routes>
-  </>
-);
 
 export default App;
