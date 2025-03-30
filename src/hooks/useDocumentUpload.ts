@@ -70,7 +70,7 @@ export const useDocumentUpload = ({
         const version = isNewVersion ? currentVersion + 1 : 1;
         
         // Define base document data
-        const baseData = {
+        const documentData = {
           id: documentId,
           document_name: documentName,
           document_type: documentType,
@@ -80,12 +80,11 @@ export const useDocumentUpload = ({
           version: version,
           is_latest_version: true,
           original_document_id: originalDocumentId || null,
-          category: documentCategory || null,
-          approval_status: "pending" as DocumentApprovalStatus
+          category: documentCategory || null
         };
         
         // Create entity-specific document data
-        const insertData = createDocumentData(baseData, entityType, entityId);
+        const insertData = createDocumentData(documentData, entityType, entityId);
         
         // Insert document record
         await insertDocumentRecord(documentTable, insertData);

@@ -119,7 +119,7 @@ export const useDocumentVersions = ({
           
         if (versionsError) throw versionsError;
         
-        // Transform to Document type
+        // Transform to Document type, safely handling potentially missing properties
         return (allVersions || []).map(doc => ({
           id: doc.id,
           document_name: doc.document_name,
@@ -129,12 +129,13 @@ export const useDocumentVersions = ({
           entity_type: entityType,
           entity_id: doc[entityField],
           uploaded_by_id: doc.uploaded_by,
+          // Handle potentially missing properties with default values
           version: doc.version || 1,
           is_latest_version: doc.is_latest_version || false,
-          original_document_id: doc.original_document_id,
-          category: doc.category,
+          original_document_id: doc.original_document_id || null,
+          category: doc.category || null,
           approval_status: 'pending', // Default, will be fetched from activity logs if needed
-          mime_type: doc.mime_type
+          mime_type: doc.mime_type || null
         })) as Document[];
       } catch (error) {
         console.error("Error fetching document versions:", error);

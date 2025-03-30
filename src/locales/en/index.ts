@@ -1,3 +1,4 @@
+
 import auth from './auth.json';
 import common from './common.json';
 import dashboard from './dashboard.json';
@@ -22,10 +23,8 @@ const translations = {
   ...policyTranslations,
   ...finances,
   ...claims,
-  ...modules
+  ...modules,
+  ...documents
 };
 
-export default {
-  documents,
-  ...translations
-} as const;
+export default translations;

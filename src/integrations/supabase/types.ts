@@ -287,6 +287,7 @@ export type Database = {
       }
       claim_documents: {
         Row: {
+          category: string | null
           claim_id: string
           company_id: string
           created_at: string
@@ -294,10 +295,15 @@ export type Database = {
           document_type: string
           file_path: string
           id: string
+          is_latest_version: boolean | null
+          mime_type: string | null
+          original_document_id: string | null
           updated_at: string
           uploaded_by: string
+          version: number | null
         }
         Insert: {
+          category?: string | null
           claim_id: string
           company_id: string
           created_at?: string
@@ -305,10 +311,15 @@ export type Database = {
           document_type: string
           file_path: string
           id?: string
+          is_latest_version?: boolean | null
+          mime_type?: string | null
+          original_document_id?: string | null
           updated_at?: string
           uploaded_by: string
+          version?: number | null
         }
         Update: {
+          category?: string | null
           claim_id?: string
           company_id?: string
           created_at?: string
@@ -316,8 +327,12 @@ export type Database = {
           document_type?: string
           file_path?: string
           id?: string
+          is_latest_version?: boolean | null
+          mime_type?: string | null
+          original_document_id?: string | null
           updated_at?: string
           uploaded_by?: string
+          version?: number | null
         }
         Relationships: [
           {
@@ -1479,12 +1494,16 @@ export type Database = {
       policy_documents: {
         Row: {
           addendum_id: string | null
+          category: string | null
           company_id: string
           created_at: string
           document_name: string
           document_type: string
           file_path: string
           id: string
+          is_latest_version: boolean | null
+          mime_type: string | null
+          original_document_id: string | null
           policy_id: string | null
           updated_at: string
           uploaded_by: string
@@ -1492,12 +1511,16 @@ export type Database = {
         }
         Insert: {
           addendum_id?: string | null
+          category?: string | null
           company_id: string
           created_at?: string
           document_name: string
           document_type: string
           file_path: string
           id?: string
+          is_latest_version?: boolean | null
+          mime_type?: string | null
+          original_document_id?: string | null
           policy_id?: string | null
           updated_at?: string
           uploaded_by: string
@@ -1505,12 +1528,16 @@ export type Database = {
         }
         Update: {
           addendum_id?: string | null
+          category?: string | null
           company_id?: string
           created_at?: string
           document_name?: string
           document_type?: string
           file_path?: string
           id?: string
+          is_latest_version?: boolean | null
+          mime_type?: string | null
+          original_document_id?: string | null
           policy_id?: string | null
           updated_at?: string
           uploaded_by?: string
@@ -1725,40 +1752,55 @@ export type Database = {
       }
       sales_documents: {
         Row: {
+          category: string | null
           company_id: string
           created_at: string
           document_name: string
           document_type: string
           file_path: string
           id: string
+          is_latest_version: boolean | null
+          mime_type: string | null
+          original_document_id: string | null
           sales_process_id: string
           step: string
           updated_at: string
           uploaded_by: string
+          version: number | null
         }
         Insert: {
+          category?: string | null
           company_id: string
           created_at?: string
           document_name: string
           document_type: string
           file_path: string
           id?: string
+          is_latest_version?: boolean | null
+          mime_type?: string | null
+          original_document_id?: string | null
           sales_process_id: string
           step: string
           updated_at?: string
           uploaded_by: string
+          version?: number | null
         }
         Update: {
+          category?: string | null
           company_id?: string
           created_at?: string
           document_name?: string
           document_type?: string
           file_path?: string
           id?: string
+          is_latest_version?: boolean | null
+          mime_type?: string | null
+          original_document_id?: string | null
           sales_process_id?: string
           step?: string
           updated_at?: string
           uploaded_by?: string
+          version?: number | null
         }
         Relationships: [
           {

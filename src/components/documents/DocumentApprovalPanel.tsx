@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDocumentApproval } from "@/hooks/useDocumentApproval";
@@ -19,7 +18,7 @@ import {
 import { Document, DocumentApprovalStatus } from "@/types/documents";
 import { formatDate } from "@/utils/format";
 import { Badge } from "@/components/ui/badge";
-import { useSupabaseClient } from "@/hooks/useSupabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DocumentApprovalPanelProps {
   document: Document;
@@ -45,9 +44,6 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
     notes: document.approval_notes
   });
   
-  const { supabase } = useSupabaseClient();
-  
-  // Fetch approval information from activity logs
   useEffect(() => {
     const fetchApprovalInfo = async () => {
       if (!document.entity_type || !document.entity_id || !document.id) return;
@@ -76,7 +72,6 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           notes: latestApproval.details.notes
         });
         
-        // Update notes if available
         if (latestApproval.details.notes) {
           setNotes(latestApproval.details.notes);
         }
@@ -99,7 +94,6 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       entityId: document.entity_id
     }, {
       onSuccess: () => {
-        // Update local state
         setApprovalInfo(prev => ({
           ...prev,
           status,
