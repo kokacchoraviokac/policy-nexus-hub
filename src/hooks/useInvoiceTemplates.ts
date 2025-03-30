@@ -11,7 +11,7 @@ import { useDefaultTemplate } from "@/hooks/invoiceTemplates/useDefaultTemplate"
 import { useSaveTemplate } from "@/hooks/invoiceTemplates/useSaveTemplate";
 import { TemplateFormValues } from "@/components/finances/invoices/templates/TemplateFormTypes";
 
-export { TemplateFormValues };
+export type { TemplateFormValues };
 
 export const defaultTemplateValues: TemplateFormValues = {
   name: "Default Template",

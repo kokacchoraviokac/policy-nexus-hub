@@ -17,7 +17,10 @@ export const useUnlinkedPayments = () => {
   const { pagination, setPagination } = useUnlinkedPaymentsPagination();
   const { linkPayment, isLinking } = useUnlinkedPaymentsMutations();
   const { exportPayments } = useUnlinkedPaymentsExport(filters);
-  const { data, isLoading, isError, error, refetch } = useUnlinkedPaymentsQuery(pagination, filters);
+  const { data, isLoading, isError, error, refetch } = useUnlinkedPaymentsQuery({
+    filters,
+    pagination
+  });
 
   return {
     payments: data?.data || [],
