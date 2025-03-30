@@ -63,5 +63,11 @@
   "from": "Od",
   "to": "Do",
   "clearFilters": "Obriši filtere",
-  "unlinked": "Nepovezano"
+  "unlinked": "Nepovezano",
+  "search": "Pretraži",
+  "select": "Izaberi",
+  "rowsPerPage": "Redova po strani",
+  "showingItemsOf": "Prikazuje se {0} do {1} od {2} stavki",
+  "noItemsToShow": "Nema stavki za prikaz",
+  "goTo": "Idi na"
 }

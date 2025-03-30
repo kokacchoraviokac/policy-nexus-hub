@@ -63,5 +63,11 @@
   "from": "Desde",
   "to": "Hasta",
   "clearFilters": "Limpiar Filtros",
-  "unlinked": "No Vinculado"
+  "unlinked": "No Vinculado",
+  "search": "Buscar",
+  "select": "Seleccionar",
+  "rowsPerPage": "Filas por página",
+  "showingItemsOf": "Mostrando {0} a {1} de {2} elementos",
+  "noItemsToShow": "No hay elementos para mostrar",
+  "goTo": "Ir a"
 }

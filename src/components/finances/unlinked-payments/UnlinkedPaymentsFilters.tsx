@@ -1,24 +1,11 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon, Filter, Search, RefreshCw } from "lucide-react";
-import { format } from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Search, X } from "lucide-react";
 import { FilterOptions } from "@/hooks/useUnlinkedPayments";
 
 interface UnlinkedPaymentsFiltersProps {
@@ -30,121 +17,102 @@ interface UnlinkedPaymentsFiltersProps {
 const UnlinkedPaymentsFilters: React.FC<UnlinkedPaymentsFiltersProps> = ({
   filters,
   onFiltersChange,
-  onRefresh,
+  onRefresh
 }) => {
   const { t } = useLanguage();
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onFiltersChange({ ...filters, searchTerm: e.target.value });
-  };
-
+  const [localSearchTerm, setLocalSearchTerm] = useState(filters.searchTerm || "");
+  
   const handleStatusChange = (value: string) => {
     onFiltersChange({ ...filters, status: value });
   };
-
-  const handleStartDateChange = (date: Date | undefined) => {
-    onFiltersChange({ ...filters, startDate: date || null });
+  
+  const handleStartDateChange = (date: Date | null) => {
+    onFiltersChange({ ...filters, startDate: date });
   };
-
-  const handleEndDateChange = (date: Date | undefined) => {
-    onFiltersChange({ ...filters, endDate: date || null });
+  
+  const handleEndDateChange = (date: Date | null) => {
+    onFiltersChange({ ...filters, endDate: date });
   };
-
+  
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onFiltersChange({ ...filters, searchTerm: localSearchTerm });
+  };
+  
   const handleClearFilters = () => {
+    setLocalSearchTerm("");
     onFiltersChange({
       searchTerm: "",
       startDate: null,
       endDate: null,
-      status: "unlinked",
+      status: "unlinked"
     });
   };
 
   return (
-    <div className="p-4 space-y-4 border rounded-lg bg-background">
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-grow">
+    <div className="space-y-4">
+      <form onSubmit={handleSearchSubmit} className="flex gap-2">
+        <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={t("searchPlaceholder")}
+            value={localSearchTerm}
+            onChange={(e) => setLocalSearchTerm(e.target.value)}
             className="pl-8"
-            value={filters.searchTerm || ""}
-            onChange={handleSearchChange}
           />
         </div>
-
-        <Select value={filters.status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder={t("status")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="all">{t("all")}</SelectItem>
-              <SelectItem value="linked">{t("linked")}</SelectItem>
-              <SelectItem value="unlinked">{t("unlinked")}</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-
-        <Button variant="outline" size="icon" onClick={onRefresh}>
-          <RefreshCw className="h-4 w-4" />
+        <Button type="submit" variant="default">
+          {t("search")}
         </Button>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3 items-center">
-        <div className="flex items-center space-x-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[140px] justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {filters.startDate ? (
-                  format(filters.startDate, "PPP")
-                ) : (
-                  <span>{t("from")}</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={filters.startDate || undefined}
-                onSelect={handleStartDateChange}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-[140px] justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {filters.endDate ? (
-                  format(filters.endDate, "PPP")
-                ) : (
-                  <span>{t("to")}</span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={filters.endDate || undefined}
-                onSelect={handleEndDateChange}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className="ml-auto flex space-x-2">
-          <Button variant="outline" onClick={handleClearFilters}>
-            {t("clearFilters")}
-          </Button>
+      </form>
+      
+      <div className="flex flex-col sm:flex-row gap-4 items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 flex-1">
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("status")}</label>
+            <Select
+              value={filters.status}
+              onValueChange={handleStatusChange}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t("all")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("all")}</SelectItem>
+                <SelectItem value="linked">{t("linked")}</SelectItem>
+                <SelectItem value="unlinked">{t("unlinked")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("from")}</label>
+            <DatePicker
+              date={filters.startDate}
+              onSelect={handleStartDateChange}
+              placeholder={t("select")}
+            />
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("to")}</label>
+            <DatePicker
+              date={filters.endDate}
+              onSelect={handleEndDateChange}
+              placeholder={t("select")}
+            />
+          </div>
+          
+          <div className="flex items-end">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleClearFilters}
+            >
+              <X className="mr-2 h-4 w-4" />
+              {t("clearFilters")}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

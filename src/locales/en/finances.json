@@ -63,5 +63,11 @@
   "from": "From",
   "to": "To",
   "clearFilters": "Clear Filters",
-  "unlinked": "Unlinked"
+  "unlinked": "Unlinked",
+  "search": "Search",
+  "select": "Select",
+  "rowsPerPage": "Rows per page",
+  "showingItemsOf": "Showing {0} to {1} of {2} items",
+  "noItemsToShow": "No items to show",
+  "goTo": "Go to"
 }
