@@ -1,713 +1,678 @@
 
-import React, { useState, useContext, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { AuthContext } from "@/contexts/auth/AuthContext";
+import React, { useState, useEffect, useContext } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useToast } from "@/hooks/use-toast";
+import { AuthContext } from "@/contexts/auth/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { InvoiceTemplateSettings } from "@/types/finances";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Save, Trash2 } from "lucide-react";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlusCircle, Trash2, Crown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useForm } from "react-hook-form";
+import { ColorPicker } from "@/components/ui/color-picker"; // Assuming you have a color picker component
 
-const templateSchema = z.object({
-  name: z.string().min(1, { message: "Template name is required" }),
-  is_default: z.boolean().default(false),
-  primary_color: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
-    message: "Must be a valid hex color",
-  }).optional(),
-  secondary_color: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
-    message: "Must be a valid hex color",
-  }).optional(),
-  font_family: z.string().optional(),
-  logo_position: z.enum(["left", "center", "right"]).default("left"),
-  footer_text: z.string().optional(),
-  header_text: z.string().optional(),
-  show_payment_instructions: z.boolean().default(false),
-  payment_instructions: z.string().optional(),
-});
-
-type TemplateFormValues = z.infer<typeof templateSchema>;
-
-interface InvoiceTemplateManagerProps {
-  onTemplateChange?: (template: InvoiceTemplateSettings) => void;
+interface TemplateFormValues {
+  name: string;
+  primary_color: string;
+  secondary_color: string;
+  font_family: string;
+  logo_position: 'left' | 'center' | 'right';
+  header_text: string;
+  footer_text: string;
+  show_payment_instructions: boolean;
+  payment_instructions: string;
+  is_default: boolean;
 }
 
-const InvoiceTemplateManager: React.FC<InvoiceTemplateManagerProps> = ({ onTemplateChange }) => {
+const defaultTemplateValues: TemplateFormValues = {
+  name: "Default Template",
+  primary_color: "#3b82f6", // blue-500
+  secondary_color: "#f3f4f6", // gray-100
+  font_family: "helvetica",
+  logo_position: "left",
+  header_text: "",
+  footer_text: "",
+  show_payment_instructions: false,
+  payment_instructions: "",
+  is_default: true
+};
+
+const InvoiceTemplateManager = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { user } = useContext(AuthContext);
   const [templates, setTemplates] = useState<InvoiceTemplateSettings[]>([]);
-  const [currentTemplate, setCurrentTemplate] = useState<InvoiceTemplateSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
+  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateSettings | null>(null);
+  const [activeTab, setActiveTab] = useState("list");
+  const companyId = user?.companyId;
+  
   const form = useForm<TemplateFormValues>({
-    resolver: zodResolver(templateSchema),
-    defaultValues: {
-      name: "",
-      is_default: false,
-      primary_color: "#296BFF",
-      secondary_color: "#F5F7FA",
-      font_family: "helvetica",
-      logo_position: "left",
-      footer_text: "",
-      header_text: "",
-      show_payment_instructions: false,
-      payment_instructions: "",
-    },
+    defaultValues: defaultTemplateValues
   });
-
+  
   // Load templates when component mounts
   useEffect(() => {
-    if (user?.companyId) {
+    if (companyId) {
       loadTemplates();
     }
-  }, [user?.companyId]);
-
-  // Load templates from the database
+  }, [companyId]);
+  
   const loadTemplates = async () => {
-    if (!user?.companyId) return;
-    
-    setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from("invoice_templates")
-        .select("*")
-        .eq("company_id", user.companyId)
-        .order("created_at", { ascending: false });
-
+        .from('invoice_templates')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false });
+      
       if (error) throw error;
       
-      setTemplates(data || []);
+      setTemplates(data as unknown as InvoiceTemplateSettings[]);
       
-      // Set default template as current if available
-      const defaultTemplate = data?.find(t => t.is_default);
-      if (defaultTemplate) {
-        setCurrentTemplate(defaultTemplate);
-        if (onTemplateChange) {
-          onTemplateChange(defaultTemplate);
+      // If there are no templates, create a default one
+      if (data.length === 0) {
+        createDefaultTemplate();
+      } else {
+        // Find default template
+        const defaultTemplate = data.find(template => template.is_default === true);
+        if (defaultTemplate) {
+          setSelectedTemplate(defaultTemplate as unknown as InvoiceTemplateSettings);
+        } else {
+          setSelectedTemplate(data[0] as unknown as InvoiceTemplateSettings);
         }
       }
     } catch (error) {
-      console.error("Error loading invoice templates:", error);
+      console.error("Error loading templates:", error);
       toast({
         title: t("errorLoadingTemplates"),
-        description: String(error),
+        description: t("errorLoadingTemplatesDescription"),
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  // Handle template selection
-  const handleTemplateSelect = (templateId: string) => {
-    const selected = templates.find(t => t.id === templateId);
-    if (selected) {
-      setCurrentTemplate(selected);
-      if (onTemplateChange) {
-        onTemplateChange(selected);
-      }
-      
-      // Set form values
-      form.reset({
-        name: selected.name,
-        is_default: selected.is_default,
-        primary_color: selected.primary_color || "#296BFF",
-        secondary_color: selected.secondary_color || "#F5F7FA",
-        font_family: selected.font_family || "helvetica",
-        logo_position: (selected.logo_position as "left" | "center" | "right") || "left",
-        footer_text: selected.footer_text || "",
-        header_text: selected.header_text || "",
-        show_payment_instructions: selected.show_payment_instructions || false,
-        payment_instructions: selected.payment_instructions || "",
-      });
-    }
-  };
-
-  // Handle form submission for creating a new template
-  const onSubmit = async (values: TemplateFormValues) => {
-    if (!user?.companyId) return;
-    
-    setIsSaving(true);
+  
+  const createDefaultTemplate = async () => {
     try {
-      // If setting this template as default, update all other templates
-      if (values.is_default) {
-        await supabase
-          .from("invoice_templates")
-          .update({ is_default: false })
-          .eq("company_id", user.companyId);
-      }
-      
-      // Create new template
       const { data, error } = await supabase
-        .from("invoice_templates")
-        .insert({
-          ...values,
-          company_id: user.companyId,
-        })
+        .from('invoice_templates')
+        .insert([
+          {
+            company_id: companyId,
+            name: defaultTemplateValues.name,
+            is_default: true,
+            primary_color: defaultTemplateValues.primary_color,
+            secondary_color: defaultTemplateValues.secondary_color,
+            font_family: defaultTemplateValues.font_family,
+            logo_position: defaultTemplateValues.logo_position,
+            header_text: defaultTemplateValues.header_text,
+            footer_text: defaultTemplateValues.footer_text,
+            show_payment_instructions: defaultTemplateValues.show_payment_instructions,
+            payment_instructions: defaultTemplateValues.payment_instructions
+          }
+        ])
         .select()
         .single();
-
+      
       if (error) throw error;
       
       toast({
-        title: t("templateCreated"),
-        description: t("templateCreatedSuccessfully"),
+        title: t("defaultTemplateCreated"),
+        description: t("defaultTemplateCreatedDescription"),
       });
       
-      // Close dialog and refresh templates
-      setIsDialogOpen(false);
-      loadTemplates();
-      
-      // Set as current template if it's the default
-      if (values.is_default && data) {
-        setCurrentTemplate(data);
-        if (onTemplateChange) {
-          onTemplateChange(data);
-        }
-      }
+      setSelectedTemplate(data as unknown as InvoiceTemplateSettings);
+      setTemplates([data] as unknown as InvoiceTemplateSettings[]);
     } catch (error) {
-      console.error("Error creating template:", error);
+      console.error("Error creating default template:", error);
       toast({
         title: t("errorCreatingTemplate"),
-        description: String(error),
+        description: t("errorCreatingTemplateDescription"),
         variant: "destructive",
       });
-    } finally {
-      setIsSaving(false);
     }
   };
-
-  // Handle updating an existing template
-  const handleUpdateTemplate = async () => {
-    if (!user?.companyId || !currentTemplate) return;
-    
-    const values = form.getValues();
-    setIsSaving(true);
-    
-    try {
-      // If setting this template as default, update all other templates
-      if (values.is_default && !currentTemplate.is_default) {
-        await supabase
-          .from("invoice_templates")
-          .update({ is_default: false })
-          .eq("company_id", user.companyId);
-      }
-      
-      // Update current template
-      const { data, error } = await supabase
-        .from("invoice_templates")
-        .update(values)
-        .eq("id", currentTemplate.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      toast({
-        title: t("templateUpdated"),
-        description: t("templateUpdatedSuccessfully"),
-      });
-      
-      // Refresh templates
-      loadTemplates();
-      
-      // Update current template
-      if (data) {
-        setCurrentTemplate(data);
-        if (onTemplateChange) {
-          onTemplateChange(data);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating template:", error);
-      toast({
-        title: t("errorUpdatingTemplate"),
-        description: String(error),
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+  
+  const handleAddTemplate = () => {
+    form.reset(defaultTemplateValues);
+    form.setValue("name", `Template ${templates.length + 1}`);
+    form.setValue("is_default", false);
+    setSelectedTemplate(null);
+    setActiveTab("edit");
   };
-
-  // Handle deleting a template
-  const handleDeleteTemplate = async () => {
-    if (!user?.companyId || !currentTemplate) return;
+  
+  const handleEditTemplate = (template: InvoiceTemplateSettings) => {
+    setSelectedTemplate(template);
     
-    if (currentTemplate.is_default) {
+    // Set form values
+    form.reset({
+      name: template.name,
+      primary_color: template.primary_color || defaultTemplateValues.primary_color,
+      secondary_color: template.secondary_color || defaultTemplateValues.secondary_color,
+      font_family: template.font_family || defaultTemplateValues.font_family,
+      logo_position: (template.logo_position as 'left' | 'center' | 'right') || defaultTemplateValues.logo_position,
+      header_text: template.header_text || '',
+      footer_text: template.footer_text || '',
+      show_payment_instructions: template.show_payment_instructions || false,
+      payment_instructions: template.payment_instructions || '',
+      is_default: template.is_default
+    });
+    
+    setActiveTab("edit");
+  };
+  
+  const handleDeleteTemplate = async (templateId: string) => {
+    // Don't allow deleting the default template
+    const template = templates.find(t => t.id === templateId);
+    if (template?.is_default) {
       toast({
-        title: t("cannotDeleteDefault"),
-        description: t("cannotDeleteDefaultTemplate"),
+        title: t("cannotDeleteDefaultTemplate"),
+        description: t("cannotDeleteDefaultTemplateDescription"),
         variant: "destructive",
       });
       return;
     }
     
-    if (!confirm(t("confirmDeleteTemplate"))) return;
-    
-    setIsLoading(true);
     try {
       const { error } = await supabase
-        .from("invoice_templates")
+        .from('invoice_templates')
         .delete()
-        .eq("id", currentTemplate.id);
-
+        .eq('id', templateId);
+      
       if (error) throw error;
+      
+      // Reload templates
+      loadTemplates();
       
       toast({
         title: t("templateDeleted"),
-        description: t("templateDeletedSuccessfully"),
+        description: t("templateDeletedDescription"),
       });
       
-      // Refresh templates and reset current
-      loadTemplates();
-      setCurrentTemplate(null);
+      // If the deleted template was selected, reset the form
+      if (selectedTemplate?.id === templateId) {
+        setSelectedTemplate(null);
+        form.reset(defaultTemplateValues);
+        setActiveTab("list");
+      }
     } catch (error) {
       console.error("Error deleting template:", error);
       toast({
         title: t("errorDeletingTemplate"),
-        description: String(error),
+        description: t("errorDeletingTemplateDescription"),
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  // Clear form when creating a new template
-  const handleCreateNew = () => {
-    form.reset({
-      name: "",
-      is_default: false,
-      primary_color: "#296BFF",
-      secondary_color: "#F5F7FA",
-      font_family: "helvetica",
-      logo_position: "left",
-      footer_text: "",
-      header_text: "",
-      show_payment_instructions: false,
-      payment_instructions: "",
-    });
-    setIsDialogOpen(true);
+  
+  const handleSetDefault = async (templateId: string) => {
+    try {
+      // First, unset default on all templates
+      const { error: updateError } = await supabase
+        .from('invoice_templates')
+        .update({ is_default: false })
+        .eq('company_id', companyId);
+      
+      if (updateError) throw updateError;
+      
+      // Then set the selected template as default
+      const { error } = await supabase
+        .from('invoice_templates')
+        .update({ is_default: true })
+        .eq('id', templateId);
+      
+      if (error) throw error;
+      
+      // Reload templates
+      loadTemplates();
+      
+      toast({
+        title: t("defaultTemplateUpdated"),
+        description: t("defaultTemplateUpdatedDescription"),
+      });
+    } catch (error) {
+      console.error("Error setting default template:", error);
+      toast({
+        title: t("errorSettingDefaultTemplate"),
+        description: t("errorSettingDefaultTemplateDescription"),
+        variant: "destructive",
+      });
+    }
   };
-
+  
+  const onSubmit = async (values: TemplateFormValues) => {
+    try {
+      // If creating a new template
+      if (!selectedTemplate) {
+        // Check if this will be the default template
+        if (values.is_default) {
+          // Unset default on all templates
+          await supabase
+            .from('invoice_templates')
+            .update({ is_default: false })
+            .eq('company_id', companyId);
+        }
+        
+        // Create new template
+        const { data, error } = await supabase
+          .from('invoice_templates')
+          .insert([
+            {
+              company_id: companyId,
+              name: values.name,
+              is_default: values.is_default,
+              primary_color: values.primary_color,
+              secondary_color: values.secondary_color,
+              font_family: values.font_family,
+              logo_position: values.logo_position,
+              header_text: values.header_text,
+              footer_text: values.footer_text,
+              show_payment_instructions: values.show_payment_instructions,
+              payment_instructions: values.payment_instructions
+            }
+          ])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        toast({
+          title: t("templateCreated"),
+          description: t("templateCreatedDescription"),
+        });
+        
+        setSelectedTemplate(data as unknown as InvoiceTemplateSettings);
+      } else {
+        // If updating an existing template
+        // Check if this template is being set as default
+        if (values.is_default && !selectedTemplate.is_default) {
+          // Unset default on all templates
+          await supabase
+            .from('invoice_templates')
+            .update({ is_default: false })
+            .eq('company_id', companyId);
+        }
+        
+        // Update template
+        const { data, error } = await supabase
+          .from('invoice_templates')
+          .update({
+            name: values.name,
+            is_default: values.is_default,
+            primary_color: values.primary_color,
+            secondary_color: values.secondary_color,
+            font_family: values.font_family,
+            logo_position: values.logo_position,
+            header_text: values.header_text,
+            footer_text: values.footer_text,
+            show_payment_instructions: values.show_payment_instructions,
+            payment_instructions: values.payment_instructions
+          })
+          .eq('id', selectedTemplate.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        toast({
+          title: t("templateUpdated"),
+          description: t("templateUpdatedDescription"),
+        });
+        
+        setSelectedTemplate(data as unknown as InvoiceTemplateSettings);
+      }
+      
+      // Reload templates
+      loadTemplates();
+      setActiveTab("list");
+    } catch (error) {
+      console.error("Error saving template:", error);
+      toast({
+        title: t("errorSavingTemplate"),
+        description: t("errorSavingTemplateDescription"),
+        variant: "destructive",
+      });
+    }
+  };
+  
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">{t("invoiceTemplates")}</h2>
-        <Button size="sm" onClick={handleCreateNew}>
-          <Plus className="h-4 w-4 mr-2" />
-          {t("newTemplate")}
-        </Button>
-      </div>
-
-      {templates.length === 0 && !isLoading ? (
-        <Card>
-          <CardContent className="pt-6 pb-4 text-center">
-            <p className="text-muted-foreground">{t("noTemplatesFound")}</p>
-            <Button variant="outline" className="mt-4" onClick={handleCreateNew}>
-              {t("createFirstTemplate")}
+    <div className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="list">{t("templatesList")}</TabsTrigger>
+            <TabsTrigger value="edit">{selectedTemplate ? t("editTemplate") : t("newTemplate")}</TabsTrigger>
+          </TabsList>
+          
+          {activeTab === "list" && (
+            <Button onClick={handleAddTemplate}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              {t("newTemplate")}
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
-          <div className="lg:col-span-2">
+          )}
+        </div>
+        
+        <TabsContent value="list" className="space-y-4">
+          {templates.length === 0 ? (
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>{t("availableTemplates")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1">
-                {isLoading ? (
-                  <div className="flex items-center justify-center p-4">
-                    <p>{t("loading")}</p>
-                  </div>
-                ) : (
-                  <div className="max-h-[300px] overflow-y-auto space-y-1">
-                    {templates.map((template) => (
-                      <div
-                        key={template.id}
-                        className={`p-2 rounded cursor-pointer flex items-center justify-between ${
-                          currentTemplate?.id === template.id
-                            ? "bg-primary/10 font-medium"
-                            : "hover:bg-muted"
-                        }`}
-                        onClick={() => handleTemplateSelect(template.id)}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <div
-                            className="w-3 h-3 rounded-full"
-                            style={{
-                              backgroundColor: template.primary_color || "#296BFF",
-                            }}
-                          />
-                          <span>{template.name}</span>
-                        </div>
-                        {template.is_default && (
-                          <Badge variant="outline">{t("default")}</Badge>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <CardContent className="flex flex-col items-center justify-center py-10">
+                <p className="text-muted-foreground mb-4">{t("noTemplatesFound")}</p>
+                <Button onClick={handleAddTemplate}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  {t("createFirstTemplate")}
+                </Button>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="lg:col-span-5">
-            {currentTemplate ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t("templateSettings")}</CardTitle>
-                  <CardDescription>{t("editTemplateDescription")}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...form}>
-                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("templateName")}</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="font_family"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("fontFamily")}</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder={t("selectFont")} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="helvetica">Helvetica</SelectItem>
-                                <SelectItem value="times">Times New Roman</SelectItem>
-                                <SelectItem value="courier">Courier</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="primary_color"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("primaryColor")}</FormLabel>
-                            <div className="flex items-center space-x-2">
-                              <FormControl>
-                                <Input {...field} type="color" className="w-10 h-10 p-1" />
-                              </FormControl>
-                              <Input
-                                value={field.value}
-                                onChange={field.onChange}
-                                className="flex-1"
-                              />
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="secondary_color"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("secondaryColor")}</FormLabel>
-                            <div className="flex items-center space-x-2">
-                              <FormControl>
-                                <Input {...field} type="color" className="w-10 h-10 p-1" />
-                              </FormControl>
-                              <Input
-                                value={field.value}
-                                onChange={field.onChange}
-                                className="flex-1"
-                              />
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="logo_position"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("logoPosition")}</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder={t("selectPosition")} />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="left">{t("left")}</SelectItem>
-                                <SelectItem value="center">{t("center")}</SelectItem>
-                                <SelectItem value="right">{t("right")}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="sm:col-span-2">
-                        <FormField
-                          control={form.control}
-                          name="header_text"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("headerText")}</FormLabel>
-                              <FormControl>
-                                <Textarea {...field} rows={2} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {templates.map((template) => (
+                <Card key={template.id} className="relative">
+                  {template.is_default && (
+                    <Badge className="absolute top-2 right-2" variant="secondary">
+                      <Crown className="h-3 w-3 mr-1" />
+                      {t("default")}
+                    </Badge>
+                  )}
+                  <CardHeader>
+                    <CardTitle>{template.name}</CardTitle>
+                    <CardDescription>{t("fontFamily")}: {template.font_family || "Default"}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-2 mb-4">
+                      <div className="w-8 h-8 rounded" style={{ backgroundColor: template.primary_color || '#3b82f6' }} />
+                      <div className="w-8 h-8 rounded" style={{ backgroundColor: template.secondary_color || '#f3f4f6' }} />
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground">{t("logoPosition")}: {template.logo_position || "Left"}</p>
+                    
+                    {template.header_text && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium">{t("headerText")}</p>
+                        <p className="text-xs text-muted-foreground truncate">{template.header_text}</p>
                       </div>
-
-                      <div className="sm:col-span-2">
-                        <FormField
-                          control={form.control}
-                          name="footer_text"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t("footerText")}</FormLabel>
-                              <FormControl>
-                                <Textarea {...field} rows={2} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    )}
+                    
+                    {template.footer_text && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium">{t("footerText")}</p>
+                        <p className="text-xs text-muted-foreground truncate">{template.footer_text}</p>
                       </div>
-
-                      <div className="sm:col-span-2">
-                        <FormField
-                          control={form.control}
-                          name="show_payment_instructions"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                              <div className="space-y-0.5">
-                                <FormLabel>{t("showPaymentInstructions")}</FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {form.watch("show_payment_instructions") && (
-                        <div className="sm:col-span-2">
-                          <FormField
-                            control={form.control}
-                            name="payment_instructions"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>{t("paymentInstructions")}</FormLabel>
-                                <FormControl>
-                                  <Textarea {...field} rows={3} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleEditTemplate(template)}
+                    >
+                      {t("edit")}
+                    </Button>
+                    <div className="flex gap-2">
+                      {!template.is_default && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleSetDefault(template.id)}
+                        >
+                          {t("setDefault")}
+                        </Button>
                       )}
-
-                      <div className="sm:col-span-2">
-                        <FormField
-                          control={form.control}
-                          name="is_default"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                              <div className="space-y-0.5">
-                                <FormLabel>{t("setAsDefault")}</FormLabel>
-                              </div>
-                              <FormControl>
-                                <Switch
-                                  checked={field.value}
-                                  onCheckedChange={field.onChange}
-                                  disabled={currentTemplate?.is_default}
-                                />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      {!template.is_default && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDeleteTemplate(template.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                  </Form>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button
-                    variant="outline"
-                    onClick={handleDeleteTemplate}
-                    disabled={isSaving || currentTemplate.is_default}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    {t("delete")}
-                  </Button>
-                  <Button onClick={handleUpdateTemplate} disabled={isSaving}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {isSaving ? t("saving") : t("saveChanges")}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="pt-6 pb-4 text-center">
-                  <p className="text-muted-foreground">
-                    {t("selectTemplateOrCreateNew")}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
-      )}
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>{t("createNewTemplate")}</DialogTitle>
-            <DialogDescription>
-              {t("createNewTemplateDescription")}
-            </DialogDescription>
-          </DialogHeader>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("templateName")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder={t("templateNamePlaceholder")} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="primary_color"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("primaryColor")}</FormLabel>
-                      <div className="flex items-center space-x-2">
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="edit">
+          <Card>
+            <CardHeader>
+              <CardTitle>{selectedTemplate ? t("editTemplate") : t("newTemplate")}</CardTitle>
+              <CardDescription>{t("customizeInvoiceTemplate")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("templateName")}</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder={t("templateNamePlaceholder")} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="font_family"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("fontFamily")}</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("selectFont")} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="helvetica">Helvetica</SelectItem>
+                              <SelectItem value="times">Times</SelectItem>
+                              <SelectItem value="courier">Courier</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="primary_color"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("primaryColor")}</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="color" 
+                              {...field} 
+                              className="h-10 w-full"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="secondary_color"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("secondaryColor")}</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="color" 
+                              {...field} 
+                              className="h-10 w-full"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="logo_position"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("logoPosition")}</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("selectLogoPosition")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="left">{t("left")}</SelectItem>
+                            <SelectItem value="center">{t("center")}</SelectItem>
+                            <SelectItem value="right">{t("right")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="header_text"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("headerText")}</FormLabel>
                         <FormControl>
-                          <Input {...field} type="color" className="w-10 h-10 p-1" />
+                          <Textarea 
+                            {...field} 
+                            placeholder={t("headerTextPlaceholder")} 
+                            className="min-h-[80px]"
+                          />
                         </FormControl>
-                        <Input
-                          value={field.value}
-                          onChange={field.onChange}
-                          className="flex-1"
-                        />
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="font_family"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("fontFamily")}</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                        <FormDescription>
+                          {t("headerTextDescription")}
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="footer_text"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("footerText")}</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("selectFont")} />
-                          </SelectTrigger>
+                          <Textarea 
+                            {...field} 
+                            placeholder={t("footerTextPlaceholder")} 
+                            className="min-h-[80px]"
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="helvetica">Helvetica</SelectItem>
-                          <SelectItem value="times">Times New Roman</SelectItem>
-                          <SelectItem value="courier">Courier</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                        <FormDescription>
+                          {t("footerTextDescription")}
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="show_payment_instructions"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            {t("showPaymentInstructions")}
+                          </FormLabel>
+                          <FormDescription>
+                            {t("showPaymentInstructionsDescription")}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  {form.watch("show_payment_instructions") && (
+                    <FormField
+                      control={form.control}
+                      name="payment_instructions"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("paymentInstructions")}</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              {...field} 
+                              placeholder={t("paymentInstructionsPlaceholder")} 
+                              className="min-h-[100px]"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                   )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="is_default"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel>{t("setAsDefault")}</FormLabel>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter>
-                <Button type="submit" disabled={isCreating}>
-                  {isCreating ? t("creating") : t("createTemplate")}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+                  
+                  <FormField
+                    control={form.control}
+                    name="is_default"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            {t("defaultTemplate")}
+                          </FormLabel>
+                          <FormDescription>
+                            {t("defaultTemplateDescription")}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("list")}
+                    >
+                      {t("cancel")}
+                    </Button>
+                    <Button type="submit">
+                      {selectedTemplate ? t("updateTemplate") : t("createTemplate")}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

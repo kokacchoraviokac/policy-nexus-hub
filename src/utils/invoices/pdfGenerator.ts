@@ -158,8 +158,10 @@ export const generateInvoicePdf = async (
     }
   }
   
-  // Invoice details box
-  const detailsY = headerY + 75;
+  // Invoice details box - start position
+  let detailsY = headerY + 75;
+  // Define column positions for details section
+  const detailsX = margin;
   
   // Draw details box
   doc.setDrawColor(230, 230, 230);
@@ -337,7 +339,7 @@ export const getInvoiceTemplate = async (
         .single();
         
       if (error || !data) return null;
-      return data as InvoiceTemplateSettings;
+      return data as unknown as InvoiceTemplateSettings;
     }
     
     // Otherwise, fetch the default template
@@ -349,7 +351,7 @@ export const getInvoiceTemplate = async (
       .single();
       
     if (error || !data) return null;
-    return data as InvoiceTemplateSettings;
+    return data as unknown as InvoiceTemplateSettings;
   } catch (error) {
     console.error('Error fetching invoice template:', error);
     return null;
