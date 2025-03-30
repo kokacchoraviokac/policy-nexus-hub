@@ -1,19 +1,18 @@
 
-import general from './general.json';
-import importExport from './importExport.json';
-import documents from './documents.json';
-import workflow from './workflow.json';
-import addendums from './addendums.json';
-import unlinkedPayments from './unlinkedPayments.json';
+import general from "./general.json";
+import addendums from "./addendums.json";
+import documents from "./documents.json";
+import importExport from "./importExport.json";
+import unlinkedPayments from "./unlinkedPayments.json";
+import workflow from "./workflow.json";
+import reports from "./reports.json";
 
-// Merge all policy-related translations
-const policyTranslations = {
+export default {
   ...general,
-  ...importExport,
-  ...documents,
-  ...workflow,
   ...addendums,
-  ...unlinkedPayments
+  ...documents,
+  ...importExport,
+  ...unlinkedPayments,
+  ...workflow,
+  ...reports
 };
-
-export default policyTranslations;
