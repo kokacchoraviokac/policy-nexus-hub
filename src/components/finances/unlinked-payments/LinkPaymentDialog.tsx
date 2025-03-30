@@ -8,12 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Link, Loader2, Search, X } from "lucide-react";
 import { usePoliciesSearch } from "@/hooks/usePoliciesSearch";
 import { Policy } from "@/types/policies";
+import { UnlinkedPaymentType } from "@/types/finances";
 
 export interface LinkPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (policyId: string) => void;
-  isLoading: boolean;
+  onLink: (paymentId: string, policyId: string) => Promise<void>;
+  isLinking: boolean;
+  payment?: UnlinkedPaymentType;
   paymentReference?: string;
   paymentAmount?: number;
   payerName?: string;
@@ -22,8 +24,9 @@ export interface LinkPaymentDialogProps {
 const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
   open,
   onOpenChange,
-  onConfirm,
-  isLoading,
+  onLink,
+  isLinking,
+  payment,
   paymentReference,
   paymentAmount,
   payerName
@@ -39,8 +42,11 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
   } = usePoliciesSearch();
   
   const handleConfirm = () => {
-    if (selectedPolicyId) {
-      onConfirm(selectedPolicyId);
+    if (selectedPolicyId && payment) {
+      onLink(payment.id, selectedPolicyId);
+    } else if (selectedPolicyId) {
+      // Fallback for older interface
+      onLink(selectedPolicyId, selectedPolicyId);
     }
   };
   
@@ -57,6 +63,12 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
   }, [open, setSearchTerm]);
 
   const selectedPolicy = policies.find(p => p.id === selectedPolicyId);
+  
+  // Prioritize payment prop over individual fields
+  const displayRef = payment?.reference || paymentReference;
+  const displayAmount = payment?.amount !== undefined ? payment.amount : paymentAmount;
+  const displayCurrency = payment?.currency || "EUR";
+  const displayPayer = payment?.payer_name || payerName;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,31 +77,31 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
           <DialogTitle>{t("linkPaymentToPolicy")}</DialogTitle>
         </DialogHeader>
         
-        {paymentReference || paymentAmount || payerName ? (
+        {(displayRef || displayAmount !== undefined || displayPayer) && (
           <div className="bg-muted/50 p-3 rounded-md mb-4">
             <h4 className="text-sm font-medium mb-2">{t("paymentDetails")}:</h4>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              {paymentReference && (
+              {displayRef && (
                 <div>
                   <span className="text-muted-foreground">{t("reference")}: </span>
-                  <span className="font-medium">{paymentReference}</span>
+                  <span className="font-medium">{displayRef}</span>
                 </div>
               )}
-              {paymentAmount && (
+              {displayAmount !== undefined && (
                 <div>
                   <span className="text-muted-foreground">{t("amount")}: </span>
-                  <span className="font-medium">{formatCurrency(paymentAmount, "EUR")}</span>
+                  <span className="font-medium">{formatCurrency(displayAmount, displayCurrency)}</span>
                 </div>
               )}
-              {payerName && (
+              {displayPayer && (
                 <div className="col-span-2">
                   <span className="text-muted-foreground">{t("payerName")}: </span>
-                  <span className="font-medium">{payerName}</span>
+                  <span className="font-medium">{displayPayer}</span>
                 </div>
               )}
             </div>
           </div>
-        ) : null}
+        )}
         
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
@@ -168,9 +180,9 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
           </Button>
           <Button 
             onClick={handleConfirm} 
-            disabled={!selectedPolicyId || isLoading}
+            disabled={!selectedPolicyId || isLinking}
           >
-            {isLoading ? (
+            {isLinking ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("processing")}

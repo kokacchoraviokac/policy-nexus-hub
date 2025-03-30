@@ -14,18 +14,26 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface DatePickerProps {
   date: Date | undefined;
-  setDate: (date: Date | undefined) => void;
+  setDate?: (date: Date | undefined) => void;
+  onSelect?: (date: Date | undefined) => void;
   className?: string;
   placeholder?: string;
+  id?: string;
 }
 
-export function DatePicker({ date, setDate, className, placeholder }: DatePickerProps) {
+export function DatePicker({ date, setDate, onSelect, className, placeholder, id }: DatePickerProps) {
   const { t } = useLanguage();
+  
+  const handleSelect = (date: Date | undefined) => {
+    if (setDate) setDate(date);
+    if (onSelect) onSelect(date);
+  };
   
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant={"outline"}
           className={cn(
             "w-full justify-start text-left font-normal",
@@ -41,7 +49,7 @@ export function DatePicker({ date, setDate, className, placeholder }: DatePicker
         <Calendar
           mode="single"
           selected={date}
-          onSelect={setDate}
+          onSelect={handleSelect}
           initialFocus
           className="pointer-events-auto"
         />

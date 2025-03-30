@@ -1,10 +1,8 @@
 
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import Login from '@/pages/Login';
-import NotFound from '@/pages/NotFound';
 import AppLayout from '@/components/layout/AppLayout';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import NotFound from '@/pages/NotFound';
 import { DashboardRoutes } from './DashboardRoutes';
 import { PolicyRoutes } from './PolicyRoutes'; 
 import { SalesRoutes } from './SalesRoutes';

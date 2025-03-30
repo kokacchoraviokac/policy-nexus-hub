@@ -9,27 +9,14 @@ import { useCreateDefaultTemplate } from "@/hooks/invoiceTemplates/useCreateDefa
 import { useDeleteTemplate } from "@/hooks/invoiceTemplates/useDeleteTemplate";
 import { useDefaultTemplate } from "@/hooks/invoiceTemplates/useDefaultTemplate";
 import { useSaveTemplate } from "@/hooks/invoiceTemplates/useSaveTemplate";
-
-export type TemplateFormValues = {
-  name: string;
-  primary_color: string;
-  secondary_color: string;
-  font_family: string;
-  font_weight: 'normal' | 'bold' | 'light';
-  font_style: 'normal' | 'italic';
-  logo_position: 'left' | 'center' | 'right';
-  header_text: string;
-  footer_text: string;
-  show_payment_instructions: boolean;
-  payment_instructions: string;
-  is_default: boolean;
-};
+import { TemplateFormValues } from "@/components/finances/invoices/templates/TemplateFormTypes";
 
 export const defaultTemplateValues: TemplateFormValues = {
   name: "Default Template",
   primary_color: "#3b82f6", // blue-500
   secondary_color: "#f3f4f6", // gray-100
   font_family: "helvetica",
+  font_size: "12px", // Added missing font_size property
   font_weight: "normal",
   font_style: "normal",
   logo_position: "left",

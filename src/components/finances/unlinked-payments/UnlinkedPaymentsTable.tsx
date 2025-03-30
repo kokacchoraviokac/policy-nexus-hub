@@ -11,22 +11,24 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Link, Loader2 } from "lucide-react";
-import { UnlinkedPayment } from "@/hooks/unlinked-payments";
+import { UnlinkedPaymentType } from "@/types/finances";
 
 interface UnlinkedPaymentsTableProps {
-  payments: UnlinkedPayment[];
+  payments: UnlinkedPaymentType[];
   isLoading: boolean;
-  onLinkPayment: (paymentId: string) => void;
-  isLinking: boolean;
+  onLinkPayment?: (payment: UnlinkedPaymentType) => void;
+  isLinking?: boolean;
   linkingPaymentId?: string;
+  onRefresh?: () => void;
 }
 
-const UnlinkedPaymentsTable: React.FC<UnlinkedPaymentsTableProps> = ({
+export const UnlinkedPaymentsTable: React.FC<UnlinkedPaymentsTableProps> = ({
   payments,
   isLoading,
   onLinkPayment,
   isLinking,
-  linkingPaymentId
+  linkingPaymentId,
+  onRefresh
 }) => {
   const { t, formatCurrency, formatDate } = useLanguage();
   
@@ -74,11 +76,11 @@ const UnlinkedPaymentsTable: React.FC<UnlinkedPaymentsTableProps> = ({
               </span>
             </TableCell>
             <TableCell>
-              {payment.status === "unlinked" ? (
+              {payment.status === "unlinked" && onLinkPayment ? (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onLinkPayment(payment.id)}
+                  onClick={() => onLinkPayment(payment)}
                   disabled={isLinking && linkingPaymentId === payment.id}
                 >
                   {isLinking && linkingPaymentId === payment.id ? (

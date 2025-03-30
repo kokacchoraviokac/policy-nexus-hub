@@ -1,24 +1,8 @@
+
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { InvoiceType, InvoiceItem } from '@/types/finances';
+import { InvoiceType, InvoiceItem, InvoiceTemplateSettings } from '@/types/finances';
 import { formatCurrency, formatDate } from '@/utils/format';
-
-// Define the template settings interface
-export interface InvoiceTemplateSettings {
-  name: string;
-  primary_color: string;
-  secondary_color: string;
-  font_family: string;
-  font_size: string;
-  font_weight?: 'normal' | 'bold' | 'light';
-  font_style?: 'normal' | 'italic';
-  logo_position: 'left' | 'center' | 'right';
-  header_text: string;
-  footer_text: string;
-  payment_instructions: string;
-  show_payment_instructions?: boolean;
-  is_default: boolean;
-}
 
 // Generate PDF function
 export const generateInvoicePdf = async (
@@ -97,7 +81,7 @@ export const generateInvoicePdf = async (
     didDrawPage: (data) => {
       // Footer section
       let footerText = options?.customFooter || 'Thank you for your business!';
-      let nPages = doc.internal.getNumberOfPages();
+      let nPages = (doc as any).internal.getNumberOfPages();
       
       for (let i = 1; i <= nPages; i++) {
         if (i > 1) {
@@ -115,7 +99,7 @@ export const generateInvoicePdf = async (
     }
   });
   
-  const finalY = doc.lastAutoTable?.finalY || 150;
+  const finalY = (doc as any).lastAutoTable?.finalY || 150;
   
   // Total amount section
   doc.setFontSize(12);

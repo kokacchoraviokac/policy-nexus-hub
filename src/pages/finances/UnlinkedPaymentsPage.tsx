@@ -5,23 +5,23 @@ import { ArrowLeft, FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { UnlinkedPaymentsTable } from "@/components/finances/unlinked-payments/UnlinkedPaymentsTable";
+import UnlinkedPaymentsTable from "@/components/finances/unlinked-payments/UnlinkedPaymentsTable";
 import { UnlinkedPaymentsFilters } from "@/components/finances/unlinked-payments/UnlinkedPaymentsFilters";
 import { useUnlinkedPaymentsFilters } from "@/hooks/unlinked-payments/useUnlinkedPaymentsFilters";
 import { useUnlinkedPaymentsQuery } from "@/hooks/unlinked-payments/useUnlinkedPaymentsQuery";
 import { useUnlinkedPaymentsPagination } from "@/hooks/unlinked-payments/useUnlinkedPaymentsPagination";
 import { useUnlinkedPaymentsExport } from "@/hooks/unlinked-payments/useUnlinkedPaymentsExport";
-import { UnlinkedPaymentsPagination } from "@/components/finances/unlinked-payments/UnlinkedPaymentsPagination";
+import UnlinkedPaymentsPagination from "@/components/finances/unlinked-payments/UnlinkedPaymentsPagination";
 
 const UnlinkedPaymentsPage = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { filters, setFilters } = useUnlinkedPaymentsFilters();
   const { pagination, setPagination } = useUnlinkedPaymentsPagination();
+  const [isExporting, setIsExporting] = useState(false);
   
   const {
-    data: unlinkedPayments,
-    totalItems,
+    data,
     isLoading,
     isError,
     refetch
@@ -30,7 +30,10 @@ const UnlinkedPaymentsPage = () => {
     pagination
   });
   
-  const { exportUnlinkedPayments, isExporting } = useUnlinkedPaymentsExport();
+  const unlinkedPayments = data?.data || [];
+  const totalItems = data?.totalCount || 0;
+  
+  const { exportPayments } = useUnlinkedPaymentsExport(filters);
   
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
@@ -53,7 +56,8 @@ const UnlinkedPaymentsPage = () => {
   
   const handleExport = async () => {
     try {
-      await exportUnlinkedPayments(filters);
+      setIsExporting(true);
+      await exportPayments();
       toast({
         title: t("exportSuccess"),
         description: t("unlinkedPaymentsExportedSuccessfully"),
@@ -65,6 +69,8 @@ const UnlinkedPaymentsPage = () => {
         description: t("unlinkedPaymentsExportFailed"),
         variant: "destructive",
       });
+    } finally {
+      setIsExporting(false);
     }
   };
   
@@ -119,7 +125,7 @@ const UnlinkedPaymentsPage = () => {
       />
       
       <UnlinkedPaymentsTable 
-        payments={unlinkedPayments || []}
+        payments={unlinkedPayments}
         isLoading={isLoading}
         onRefresh={refetch}
       />

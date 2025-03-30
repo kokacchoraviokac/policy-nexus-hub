@@ -1,3 +1,4 @@
+
 // Commission Type
 export interface CommissionType {
   id: string;
@@ -24,6 +25,10 @@ export interface UnlinkedPaymentType {
   policy_id?: string;
   created_at: string;
   company_id: string;
+  currency: string;
+  linked_policy_id?: string;
+  linked_by?: string;
+  linked_at?: string;
 }
 
 export interface InvoiceType {
@@ -71,6 +76,7 @@ export interface InvoiceItem {
 }
 
 export interface InvoiceTemplateSettings {
+  id: string;
   name: string;
   primary_color: string;
   secondary_color: string;
@@ -84,4 +90,38 @@ export interface InvoiceTemplateSettings {
   payment_instructions: string;
   show_payment_instructions?: boolean;
   is_default: boolean;
+}
+
+// Bank Statement Types
+export interface BankStatement {
+  id: string;
+  statement_date: string;
+  bank_name: string;
+  account_number: string;
+  starting_balance: number;
+  ending_balance: number;
+  status: 'in_progress' | 'processed' | 'confirmed';
+  file_path?: string;
+  processed_by?: string;
+  processed_at?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankTransaction {
+  id: string;
+  statement_id: string;
+  transaction_date: string;
+  description: string;
+  reference?: string;
+  amount: number;
+  status: 'unmatched' | 'matched' | 'ignored';
+  matched_policy_id?: string;
+  matched_invoice_id?: string;
+  matched_by?: string;
+  matched_at?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
 }
