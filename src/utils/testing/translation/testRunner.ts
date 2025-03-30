@@ -1,8 +1,9 @@
+
 import en from '../../../locales/en/index';
 import sr from '../../../locales/sr/index';
 import mk from '../../../locales/mk/index';
 import es from '../../../locales/es/index';
-import { testTranslationExists } from './existenceTest';
+import testTranslationExistence from './existenceTest';
 import { testTranslationParameters } from './parameterTest';
 import { testHtmlTranslations } from './htmlTest';
 import { TestCaseResult, TranslationTestReport } from './types';
@@ -32,7 +33,14 @@ export const runAllTranslationTests = (): TranslationTestReport => {
   };
   
   allKeys.forEach(key => {
-    const results = testTranslationExists(key);
+    const existenceTest = testTranslationExistence();
+    const results = Object.entries(existenceTest.issues).flatMap(([lang, keys]) => {
+      return keys.map(k => ({
+        passed: !keys.includes(key),
+        message: `Key "${key}" is missing in ${lang.toUpperCase()}`
+      }));
+    });
+    
     existenceTestCase.results.push(...results);
     
     totalTests += results.length;
@@ -49,7 +57,14 @@ export const runAllTranslationTests = (): TranslationTestReport => {
   };
   
   Object.keys(en).forEach(key => {
-    const results = testTranslationParameters(key);
+    const paramTest = testTranslationParameters();
+    const results = Object.entries(paramTest.issues).flatMap(([lang, keys]) => {
+      return keys.map(k => ({
+        passed: !keys.includes(key),
+        message: `Key "${key}" has inconsistent parameters in ${lang.toUpperCase()}`
+      }));
+    });
+    
     parameterTestCase.results.push(...results);
     
     totalTests += results.length;
@@ -66,7 +81,14 @@ export const runAllTranslationTests = (): TranslationTestReport => {
   };
   
   Object.keys(en).forEach(key => {
-    const results = testHtmlTranslations(key);
+    const htmlTest = testHtmlTranslations();
+    const results = Object.entries(htmlTest.issues).flatMap(([lang, keys]) => {
+      return keys.map(k => ({
+        passed: !keys.includes(key),
+        message: `Key "${key}" has inconsistent HTML in ${lang.toUpperCase()}`
+      }));
+    });
+    
     htmlTestCase.results.push(...results);
     
     totalTests += results.length;

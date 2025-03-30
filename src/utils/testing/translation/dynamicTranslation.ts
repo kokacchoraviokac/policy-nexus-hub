@@ -9,7 +9,7 @@ export const validateDynamicTranslation = (
   params: Record<string, string | number>
 ): boolean => {
   const paramRegex = /\{(\d+|[a-zA-Z]+)\}/g;
-  const requiredParams = [...translation.matchAll(paramRegex)].map(match => match[1]);
+  const requiredParams = Array.from(translation.matchAll(paramRegex)).map(match => match[1]);
   
   // Check if all required parameters are provided
   return requiredParams.every(param => Object.prototype.hasOwnProperty.call(params, param));

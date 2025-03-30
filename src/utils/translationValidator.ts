@@ -5,7 +5,7 @@ import sr from '@/locales/sr/index';
 import mk from '@/locales/mk/index';
 import es from '@/locales/es/index';
 
-interface TranslationReport {
+export interface TranslationReport {
   totalKeys: number;
   missingKeys: Record<Language, string[]>;
   missingCount: Record<Language, number>;
@@ -13,12 +13,17 @@ interface TranslationReport {
 }
 
 /**
- * Generate a comprehensive report about the translation status
+ * Format a missing translation key
+ */
+export const formatMissingTranslation = (key: string): string => {
+  return `[MISSING: ${key}]`;
+};
+
+/**
+ * Generate a report on translation status
  */
 export const generateTranslationReport = (): TranslationReport => {
-  const allKeys = Object.keys(en);
-  const languages: Record<Language, any> = { en, sr, mk, es };
-  
+  const totalKeys = Object.keys(en).length;
   const missingKeys: Record<Language, string[]> = {
     en: [],
     sr: [],
@@ -26,36 +31,47 @@ export const generateTranslationReport = (): TranslationReport => {
     es: []
   };
   
-  // Find missing keys for each language
-  Object.keys(languages).forEach(langCode => {
-    const lang = langCode as Language;
-    if (lang === 'en') return; // Skip English as it's the source
-    
-    const langData = languages[lang];
-    allKeys.forEach(key => {
-      if (!langData[key]) {
-        missingKeys[lang].push(key);
-      }
-    });
+  // English is the source, so nothing is missing
+  
+  // Check Serbian translations
+  Object.keys(en).forEach(key => {
+    if (!sr[key]) {
+      missingKeys.sr.push(key);
+    }
   });
   
-  // Calculate stats
-  const missingCount: Record<Language, number> = {
-    en: 0,
+  // Check Macedonian translations
+  Object.keys(en).forEach(key => {
+    if (!mk[key]) {
+      missingKeys.mk.push(key);
+    }
+  });
+  
+  // Check Spanish translations
+  Object.keys(en).forEach(key => {
+    if (!es[key]) {
+      missingKeys.es.push(key);
+    }
+  });
+  
+  // Calculate missing counts
+  const missingCount = {
+    en: missingKeys.en.length,
     sr: missingKeys.sr.length,
     mk: missingKeys.mk.length,
     es: missingKeys.es.length
   };
   
-  const completionPercentage: Record<Language, number> = {
+  // Calculate completion percentages
+  const completionPercentage = {
     en: 100,
-    sr: Math.round(((allKeys.length - missingCount.sr) / allKeys.length) * 100),
-    mk: Math.round(((allKeys.length - missingCount.mk) / allKeys.length) * 100),
-    es: Math.round(((allKeys.length - missingCount.es) / allKeys.length) * 100)
+    sr: Math.round(((totalKeys - missingCount.sr) / totalKeys) * 100),
+    mk: Math.round(((totalKeys - missingCount.mk) / totalKeys) * 100),
+    es: Math.round(((totalKeys - missingCount.es) / totalKeys) * 100)
   };
   
   return {
-    totalKeys: allKeys.length,
+    totalKeys,
     missingKeys,
     missingCount,
     completionPercentage

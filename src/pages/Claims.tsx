@@ -116,7 +116,7 @@ const Claims = () => {
   const handleClearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
-    setDateRange({});
+    setDateRange(undefined);
     setFilterMenuOpen(false);
   };
 
