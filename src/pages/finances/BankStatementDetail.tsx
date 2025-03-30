@@ -182,6 +182,11 @@ const BankStatementDetail = () => {
     }
   };
   
+  // Helper function to handle matching transactions with proper parameter forwarding
+  const handleMatchTransaction = (transactionId: string, policyId: string) => {
+    matchTransaction({ transactionId, policyId });
+  };
+  
   if (isLoadingStatement) {
     return (
       <div className="space-y-6">
@@ -249,7 +254,7 @@ const BankStatementDetail = () => {
           <BankTransactionsTable 
             transactions={transactions}
             isLoading={isLoadingTransactions}
-            onMatchTransaction={matchTransaction}
+            onMatchTransaction={handleMatchTransaction}
             onIgnoreTransaction={ignoreTransaction}
             onResetStatus={resetStatus}
             isMatching={isMatching}

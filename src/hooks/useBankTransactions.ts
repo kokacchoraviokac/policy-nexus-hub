@@ -127,30 +127,17 @@ export const useBankTransactions = (statementId: string) => {
     },
   });
 
-  // Create wrapper functions that match the expected function signatures
-  const matchTransaction = (transactionId: string, policyId: string) => {
-    matchTransactionMutation.mutate({ transactionId, policyId });
-  };
-
-  const ignoreTransaction = (transactionId: string) => {
-    ignoreTransactionMutation.mutate(transactionId);
-  };
-
-  const resetStatus = (transactionId: string) => {
-    resetStatusMutation.mutate(transactionId);
-  };
-
   return {
     transactions: transactions || [],
     isLoading,
     isError,
     error,
     refetch,
-    matchTransaction,
+    matchTransaction: matchTransactionMutation.mutate,
     isMatching: matchTransactionMutation.isPending,
-    ignoreTransaction,
+    ignoreTransaction: ignoreTransactionMutation.mutate,
     isIgnoring: ignoreTransactionMutation.isPending,
-    resetStatus,
+    resetStatus: resetStatusMutation.mutate,
     isResetting: resetStatusMutation.isPending
   };
 };

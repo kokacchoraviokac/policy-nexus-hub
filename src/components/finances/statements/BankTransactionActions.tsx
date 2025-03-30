@@ -9,9 +9,9 @@ import MatchTransactionDialog from "./MatchTransactionDialog";
 
 interface BankTransactionActionsProps {
   transaction: BankTransaction;
-  onMatchTransaction: (transactionId: string, policyId: string) => void;
-  onIgnoreTransaction: (transactionId: string) => void;
-  onResetStatus?: (transactionId: string) => void;
+  onMatchTransaction: (policyId: string) => void;
+  onIgnoreTransaction: () => void;
+  onResetStatus?: () => void;
   isMatching: boolean;
   isIgnoring: boolean;
   isResetting?: boolean;
@@ -46,7 +46,7 @@ const BankTransactionActions: React.FC<BankTransactionActionsProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onIgnoreTransaction(transaction.id)}
+            onClick={onIgnoreTransaction}
             disabled={isIgnoring}
           >
             {t("ignore")}
@@ -57,7 +57,7 @@ const BankTransactionActions: React.FC<BankTransactionActionsProps> = ({
           open={showMatchDialog}
           onOpenChange={setShowMatchDialog}
           onConfirm={(transactionId, policyId) => {
-            onMatchTransaction(transactionId, policyId);
+            onMatchTransaction(policyId);
             setShowMatchDialog(false);
           }}
           transaction={transaction}
@@ -86,7 +86,7 @@ const BankTransactionActions: React.FC<BankTransactionActionsProps> = ({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onResetStatus(transaction.id)}
+        onClick={onResetStatus}
         disabled={isResetting}
       >
         {t("resetStatus")}
