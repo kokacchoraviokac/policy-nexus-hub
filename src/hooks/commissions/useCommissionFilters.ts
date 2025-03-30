@@ -8,6 +8,7 @@ export interface CommissionFilterOptions {
   status?: string;
   insurerId?: string;
   agentId?: string;
+  companyId?: string; // Added this property
 }
 
 export const useCommissionFilters = () => {
