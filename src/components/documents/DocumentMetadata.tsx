@@ -28,8 +28,10 @@ const DocumentMetadata: React.FC<DocumentMetadataProps> = ({ document }) => {
       <div className="text-sm text-muted-foreground">
         <span>{document.document_type}</span>
         {document.file_size && (
-          <span className="mx-1">•</span>
-          <span>{getFileSize()}</span>
+          <>
+            <span className="mx-1">•</span>
+            <span>{getFileSize()}</span>
+          </>
         )}
         <span className="mx-1">•</span>
         <span>{formatDate(document.created_at)}</span>
