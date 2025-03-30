@@ -1,4 +1,3 @@
-
 {
   "claims": "Claims",
   "claimsManagement": "Claims Management",
@@ -93,6 +92,7 @@
   "moreHistoryEntries": "And {count} more entries",
   "recommendedStatusTransitions": "Recommended next statuses",
   "unusualStatusTransitionWarning": "This status transition is unusual and may not follow standard workflow",
+  "updateClaimStatus": "Update Claim Status",
   "updateClaimStatusDescription": "Update the status of this claim and add notes for tracking",
   "claimStatusInProcessingDescription": "This claim is currently being processed by the insurance company",
   "claimStatusReportedDescription": "This claim has been reported to the insurance company",
@@ -103,5 +103,8 @@
   "claimStatusPaidDescription": "This claim has been fully paid and is now complete",
   "claimStatusWithdrawnDescription": "This claim has been withdrawn by the claimant",
   "claimStatusDefaultDescription": "Current status of the claim",
-  "updating": "Updating..."
+  "updating": "Updating...",
+  "claimStatusUpdatedSuccessfully": "Claim status has been updated successfully",
+  "errorUpdatingStatus": "Error Updating Status",
+  "errorOccurredTryAgain": "An error occurred. Please try again."
 }
