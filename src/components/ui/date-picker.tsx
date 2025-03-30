@@ -16,9 +16,10 @@ export interface DatePickerProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   className?: string;
+  placeholder?: string; // Add placeholder prop
 }
 
-export function DatePicker({ date, setDate, className }: DatePickerProps) {
+export function DatePicker({ date, setDate, className, placeholder }: DatePickerProps) {
   const { t } = useLanguage();
   
   return (
@@ -33,7 +34,7 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "PPP") : <span>{t("selectDate")}</span>}
+          {date ? format(date, "PPP") : <span>{placeholder || t("selectDate")}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">

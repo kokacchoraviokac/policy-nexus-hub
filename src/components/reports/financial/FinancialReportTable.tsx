@@ -25,14 +25,15 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
 }) => {
   const { t, language } = useLanguage();
   
+  // Update this function to return valid badge variants
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'success';
+        return 'secondary';  // Instead of 'success'
       case 'paid':
-        return 'success';
+        return 'secondary';  // Instead of 'success'
       case 'pending':
-        return 'warning';
+        return 'outline';    // Instead of 'warning'
       default:
         return 'outline';
     }
