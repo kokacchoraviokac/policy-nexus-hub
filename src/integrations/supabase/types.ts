@@ -353,6 +353,7 @@ export type Database = {
           policy_id: string
           reported_by: string
           status: string
+          status_history: Json | null
           updated_at: string
         }
         Insert: {
@@ -371,6 +372,7 @@ export type Database = {
           policy_id: string
           reported_by: string
           status: string
+          status_history?: Json | null
           updated_at?: string
         }
         Update: {
@@ -389,6 +391,7 @@ export type Database = {
           policy_id?: string
           reported_by?: string
           status?: string
+          status_history?: Json | null
           updated_at?: string
         }
         Relationships: [

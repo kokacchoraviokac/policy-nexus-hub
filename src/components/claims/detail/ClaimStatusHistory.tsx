@@ -5,13 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, ArrowRight } from "lucide-react";
 import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
-
-interface StatusHistoryEntry {
-  from: string;
-  to: string;
-  timestamp: string;
-  note?: string;
-}
+import { StatusHistoryEntry } from "@/hooks/claims/useClaimDetail";
 
 interface ClaimStatusHistoryProps {
   statusHistory: StatusHistoryEntry[];

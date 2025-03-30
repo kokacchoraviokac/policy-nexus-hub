@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +22,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { StatusHistoryEntry } from "@/hooks/claims/useClaimDetail";
 
 interface UpdateClaimStatusDialogProps {
   open: boolean;
@@ -85,7 +85,7 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
     mutationFn: async () => {
       // Create status history entry
       const timestamp = new Date().toISOString();
-      const statusChange = {
+      const statusChange: StatusHistoryEntry = {
         from: currentStatus,
         to: newStatus,
         note: statusNote,
@@ -95,13 +95,13 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
       // Get existing history or create new array
       const { data: existingClaim, error: fetchError } = await supabase
         .from('claims')
-        .select('status_history')
+        .select('status_history, notes')
         .eq('id', claimId)
         .single();
       
       if (fetchError) throw fetchError;
       
-      const statusHistory = existingClaim.status_history 
+      const statusHistory = Array.isArray(existingClaim.status_history) 
         ? [...existingClaim.status_history, statusChange]
         : [statusChange];
       

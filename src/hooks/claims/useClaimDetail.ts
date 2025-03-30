@@ -2,6 +2,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface StatusHistoryEntry {
+  from: string;
+  to: string;
+  timestamp: string;
+  note?: string;
+}
+
 export const useClaimDetail = (claimId: string | undefined) => {
   const { 
     data: claim, 
@@ -28,8 +35,8 @@ export const useClaimDetail = (claimId: string | undefined) => {
       
       if (error) throw error;
       
-      // Initialize status_history if it doesn't exist
-      if (!data.status_history) {
+      // Initialize status_history if it doesn't exist or isn't an array
+      if (!data.status_history || !Array.isArray(data.status_history)) {
         data.status_history = [];
       }
       
