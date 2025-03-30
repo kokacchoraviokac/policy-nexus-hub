@@ -1,15 +1,13 @@
 
-import React, { useState } from "react";
-import { FileUp, Loader2, Plus } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useDocumentUpload } from "@/hooks/useDocumentUpload";
-import DocumentTypeSelector from "@/components/documents/DocumentTypeSelector";
-import DocumentCategorySelector from "@/components/documents/DocumentCategorySelector";
-import FileUploadField from "@/components/documents/FileUploadField";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Document } from "@/types/documents";
+import DocumentUploadTabs from "./DocumentUploadTabs";
+import DocumentUploadForm from "./DocumentUploadForm";
+import DocumentUploadActions from "./DocumentUploadActions";
+import VersionInfoBox from "./VersionInfoBox";
 
 interface DocumentUploadDialogProps {
   open: boolean;
@@ -58,7 +56,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   });
   
   // Pre-fill form if uploading a new version
-  React.useEffect(() => {
+  useEffect(() => {
     if (isNewVersion && selectedDocument) {
       setDocumentName(selectedDocument.document_name);
       setDocumentType(selectedDocument.document_type);
@@ -67,6 +65,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
       }
     }
   }, [isNewVersion, selectedDocument, setDocumentName, setDocumentType, setDocumentCategory]);
+
+  const canUpload = !!file && !!documentName;
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -77,70 +77,37 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        {selectedDocument && (
-          <Tabs value={uploadMode} onValueChange={(value) => setUploadMode(value as "new" | "version")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="new">{t("newDocument")}</TabsTrigger>
-              <TabsTrigger value="version">{t("newVersion")}</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
+        <DocumentUploadTabs 
+          uploadMode={uploadMode}
+          setUploadMode={setUploadMode}
+          showTabs={!!selectedDocument}
+        />
         
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <label htmlFor="documentName" className="text-sm font-medium">{t("documentName")} *</label>
-            <input
-              id="documentName"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              value={documentName}
-              onChange={(e) => setDocumentName(e.target.value)}
-              placeholder={t("enterDocumentName")}
-              disabled={isNewVersion}
-            />
-          </div>
-          
-          <DocumentTypeSelector 
-            value={documentType} 
-            onValueChange={setDocumentType}
-            disabled={isNewVersion}
-          />
-          
-          <DocumentCategorySelector
-            value={documentCategory}
-            onValueChange={setDocumentCategory}
-            disabled={isNewVersion}
-          />
-          
-          <FileUploadField 
-            onChange={handleFileChange}
-            file={file}
-          />
-          
-          {isNewVersion && (
-            <div className="bg-blue-50 p-3 rounded-md text-sm text-blue-800">
-              <p className="font-medium">{t("uploadingNewVersion")}:</p>
-              <p className="mt-1">{t("documentVersionInfo", { current: selectedDocument?.version || 1, new: (selectedDocument?.version || 1) + 1 })}</p>
-            </div>
-          )}
-        </div>
+        <DocumentUploadForm
+          documentName={documentName}
+          setDocumentName={setDocumentName}
+          documentType={documentType}
+          setDocumentType={setDocumentType}
+          documentCategory={documentCategory}
+          setDocumentCategory={setDocumentCategory}
+          file={file}
+          handleFileChange={handleFileChange}
+          isNewVersion={isNewVersion}
+        />
+        
+        <VersionInfoBox 
+          isNewVersion={isNewVersion}
+          selectedDocument={selectedDocument}
+        />
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={uploading}>
-            {t("cancel")}
-          </Button>
-          <Button onClick={handleUpload} disabled={!file || uploading || !documentName}>
-            {uploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("uploading")}
-              </>
-            ) : (
-              <>
-                <FileUp className="mr-2 h-4 w-4" />
-                {isNewVersion ? t("uploadVersion") : t("upload")}
-              </>
-            )}
-          </Button>
+          <DocumentUploadActions
+            uploading={uploading}
+            isNewVersion={isNewVersion}
+            canUpload={canUpload}
+            onCancel={() => onOpenChange(false)}
+            onUpload={handleUpload}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>
