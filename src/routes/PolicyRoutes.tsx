@@ -3,73 +3,49 @@ import React from "react";
 import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
-import Policies from "@/pages/Policies";
-import NewPolicy from "@/pages/policies/NewPolicy";
-import PolicyDetailPage from "@/pages/policies/PolicyDetailPage";
+
+// Policy Pages
+import AllPolicies from "@/pages/policies/AllPolicies";
+import PolicyDetail from "@/pages/policies/PolicyDetail";
 import PolicyAddendums from "@/pages/policies/PolicyAddendums";
 import UnlinkedPayments from "@/pages/policies/UnlinkedPayments";
 import PolicyDocuments from "@/pages/policies/PolicyDocuments";
-import PolicyWorkflow from "@/pages/policies/PolicyWorkflow";
-import PolicyReviewPage from "@/pages/policies/PolicyReviewPage";
-import PolicyImportPage from "@/pages/policies/PolicyImportPage";
+import PolicyWorkflow from "@/pages/policies/workflow/PolicyWorkflow";
+import PolicyReview from "@/pages/policies/workflow/PolicyReview";
+
+// Finance Pages
+import FinancesModule from "@/pages/finances/FinancesModule";
+import Commissions from "@/pages/finances/Commissions";
 
 export const PolicyRoutes = [
-  // Main policies page
-  <Route 
-    key="policies-main"
-    path="/policies" 
+  // Policy Directory Routes
+  <Route
+    key="policies"
+    path="/policies"
     element={
       <ProtectedRoute requiredPrivilege="policies:view">
         <AppLayout>
-          <Policies />
+          <AllPolicies />
         </AppLayout>
       </ProtectedRoute>
     }
   />,
-  
-  // New policy page
-  <Route 
-    key="policies-new"
-    path="/policies/new" 
-    element={
-      <ProtectedRoute requiredPrivilege="policies:create">
-        <AppLayout>
-          <NewPolicy />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Policy detail page
-  <Route 
+  <Route
     key="policy-detail"
-    path="/policies/:policyId" 
+    path="/policies/:policyId"
     element={
       <ProtectedRoute requiredPrivilege="policies:view">
         <AppLayout>
-          <PolicyDetailPage />
+          <PolicyDetail />
         </AppLayout>
       </ProtectedRoute>
     }
   />,
   
-  // Policy review page
-  <Route 
-    key="policy-review"
-    path="/policies/:policyId/review" 
-    element={
-      <ProtectedRoute requiredPrivilege="policies:edit">
-        <AppLayout>
-          <PolicyReviewPage />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Policy workflow page
-  <Route 
+  // Policy Workflow Routes
+  <Route
     key="policy-workflow"
-    path="/policies/workflow" 
+    path="/policies/workflow"
     element={
       <ProtectedRoute requiredPrivilege="policies:view">
         <AppLayout>
@@ -78,11 +54,22 @@ export const PolicyRoutes = [
       </ProtectedRoute>
     }
   />,
+  <Route
+    key="policy-review"
+    path="/policies/workflow/:policyId"
+    element={
+      <ProtectedRoute requiredPrivilege="policies:edit">
+        <AppLayout>
+          <PolicyReview />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
   
-  // Policy addendums page
-  <Route 
+  // Policy Addendums Route
+  <Route
     key="policy-addendums"
-    path="/policies/addendums" 
+    path="/policies/addendums"
     element={
       <ProtectedRoute requiredPrivilege="policies:view">
         <AppLayout>
@@ -92,10 +79,10 @@ export const PolicyRoutes = [
     }
   />,
   
-  // Unlinked payments page
-  <Route 
-    key="policy-unlinked-payments"
-    path="/policies/unlinked-payments" 
+  // Unlinked Payments Route
+  <Route
+    key="unlinked-payments"
+    path="/policies/unlinked-payments"
     element={
       <ProtectedRoute requiredPrivilege="policies:view">
         <AppLayout>
@@ -105,10 +92,10 @@ export const PolicyRoutes = [
     }
   />,
   
-  // Policy documents page
-  <Route 
+  // Policy Documents Route
+  <Route
     key="policy-documents"
-    path="/policies/documents" 
+    path="/policies/documents"
     element={
       <ProtectedRoute requiredPrivilege="policies:view">
         <AppLayout>
@@ -118,16 +105,40 @@ export const PolicyRoutes = [
     }
   />,
   
-  // Policy import/export page
-  <Route 
-    key="policy-import"
-    path="/policies/import" 
+  // Finances Routes
+  <Route
+    key="finances-base"
+    path="/finances"
     element={
-      <ProtectedRoute requiredPrivilege="policies:edit">
+      <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
-          <PolicyImportPage />
+          <FinancesModule />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="finances-commissions"
+    path="/finances/commissions"
+    element={
+      <ProtectedRoute requiredPrivilege="finances:view">
+        <AppLayout>
+          <Commissions />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="finances-unlinked-payments"
+    path="/finances/unlinked-payments"
+    element={
+      <ProtectedRoute requiredPrivilege="finances:view">
+        <AppLayout>
+          <UnlinkedPayments />
         </AppLayout>
       </ProtectedRoute>
     }
   />
 ];
+
+export default PolicyRoutes;

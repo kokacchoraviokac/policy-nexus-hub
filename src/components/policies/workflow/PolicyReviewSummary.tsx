@@ -3,7 +3,7 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy } from "@/types/policies";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, AlertTriangle, Clock } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Clock, CircleDollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
@@ -31,6 +31,7 @@ const PolicyReviewSummary: React.FC<PolicyReviewSummaryProps> = ({ policy }) => 
   const hasInsurerInfo = !!policy.insurer_name;
   const hasFinancialInfo = policy.premium > 0 && !!policy.currency;
   const hasCommission = policy.commission_percentage !== null && policy.commission_percentage !== undefined;
+  const hasPaymentFrequency = !!policy.payment_frequency;
   
   // Calculate overall completion percentage
   const requiredChecks = [hasBasicInfo, hasClientInfo, hasInsurerInfo, hasFinancialInfo];
@@ -119,6 +120,11 @@ const PolicyReviewSummary: React.FC<PolicyReviewSummaryProps> = ({ policy }) => 
             </div>
             
             <div className="flex justify-between items-center border rounded p-3">
+              <span className="font-medium">{t("paymentFrequency")} ({t("optional")})</span>
+              {getStatusIcon(hasPaymentFrequency, true)}
+            </div>
+            
+            <div className="flex justify-between items-center border rounded p-3">
               <span className="font-medium">{t("documents")} ({t("optional")})</span>
               {getStatusIcon(policy.documents_count > 0, true)}
             </div>
@@ -127,6 +133,15 @@ const PolicyReviewSummary: React.FC<PolicyReviewSummaryProps> = ({ policy }) => 
           {policy.workflow_status === 'draft' && (
             <div className="bg-blue-50 border border-blue-200 rounded p-3 text-blue-800 text-sm">
               {t("importedPolicyReviewNote")}
+            </div>
+          )}
+          
+          {hasFinancialInfo && !hasCommission && (
+            <div className="bg-amber-50 border border-amber-200 rounded p-3 text-amber-800 text-sm flex items-start gap-2">
+              <CircleDollarSign className="h-5 w-5 shrink-0 mt-0.5" />
+              <span>
+                {t("commissionReminderNote")}
+              </span>
             </div>
           )}
         </div>
