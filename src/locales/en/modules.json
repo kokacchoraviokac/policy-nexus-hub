@@ -181,6 +181,7 @@
   "document": "Document",
   "documentManagement": "Document Management",
   "uploadDocument": "Upload Document",
+  "uploadDocumentDescription": "Upload and attach a document to a policy",
   "allDocuments": "All Documents",
   "searchDocuments": "Search documents",
   "selectDocumentType": "Select document type",
@@ -213,5 +214,10 @@
   "policiesWorkflow": "Policy Processing",
   "workflowManagement": "Workflow Management",
   "policyStatus": "Policy Status",
-  "lastUpdated": "Last Updated"
+  "lastUpdated": "Last Updated",
+  "enterDocumentName": "Enter document name",
+  "upload": "Upload",
+  "invoices": "Invoices",
+  "certificates": "Certificates",
+  "otherDocuments": "Other Documents"
 }
