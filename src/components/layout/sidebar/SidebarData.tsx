@@ -15,7 +15,21 @@ import {
   Workflow,
   FileArchive,
   CreditCard,
-  FileImage
+  FileImage,
+  PieChart,
+  UserSquare,
+  ReceiptText,
+  KanbanSquare,
+  UserCircle,
+  UserPlus,
+  Calculator,
+  LineChart,
+  BarChart3,
+  ClipboardList as ClipboardListIcon,
+  UserCog,
+  Shield,
+  Building,
+  HelpCircle
 } from "lucide-react";
 
 export const sidebarItems = [
@@ -50,6 +64,12 @@ export const sidebarItems = [
         icon: FileArchive
       },
       {
+        label: "unlinkedPayments",
+        path: "/policies/unlinked-payments",
+        requiredPrivilege: "policies:view",
+        icon: CreditCard
+      },
+      {
         label: "documents",
         path: "/policies/documents",
         requiredPrivilege: "policies:view",
@@ -61,7 +81,33 @@ export const sidebarItems = [
     icon: Briefcase,
     label: "sales",
     path: "/sales",
-    requiredPrivilege: "sales:view"
+    requiredPrivilege: "sales:view",
+    subItems: [
+      {
+        label: "pipelineOverview",
+        path: "/sales/pipeline",
+        requiredPrivilege: "sales:view",
+        icon: KanbanSquare
+      },
+      {
+        label: "leads",
+        path: "/sales/leads",
+        requiredPrivilege: "sales:view",
+        icon: UserPlus
+      },
+      {
+        label: "salesProcesses",
+        path: "/sales/processes",
+        requiredPrivilege: "sales:view",
+        icon: Workflow
+      },
+      {
+        label: "responsiblePersons",
+        path: "/sales/responsible",
+        requiredPrivilege: "sales:view",
+        icon: UserCircle
+      }
+    ]
   },
   {
     icon: ClipboardList,
@@ -85,7 +131,7 @@ export const sidebarItems = [
         label: "invoicing",
         path: "/finances/invoicing",
         requiredPrivilege: "finances:view",
-        icon: FileText
+        icon: ReceiptText
       },
       {
         label: "statementProcessing",
@@ -131,18 +177,102 @@ export const sidebarItems = [
     icon: CircleDollarSign,
     label: "agent",
     path: "/agent",
-    requiredPrivilege: "agent:view"
+    requiredPrivilege: "agent:view",
+    subItems: [
+      {
+        label: "fixedCommissions",
+        path: "/agent/fixed-commissions",
+        requiredPrivilege: "agent:view",
+        icon: DollarSign
+      },
+      {
+        label: "clientCommissions",
+        path: "/agent/client-commissions",
+        requiredPrivilege: "agent:view",
+        icon: Users
+      },
+      {
+        label: "manualCommissions",
+        path: "/agent/manual-commissions",
+        requiredPrivilege: "agent:view",
+        icon: FileText
+      },
+      {
+        label: "calculatePayouts",
+        path: "/agent/calculate-payouts",
+        requiredPrivilege: "agent:view",
+        icon: Calculator
+      },
+      {
+        label: "payoutReports",
+        path: "/agent/payout-reports",
+        requiredPrivilege: "agent:view",
+        icon: PieChart
+      }
+    ]
   },
   {
     icon: FileText,
     label: "reports",
     path: "/reports",
-    requiredPrivilege: "reports:view"
+    requiredPrivilege: "reports:view",
+    subItems: [
+      {
+        label: "productionReport",
+        path: "/reports/production",
+        requiredPrivilege: "reports:view",
+        icon: LineChart
+      },
+      {
+        label: "clientsReport",
+        path: "/reports/clients",
+        requiredPrivilege: "reports:view",
+        icon: UserSquare
+      },
+      {
+        label: "agentsReport",
+        path: "/reports/agents",
+        requiredPrivilege: "reports:view",
+        icon: UserCog
+      },
+      {
+        label: "claimsReport",
+        path: "/reports/claims",
+        requiredPrivilege: "reports:view",
+        icon: ClipboardListIcon
+      }
+    ]
   },
   {
     icon: Settings,
     label: "settings",
     path: "/settings",
-    requiredPrivilege: "settings:view"
+    requiredPrivilege: "settings:view",
+    subItems: [
+      {
+        label: "employees",
+        path: "/settings/employees",
+        requiredPrivilege: "settings:view",
+        icon: Users
+      },
+      {
+        label: "privileges",
+        path: "/settings/privileges",
+        requiredPrivilege: "settings:view",
+        icon: Shield
+      },
+      {
+        label: "companyData",
+        path: "/settings/company",
+        requiredPrivilege: "settings:view",
+        icon: Building
+      },
+      {
+        label: "instructions",
+        path: "/settings/instructions",
+        requiredPrivilege: "settings:view",
+        icon: HelpCircle
+      }
+    ]
   }
 ];

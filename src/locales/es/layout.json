@@ -54,5 +54,22 @@
   "insuranceProducts": "Productos de Seguros",
   "commissions": "Comisiones",
   "invoicing": "Facturación",
-  "statementProcessing": "Procesamiento de Extractos"
+  "statementProcessing": "Procesamiento de Extractos",
+  "pipelineOverview": "Visión General del Pipeline",
+  "leads": "Prospectos",
+  "salesProcesses": "Procesos de Venta",
+  "responsiblePersons": "Personas Responsables",
+  "fixedCommissions": "Comisiones Fijas",
+  "clientCommissions": "Comisiones de Clientes",
+  "manualCommissions": "Comisiones Manuales",
+  "calculatePayouts": "Calcular Pagos",
+  "payoutReports": "Informes de Pagos",
+  "productionReport": "Informe de Producción",
+  "clientsReport": "Informe de Clientes",
+  "agentsReport": "Informe de Agentes",
+  "claimsReport": "Informe de Reclamaciones",
+  "employees": "Empleados",
+  "privileges": "Privilegios",
+  "companyData": "Datos de la Empresa",
+  "instructions": "Instrucciones"
 }
