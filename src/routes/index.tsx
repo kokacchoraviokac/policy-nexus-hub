@@ -9,6 +9,7 @@ import { CodebookRoutes } from "./CodebookRoutes";
 import { SettingsRoutes } from "./SettingsRoutes";
 import { FinancesRoutes } from "./FinancesRoutes";
 import { ReportsRoutes } from "./ReportsRoutes";
+import { SalesRoutes } from "./SalesRoutes";
 
 // Combine all routes into a single array
 export const AppRoutes = [
@@ -20,5 +21,6 @@ export const AppRoutes = [
   ...CodebookRoutes,
   ...SettingsRoutes,
   ...FinancesRoutes,
-  ...ReportsRoutes
+  ...ReportsRoutes,
+  ...SalesRoutes
 ];
