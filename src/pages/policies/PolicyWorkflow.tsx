@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -25,12 +24,10 @@ const PolicyWorkflow = () => {
         .from('policies')
         .select('*', { count: 'exact' });
       
-      // Filter by workflow status
       if (activeTab !== 'all') {
         query = query.eq('workflow_status', activeTab);
       }
       
-      // Apply search if provided
       if (searchTerm) {
         query = query.or(
           `policy_number.ilike.%${searchTerm}%,` +
@@ -67,8 +64,7 @@ const PolicyWorkflow = () => {
   };
   
   const handleImportPolicy = () => {
-    // This will be implemented later for policy import
-    console.log("Import policy");
+    navigate("/policies/import");
   };
   
   const workflowStages = [
@@ -120,7 +116,6 @@ const PolicyWorkflow = () => {
         </div>
       </div>
       
-      {/* Workflow Stages */}
       <Card>
         <CardHeader>
           <CardTitle>{t("workflowStages")}</CardTitle>
