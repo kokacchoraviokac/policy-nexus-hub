@@ -1,132 +1,135 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ArrowLeft, FileDown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Download } from "lucide-react";
-import { useUnlinkedPayments } from "@/hooks/useUnlinkedPayments";
-import UnlinkedPaymentsTable from "@/components/finances/unlinked-payments/UnlinkedPaymentsTable";
-import UnlinkedPaymentsFilters from "@/components/finances/unlinked-payments/UnlinkedPaymentsFilters";
-import UnlinkedPaymentsPagination from "@/components/finances/unlinked-payments/UnlinkedPaymentsPagination";
-import LinkPaymentDialog from "@/components/policies/unlinked-payments/LinkPaymentDialog";
+import { UnlinkedPaymentsTable } from "@/components/finances/unlinked-payments/UnlinkedPaymentsTable";
+import { UnlinkedPaymentsFilters } from "@/components/finances/unlinked-payments/UnlinkedPaymentsFilters";
+import { useUnlinkedPaymentsFilters } from "@/hooks/unlinked-payments/useUnlinkedPaymentsFilters";
+import { useUnlinkedPaymentsQuery } from "@/hooks/unlinked-payments/useUnlinkedPaymentsQuery";
+import { useUnlinkedPaymentsPagination } from "@/hooks/unlinked-payments/useUnlinkedPaymentsPagination";
+import { useUnlinkedPaymentsExport } from "@/hooks/unlinked-payments/useUnlinkedPaymentsExport";
+import { UnlinkedPaymentsPagination } from "@/components/finances/unlinked-payments/UnlinkedPaymentsPagination";
 
 const UnlinkedPaymentsPage = () => {
   const { t } = useLanguage();
-  const navigate = useNavigate();
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string>("");
+  const { toast } = useToast();
+  const { filters, setFilters } = useUnlinkedPaymentsFilters();
+  const { pagination, setPagination } = useUnlinkedPaymentsPagination();
   
   const {
-    payments,
-    totalCount,
+    data: unlinkedPayments,
+    totalItems,
     isLoading,
+    isError,
+    refetch
+  } = useUnlinkedPaymentsQuery({
     filters,
-    setFilters,
-    pagination,
-    setPagination,
-    linkPayment,
-    isLinking,
-    exportPayments
-  } = useUnlinkedPayments();
+    pagination
+  });
+  
+  const { exportUnlinkedPayments, isExporting } = useUnlinkedPaymentsExport();
   
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
     // Reset to first page when filters change
-    setPagination({ ...pagination, page: 1 });
+    setPagination({
+      ...pagination,
+      page: 1,
+      pageIndex: 0
+    });
   };
   
   const handleClearFilters = () => {
     setFilters({});
-    // Reset to first page when filters are cleared
-    setPagination({ ...pagination, page: 1 });
+    setPagination({
+      ...pagination,
+      page: 1,
+      pageIndex: 0
+    });
   };
   
-  const handlePageChange = (page: number) => {
-    setPagination({ ...pagination, page });
+  const handleExport = async () => {
+    try {
+      await exportUnlinkedPayments(filters);
+      toast({
+        title: t("exportSuccess"),
+        description: t("unlinkedPaymentsExportedSuccessfully"),
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: t("exportError"),
+        description: t("unlinkedPaymentsExportFailed"),
+        variant: "destructive",
+      });
+    }
   };
   
-  const handlePageSizeChange = (pageSize: number) => {
-    setPagination({ page: 1, pageSize });
+  const handlePageChange = (newPage: number) => {
+    setPagination({
+      ...pagination,
+      page: newPage,
+      pageIndex: newPage - 1
+    });
   };
   
-  const handleLinkPayment = (paymentId: string) => {
-    setSelectedPaymentId(paymentId);
-    setLinkDialogOpen(true);
-  };
-  
-  const handleConfirmLink = (policyId: string) => {
-    linkPayment({ paymentId: selectedPaymentId, policyId });
-    setLinkDialogOpen(false);
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPagination({
+      ...pagination,
+      pageSize: newPageSize,
+      page: 1,
+      pageIndex: 0
+    });
   };
   
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/finances")}
+          <Link
+            to="/finances"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            {t("backToFinances")}
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("unlinkedPayments")}</h1>
-            <p className="text-muted-foreground">
-              {t("unlinkedPaymentsModuleDescription")}
-            </p>
-          </div>
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("unlinkedPayments")}
+          </h1>
         </div>
+        
         <Button
           variant="outline"
-          onClick={exportPayments}
-          disabled={payments.length === 0}
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={handleExport}
+          disabled={isExporting}
         >
-          <Download className="h-4 w-4 mr-2" />
-          {t("exportPayments")}
+          <FileDown className="h-4 w-4" />
+          {isExporting ? t("exporting") : t("exportPayments")}
         </Button>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("paymentManagement")}</CardTitle>
-          <CardDescription>
-            {t("unlinkedPaymentsDescription")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <UnlinkedPaymentsFilters
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            onClearFilters={handleClearFilters}
-          />
-          
-          <UnlinkedPaymentsTable
-            payments={payments}
-            isLoading={isLoading}
-            onLinkPayment={handleLinkPayment}
-            isLinking={isLinking}
-            linkingPaymentId={selectedPaymentId}
-          />
-          
-          {!isLoading && payments.length > 0 && (
-            <UnlinkedPaymentsPagination
-              totalCount={totalCount}
-              pagination={pagination}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          )}
-        </CardContent>
-      </Card>
+      <UnlinkedPaymentsFilters 
+        filters={filters} 
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
+      />
       
-      <LinkPaymentDialog
-        open={linkDialogOpen}
-        onOpenChange={setLinkDialogOpen}
-        onConfirm={handleConfirmLink}
-        isLoading={isLinking}
+      <UnlinkedPaymentsTable 
+        payments={unlinkedPayments || []}
+        isLoading={isLoading}
+        onRefresh={refetch}
+      />
+      
+      <UnlinkedPaymentsPagination
+        currentPage={pagination.page}
+        pageSize={pagination.pageSize}
+        totalItems={totalItems}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
       />
     </div>
   );

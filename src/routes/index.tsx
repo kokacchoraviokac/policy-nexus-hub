@@ -1,34 +1,60 @@
 
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import LoginPage from '@/pages/LoginPage';
-import RegisterPage from '@/pages/RegisterPage';
-import DashboardLayout from '@/layouts/DashboardLayout';
-import PublicLayout from '@/layouts/PublicLayout';
-import AuthProtected from '@/components/auth/AuthProtected';
-import GuestOnly from '@/components/auth/GuestOnly';
-import { RouterProvider } from '@/contexts/RouterContext';
-import AppRoutes from './routes';
+import Login from '@/pages/Login';
+import NotFound from '@/pages/NotFound';
+import AppLayout from '@/components/layout/AppLayout';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { DashboardRoutes } from './DashboardRoutes';
+import { PolicyRoutes } from './PolicyRoutes'; 
+import { SalesRoutes } from './SalesRoutes';
+import { ClaimsRoutes } from './ClaimsRoutes';
+import { FinancesRoutes } from './FinancesRoutes';
+import { CodebookRoutes } from './CodebookRoutes';
+import { ReportsRoutes } from './ReportsRoutes';
+import { SettingsRoutes } from './SettingsRoutes';
+import { AuthRoutes } from './AuthRoutes';
 
 const Router = () => {
   return (
-    <RouterProvider>
-      <Routes>
-        <Route element={<PublicLayout />}>
-          <Route element={<GuestOnly />}>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-          </Route>
-        </Route>
-        
-        <Route element={<AuthProtected />}>
-          <Route element={<DashboardLayout />}>
-            {/* Use a React Fragment to render a group of routes */}
-            {React.createElement(React.Fragment, null, AppRoutes)}
-          </Route>
-        </Route>
-      </Routes>
-    </RouterProvider>
+    <Routes>
+      {/* Auth Routes */}
+      {AuthRoutes}
+      
+      {/* Dashboard Routes */}
+      {DashboardRoutes}
+      
+      {/* Policies Routes */}
+      {PolicyRoutes}
+      
+      {/* Sales Routes */}
+      {SalesRoutes}
+      
+      {/* Claims Routes */}
+      {ClaimsRoutes}
+      
+      {/* Finances Routes */}
+      {FinancesRoutes}
+      
+      {/* Codebook Routes */}
+      {CodebookRoutes}
+      
+      {/* Reports Routes */}
+      {ReportsRoutes}
+      
+      {/* Settings Routes */}
+      {SettingsRoutes}
+      
+      {/* 404 */}
+      <Route
+        path="*"
+        element={
+          <AppLayout>
+            <NotFound />
+          </AppLayout>
+        }
+      />
+    </Routes>
   );
 };
 
