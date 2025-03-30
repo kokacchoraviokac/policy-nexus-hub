@@ -8,6 +8,15 @@ import { AuthContext } from "@/contexts/auth/AuthContext";
 import { useContext } from "react";
 import { CommissionType } from "@/types/finances";
 
+export type CommissionWithPolicyDetails = CommissionType & {
+  policy_number?: string;
+  policyholder_name?: string;
+  insurer_name?: string;
+  product_name?: string;
+  agent_name?: string | null;
+  currency?: string;
+}
+
 export const useCommissionsData = (
   pagination: { pageIndex: number; pageSize: number },
   filters: CommissionFilterOptions
@@ -110,14 +119,7 @@ export const useCommissionsData = (
       });
       
       return {
-        data: transformedData as (CommissionType & {
-          policy_number?: string;
-          policyholder_name?: string;
-          insurer_name?: string;
-          product_name?: string;
-          agent_name?: string | null;
-          currency?: string;
-        })[],
+        data: transformedData as CommissionWithPolicyDetails[],
         totalCount: count || 0
       };
     } catch (error) {

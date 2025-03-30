@@ -1,7 +1,7 @@
 
 import { useCommissionFilters } from "./commissions/useCommissionFilters";
 import { useCommissionPagination } from "./commissions/useCommissionPagination";
-import { useCommissionsData } from "./commissions/useCommissionsData";
+import { useCommissionsData, CommissionWithPolicyDetails } from "./commissions/useCommissionsData";
 import { useCommissionMutations } from "./commissions/useCommissionMutations";
 import { useCommissionExport } from "./commissions/useCommissionExport";
 
@@ -61,3 +61,4 @@ export const useCommissions = () => {
 
 // Re-export the types for use elsewhere
 export type { CommissionFilterOptions } from "./commissions/useCommissionFilters";
+export type { CommissionWithPolicyDetails };
