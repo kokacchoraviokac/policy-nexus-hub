@@ -3,11 +3,13 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDocumentVersions } from "@/hooks/useDocumentVersions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { History, Loader2, AlertCircle } from "lucide-react";
+import { History, Loader2, AlertCircle, Download } from "lucide-react";
 import { Document } from "@/types/documents";
 import { formatDate } from "@/utils/format";
 import DocumentActions from "./DocumentActions";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useDocumentDownload } from "@/hooks/useDocumentDownload";
 
 interface DocumentVersionHistoryProps {
   documentId: string;
@@ -19,6 +21,7 @@ const DocumentVersionHistory: React.FC<DocumentVersionHistoryProps> = ({
   originalDocumentId
 }) => {
   const { t } = useLanguage();
+  const { isDownloading, downloadDocument } = useDocumentDownload();
   const { 
     versions, 
     isLoading, 
@@ -91,12 +94,18 @@ const DocumentVersionHistory: React.FC<DocumentVersionHistoryProps> = ({
                     {formatDate(version.created_at)}
                   </p>
                 </div>
-                <DocumentActions 
-                  document={version}
-                  onDelete={() => {}} // Version deletion is typically not allowed
-                  isDeleting={false}
-                  hideDelete={true}
-                />
+                <div className="flex items-center">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 px-2" 
+                    onClick={() => downloadDocument(version)}
+                    disabled={isDownloading}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    {t("download")}
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

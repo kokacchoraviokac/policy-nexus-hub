@@ -29,69 +29,44 @@ export const useDocumentApproval = () => {
       if (!userId) {
         throw new Error("User not authenticated");
       }
-      
-      // For claim documents, we update the claim_documents table
-      if (entityType === "claim") {
-        // Since we don't want to add columns to the DB table, we'll just update the timestamp
-        // and then log the approval info in the activity log
-        const { data, error } = await supabase
-          .from('claim_documents')
-          .update({
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', documentId)
-          .select()
-          .single();
+
+      const tableName = entityType === "policy" 
+        ? "policy_documents" 
+        : entityType === "claim" 
+          ? "claim_documents" 
+          : "sales_documents";
           
-        if (error) throw error;
-        
-        // Log the approval activity with all details
-        await logActivity({
-          entityType,
-          entityId,
-          action: "update",
-          details: {
-            action_type: "document_approval",
-            document_id: documentId,
-            approval_status: status,
-            notes
-          }
-        });
-        
-        return data;
-      }
+      // Update the document with approval information
+      const updateData = {
+        updated_at: new Date().toISOString(),
+        // We store approval info in activity logs since the document tables don't have these columns
+      };
       
-      // Similar simplified logic for policy documents
-      if (entityType === "policy") {
-        const { data, error } = await supabase
-          .from('policy_documents')
-          .update({
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', documentId)
-          .select()
-          .single();
-          
-        if (error) throw error;
+      const { data, error } = await supabase
+        .from(tableName)
+        .update(updateData)
+        .eq('id', documentId)
+        .select()
+        .single();
         
-        // Log activity
-        await logActivity({
-          entityType,
-          entityId,
-          action: "update",
-          details: {
-            action_type: "document_approval",
-            document_id: documentId,
-            approval_status: status,
-            notes
-          }
-        });
-        
-        return data;
-      }
+      if (error) throw error;
       
-      // For other document types
-      throw new Error("Document type not supported");
+      // Log the approval activity with all details
+      await logActivity({
+        entityType,
+        entityId,
+        action: "update",
+        details: {
+          action_type: "document_approval",
+          document_id: documentId,
+          approval_status: status,
+          approved_by: userId,
+          approved_at: new Date().toISOString(),
+          notes
+        }
+      });
+      
+      return data;
     },
     onSuccess: (_, variables) => {
       const { status, entityType, entityId } = variables;

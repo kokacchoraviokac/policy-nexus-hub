@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Document } from "@/types/documents";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +7,16 @@ import DocumentMetadata from "./DocumentMetadata";
 import DocumentActions from "./DocumentActions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, ShieldX, Clock, History, Shield, ChevronDown, ChevronUp } from "lucide-react";
+import { 
+  ShieldCheck, 
+  ShieldX, 
+  Clock, 
+  History, 
+  Shield, 
+  ChevronDown, 
+  ChevronUp, 
+  Tag
+} from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DocumentVersionHistory from "./DocumentVersionHistory";
 import DocumentApprovalPanel from "./DocumentApprovalPanel";
@@ -64,6 +74,17 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
     }
   };
   
+  const getCategoryBadge = () => {
+    if (!document.category) return null;
+    
+    return (
+      <Badge variant="outline" className="bg-gray-100 flex items-center gap-1">
+        <Tag className="h-3 w-3" />
+        {t(document.category)}
+      </Badge>
+    );
+  };
+  
   return (
     <Card className="overflow-hidden hover:border-primary/50 transition-colors">
       <CardContent className="p-0">
@@ -73,12 +94,8 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
             
             <DocumentMetadata document={document} />
             
-            <div className="ml-auto flex items-center gap-2">
-              {document.category && (
-                <Badge variant="outline" className="bg-gray-100">
-                  {t(document.category)}
-                </Badge>
-              )}
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              {document.category && getCategoryBadge()}
               
               {document.approval_status && getApprovalBadge()}
               
@@ -98,7 +115,7 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
             </div>
           </div>
           
-          {showApproval && (
+          {(showApproval || document.version && document.version > 1 || document.original_document_id) && (
             <Button
               variant="ghost"
               size="sm"
@@ -131,7 +148,12 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
               )}
               
               {showApproval && (
-                <DocumentApprovalPanel document={document} />
+                <DocumentApprovalPanel 
+                  document={document} 
+                  onApprovalComplete={() => {
+                    // Refresh data when approval is complete
+                  }}
+                />
               )}
             </div>
           </div>

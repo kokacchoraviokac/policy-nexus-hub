@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDocumentApproval } from "@/hooks/useDocumentApproval";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import {
 import { Document, DocumentApprovalStatus } from "@/types/documents";
 import { formatDate } from "@/utils/format";
 import { Badge } from "@/components/ui/badge";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 
 interface DocumentApprovalPanelProps {
   document: Document;
@@ -32,6 +33,58 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
   const { t } = useLanguage();
   const [notes, setNotes] = useState(document.approval_notes || "");
   const { mutate: approveDocument, isPending } = useDocumentApproval();
+  const [approvalInfo, setApprovalInfo] = useState<{
+    status: DocumentApprovalStatus;
+    approved_by?: string;
+    approved_at?: string;
+    notes?: string;
+  }>({
+    status: document.approval_status || "pending",
+    approved_by: document.approved_by,
+    approved_at: document.approved_at,
+    notes: document.approval_notes
+  });
+  
+  const { supabase } = useSupabaseClient();
+  
+  // Fetch approval information from activity logs
+  useEffect(() => {
+    const fetchApprovalInfo = async () => {
+      if (!document.entity_type || !document.entity_id || !document.id) return;
+      
+      const { data, error } = await supabase
+        .from('activity_logs')
+        .select('*')
+        .eq('entity_type', document.entity_type)
+        .eq('entity_id', document.entity_id)
+        .eq('details->document_id', document.id)
+        .eq('details->action_type', 'document_approval')
+        .order('created_at', { ascending: false })
+        .limit(1);
+        
+      if (error) {
+        console.error("Error fetching approval info:", error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        const latestApproval = data[0];
+        setApprovalInfo({
+          status: latestApproval.details.approval_status || "pending",
+          approved_by: latestApproval.user_id,
+          approved_at: latestApproval.created_at,
+          notes: latestApproval.details.notes
+        });
+        
+        // Update notes if available
+        if (latestApproval.details.notes) {
+          setNotes(latestApproval.details.notes);
+        }
+      }
+    };
+    
+    fetchApprovalInfo();
+  }, [document, supabase]);
   
   if (!document.entity_type || !document.entity_id) {
     return null;
@@ -46,6 +99,13 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       entityId: document.entity_id
     }, {
       onSuccess: () => {
+        // Update local state
+        setApprovalInfo(prev => ({
+          ...prev,
+          status,
+          notes
+        }));
+        
         if (onApprovalComplete) {
           onApprovalComplete();
         }
@@ -54,7 +114,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
   };
   
   const getStatusIcon = () => {
-    switch (document.approval_status) {
+    switch (approvalInfo.status) {
       case "approved":
         return <ShieldCheck className="h-5 w-5 text-green-500" />;
       case "rejected":
@@ -67,7 +127,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
   };
   
   const getStatusBadge = () => {
-    switch (document.approval_status) {
+    switch (approvalInfo.status) {
       case "approved":
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{t("approved")}</Badge>;
       case "rejected":
@@ -97,9 +157,9 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
             </div>
           </div>
           
-          {document.approved_by && document.approved_at && (
+          {approvalInfo.approved_by && approvalInfo.approved_at && (
             <div className="text-sm text-muted-foreground">
-              {document.approval_status === "approved" ? t("approvedOn") : t("reviewedOn")}: {formatDate(document.approved_at)}
+              {approvalInfo.status === "approved" ? t("approvedOn") : t("reviewedOn")}: {formatDate(approvalInfo.approved_at)}
             </div>
           )}
           
@@ -120,7 +180,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           variant="default" 
           className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
           onClick={() => handleUpdateStatus("approved")}
-          disabled={isPending || document.approval_status === "approved"}
+          disabled={isPending || approvalInfo.status === "approved"}
         >
           {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
           {t("approve")}
@@ -129,7 +189,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           variant="default"
           className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600"
           onClick={() => handleUpdateStatus("needs_review")}
-          disabled={isPending || document.approval_status === "needs_review"}
+          disabled={isPending || approvalInfo.status === "needs_review"}
         >
           {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertCircle className="mr-2 h-4 w-4" />}
           {t("needsReview")}
@@ -138,7 +198,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           variant="destructive"
           className="w-full sm:w-auto"
           onClick={() => handleUpdateStatus("rejected")}
-          disabled={isPending || document.approval_status === "rejected"}
+          disabled={isPending || approvalInfo.status === "rejected"}
         >
           {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
           {t("reject")}

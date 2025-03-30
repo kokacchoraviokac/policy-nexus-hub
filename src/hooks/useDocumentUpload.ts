@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useFileInput, validateUploadFields } from "@/utils/fileHandlingUtils";
 import { getDocumentTable, uploadFileToStorage, insertDocumentRecord, createDocumentData } from "@/utils/documentUploadUtils";
 import type { EntityType } from "@/utils/activityLogger";
-import type { DocumentCategory } from "@/types/documents";
+import type { DocumentCategory, DocumentApprovalStatus } from "@/types/documents";
 
 export interface UseDocumentUploadProps {
   entityType: EntityType;
@@ -69,18 +69,19 @@ export const useDocumentUpload = ({
         const isNewVersion = !!originalDocumentId;
         const version = isNewVersion ? currentVersion + 1 : 1;
         
-        // Define base document data - only include fields that actually exist in the table
+        // Define base document data
         const baseData = {
           id: documentId,
           document_name: documentName,
           document_type: documentType,
           file_path: filePath,
           uploaded_by: userId,
-          company_id: user.data.user?.user_metadata?.company_id,
+          company_id: user.data.user?.user_metadata?.company_id || "",
           version: version,
           is_latest_version: true,
           original_document_id: originalDocumentId || null,
-          category: documentCategory || null
+          category: documentCategory || null,
+          approval_status: "pending" as DocumentApprovalStatus
         };
         
         // Create entity-specific document data
@@ -88,6 +89,18 @@ export const useDocumentUpload = ({
         
         // Insert document record
         await insertDocumentRecord(documentTable, insertData);
+        
+        // If this is a new version, update the previous version to not be the latest
+        if (isNewVersion && originalDocumentId) {
+          const { error } = await supabase
+            .from(documentTable)
+            .update({ is_latest_version: false })
+            .eq('id', originalDocumentId);
+            
+          if (error) {
+            console.error("Error updating previous version:", error);
+          }
+        }
         
         // Log activity
         await logActivity({

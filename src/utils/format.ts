@@ -1,15 +1,20 @@
-
 /**
  * Format a date as a string using the specified locale
  */
-export const formatDate = (date: Date | string, locale = 'en-US'): string => {
+export const formatDate = (date: string | Date): string => {
   if (!date) return '';
   
-  return new Date(date).toLocaleDateString(locale, {
+  // Convert string to Date object if needed
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  // Format the date
+  return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
-  });
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(dateObj);
 };
 
 /**
