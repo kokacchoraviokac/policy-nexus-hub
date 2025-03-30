@@ -125,5 +125,31 @@
   "importErrors": "Greške pri uvozu",
   "andMoreErrors": "I još {count} grešaka",
   "importedPoliciesInDraft": "Uspešno uvezene polise su sada u statusu 'Nacrt' i spremne su za pregled",
-  "done": "Gotovo"
+  "done": "Gotovo",
+  
+  "importSteps": "Koraci uvoza",
+  "downloadTemplateStep": "Preuzmite šablon CSV datoteke",
+  "fillTemplateStep": "Popunite šablon podacima o polisama",
+  "uploadFileStep": "Otpremite popunjenu CSV datoteku",
+  "reviewPoliciesStep": "Pregledajte uvezene polise",
+  "confirmAndImportStep": "Potvrdite i završite uvoz",
+  
+  "importantNotes": "Važne napomene",
+  "importNoteAutoLinking": "Podaci o klijentima i osiguravačima će biti automatski povezani sa postojećim zapisima gde je to moguće",
+  "importNoteWorkflowStatus": "Sve uvezene polise će inicijalno imati status 'Nacrt'",
+  "importNoteDuplicates": "Sistem će proveriti potencijalne duplikate na osnovu broja polise",
+  
+  "export": "Izvoz",
+  "searchPolicies": "Pretraži polise",
+  "allStatuses": "Svi statusi",
+  "noPoliciesFound": "Nema pronađenih polisa",
+  "tryAdjustingYourSearch": "Pokušajte da prilagodite kriterijume pretrage",
+  "refresh": "Osveži",
+  
+  "upcomingRenewals": "Predstojeća obnavljanja",
+  "nextDays": "narednih 40 dana",
+  "activePolicies": "Aktivne polise",
+  "acrossClients": "za sve klijente",
+  "unassignedPolicies": "Nedodeljene polise",
+  "needAttention": "zahtevaju pažnju"
 }
