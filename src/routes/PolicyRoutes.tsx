@@ -2,6 +2,7 @@
 import React from "react";
 import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AppLayout from "@/components/layout/AppLayout";
 import Policies from "@/pages/Policies";
 import AllPolicies from "@/pages/policies/AllPolicies";
 import NewPolicy from "@/pages/policies/NewPolicy";
@@ -18,7 +19,9 @@ export const PolicyRoutes = [
     path="/policies"
     element={
       <ProtectedRoute>
-        <Policies />
+        <AppLayout>
+          <Policies />
+        </AppLayout>
       </ProtectedRoute>
     }
   >
