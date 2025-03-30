@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,7 +79,8 @@ export const useDocumentUpload = ({
           version: version,
           is_latest_version: true,
           original_document_id: originalDocumentId || null,
-          category: documentCategory || null
+          category: documentCategory || null,
+          mime_type: file.type || null
         };
         
         // Create entity-specific document data

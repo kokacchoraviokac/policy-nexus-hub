@@ -9,6 +9,22 @@ export interface UseDocumentVersionsProps {
   enabled?: boolean;
 }
 
+// Define a type for document database row
+interface DocumentDbRow {
+  id: string;
+  document_name: string;
+  document_type: string;
+  created_at: string;
+  file_path: string;
+  uploaded_by: string;
+  version?: number;
+  is_latest_version?: boolean;
+  original_document_id?: string | null;
+  category?: string | null;
+  mime_type?: string | null;
+  [key: string]: any; // For other fields
+}
+
 export const useDocumentVersions = ({ 
   documentId, 
   originalDocumentId,
@@ -109,18 +125,25 @@ export const useDocumentVersions = ({
           }
         }
         
-        // Query all versions based on original_document_id or being the original
-        const { data: allVersions, error: versionsError } = await supabase
+        // Build the query for OR condition
+        let query = supabase
           .from(tableName)
           .select('*')
-          .or(`original_document_id.eq.${originalId},id.eq.${originalId}`)
-          .eq(entityField, entityId)
-          .order('version', { ascending: false });
+          .eq(entityField, entityId);
           
+        // Add OR condition for original_document_id or being the original
+        if (originalId) {
+          query = query.or(`original_document_id.eq.${originalId},id.eq.${originalId}`);
+        } else {
+          query = query.or(`id.eq.${documentId}`);
+        }
+          
+        const { data: allVersions, error: versionsError } = await query.order('version', { ascending: false });
+        
         if (versionsError) throw versionsError;
         
         // Transform to Document type, safely handling potentially missing properties
-        return (allVersions || []).map(doc => ({
+        return (allVersions || []).map((doc: DocumentDbRow) => ({
           id: doc.id,
           document_name: doc.document_name,
           document_type: doc.document_type,

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDocumentApproval } from "@/hooks/useDocumentApproval";
@@ -23,6 +24,14 @@ import { supabase } from "@/integrations/supabase/client";
 interface DocumentApprovalPanelProps {
   document: Document;
   onApprovalComplete?: () => void;
+}
+
+// Define a type for activity log details
+interface ApprovalDetails {
+  approval_status?: DocumentApprovalStatus;
+  document_id?: string;
+  action_type?: string;
+  notes?: string;
 }
 
 const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
@@ -65,21 +74,23 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       
       if (data && data.length > 0) {
         const latestApproval = data[0];
+        const details = latestApproval.details as ApprovalDetails;
+        
         setApprovalInfo({
-          status: latestApproval.details.approval_status || "pending",
+          status: details.approval_status || "pending",
           approved_by: latestApproval.user_id,
           approved_at: latestApproval.created_at,
-          notes: latestApproval.details.notes
+          notes: details.notes
         });
         
-        if (latestApproval.details.notes) {
-          setNotes(latestApproval.details.notes);
+        if (details.notes) {
+          setNotes(details.notes);
         }
       }
     };
     
     fetchApprovalInfo();
-  }, [document, supabase]);
+  }, [document, document.entity_type, document.entity_id, document.id]);
   
   if (!document.entity_type || !document.entity_id) {
     return null;
