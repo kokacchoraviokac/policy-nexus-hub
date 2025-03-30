@@ -4,9 +4,10 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CommissionFilterOptions } from "./useCommissionFilters";
 
-interface ExportCommissionsParams {
-  filters: any;
+export interface ExportCommissionsParams {
+  filters: CommissionFilterOptions;
   includeHeaders?: boolean;
 }
 

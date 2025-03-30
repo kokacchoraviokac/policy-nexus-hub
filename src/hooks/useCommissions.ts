@@ -22,7 +22,12 @@ export const useCommissions = () => {
     updateCommissionStatus, 
     isUpdating 
   } = useCommissionMutations();
-  const { exportCommissions } = useCommissionExport(filters);
+  const { exportCommissions, isExporting } = useCommissionExport();
+
+  // Wrapper function to provide proper arguments for exportCommissions
+  const handleExportCommissions = () => {
+    exportCommissions({ filters });
+  };
 
   return {
     // Filters
@@ -49,7 +54,8 @@ export const useCommissions = () => {
     isUpdating,
     
     // Export
-    exportCommissions
+    exportCommissions: handleExportCommissions,
+    isExporting
   };
 };
 
