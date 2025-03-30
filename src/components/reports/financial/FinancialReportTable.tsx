@@ -20,6 +20,13 @@ interface FinancialReportTableProps {
   visibleColumns?: string[];
 }
 
+// Define an interface for the column data
+interface ColumnData {
+  header: string;
+  render: (transaction: FinancialTransaction) => React.ReactNode;
+  className?: string;
+}
+
 const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
   data,
   isLoading,
@@ -62,9 +69,15 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
     );
   }
   
-  const columnMap = {
-    date: { header: t("date"), render: (transaction: FinancialTransaction) => formatDate(new Date(transaction.date), language) },
-    description: { header: t("description"), render: (transaction: FinancialTransaction) => transaction.description },
+  const columnMap: Record<string, ColumnData> = {
+    date: { 
+      header: t("date"), 
+      render: (transaction: FinancialTransaction) => formatDate(new Date(transaction.date), language) 
+    },
+    description: { 
+      header: t("description"), 
+      render: (transaction: FinancialTransaction) => transaction.description 
+    },
     type: { 
       header: t("type"), 
       render: (transaction: FinancialTransaction) => (
@@ -73,8 +86,14 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
         </Badge>
       )
     },
-    category: { header: t("category"), render: (transaction: FinancialTransaction) => t(transaction.category) },
-    reference: { header: t("reference"), render: (transaction: FinancialTransaction) => transaction.reference || "-" },
+    category: { 
+      header: t("category"), 
+      render: (transaction: FinancialTransaction) => t(transaction.category) 
+    },
+    reference: { 
+      header: t("reference"), 
+      render: (transaction: FinancialTransaction) => transaction.reference || "-" 
+    },
     status: { 
       header: t("status"), 
       render: (transaction: FinancialTransaction) => (
@@ -103,7 +122,10 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
         <TableHeader>
           <TableRow>
             {visibleColumnData.map((column, index) => (
-              <TableHead key={index} className={column.className}>
+              <TableHead 
+                key={index} 
+                className={column.className}
+              >
                 {column.header}
               </TableHead>
             ))}
@@ -113,7 +135,10 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
           {data.map((transaction) => (
             <TableRow key={transaction.id}>
               {visibleColumnData.map((column, index) => (
-                <TableCell key={index} className={column.className}>
+                <TableCell 
+                  key={index} 
+                  className={column.className}
+                >
                   {column.render(transaction)}
                 </TableCell>
               ))}
