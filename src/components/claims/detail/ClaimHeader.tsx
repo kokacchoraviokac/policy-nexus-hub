@@ -1,7 +1,8 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Pencil, Download } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowLeft, Pencil, ArrowDownToLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +12,7 @@ interface ClaimHeaderProps {
   claimNumber: string;
   status: string;
   createdAt: string;
-  isEditMode: boolean;
+  isEditMode?: boolean;
   claimId: string;
 }
 
@@ -19,64 +20,68 @@ const ClaimHeader: React.FC<ClaimHeaderProps> = ({
   claimNumber,
   status,
   createdAt,
-  isEditMode,
-  claimId
+  isEditMode = false,
+  claimId,
 }) => {
   const navigate = useNavigate();
   const { t, formatDate } = useLanguage();
   const { toast } = useToast();
 
-  const handleBackClick = () => {
-    navigate(-1);
+  const handleBack = () => {
+    navigate("/claims");
   };
 
-  const handleEditClaim = () => {
+  const handleEdit = () => {
     navigate(`/claims/${claimId}/edit`);
   };
 
-  const handleExportClaim = () => {
+  const handleExport = () => {
+    // In a real application, this would trigger an API call to generate a PDF
     toast({
       title: t("exportStarted"),
-      description: t("claimExportInProgress")
+      description: t("claimExportInProgress"),
     });
   };
 
   return (
-    <>
+    <div className="flex flex-col space-y-4">
       <Button
         variant="outline"
         size="sm"
-        className="mb-4"
-        onClick={handleBackClick}
+        className="w-fit"
+        onClick={handleBack}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         {t("backToClaims")}
       </Button>
-
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold">{t("claim")} {claimNumber}</h1>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight mb-1">
+              {claimNumber}
+            </h1>
             <ClaimStatusBadge status={status} />
-            <span className="text-sm text-muted-foreground">
-              {t("createdOn")}: {formatDate(createdAt)}
-            </span>
           </div>
+          <p className="text-muted-foreground text-sm">
+            {t("createdOn")} {formatDate(createdAt)}
+          </p>
         </div>
-        <div className="flex space-x-2">
+        
+        <div className="flex items-center mt-4 md:mt-0 gap-2">
           {!isEditMode && (
-            <Button variant="outline" size="sm" onClick={handleEditClaim}>
+            <Button variant="outline" onClick={handleEdit}>
               <Pencil className="mr-2 h-4 w-4" />
               {t("editClaim")}
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handleExportClaim}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button variant="outline" onClick={handleExport}>
+            <ArrowDownToLine className="mr-2 h-4 w-4" />
             {t("exportClaim")}
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

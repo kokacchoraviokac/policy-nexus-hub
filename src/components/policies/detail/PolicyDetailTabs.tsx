@@ -1,65 +1,60 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import PolicyDocumentsTab from "./PolicyDocumentsTab";
+import PolicyOverviewTab from "./PolicyOverviewTab";
 import PolicyClaimsTab from "./PolicyClaimsTab";
 import PolicyFinancialsTab from "./PolicyFinancialsTab";
-import PolicyHistoryTab from "./PolicyHistoryTab";
-import PolicyAddendumTab from "./PolicyAddendumTab";
-import { Policy } from "@/types/policies";
+import PolicyDocumentsTab from "./PolicyDocumentsTab";
+import PolicyAddendaTab from "./PolicyAddendaTab";
+import PolicyActivityTab from "./PolicyActivityTab";
 
 interface PolicyDetailTabsProps {
-  policy: Policy;
+  policy: any;
 }
 
 const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
   const { t } = useLanguage();
-
+  const [activeTab, setActiveTab] = useState("overview");
+  
   return (
-    <Tabs defaultValue="documents" className="w-full">
-      <TabsList className="mb-6">
-        <TabsTrigger value="documents">
-          {t("documents")}
-          {policy.documents_count > 0 && (
-            <Badge variant="secondary" className="ml-2">{policy.documents_count}</Badge>
-          )}
-        </TabsTrigger>
-        <TabsTrigger value="addendums">
-          {t("addendums")}
-          {policy.addendums_count > 0 && (
-            <Badge variant="secondary" className="ml-2">{policy.addendums_count}</Badge>
-          )}
-        </TabsTrigger>
-        <TabsTrigger value="claims">
-          {t("claims")}
-          {policy.claims_count > 0 && (
-            <Badge variant="secondary" className="ml-2">{policy.claims_count}</Badge>
-          )}
-        </TabsTrigger>
+    <Tabs 
+      defaultValue="overview" 
+      value={activeTab} 
+      onValueChange={setActiveTab}
+      className="space-y-4"
+    >
+      <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+        <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+        <TabsTrigger value="claims">{t("claims")}</TabsTrigger>
         <TabsTrigger value="financials">{t("financials")}</TabsTrigger>
-        <TabsTrigger value="history">{t("history")}</TabsTrigger>
+        <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
+        <TabsTrigger value="addenda">{t("addenda")}</TabsTrigger>
+        <TabsTrigger value="activity">{t("activity")}</TabsTrigger>
       </TabsList>
       
-      <TabsContent value="documents">
-        <PolicyDocumentsTab policyId={policy.id} />
+      <TabsContent value="overview" className="space-y-4">
+        <PolicyOverviewTab policy={policy} />
       </TabsContent>
       
-      <TabsContent value="addendums">
-        <PolicyAddendumTab policyId={policy.id} policyNumber={policy.policy_number} />
-      </TabsContent>
-      
-      <TabsContent value="claims">
+      <TabsContent value="claims" className="space-y-4">
         <PolicyClaimsTab policyId={policy.id} />
       </TabsContent>
       
-      <TabsContent value="financials">
-        <PolicyFinancialsTab policyId={policy.id} />
+      <TabsContent value="financials" className="space-y-4">
+        <PolicyFinancialsTab policy={policy} />
       </TabsContent>
       
-      <TabsContent value="history">
-        <PolicyHistoryTab policyId={policy.id} />
+      <TabsContent value="documents" className="space-y-4">
+        <PolicyDocumentsTab policyId={policy.id} />
+      </TabsContent>
+      
+      <TabsContent value="addenda" className="space-y-4">
+        <PolicyAddendaTab policyId={policy.id} />
+      </TabsContent>
+      
+      <TabsContent value="activity" className="space-y-4">
+        <PolicyActivityTab policyId={policy.id} />
       </TabsContent>
     </Tabs>
   );

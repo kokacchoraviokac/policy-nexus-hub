@@ -1,61 +1,85 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Grid } from "@/components/ui/grid";
-import PolicyFinancialCard from "./PolicyFinancialCard";
-import PolicyWorkflowCard from "./PolicyWorkflowCard";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, Clock, User, Building, FileText, AlertCircle, Activity, CreditCard } from "lucide-react";
+import PolicyStatusBadge from "./PolicyStatusBadge";
+import PolicyQuickInfo from "./PolicyQuickInfo";
 import PolicyClaimsCard from "./PolicyClaimsCard";
-import PolicyDocumentsCard from "./PolicyDocumentsCard";
-import PolicyAddendumCard from "./PolicyAddendumCard";
-import { usePolicyAddendums } from "@/hooks/usePolicyAddendums";
+import PolicyAssignmentCard from "./PolicyAssignmentCard";
 
 interface PolicyDetailSummaryProps {
-  policy: any; // Will be properly typed when we have the full schema
+  policy: any;
 }
 
 const PolicyDetailSummary: React.FC<PolicyDetailSummaryProps> = ({ policy }) => {
-  const { t } = useLanguage();
-  const { addendumCount, getLatestAddendum } = usePolicyAddendums(policy.id);
-  const latestAddendum = getLatestAddendum();
-
-  const handleCreateAddendum = () => {
-    // This will be handled by the tab implementation
-    const addendumTab = document.querySelector('[data-value="addendums"]');
-    if (addendumTab instanceof HTMLElement) {
-      addendumTab.click();
-    }
-  };
+  const { t, formatDate, formatCurrency } = useLanguage();
   
   return (
-    <Grid className="grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <PolicyFinancialCard
-        premium={policy.premium}
-        currency={policy.currency}
-        startDate={policy.start_date}
-        expiryDate={policy.expiry_date}
-        paymentFrequency={policy.payment_frequency}
-      />
+    <div className="grid grid-cols-12 gap-4">
+      <Card className="col-span-12 lg:col-span-9">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div>
+              <PolicyQuickInfo
+                icon={<Building className="h-5 w-5 text-slate-700" />}
+                label={t("insurerInsuredParty")}
+                value={policy.insurer_name}
+                subvalue={policy.insured_name || policy.policyholder_name}
+              />
+            </div>
+            
+            <div>
+              <PolicyQuickInfo
+                icon={<CalendarDays className="h-5 w-5 text-slate-700" />}
+                label={t("validityPeriod")}
+                value={formatDate(policy.start_date)}
+                subvalue={formatDate(policy.expiry_date)}
+                sublabel={t("expiry")}
+              />
+            </div>
+            
+            <div>
+              <PolicyQuickInfo
+                icon={<FileText className="h-5 w-5 text-slate-700" />}
+                label={t("premiumPayments")}
+                value={formatCurrency(policy.premium)}
+                subvalue={t(policy.payment_frequency || "unknown")}
+                sublabel={t("frequency")}
+              />
+            </div>
+            
+            <div>
+              <PolicyQuickInfo
+                icon={<Activity className="h-5 w-5 text-slate-700" />}
+                label={t("statusWorkflow")}
+                value={<PolicyStatusBadge status={policy.status} />}
+                subvalue={policy.workflow_status}
+                isTag={true}
+              />
+            </div>
+          </div>
+          
+          {policy.notes && (
+            <div className="mt-6 p-3 bg-muted/50 rounded-md">
+              <h4 className="text-sm font-medium mb-1">{t("notes")}</h4>
+              <p className="text-sm whitespace-pre-wrap">{policy.notes}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       
-      <PolicyWorkflowCard
-        policy={policy}
-      />
-      
-      <PolicyAddendumCard
-        policyId={policy.id}
-        onCreateAddendum={handleCreateAddendum}
-        addendumCount={addendumCount}
-        latestAddendum={latestAddendum}
-      />
-      
-      <PolicyClaimsCard
-        policyId={policy.id}
-      />
-      
-      <PolicyDocumentsCard
-        policyId={policy.id}
-        documentsCount={policy.documents_count || 0}
-      />
-    </Grid>
+      <div className="col-span-12 lg:col-span-3 space-y-4">
+        <PolicyAssignmentCard
+          policy={policy}
+        />
+        
+        <PolicyClaimsCard
+          policyId={policy.id}
+        />
+      </div>
+    </div>
   );
 };
 
