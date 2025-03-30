@@ -5,7 +5,11 @@ import { generateTranslationReport } from '@/utils/translationValidator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-const TranslationTestStatus: React.FC = () => {
+interface TranslationTestStatusProps {
+  autoRun?: boolean;
+}
+
+const TranslationTestStatus: React.FC<TranslationTestStatusProps> = ({ autoRun }) => {
   const { language, getMissingTranslationsCount } = useLanguage();
   
   // Generate a comprehensive report - only in dev environments
