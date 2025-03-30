@@ -161,7 +161,6 @@
   "importedPoliciesInDraft": "Las pólizas importadas exitosamente ahora están en estado 'Borrador' y listas para revisión",
   "done": "Hecho",
   
-  // Adding missing translations for policy form
   "basicInfo": "Información básica",
   "parties": "Partes",
   "financialInfo": "Información financiera",
