@@ -76,12 +76,12 @@ export const useInvoices = () => {
       const to = from + pagination.pageSize - 1;
       
       // Add range and ordering
-      query = query
+      const finalQuery = query
         .order('created_at', { ascending: false })
         .range(from, to);
       
       // Execute the query
-      const { data, error, count } = await query;
+      const { data, error, count } = await finalQuery;
       
       if (error) throw error;
       
@@ -129,10 +129,10 @@ export const useInvoices = () => {
     }
     
     // Order by created_at descending
-    query = query.order('created_at', { ascending: false });
+    const finalQuery = query.order('created_at', { ascending: false });
     
     // Execute the query
-    const { data, error } = await query;
+    const { data, error } = await finalQuery;
     
     if (error) throw error;
     
@@ -157,6 +157,12 @@ export const useInvoices = () => {
     setFilters,
     pagination: {
       ...pagination,
+      page: pagination.pageIndex + 1,
+      pageSize: pagination.pageSize,
+      totalCount: fetchResult?.count || 0,
+      totalPages: Math.ceil((fetchResult?.count || 0) / pagination.pageSize),
+      setPage: (page: number) => setPagination({ ...pagination, pageIndex: page - 1 }),
+      setPageSize: (pageSize: number) => setPagination({ pageIndex: 0, pageSize }),
       onPageChange: (pageIndex: number) => setPagination({ ...pagination, pageIndex }),
       onPageSizeChange: (pageSize: number) => setPagination({ pageIndex: 0, pageSize })
     },

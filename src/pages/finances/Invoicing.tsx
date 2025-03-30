@@ -82,6 +82,16 @@ const Invoicing = () => {
     }
   };
 
+  // Extract the correct pagination interface that matches what InvoicesTable expects
+  const tablePagination = {
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    totalCount: pagination.totalCount,
+    totalPages: pagination.totalPages,
+    setPage: pagination.setPage,
+    setPageSize: pagination.setPageSize
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -134,7 +144,7 @@ const Invoicing = () => {
       <InvoicesTable
         invoices={invoices}
         isLoading={isLoading}
-        pagination={pagination}
+        pagination={tablePagination}
         totalCount={totalCount}
         onRefresh={refetch}
       />

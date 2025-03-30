@@ -31,9 +31,10 @@ import { format } from 'date-fns';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import InvoiceItemsTable from './InvoiceItemsTable';
+import { InvoiceItem } from '@/types/finances';
 
-// Define a proper type for invoice items to avoid TypeScript errors
-interface InvoiceItemType {
+// Define proper types for invoice items
+interface InvoiceItemInput {
   id: string;
   description: string;
   amount: number;
@@ -59,8 +60,8 @@ const invoiceSchema = z.object({
       policy_id: z.string().optional(),
     })
   ).min(1, { message: "At least one item is required" }),
-  invoice_type: z.string().optional(),
-  invoice_category: z.string().optional(),
+  invoice_type: z.enum(['domestic', 'foreign']).optional(),
+  invoice_category: z.enum(['automatic', 'manual']).optional(),
   calculation_reference: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -77,7 +78,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInv
   const { t } = useLanguage();
   const { toast } = useToast();
   const { createInvoice, isCreating } = useInvoiceMutations();
-  const [items, setItems] = useState<InvoiceItemType[]>([{ id: nanoid(), description: "", amount: 0 }]);
+  const [items, setItems] = useState<InvoiceItemInput[]>([{ id: nanoid(), description: "", amount: 0 }]);
   
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),

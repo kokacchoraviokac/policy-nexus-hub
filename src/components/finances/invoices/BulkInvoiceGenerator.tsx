@@ -33,6 +33,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Separator } from '@/components/ui/separator';
 import { CommissionType } from '@/types/finances';
+import { useContext } from 'react';
+import { AuthContext } from '@/contexts/auth/AuthContext';
 
 interface BulkInvoiceGeneratorProps {
   onGenerationComplete?: () => void;
@@ -42,6 +44,9 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useContext(AuthContext);
+  const companyId = user?.companyId;
+  
   const [isOpen, setIsOpen] = useState(false);
   const [invoiceDate, setInvoiceDate] = useState<Date>(new Date());
   const [dueDate, setDueDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() + 30)));
@@ -135,6 +140,10 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
       if (!selectedCommissions || selectedCommissions.length === 0) {
         throw new Error("No commissions selected");
       }
+
+      if (!companyId) {
+        throw new Error("Company ID not found");
+      }
       
       // Group selected commissions by insurer
       const commissionsByInsurer: Record<string, typeof commissions> = {};
@@ -163,7 +172,7 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
         // Calculate total amount
         const totalAmount = insurerCommissions.reduce((sum, commission) => sum + Number(commission.calculated_amount), 0);
         
-        // Create invoice
+        // Create invoice with proper field structure
         const { data: invoice, error: invoiceError } = await supabase
           .from('invoices')
           .insert({
@@ -176,15 +185,25 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
             total_amount: totalAmount,
             status: 'draft',
             currency: 'EUR',
-            invoice_type: 'domestic',
-            invoice_category: 'automatic',
-            calculation_reference: `BULK-${format(new Date(), 'yyyyMMdd')}`,
+            company_id: companyId,
             notes: `Automatically generated invoice for commissions from ${insurerName}`
           })
           .select('id')
           .single();
         
         if (invoiceError) throw invoiceError;
+
+        // After creating the invoice, update it with additional fields using an RPC or a separate update
+        const { error: updateError } = await supabase
+          .from('invoices')
+          .update({ 
+            invoice_type: 'domestic',
+            invoice_category: 'automatic',
+            calculation_reference: `BULK-${format(new Date(), 'yyyyMMdd')}`
+          })
+          .eq('id', invoice.id);
+          
+        if (updateError) throw updateError;
         
         // Create invoice items
         const invoiceItems = insurerCommissions.map(commission => ({
