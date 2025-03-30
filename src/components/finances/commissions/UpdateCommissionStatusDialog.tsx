@@ -69,7 +69,7 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
       commissionId: commission.id,
       status,
       paymentDate: paymentDate ? format(paymentDate, 'yyyy-MM-dd') : undefined,
-      paidAmount: status === 'paid' ? paidAmount : undefined
+      paidAmount: status === 'paid' || status === 'partially_paid' ? paidAmount : undefined
     });
   };
 
