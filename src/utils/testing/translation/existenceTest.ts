@@ -36,4 +36,5 @@ export const testTranslationExistence = () => {
   };
 };
 
+export { testTranslationExistence as testTranslationExists };
 export default testTranslationExistence;

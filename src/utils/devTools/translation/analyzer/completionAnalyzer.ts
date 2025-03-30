@@ -1,4 +1,5 @@
 
+import { generateTranslationReport } from '../../../translationValidator';
 import { TranslationReport } from '../../../translationValidator';
 
 /**

@@ -3,7 +3,7 @@ import en from '../../../locales/en/index';
 import sr from '../../../locales/sr/index';
 import mk from '../../../locales/mk/index';
 import es from '../../../locales/es/index';
-import testTranslationExistence from './existenceTest';
+import { testTranslationExistence } from './existenceTest';
 import { testTranslationParameters } from './parameterTest';
 import { testHtmlTranslations } from './htmlTest';
 import { TestCaseResult, TranslationTestReport } from './types';
