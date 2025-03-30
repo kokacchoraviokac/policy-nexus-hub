@@ -1,15 +1,10 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface BankTransactionsFiltersProps {
   searchTerm: string;
@@ -22,38 +17,44 @@ const BankTransactionsFilters: React.FC<BankTransactionsFiltersProps> = ({
   searchTerm,
   onSearchChange,
   statusFilter,
-  onStatusFilterChange
+  onStatusFilterChange,
 }) => {
   const { t } = useLanguage();
   
   return (
-    <div className="flex flex-col md:flex-row gap-4 mb-6">
-      <div className="relative w-full md:w-96">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder={t("searchTransactions")}
-          className="pl-8"
-          value={searchTerm}
-          onChange={onSearchChange}
-        />
-      </div>
-      
-      <Select
-        value={statusFilter}
-        onValueChange={onStatusFilterChange}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder={t("filterByStatus")} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">{t("allTransactions")}</SelectItem>
-          <SelectItem value="unmatched">{t("unmatched")}</SelectItem>
-          <SelectItem value="matched">{t("matched")}</SelectItem>
-          <SelectItem value="ignored">{t("ignored")}</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("search")}</label>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder={t("searchTransactionsPlaceholder")}
+                value={searchTerm}
+                onChange={onSearchChange}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("status")}</label>
+            <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("selectStatus")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("all")}</SelectItem>
+                <SelectItem value="unmatched">{t("unmatched")}</SelectItem>
+                <SelectItem value="matched">{t("matched")}</SelectItem>
+                <SelectItem value="ignored">{t("ignored")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

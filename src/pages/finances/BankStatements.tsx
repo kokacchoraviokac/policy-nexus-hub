@@ -32,7 +32,7 @@ const BankStatements = () => {
   
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [bankFilter, setBankFilter] = useState<string>("");
+  const [bankFilter, setBankFilter] = useState<string>("all"); // Changed from empty string to "all"
   const [dateFrom, setDateFrom] = useState<Date | null>(null);
   const [dateTo, setDateTo] = useState<Date | null>(null);
   
@@ -48,7 +48,7 @@ const BankStatements = () => {
   } = useBankStatements({
     searchTerm,
     status: statusFilter !== "all" ? statusFilter : undefined,
-    bankName: bankFilter || undefined,
+    bankName: bankFilter !== "all" ? bankFilter : undefined, // Check for "all" value
     dateFrom,
     dateTo
   });
@@ -56,7 +56,7 @@ const BankStatements = () => {
   const handleClearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
-    setBankFilter("");
+    setBankFilter("all"); // Set to "all" instead of empty string
     setDateFrom(null);
     setDateTo(null);
   };

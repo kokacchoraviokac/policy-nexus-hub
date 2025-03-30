@@ -41,7 +41,7 @@ const BankStatementsFilters: React.FC<BankStatementsFiltersProps> = ({
   
   // Mock bank options for now - in a real app, fetch from the database
   const bankOptions = [
-    { label: t("allBanks"), value: "" },
+    { label: t("allBanks"), value: "all" }, // Changed empty string to "all"
     { label: "UniCredit", value: "UniCredit" },
     { label: "Raiffeisen", value: "Raiffeisen" },
     { label: "Komercijalna", value: "Komercijalna" }
