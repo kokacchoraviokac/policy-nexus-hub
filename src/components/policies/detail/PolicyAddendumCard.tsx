@@ -5,7 +5,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, FileEdit } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatDistance } from "date-fns";
 
 interface PolicyAddendumCardProps {
   policyId: string;
@@ -16,6 +15,7 @@ interface PolicyAddendumCardProps {
     addendum_number: string;
     effective_date: string;
     status: string;
+    workflow_status: string;
     premium_adjustment?: number;
   };
 }
@@ -41,6 +41,36 @@ const PolicyAddendumCard: React.FC<PolicyAddendumCardProps> = ({
         return "outline";
     }
   };
+  
+  const getWorkflowStatusVariant = (status: string): "default" | "secondary" | "destructive" | "success" | "outline" => {
+    switch (status?.toLowerCase()) {
+      case 'draft':
+        return "outline";
+      case 'in_review':
+        return "secondary";
+      case 'ready':
+        return "default";
+      case 'complete':
+        return "success";
+      default:
+        return "outline";
+    }
+  };
+  
+  const getWorkflowStatusLabel = (status: string): string => {
+    switch (status?.toLowerCase()) {
+      case 'draft':
+        return t("draft");
+      case 'in_review':
+        return t("inReview");
+      case 'ready':
+        return t("ready");
+      case 'complete':
+        return t("complete");
+      default:
+        return status;
+    }
+  };
 
   return (
     <Card>
@@ -59,10 +89,15 @@ const PolicyAddendumCard: React.FC<PolicyAddendumCardProps> = ({
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="font-medium">{t("latestAddendum")}: {latestAddendum.addendum_number}</span>
-                    <div className="flex space-x-2 items-center mt-1">
+                    <div className="flex flex-wrap gap-2 mt-1">
                       <Badge variant={getStatusVariant(latestAddendum.status)}>
                         {latestAddendum.status}
                       </Badge>
+                      {latestAddendum.workflow_status && (
+                        <Badge variant={getWorkflowStatusVariant(latestAddendum.workflow_status)}>
+                          {getWorkflowStatusLabel(latestAddendum.workflow_status)}
+                        </Badge>
+                      )}
                       <span className="text-xs text-muted-foreground">
                         {formatDate(latestAddendum.effective_date)}
                       </span>

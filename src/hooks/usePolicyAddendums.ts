@@ -58,6 +58,36 @@ export const usePolicyAddendums = (policyId: string) => {
     }
   });
   
+  const updateWorkflowStatusMutation = useMutation({
+    mutationFn: async ({ addendumId, status }: { addendumId: string; status: string }) => {
+      const { error } = await supabase
+        .from('policy_addendums')
+        .update({ 
+          workflow_status: status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', addendumId);
+      
+      if (error) throw error;
+      return { addendumId, status };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['policy-addendums', policyId] });
+      toast({
+        title: t("statusUpdated"),
+        description: t("workflowStatusUpdatedSuccess"),
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating workflow status:', error);
+      toast({
+        title: t("updateError"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "destructive",
+      });
+    }
+  });
+  
   const getLatestAddendum = (): PolicyAddendum | undefined => {
     if (!addendums || addendums.length === 0) return undefined;
     return addendums[0];
@@ -71,6 +101,8 @@ export const usePolicyAddendums = (policyId: string) => {
     refetch,
     deleteAddendum: deleteAddendumMutation.mutate,
     isDeletingAddendum: deleteAddendumMutation.isPending,
+    updateWorkflowStatus: updateWorkflowStatusMutation.mutate,
+    isUpdatingWorkflowStatus: updateWorkflowStatusMutation.isPending,
     getLatestAddendum,
     addendumCount: addendums?.length || 0
   };

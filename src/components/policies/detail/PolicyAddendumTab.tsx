@@ -82,7 +82,11 @@ const PolicyAddendumTab: React.FC<PolicyAddendumTabProps> = ({
       <Separator />
       
       {addendums && addendums.length > 0 ? (
-        <AddendumList addendums={addendums} onRefresh={refetch} />
+        <AddendumList 
+          addendums={addendums} 
+          policyNumber={policyNumber}
+          onRefresh={refetch} 
+        />
       ) : (
         <EmptyState
           icon="file-edit"

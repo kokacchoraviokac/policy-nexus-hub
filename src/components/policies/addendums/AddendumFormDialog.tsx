@@ -18,6 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import {
   Select,
@@ -30,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -39,10 +40,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AddendumFormDialogProps {
   policyId: string;
@@ -50,6 +52,16 @@ interface AddendumFormDialogProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editAddendum?: {
+    id: string;
+    addendum_number: string;
+    effective_date: string;
+    description: string;
+    premium_adjustment?: number;
+    lien_status: boolean;
+    status: string;
+    workflow_status: string;
+  };
 }
 
 const addendumSchema = z.object({
@@ -70,19 +82,32 @@ const AddendumFormDialog: React.FC<AddendumFormDialogProps> = ({
   open,
   onClose,
   onSuccess,
+  editAddendum,
 }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const isEditing = !!editAddendum;
   
   const form = useForm<AddendumFormValues>({
     resolver: zodResolver(addendumSchema),
-    defaultValues: {
-      addendum_number: `${policyNumber}-A`,
-      status: "pending",
-      workflow_status: "draft",
-      lien_status: false,
-    },
+    defaultValues: editAddendum
+      ? {
+          addendum_number: editAddendum.addendum_number,
+          effective_date: new Date(editAddendum.effective_date),
+          description: editAddendum.description,
+          premium_adjustment: editAddendum.premium_adjustment,
+          lien_status: editAddendum.lien_status,
+          status: editAddendum.status,
+          workflow_status: editAddendum.workflow_status,
+        }
+      : {
+          addendum_number: `${policyNumber}-A`,
+          status: "pending",
+          workflow_status: "draft",
+          lien_status: false,
+        },
   });
   
   const createAddendumMutation = useMutation({
@@ -114,6 +139,7 @@ const AddendumFormDialog: React.FC<AddendumFormDialogProps> = ({
       return addendum;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['policy-addendums', policyId] });
       toast({
         title: t("addendumCreated"),
         description: t("addendumCreatedSuccess"),
@@ -130,17 +156,74 @@ const AddendumFormDialog: React.FC<AddendumFormDialogProps> = ({
     },
   });
   
+  const updateAddendumMutation = useMutation({
+    mutationFn: async (data: AddendumFormValues) => {
+      if (!editAddendum) throw new Error("No addendum to update");
+      
+      // Format the date for Supabase
+      const effectiveDate = data.effective_date.toISOString().split('T')[0];
+      
+      // Prepare addendum data with correctly typed fields
+      const addendumData = {
+        addendum_number: data.addendum_number,
+        effective_date: effectiveDate,
+        description: data.description,
+        premium_adjustment: data.premium_adjustment,
+        lien_status: data.lien_status,
+        status: data.status,
+        workflow_status: data.workflow_status,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: addendum, error } = await supabase
+        .from("policy_addendums")
+        .update(addendumData)
+        .eq('id', editAddendum.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return addendum;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['policy-addendums', policyId] });
+      toast({
+        title: t("addendumUpdated"),
+        description: t("addendumUpdatedSuccess"),
+      });
+      onSuccess();
+    },
+    onError: (error) => {
+      console.error("Error updating addendum:", error);
+      toast({
+        title: t("addendumUpdateError"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "destructive",
+      });
+    },
+  });
+  
   const onSubmit = (data: AddendumFormValues) => {
-    createAddendumMutation.mutate(data);
+    if (isEditing) {
+      updateAddendumMutation.mutate(data);
+    } else {
+      createAddendumMutation.mutate(data);
+    }
   };
+
+  const isPending = createAddendumMutation.isPending || updateAddendumMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>{t("createAddendum")}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? t("editAddendum") : t("createAddendum")}
+          </DialogTitle>
           <DialogDescription>
-            {t("createAddendumDescription", { policyNumber })}
+            {isEditing
+              ? t("editAddendumDescription", { policyNumber })
+              : t("createAddendumDescription", { policyNumber })}
           </DialogDescription>
         </DialogHeader>
 
@@ -234,6 +317,9 @@ const AddendumFormDialog: React.FC<AddendumFormDialogProps> = ({
                         value={field.value || ""} 
                       />
                     </FormControl>
+                    <FormDescription>
+                      {t("enterNegativeValueForReduction")}
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -268,6 +354,36 @@ const AddendumFormDialog: React.FC<AddendumFormDialogProps> = ({
             
             <FormField
               control={form.control}
+              name="workflow_status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("workflowStatus")}</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("selectWorkflowStatus")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="draft">{t("draft")}</SelectItem>
+                      <SelectItem value="in_review">{t("inReview")}</SelectItem>
+                      <SelectItem value="ready">{t("ready")}</SelectItem>
+                      <SelectItem value="complete">{t("complete")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    {t("workflowStatusDescription")}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
               name="lien_status"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -290,11 +406,18 @@ const AddendumFormDialog: React.FC<AddendumFormDialogProps> = ({
             />
             
             <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
                 {t("cancel")}
               </Button>
-              <Button type="submit" disabled={createAddendumMutation.isPending}>
-                {createAddendumMutation.isPending ? t("creating") : t("createAddendum")}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {isEditing ? t("updating") : t("creating")}
+                  </>
+                ) : (
+                  isEditing ? t("updateAddendum") : t("createAddendum")
+                )}
               </Button>
             </div>
           </form>
