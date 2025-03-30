@@ -198,5 +198,16 @@
   "documentDownloadStarted": "Document download has started",
   "downloadFailed": "Download Failed",
   "documentPathMissing": "Document path is missing",
-  "errorOccurred": "An error occurred"
+  "errorOccurred": "An error occurred",
+  "confirmDocumentDeletion": "Confirm Document Deletion",
+  "deleteDocumentConfirmation": "Are you sure you want to delete the document {name}?",
+  "delete": "Delete",
+  "cancel": "Cancel",
+  "uploadedBy": "Uploaded by",
+  "documentType": "Document Type",
+  "noDocumentsFound": "No documents found",
+  "uploadFirstDocument": "Upload your first document",
+  "errorLoadingDocuments": "Error loading documents",
+  "tryRefreshingPage": "Try refreshing the page",
+  "selectFile": "Select file"
 }

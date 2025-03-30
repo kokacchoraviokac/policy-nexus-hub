@@ -101,7 +101,7 @@ const PolicyWorkflow = () => {
           </div>
         </CardContent>
         <CardFooter className="bg-slate-50 text-sm text-muted-foreground">
-          <p>{t("importAndReviewProcess")}: {t("policyImportNote")}</p>
+          <p>{t("importAndReviewProcess")}</p>
         </CardFooter>
       </Card>
       
