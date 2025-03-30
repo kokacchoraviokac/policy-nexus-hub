@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 
@@ -85,6 +85,13 @@ export const PolicyRoutes = [
         </AppLayout>
       </ProtectedRoute>
     }
+  />,
+  
+  // Redirect from old unlinked payments path to new one
+  <Route
+    key="unlinked-payments-redirect"
+    path="/policies/unlinked-payments"
+    element={<Navigate to="/finances/unlinked-payments" replace />}
   />
 ];
 

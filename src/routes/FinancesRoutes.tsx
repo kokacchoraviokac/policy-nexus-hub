@@ -89,3 +89,5 @@ export const FinancesRoutes = [
     }
   />
 ];
+
+export default FinancesRoutes;

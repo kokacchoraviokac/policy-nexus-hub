@@ -1,3 +1,4 @@
+
 import {
   Book,
   DollarSign,
@@ -49,12 +50,6 @@ export const sidebarItems = [
         icon: FileArchive
       },
       {
-        label: "unlinkedPayments",
-        path: "/policies/unlinked-payments",
-        requiredPrivilege: "policies:view",
-        icon: CreditCard
-      },
-      {
         label: "documents",
         path: "/policies/documents",
         requiredPrivilege: "policies:view",
@@ -78,7 +73,33 @@ export const sidebarItems = [
     icon: DollarSign,
     label: "finances",
     path: "/finances",
-    requiredPrivilege: "finances:view"
+    requiredPrivilege: "finances:view",
+    subItems: [
+      {
+        label: "commissions",
+        path: "/finances/commissions",
+        requiredPrivilege: "finances.commissions:view",
+        icon: CircleDollarSign
+      },
+      {
+        label: "invoicing",
+        path: "/finances/invoicing",
+        requiredPrivilege: "finances.invoicing:view",
+        icon: FileText
+      },
+      {
+        label: "statementProcessing",
+        path: "/finances/statements",
+        requiredPrivilege: "finances.statements:view",
+        icon: FileArchive
+      },
+      {
+        label: "unlinkedPayments",
+        path: "/finances/unlinked-payments",
+        requiredPrivilege: "finances.payments:view",
+        icon: CreditCard
+      }
+    ]
   },
   {
     icon: Book,
