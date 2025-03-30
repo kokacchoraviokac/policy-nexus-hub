@@ -33,7 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import InvoiceItemsTable from './InvoiceItemsTable';
 import { InvoiceItem } from '@/types/finances';
 
-// Define proper types for invoice items
+// Define proper types for invoice items input
 interface InvoiceItemInput {
   id: string;
   description: string;
@@ -60,8 +60,8 @@ const invoiceSchema = z.object({
       policy_id: z.string().optional(),
     })
   ).min(1, { message: "At least one item is required" }),
-  invoice_type: z.enum(['domestic', 'foreign']).optional(),
-  invoice_category: z.enum(['automatic', 'manual']).optional(),
+  invoice_type: z.enum(['domestic', 'foreign']),
+  invoice_category: z.enum(['automatic', 'manual']),
   calculation_reference: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -78,7 +78,11 @@ const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInv
   const { t } = useLanguage();
   const { toast } = useToast();
   const { createInvoice, isCreating } = useInvoiceMutations();
-  const [items, setItems] = useState<InvoiceItemInput[]>([{ id: nanoid(), description: "", amount: 0 }]);
+  const [items, setItems] = useState<InvoiceItemInput[]>([{ 
+    id: nanoid(), 
+    description: "", 
+    amount: 0 
+  }]);
   
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),

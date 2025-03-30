@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -57,7 +56,6 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
   const [selectedCommissions, setSelectedCommissions] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Fetch insurers
   const { data: insurers, isLoading: isLoadingInsurers } = useQuery({
     queryKey: ['insurers'],
     queryFn: async () => {
@@ -73,7 +71,6 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
     enabled: isOpen,
   });
 
-  // Fetch eligible commissions for invoicing
   const { data: commissions, isLoading: isLoadingCommissions } = useQuery({
     queryKey: ['commissions-for-invoicing', status, insurer, dateFrom, dateTo],
     queryFn: async () => {
@@ -109,14 +106,12 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
         query = query.lte('created_at', dateTo.toISOString());
       }
 
-      // Filter out commissions that already have invoices
       const { data: commissions, error: commissionsError } = await query;
       
       if (commissionsError) throw commissionsError;
       
       if (!commissions || commissions.length === 0) return [];
       
-      // Get commission IDs that are already linked to invoices
       const commissionIds = commissions.map(c => c.id);
       
       const { data: invoiceItems, error: invoiceItemsError } = await supabase
@@ -126,7 +121,6 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
       
       if (invoiceItemsError) throw invoiceItemsError;
       
-      // Filter out commissions that already have invoices
       const invoicedCommissionIds = new Set((invoiceItems || []).map(item => item.commission_id));
       
       return commissions.filter(commission => !invoicedCommissionIds.has(commission.id));
@@ -134,7 +128,6 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
     enabled: isOpen && !!status,
   });
 
-  // Mutation to create invoices in bulk
   const createBulkInvoices = useMutation({
     mutationFn: async () => {
       if (!selectedCommissions || selectedCommissions.length === 0) {
@@ -145,7 +138,6 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
         throw new Error("Company ID not found");
       }
       
-      // Group selected commissions by insurer
       const commissionsByInsurer: Record<string, typeof commissions> = {};
       
       selectedCommissions.forEach(commissionId => {
@@ -162,17 +154,14 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
         }
       });
       
-      // Create one invoice per insurer
       const invoicePromises = Object.entries(commissionsByInsurer).map(async ([insurerId, insurerCommissions]) => {
         if (!insurerCommissions || insurerCommissions.length === 0) return null;
         
         const invoiceNumber = `INV-${new Date().getTime().toString().slice(-6)}-${nanoid(4)}`;
         const insurerName = insurerCommissions[0].policies?.insurer_name || "Unknown Insurer";
         
-        // Calculate total amount
         const totalAmount = insurerCommissions.reduce((sum, commission) => sum + Number(commission.calculated_amount), 0);
         
-        // Create invoice with proper field structure
         const { data: invoice, error: invoiceError } = await supabase
           .from('invoices')
           .insert({
@@ -186,26 +175,16 @@ const BulkInvoiceGenerator = ({ onGenerationComplete }: BulkInvoiceGeneratorProp
             status: 'draft',
             currency: 'EUR',
             company_id: companyId,
-            notes: `Automatically generated invoice for commissions from ${insurerName}`
+            notes: `Automatically generated invoice for commissions from ${insurerName}`,
+            invoice_type: 'domestic',
+            invoice_category: 'automatic',
+            calculation_reference: `BULK-${format(new Date(), 'yyyyMMdd')}`
           })
           .select('id')
           .single();
         
         if (invoiceError) throw invoiceError;
-
-        // After creating the invoice, update it with additional fields using an RPC or a separate update
-        const { error: updateError } = await supabase
-          .from('invoices')
-          .update({ 
-            invoice_type: 'domestic',
-            invoice_category: 'automatic',
-            calculation_reference: `BULK-${format(new Date(), 'yyyyMMdd')}`
-          })
-          .eq('id', invoice.id);
-          
-        if (updateError) throw updateError;
         
-        // Create invoice items
         const invoiceItems = insurerCommissions.map(commission => ({
           invoice_id: invoice.id,
           description: `Commission for policy ${commission.policies?.policy_number} - ${commission.policies?.policyholder_name}`,

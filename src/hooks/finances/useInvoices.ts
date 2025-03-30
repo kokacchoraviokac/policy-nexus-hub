@@ -19,6 +19,17 @@ export interface InvoicePaginationOptions {
   pageSize: number;
 }
 
+export interface InvoicePaginationResult {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
+  onPageChange: (pageIndex: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+}
+
 export const useInvoices = () => {
   const { user } = useContext(AuthContext);
   const companyId = user?.companyId;
@@ -148,6 +159,18 @@ export const useInvoices = () => {
     });
   };
   
+  // Construct pagination result object
+  const paginationResult: InvoicePaginationResult = {
+    page: pagination.pageIndex + 1,
+    pageSize: pagination.pageSize,
+    totalCount: fetchResult?.count || 0,
+    totalPages: Math.ceil((fetchResult?.count || 0) / pagination.pageSize),
+    setPage: (page: number) => setPagination({ ...pagination, pageIndex: page - 1 }),
+    setPageSize: (pageSize: number) => setPagination({ pageIndex: 0, pageSize }),
+    onPageChange: (pageIndex: number) => setPagination({ ...pagination, pageIndex }),
+    onPageSizeChange: (pageSize: number) => setPagination({ pageIndex: 0, pageSize })
+  };
+  
   return {
     invoices: fetchResult?.data || [],
     totalCount: fetchResult?.count || 0,
@@ -155,17 +178,7 @@ export const useInvoices = () => {
     isError,
     filters,
     setFilters,
-    pagination: {
-      ...pagination,
-      page: pagination.pageIndex + 1,
-      pageSize: pagination.pageSize,
-      totalCount: fetchResult?.count || 0,
-      totalPages: Math.ceil((fetchResult?.count || 0) / pagination.pageSize),
-      setPage: (page: number) => setPagination({ ...pagination, pageIndex: page - 1 }),
-      setPageSize: (pageSize: number) => setPagination({ pageIndex: 0, pageSize }),
-      onPageChange: (pageIndex: number) => setPagination({ ...pagination, pageIndex }),
-      onPageSizeChange: (pageSize: number) => setPagination({ pageIndex: 0, pageSize })
-    },
+    pagination: paginationResult,
     refetch,
     clearFilters,
     exportAllInvoices

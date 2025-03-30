@@ -48,8 +48,8 @@ export interface InvoiceType {
   notes?: string;
   created_at: string;
   updated_at: string;
-  invoice_type?: 'domestic' | 'foreign';
-  invoice_category?: 'automatic' | 'manual';
+  invoice_type: 'domestic' | 'foreign';
+  invoice_category: 'automatic' | 'manual';
   calculation_reference?: string;
   entity?: {
     name?: string;

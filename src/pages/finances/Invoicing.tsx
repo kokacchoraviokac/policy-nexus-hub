@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -144,7 +143,7 @@ const Invoicing = () => {
       <InvoicesTable
         invoices={invoices}
         isLoading={isLoading}
-        pagination={tablePagination}
+        pagination={pagination}
         totalCount={totalCount}
         onRefresh={refetch}
       />
