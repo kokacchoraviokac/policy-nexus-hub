@@ -1,4 +1,3 @@
-
 export interface BankStatement {
   id: string;
   statement_number?: string;
@@ -51,6 +50,7 @@ export interface InvoiceType {
   invoice_type: 'domestic' | 'foreign';
   invoice_category: 'automatic' | 'manual';
   calculation_reference?: string;
+  template_style?: string;
   entity?: {
     name?: string;
     address?: string;
@@ -89,6 +89,35 @@ export interface CommissionType {
   paid_amount?: number;
   status: 'due' | 'partially_paid' | 'paid' | 'calculating';
   company_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompanyBranding {
+  id: string;
+  company_id: string;
+  logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  footer_text?: string;
+  header_text?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InvoiceTemplateSettings {
+  id: string;
+  company_id: string;
+  name: string;
+  is_default: boolean;
+  primary_color?: string;
+  secondary_color?: string;
+  font_family?: string;
+  logo_position?: 'left' | 'center' | 'right';
+  footer_text?: string;
+  header_text?: string;
+  show_payment_instructions?: boolean;
+  payment_instructions?: string;
   created_at: string;
   updated_at: string;
 }

@@ -8,6 +8,7 @@ import BankStatementDetail from "@/pages/finances/BankStatementDetail";
 import Commissions from "@/pages/finances/Commissions";
 import Invoicing from "@/pages/finances/Invoicing";
 import InvoiceDetail from "@/pages/finances/InvoiceDetail";
+import InvoiceTemplatesPage from "@/pages/finances/InvoiceTemplatesPage";
 import FinancesModule from "@/pages/finances/FinancesModule";
 import UnlinkedPayments from "@/pages/finances/UnlinkedPayments";
 
@@ -55,6 +56,19 @@ export const FinancesRoutes = [
       <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
           <InvoiceDetail />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // Invoice Templates
+  <Route 
+    key="finances-invoice-templates"
+    path="/finances/invoicing/templates" 
+    element={
+      <ProtectedRoute requiredPrivilege="finances:view">
+        <AppLayout>
+          <InvoiceTemplatesPage />
         </AppLayout>
       </ProtectedRoute>
     }

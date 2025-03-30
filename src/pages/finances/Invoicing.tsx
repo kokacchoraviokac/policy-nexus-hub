@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, FileDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Plus, FileDown, FileText } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import InvoicesTable from "@/components/finances/invoices/InvoicesTable";
 import InvoicesFilters from "@/components/finances/invoices/InvoicesFilters";
 import { useInvoices } from "@/hooks/finances/useInvoices";
@@ -14,6 +15,7 @@ import BulkInvoiceGenerator from "@/components/finances/invoices/BulkInvoiceGene
 const Invoicing = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   
@@ -81,14 +83,9 @@ const Invoicing = () => {
     }
   };
 
-  // Extract the correct pagination interface that matches what InvoicesTable expects
-  const tablePagination = {
-    page: pagination.page,
-    pageSize: pagination.pageSize,
-    totalCount: pagination.totalCount,
-    totalPages: pagination.totalPages,
-    setPage: pagination.setPage,
-    setPageSize: pagination.setPageSize
+  // Navigate to invoice templates page
+  const handleManageTemplates = () => {
+    navigate("/finances/invoicing/templates");
   };
 
   return (
@@ -119,6 +116,16 @@ const Invoicing = () => {
           >
             <FileDown className="h-4 w-4 mr-2" />
             {isExporting ? t("exporting") : t("exportInvoices")}
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={handleManageTemplates}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            {t("invoiceTemplates")}
           </Button>
           
           <BulkInvoiceGenerator onGenerationComplete={refetch} />

@@ -1,11 +1,13 @@
-import React, { useState, useRef } from "react";
+
+import React, { useState, useRef, useContext, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Printer, FileText, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Printer, FileText, AlertTriangle, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthContext } from "@/contexts/auth/AuthContext";
 import {
   Card,
   CardContent,
@@ -18,10 +20,10 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InvoiceType, InvoiceItem } from "@/types/finances";
+import { InvoiceType, InvoiceItem, InvoiceTemplateSettings } from "@/types/finances";
 import UpdateInvoiceStatusDialog from "@/components/finances/invoices/UpdateInvoiceStatusDialog";
 import { useReactToPrint } from "@/hooks/finances/useReactToPrint";
-import { generateInvoicePdf } from "@/utils/invoices/pdfGenerator";
+import { generateInvoicePdf, getInvoiceTemplate, getCompanyInfo } from "@/utils/invoices/pdfGenerator";
 
 interface InvoiceWithItems extends InvoiceType {
   items: InvoiceItem[];
@@ -31,8 +33,12 @@ const InvoiceDetail = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { invoiceId } = useParams<{ invoiceId: string }>();
+  const { user } = useContext(AuthContext);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [invoiceTemplate, setInvoiceTemplate] = useState<InvoiceTemplateSettings | null>(null);
+  const [companyInfo, setCompanyInfo] = useState<any>(null);
   const printRef = useRef<HTMLDivElement>(null);
   
   const { data: invoice, isLoading, isError, refetch } = useQuery({
@@ -69,6 +75,23 @@ const InvoiceDetail = () => {
       } as unknown as InvoiceWithItems;
     },
   });
+  
+  // Load invoice template and company info
+  useEffect(() => {
+    if (user?.companyId && invoice) {
+      const loadTemplateAndCompanyInfo = async () => {
+        // Get invoice template
+        const template = await getInvoiceTemplate(user.companyId);
+        setInvoiceTemplate(template);
+        
+        // Get company info
+        const companyData = await getCompanyInfo(user.companyId);
+        setCompanyInfo(companyData);
+      };
+      
+      loadTemplateAndCompanyInfo();
+    }
+  }, [user?.companyId, invoice]);
   
   const getStatusBadge = (status?: string) => {
     if (!status) return null;
@@ -123,12 +146,26 @@ const InvoiceDetail = () => {
     if (!invoice) return;
     
     try {
+      setIsDownloading(true);
       toast({
         title: t("generatingPdf"),
         description: t("preparingPdfDownload"),
       });
       
-      const pdfBlob = await generateInvoicePdf(invoice);
+      // Prepare options for PDF generation
+      const pdfOptions = {
+        template: invoiceTemplate || undefined,
+        companyName: companyInfo?.name || 'Your Company Name',
+        companyAddress: companyInfo?.address || 'Your Company Address',
+        companyCity: companyInfo?.city || 'Your Company City',
+        companyPostalCode: companyInfo?.postal_code || 'Your Postal Code',
+        companyCountry: companyInfo?.country || 'Your Country',
+        companyPhone: companyInfo?.phone,
+        customFooter: invoiceTemplate?.footer_text,
+        customHeader: invoiceTemplate?.header_text
+      };
+      
+      const pdfBlob = await generateInvoicePdf(invoice, pdfOptions);
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -148,6 +185,41 @@ const InvoiceDetail = () => {
         description: t("errorGeneratingPdfDescription"),
         variant: "destructive",
       });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+  
+  const handlePreviewPdf = async () => {
+    if (!invoice) return;
+    
+    try {
+      setIsDownloading(true);
+      // Prepare options for PDF generation
+      const pdfOptions = {
+        template: invoiceTemplate || undefined,
+        companyName: companyInfo?.name || 'Your Company Name',
+        companyAddress: companyInfo?.address || 'Your Company Address',
+        companyCity: companyInfo?.city || 'Your Company City',
+        companyPostalCode: companyInfo?.postal_code || 'Your Postal Code',
+        companyCountry: companyInfo?.country || 'Your Country',
+        companyPhone: companyInfo?.phone,
+        customFooter: invoiceTemplate?.footer_text,
+        customHeader: invoiceTemplate?.header_text
+      };
+      
+      const pdfBlob = await generateInvoicePdf(invoice, pdfOptions);
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error("Error generating PDF preview:", error);
+      toast({
+        title: t("errorGeneratingPdf"),
+        description: t("errorGeneratingPdfDescription"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
     }
   };
   
@@ -233,11 +305,20 @@ const InvoiceDetail = () => {
           <Button 
             variant="outline"
             size="sm"
-            onClick={handleDownloadPdf}
-            disabled={isLoading || isError}
+            onClick={handlePreviewPdf}
+            disabled={isLoading || isError || isDownloading}
           >
             <FileText className="h-4 w-4 mr-2" />
-            {t("downloadPdf")}
+            {t("previewPdf")}
+          </Button>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadPdf}
+            disabled={isLoading || isError || isDownloading}
+          >
+            <FileDown className="h-4 w-4 mr-2" />
+            {isDownloading ? t("downloading") : t("downloadPdf")}
           </Button>
           <Button 
             size="sm"
