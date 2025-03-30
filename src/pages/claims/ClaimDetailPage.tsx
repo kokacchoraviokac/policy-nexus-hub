@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -23,7 +24,11 @@ import DocumentList from "@/components/documents/DocumentList";
 import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
 import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
 
-const ClaimDetailPage = () => {
+interface ClaimDetailPageProps {
+  isEditMode?: boolean;
+}
+
+const ClaimDetailPage: React.FC<ClaimDetailPageProps> = ({ isEditMode = false }) => {
   const { claimId } = useParams<{ claimId: string }>();
   const navigate = useNavigate();
   const { t, formatDate, formatCurrency } = useLanguage();
@@ -118,10 +123,12 @@ const ClaimDetailPage = () => {
           </div>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={handleEditClaim}>
-            <Pencil className="mr-2 h-4 w-4" />
-            {t("editClaim")}
-          </Button>
+          {!isEditMode && (
+            <Button variant="outline" size="sm" onClick={handleEditClaim}>
+              <Pencil className="mr-2 h-4 w-4" />
+              {t("editClaim")}
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={handleExportClaim}>
             <Download className="mr-2 h-4 w-4" />
             {t("exportClaim")}
@@ -133,7 +140,7 @@ const ClaimDetailPage = () => {
         <ResizablePanel defaultSize={65}>
           <Card className="h-full">
             <CardHeader>
-              <CardTitle>{t("claimDetails")}</CardTitle>
+              <CardTitle>{isEditMode ? t("editClaim") : t("claimDetails")}</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="details">

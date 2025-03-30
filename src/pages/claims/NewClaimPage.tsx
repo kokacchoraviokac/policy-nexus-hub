@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -173,11 +174,18 @@ const NewClaimPage = () => {
         throw new Error("User information is missing");
       }
 
-      // Prepare claim data with required fields
+      // Prepare claim data with all required fields
       const claimData = {
-        ...values,
         reported_by: currentUser.id,
-        company_id: userProfile.company_id
+        company_id: userProfile.company_id,
+        policy_id: values.policy_id,
+        claim_number: values.claim_number,
+        damage_description: values.damage_description,
+        incident_date: values.incident_date,
+        claimed_amount: values.claimed_amount,
+        status: values.status,
+        deductible: values.deductible || null,
+        notes: values.notes || null
       };
       
       const { data, error } = await supabase
