@@ -4,7 +4,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UnlinkedPaymentType } from "@/types/policies";
-import { CalendarClock, CreditCard, Hash, User, DollarSign, CheckCircle, Link } from "lucide-react";
+import { CalendarClock, CreditCard, Hash, User, DollarSign, CheckCircle, Link, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface PaymentDetailsDialogProps {
   open: boolean;
@@ -18,6 +19,7 @@ const PaymentDetailsDialog: React.FC<PaymentDetailsDialogProps> = ({
   payment
 }) => {
   const { t, formatCurrency, formatDate } = useLanguage();
+  const navigate = useNavigate();
 
   if (!payment) return null;
 
@@ -48,6 +50,13 @@ const PaymentDetailsDialog: React.FC<PaymentDetailsDialogProps> = ({
       value: payment.currency
     }
   ];
+
+  const handleViewPolicy = () => {
+    if (payment.linked_policy_id) {
+      onOpenChange(false);
+      navigate(`/policies/detail/${payment.linked_policy_id}`);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,6 +91,25 @@ const PaymentDetailsDialog: React.FC<PaymentDetailsDialogProps> = ({
               </div>
             ))}
           </div>
+          
+          {payment.linked_policy_id && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+              <h4 className="text-sm font-medium flex items-center text-green-800">
+                <Link className="h-4 w-4 mr-1" />
+                {t("linkedPolicy")}
+              </h4>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-2 text-green-800" 
+                onClick={handleViewPolicy}
+              >
+                <ExternalLink className="h-4 w-4 mr-1" />
+                {t("viewPolicy")}
+              </Button>
+            </div>
+          )}
           
           {payment.linked_at && (
             <div className="mt-4 p-3 bg-muted/30 rounded-md">
