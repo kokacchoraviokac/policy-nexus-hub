@@ -51,6 +51,13 @@ export interface InvoiceType {
   invoice_type?: 'domestic' | 'foreign';
   invoice_category?: 'automatic' | 'manual';
   calculation_reference?: string;
+  entity?: {
+    name?: string;
+    address?: string;
+    city?: string;
+    postal_code?: string;
+    country?: string;
+  };
 }
 
 export interface InvoiceItem {

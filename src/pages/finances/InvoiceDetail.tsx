@@ -18,24 +18,20 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/utils/format";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InvoiceType } from "@/types/finances";
+import { InvoiceType, InvoiceItem } from "@/types/finances";
 import UpdateInvoiceStatusDialog from "@/components/finances/invoices/UpdateInvoiceStatusDialog";
 import { useReactToPrint } from "@/hooks/finances/useReactToPrint";
 import { generateInvoicePdf } from "@/utils/invoices/pdfGenerator";
 
-interface InvoiceItem {
-  id: string;
-  invoice_id: string;
-  description: string;
-  amount: number;
-  policy_id?: string;
-  commission_id?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 interface InvoiceWithItems extends InvoiceType {
   items: InvoiceItem[];
+  entity?: {
+    name?: string;
+    address?: string;
+    city?: string;
+    postal_code?: string;
+    country?: string;
+  };
 }
 
 const InvoiceDetail = () => {

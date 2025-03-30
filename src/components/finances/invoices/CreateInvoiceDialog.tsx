@@ -44,11 +44,18 @@ interface CreateInvoiceDialogProps {
   onInvoiceCreated?: () => void;
 }
 
+// Define a proper type for invoice items to avoid TypeScript errors
+interface InvoiceItemType {
+  id: string;
+  description: string;
+  amount: number;
+}
+
 const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInvoiceDialogProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { createInvoice, isCreating } = useInvoiceMutations();
-  const [items, setItems] = useState([{ id: nanoid(), description: "", amount: 0 }]);
+  const [items, setItems] = useState<InvoiceItemType[]>([{ id: nanoid(), description: "", amount: 0 }]);
   
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
@@ -106,7 +113,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInv
   };
 
   const addItem = () => {
-    const newItem = { id: nanoid(), description: "", amount: 0 };
+    const newItem: InvoiceItemType = { id: nanoid(), description: "", amount: 0 };
     const currentItems = form.getValues("items") || [];
     form.setValue("items", [...currentItems, newItem]);
     setItems(prevItems => [...prevItems, newItem]);
@@ -119,7 +126,7 @@ const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInv
     const newItems = [...currentItems];
     newItems.splice(index, 1);
     form.setValue("items", newItems);
-    setItems(newItems);
+    setItems(newItems as InvoiceItemType[]);
   };
 
   const calculateTotal = () => {
