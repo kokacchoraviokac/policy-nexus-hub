@@ -1,185 +1,202 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
   DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CommissionType } from "@/types/finances";
+import { Loader2 } from "lucide-react";
 
 interface UpdateCommissionStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   commission: CommissionType & { currency?: string };
-  onUpdateStatus: (params: {
-    commissionId: string;
-    status: CommissionType["status"];
-    paymentDate?: string;
-    paidAmount?: number;
+  onUpdateStatus: (params: { 
+    commissionId: string; 
+    status: string; 
+    paymentDate?: string; 
+    paidAmount?: number 
   }) => void;
   isUpdating: boolean;
 }
 
-const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> = ({
-  open,
-  onOpenChange,
-  commission,
+const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  commission, 
   onUpdateStatus,
-  isUpdating,
+  isUpdating
 }) => {
   const { t, formatCurrency } = useLanguage();
-  const [status, setStatus] = useState<CommissionType["status"]>(commission.status);
-  const [paymentDate, setPaymentDate] = useState<Date | undefined>(
-    commission.payment_date ? new Date(commission.payment_date) : undefined
-  );
-  const [paidAmount, setPaidAmount] = useState<number | undefined>(
-    commission.paid_amount !== undefined ? commission.paid_amount : commission.calculated_amount
-  );
+  
+  // Create schema for status update form
+  const formSchema = z.object({
+    status: z.enum(["due", "partially_paid", "paid"]),
+    paymentDate: z.string().optional(),
+    paidAmount: z.number().optional()
+  }).refine((data) => {
+    // If status is paid or partially_paid, paymentDate should be provided
+    if ((data.status === 'paid' || data.status === 'partially_paid') && !data.paymentDate) {
+      return false;
+    }
+    return true;
+  }, {
+    message: t("paymentDateRequired"),
+    path: ["paymentDate"]
+  }).refine((data) => {
+    // If status is partially_paid, paidAmount should be provided
+    if (data.status === 'partially_paid' && !data.paidAmount) {
+      return false;
+    }
+    return true;
+  }, {
+    message: t("paidAmountRequired"),
+    path: ["paidAmount"]
+  }).refine((data) => {
+    // If status is paid, paidAmount should be provided and equal to or greater than calculated amount
+    if (data.status === 'paid' && (!data.paidAmount || data.paidAmount < commission.calculated_amount)) {
+      return false;
+    }
+    return true;
+  }, {
+    message: t("paidAmountShouldBeAtLeastCalculated"),
+    path: ["paidAmount"]
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // Initialize form with default values
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      status: commission.status,
+      paymentDate: commission.payment_date || '',
+      paidAmount: commission.paid_amount || undefined
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
     onUpdateStatus({
       commissionId: commission.id,
-      status,
-      paymentDate: paymentDate?.toISOString().split('T')[0],
-      paidAmount: ['paid', 'partially_paid'].includes(status) ? paidAmount : undefined,
+      status: values.status,
+      paymentDate: values.paymentDate,
+      paidAmount: values.paidAmount
     });
+    onOpenChange(false);
   };
+
+  // Watch status to show/hide additional fields
+  const currentStatus = form.watch("status");
+  const showPaymentFields = currentStatus === 'paid' || currentStatus === 'partially_paid';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("updateCommissionStatus")}</DialogTitle>
           <DialogDescription>
-            {t("updateCommissionStatusDescription")}
+            {t("calculatedCommission")}: {formatCurrency(commission.calculated_amount, commission.currency || 'EUR')}
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>{t("currentStatus")}</Label>
-            <div className="text-sm font-medium">{t(commission.status)}</div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("commissionDetails")}</Label>
-            <div className="text-sm">
-              <p>
-                <span className="text-muted-foreground">{t("baseAmount")}: </span>
-                {formatCurrency(commission.base_amount, commission.currency || "EUR")}
-              </p>
-              <p>
-                <span className="text-muted-foreground">{t("rate")}: </span>
-                {commission.rate}%
-              </p>
-              <p>
-                <span className="text-muted-foreground">{t("calculatedAmount")}: </span>
-                {formatCurrency(commission.calculated_amount, commission.currency || "EUR")}
-              </p>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+            <div className="p-4 border rounded-md bg-muted/20 mb-4">
+              <p className="text-sm text-muted-foreground">{t("currentStatus")}</p>
+              <p className="font-medium capitalize">{t(commission.status)}</p>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="status">{t("newStatus")}</Label>
-            <Select
-              value={status}
-              onValueChange={(value) => setStatus(value as CommissionType["status"])}
-            >
-              <SelectTrigger id="status">
-                <SelectValue placeholder={t("selectStatus")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="due">{t("due")}</SelectItem>
-                <SelectItem value="partially_paid">{t("partiallyPaid")}</SelectItem>
-                <SelectItem value="paid">{t("paid")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {["paid", "partially_paid"].includes(status) && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="paymentDate">{t("paymentDate")}</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="paymentDate"
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {paymentDate ? (
-                        format(paymentDate, "PPP")
-                      ) : (
-                        <span>{t("selectDate")}</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={paymentDate}
-                      onSelect={(date) => setPaymentDate(date)}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="paidAmount">{t("paidAmount")}</Label>
-                <Input
-                  id="paidAmount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max={status === "paid" ? commission.calculated_amount : undefined}
-                  value={paidAmount || ""}
-                  onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                />
-              </div>
-            </>
-          )}
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t("cancel")}
-            </Button>
-            <Button type="submit" disabled={isUpdating}>
-              {isUpdating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("updating")}
-                </>
-              ) : (
-                t("updateStatus")
+            
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("newStatus")}</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("selectStatus")} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="due">{t("due")}</SelectItem>
+                      <SelectItem value="partially_paid">{t("partially_paid")}</SelectItem>
+                      <SelectItem value="paid">{t("paid")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
-            </Button>
-          </DialogFooter>
-        </form>
+            />
+            
+            {showPaymentFields && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="paymentDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("paymentDate")}</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="paidAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("paidAmount")}</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          {...field} 
+                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+            
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                {t("cancel")}
+              </Button>
+              <Button type="submit" disabled={isUpdating}>
+                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t("updateStatus")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
