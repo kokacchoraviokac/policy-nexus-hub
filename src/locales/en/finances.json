@@ -62,5 +62,6 @@
   "all": "All",
   "from": "From",
   "to": "To",
-  "clearFilters": "Clear Filters"
+  "clearFilters": "Clear Filters",
+  "unlinked": "Unlinked"
 }

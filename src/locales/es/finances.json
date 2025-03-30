@@ -62,5 +62,6 @@
   "all": "Todos",
   "from": "Desde",
   "to": "Hasta",
-  "clearFilters": "Limpiar Filtros"
+  "clearFilters": "Limpiar Filtros",
+  "unlinked": "No Vinculado"
 }

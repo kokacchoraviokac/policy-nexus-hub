@@ -62,5 +62,6 @@
   "all": "Sve",
   "from": "Od",
   "to": "Do",
-  "clearFilters": "Obriši filtere"
+  "clearFilters": "Obriši filtere",
+  "unlinked": "Nepovezano"
 }
