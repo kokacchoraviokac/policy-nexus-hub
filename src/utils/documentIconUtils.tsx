@@ -3,7 +3,7 @@ import React from "react";
 import { 
   FileText,
   FileImage,
-  FilePdf,
+  File,
   FileSpreadsheet,
   FileCode,
   FileArchive,
@@ -18,7 +18,7 @@ export const getDocumentIcon = (filePath: string, mimeType?: string) => {
     if (mimeType.startsWith('image/')) {
       return <FileImage className="h-8 w-8 text-blue-500" />;
     } else if (mimeType === 'application/pdf') {
-      return <FilePdf className="h-8 w-8 text-red-500" />;
+      return <File className="h-8 w-8 text-red-500" />;
     } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
       return <FileSpreadsheet className="h-8 w-8 text-green-500" />;
     } else if (mimeType.includes('zip') || mimeType.includes('compressed')) {
@@ -31,7 +31,7 @@ export const getDocumentIcon = (filePath: string, mimeType?: string) => {
   // Fallback to extension-based detection
   switch (extension) {
     case 'pdf':
-      return <FilePdf className="h-8 w-8 text-red-500" />;
+      return <File className="h-8 w-8 text-red-500" />;
     case 'jpg':
     case 'jpeg':
     case 'png':
