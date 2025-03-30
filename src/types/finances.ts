@@ -48,6 +48,28 @@ export interface InvoiceType {
   notes?: string;
   created_at: string;
   updated_at: string;
+  invoice_type?: 'domestic' | 'foreign';
+  invoice_category?: 'automatic' | 'manual';
+  calculation_reference?: string;
+}
+
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  description: string;
+  amount: number;
+  policy_id?: string;
+  commission_id?: string;
+  created_at: string;
+  updated_at: string;
+  policy?: {
+    policy_number: string;
+    policyholder_name: string;
+  };
+  commission?: {
+    policy_id: string;
+    calculated_amount: number;
+  };
 }
 
 export interface CommissionType {

@@ -1,40 +1,42 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { createInvoice } from "@/hooks/finances/useInvoiceMutations";
-import { PlusCircle, MinusCircle } from "lucide-react";
+import { useInvoiceMutations } from "@/hooks/finances/useInvoiceMutations";
+import { nanoid } from 'nanoid';
+import { Plus, Trash2 } from "lucide-react";
+
+const invoiceSchema = z.object({
+  invoice_number: z.string().min(1, { message: "Invoice number is required" }),
+  entity_type: z.string().min(1, { message: "Entity type is required" }),
+  entity_name: z.string().min(1, { message: "Entity name is required" }),
+  issue_date: z.date({ required_error: "Issue date is required" }),
+  due_date: z.date({ required_error: "Due date is required" }),
+  currency: z.string().min(1, { message: "Currency is required" }),
+  invoice_type: z.enum(["domestic", "foreign"]).optional(),
+  invoice_category: z.enum(["automatic", "manual"]).optional(),
+  calculation_reference: z.string().optional(),
+  notes: z.string().optional(),
+  items: z.array(
+    z.object({
+      id: z.string(),
+      description: z.string().min(1, { message: "Description is required" }),
+      amount: z.coerce.number().min(0.01, { message: "Amount must be greater than 0" }),
+    })
+  ).min(1, { message: "At least one item is required" }),
+});
+
+type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
 interface CreateInvoiceDialogProps {
   open: boolean;
@@ -42,89 +44,54 @@ interface CreateInvoiceDialogProps {
   onInvoiceCreated?: () => void;
 }
 
-const invoiceFormSchema = z.object({
-  invoice_number: z.string().min(1, { message: "Invoice number is required" }),
-  entity_type: z.string().min(1, { message: "Entity type is required" }),
-  entity_name: z.string().min(1, { message: "Entity name is required" }),
-  entity_id: z.string().optional(),
-  issue_date: z.date(),
-  due_date: z.date(),
-  currency: z.string().min(1, { message: "Currency is required" }),
-  notes: z.string().optional(),
-  invoice_items: z.array(
-    z.object({
-      description: z.string().min(1, { message: "Description is required" }),
-      amount: z.string().refine(
-        (val) => !isNaN(Number(val)) && Number(val) > 0,
-        { message: "Amount must be a positive number" }
-      ),
-    })
-  ),
-});
-
-type InvoiceFormValues = z.infer<typeof invoiceFormSchema>;
-
-const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
-  open,
-  onOpenChange,
-  onInvoiceCreated,
-}) => {
+const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInvoiceDialogProps) => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const { createInvoice, isCreating } = useInvoiceMutations();
+  const [items, setItems] = useState([{ id: nanoid(), description: "", amount: 0 }]);
+  
   const form = useForm<InvoiceFormValues>({
-    resolver: zodResolver(invoiceFormSchema),
+    resolver: zodResolver(invoiceSchema),
     defaultValues: {
       invoice_number: "",
       entity_type: "client",
       entity_name: "",
-      entity_id: "",
-      issue_date: new Date(),
-      due_date: new Date(new Date().setDate(new Date().getDate() + 30)),
       currency: "EUR",
+      invoice_type: "domestic",
+      invoice_category: "automatic",
+      calculation_reference: "",
       notes: "",
-      invoice_items: [{ description: "", amount: "" }],
+      items: [{ id: nanoid(), description: "", amount: 0 }],
     },
   });
 
-  const handleSubmit = async (values: InvoiceFormValues) => {
-    setIsSubmitting(true);
+  const onSubmit = async (values: InvoiceFormValues) => {
     try {
-      // Calculate total amount from invoice items
-      const total_amount = values.invoice_items.reduce(
-        (sum, item) => sum + Number(item.amount),
-        0
-      );
-
-      // Transform invoice items to the correct format
-      const invoice_items = values.invoice_items.map((item) => ({
-        description: item.description,
-        amount: Number(item.amount),
-      }));
-
-      // Create invoice
+      const totalAmount = values.items.reduce((sum, item) => sum + item.amount, 0);
+      
       await createInvoice({
         invoice_number: values.invoice_number,
         entity_type: values.entity_type,
         entity_name: values.entity_name,
-        entity_id: values.entity_id || undefined,
-        issue_date: values.issue_date.toISOString().split("T")[0],
-        due_date: values.due_date.toISOString().split("T")[0],
+        issue_date: values.issue_date.toISOString(),
+        due_date: values.due_date.toISOString(),
         currency: values.currency,
-        total_amount,
+        invoice_type: values.invoice_type,
+        invoice_category: values.invoice_category,
+        calculation_reference: values.calculation_reference,
+        total_amount: totalAmount,
         notes: values.notes,
-        status: "draft",
-        invoice_items,
+        status: 'draft',
+        invoice_items: values.items.map(item => ({
+          description: item.description,
+          amount: item.amount,
+        })),
       });
-
-      toast({
-        title: t("invoiceCreated"),
-        description: t("invoiceCreatedSuccess"),
-      });
-
-      // Close dialog and refresh data
+      
       onOpenChange(false);
+      form.reset();
+      setItems([{ id: nanoid(), description: "", amount: 0 }]);
+      
       if (onInvoiceCreated) {
         onInvoiceCreated();
       }
@@ -135,44 +102,42 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
         description: t("errorCreatingInvoiceDescription"),
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const addInvoiceItem = () => {
-    const currentItems = form.getValues("invoice_items");
-    form.setValue("invoice_items", [
-      ...currentItems,
-      { description: "", amount: "" },
-    ]);
+  const addItem = () => {
+    const newItem = { id: nanoid(), description: "", amount: 0 };
+    const currentItems = form.getValues("items") || [];
+    form.setValue("items", [...currentItems, newItem]);
+    setItems(prevItems => [...prevItems, newItem]);
   };
 
-  const removeInvoiceItem = (index: number) => {
-    const currentItems = form.getValues("invoice_items");
-    if (currentItems.length > 1) {
-      const newItems = [...currentItems];
-      newItems.splice(index, 1);
-      form.setValue("invoice_items", newItems);
-    }
+  const removeItem = (index: number) => {
+    const currentItems = form.getValues("items");
+    if (currentItems.length <= 1) return;
+    
+    const newItems = [...currentItems];
+    newItems.splice(index, 1);
+    form.setValue("items", newItems);
+    setItems(newItems);
+  };
+
+  const calculateTotal = () => {
+    const items = form.getValues("items") || [];
+    return items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("createInvoice")}</DialogTitle>
-          <DialogDescription>
-            {t("createInvoiceDescription")}
-          </DialogDescription>
+          <DialogDescription>{t("createInvoiceDescription")}</DialogDescription>
         </DialogHeader>
-
+        
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
-          >
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="invoice_number"
@@ -186,7 +151,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                   </FormItem>
                 )}
               />
-
+              
               <FormField
                 control={form.control}
                 name="entity_type"
@@ -194,8 +159,8 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                   <FormItem>
                     <FormLabel>{t("entityType")}</FormLabel>
                     <Select
-                      value={field.value}
                       onValueChange={field.onChange}
+                      defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -213,7 +178,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                 )}
               />
             </div>
-
+            
             <FormField
               control={form.control}
               name="entity_name"
@@ -227,8 +192,8 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                 </FormItem>
               )}
             />
-
-            <div className="grid grid-cols-2 gap-4">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="issue_date"
@@ -243,7 +208,7 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                   </FormItem>
                 )}
               />
-
+              
               <FormField
                 control={form.control}
                 name="due_date"
@@ -259,91 +224,183 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                 )}
               />
             </div>
-
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("currency")}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("selectCurrency")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="RSD">RSD</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="invoice_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("invoiceType")}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("selectInvoiceType")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="domestic">{t("domestic")}</SelectItem>
+                        <SelectItem value="foreign">{t("foreign")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="invoice_category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("invoiceCategory")}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("selectInvoiceCategory")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="automatic">{t("automatic")}</SelectItem>
+                        <SelectItem value="manual">{t("manual")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
             <FormField
               control={form.control}
-              name="currency"
+              name="calculation_reference"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("currency")}</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("selectCurrency")} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="RSD">RSD</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>{t("calculationReference")}</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">{t("invoiceItems")}</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addInvoiceItem}
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  {t("addItem")}
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-medium">{t("invoiceItems")}</h3>
+                <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                  <Plus className="h-4 w-4 mr-1" /> {t("addItem")}
                 </Button>
               </div>
-
-              {form.getValues("invoice_items").map((_, index) => (
-                <div key={index} className="flex gap-2 mb-3">
-                  <FormField
-                    control={form.control}
-                    name={`invoice_items.${index}.description`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder={t("itemDescription")}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`invoice_items.${index}.amount`}
-                    render={({ field }) => (
-                      <FormItem className="w-1/3">
-                        <FormControl>
-                          <Input {...field} placeholder={t("amount")} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeInvoiceItem(index)}
-                    disabled={form.getValues("invoice_items").length <= 1}
-                  >
-                    <MinusCircle className="h-4 w-4" />
-                  </Button>
+              
+              {items.map((item, index) => (
+                <div key={item.id} className="border rounded-md p-3 mb-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium">
+                      {t("item")} {index + 1}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeItem(index)}
+                      disabled={items.length <= 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.description`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("itemDescription")}</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.amount`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t("amount")}</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              onChange={e => {
+                                field.onChange(parseFloat(e.target.value) || 0);
+                                form.trigger("items");
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               ))}
+              
+              <div className="flex justify-end text-sm mt-2">
+                <div>
+                  <span className="font-medium">{t("total")}:</span>{" "}
+                  <span className="font-bold">
+                    {new Intl.NumberFormat(undefined, {
+                      style: "currency",
+                      currency: form.getValues("currency") || "EUR",
+                    }).format(calculateTotal())}
+                  </span>
+                </div>
+              </div>
+              
+              {form.formState.errors.items && (
+                <p className="text-sm font-medium text-destructive mt-2">
+                  {form.formState.errors.items.message}
+                </p>
+              )}
             </div>
-
+            
             <FormField
               control={form.control}
               name="notes"
@@ -351,26 +408,28 @@ const CreateInvoiceDialog: React.FC<CreateInvoiceDialogProps> = ({
                 <FormItem>
                   <FormLabel>{t("notes")}</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={3} />
+                    <Textarea
+                      {...field}
+                      placeholder={t("invoiceNotesDescription")}
+                      className="resize-none"
+                      rows={3}
+                    />
                   </FormControl>
-                  <FormDescription>
-                    {t("invoiceNotesDescription")}
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            
             <DialogFooter>
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                type="button"
               >
                 {t("cancel")}
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? t("creating") : t("createInvoice")}
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? t("creating") : t("createInvoice")}
               </Button>
             </DialogFooter>
           </form>

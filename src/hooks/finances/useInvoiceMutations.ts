@@ -26,6 +26,9 @@ interface CreateInvoiceParams {
   notes?: string;
   status: 'draft' | 'issued' | 'paid' | 'cancelled';
   invoice_items: InvoiceItem[];
+  invoice_type?: 'domestic' | 'foreign';
+  invoice_category?: 'automatic' | 'manual';
+  calculation_reference?: string;
 }
 
 interface UpdateInvoiceStatusParams {
@@ -34,10 +37,11 @@ interface UpdateInvoiceStatusParams {
 }
 
 // Function to create an invoice
-export const createInvoice = async (params: CreateInvoiceParams) => {
+const createInvoiceFn = async (params: CreateInvoiceParams) => {
   try {
-    // Get user from auth context
-    const { user } = useContext(AuthContext);
+    // Get user context
+    const authContext = useContext(AuthContext);
+    const user = authContext?.user;
     const companyId = user?.companyId;
 
     if (!companyId) {
@@ -59,6 +63,9 @@ export const createInvoice = async (params: CreateInvoiceParams) => {
         notes: params.notes,
         status: params.status,
         company_id: companyId,
+        invoice_type: params.invoice_type,
+        invoice_category: params.invoice_category,
+        calculation_reference: params.calculation_reference,
       })
       .select('id')
       .single();
@@ -95,11 +102,10 @@ export const useInvoiceMutations = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { user } = useContext(AuthContext);
-  const companyId = user?.companyId;
 
   // Mutation to create an invoice
   const createInvoiceMutation = useMutation({
-    mutationFn: createInvoice,
+    mutationFn: createInvoiceFn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast({
@@ -117,6 +123,77 @@ export const useInvoiceMutations = () => {
     },
   });
 
+  // Mutation to create an invoice from commission
+  const createInvoiceFromCommissionMutation = useMutation({
+    mutationFn: async ({ commissionId, policyId }: { commissionId: string, policyId: string }) => {
+      try {
+        // Fetch commission details
+        const { data: commission, error: commissionError } = await supabase
+          .from('commissions')
+          .select('*')
+          .eq('id', commissionId)
+          .single();
+        
+        if (commissionError) throw commissionError;
+        
+        // Fetch policy details
+        const { data: policy, error: policyError } = await supabase
+          .from('policies')
+          .select('*')
+          .eq('id', policyId)
+          .single();
+        
+        if (policyError) throw policyError;
+        
+        // Create invoice
+        const invoiceParams: CreateInvoiceParams = {
+          invoice_number: `INV-${new Date().getTime().toString().slice(-6)}`,
+          entity_type: 'insurer',
+          entity_name: policy.insurer_name,
+          entity_id: policy.insurer_id,
+          issue_date: new Date().toISOString(),
+          due_date: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
+          currency: policy.currency || 'EUR',
+          total_amount: commission.calculated_amount,
+          notes: `Auto-generated invoice for commission on policy ${policy.policy_number}`,
+          status: 'draft',
+          invoice_type: 'domestic',
+          invoice_category: 'automatic',
+          calculation_reference: `COM-${commissionId.slice(-6)}`,
+          invoice_items: [
+            {
+              description: `Commission for policy ${policy.policy_number} - ${policy.policyholder_name}`,
+              amount: commission.calculated_amount,
+              policy_id: policyId,
+              commission_id: commissionId
+            }
+          ]
+        };
+        
+        return await createInvoiceFn(invoiceParams);
+      } catch (error) {
+        console.error("Error creating invoice from commission:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['commissions'] });
+      toast({
+        title: t("invoiceCreated"),
+        description: t("invoiceFromCommissionSuccess"),
+      });
+    },
+    onError: (error) => {
+      console.error("Error creating invoice from commission:", error);
+      toast({
+        title: t("errorCreatingInvoice"),
+        description: t("errorCreatingInvoiceFromCommissionDescription"),
+        variant: "destructive",
+      });
+    },
+  });
+
   // Mutation to update invoice status
   const updateInvoiceStatusMutation = useMutation({
     mutationFn: async ({ invoiceId, status }: UpdateInvoiceStatusParams) => {
@@ -126,7 +203,7 @@ export const useInvoiceMutations = () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast({
         title: t("invoiceUpdated"),
-        description: t("invoiceUpdatedSuccess"),
+        description: t("invoiceStatusUpdatedSuccess"),
       });
     },
     onError: (error) => {
@@ -141,8 +218,10 @@ export const useInvoiceMutations = () => {
 
   return {
     createInvoice: createInvoiceMutation.mutate,
+    createInvoiceFromCommission: createInvoiceFromCommissionMutation.mutate,
     updateInvoiceStatus: updateInvoiceStatusMutation.mutate,
     isCreating: createInvoiceMutation.isPending,
+    isCreatingFromCommission: createInvoiceFromCommissionMutation.isPending,
     isUpdating: updateInvoiceStatusMutation.isPending,
   };
 };

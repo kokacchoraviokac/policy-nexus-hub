@@ -9,11 +9,13 @@ import InvoicesTable from "@/components/finances/invoices/InvoicesTable";
 import InvoicesFilters from "@/components/finances/invoices/InvoicesFilters";
 import { useInvoices } from "@/hooks/finances/useInvoices";
 import CreateInvoiceDialog from "@/components/finances/invoices/CreateInvoiceDialog";
+import { exportInvoicesToExcel } from "@/utils/invoices/excelExport";
 
 const Invoicing = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   const {
     invoices,
@@ -23,15 +25,60 @@ const Invoicing = () => {
     setFilters,
     pagination,
     refetch,
-    clearFilters
+    clearFilters,
+    exportAllInvoices
   } = useInvoices();
 
-  const handleExportInvoices = () => {
-    toast({
-      title: t("exportStarted"),
-      description: t("preparingExportData"),
-    });
-    // Export functionality would be implemented here
+  const handleExportInvoices = async () => {
+    try {
+      setIsExporting(true);
+      toast({
+        title: t("exportStarted"),
+        description: t("preparingExportData"),
+      });
+      
+      // Get all invoices for export (not just the current page)
+      const allInvoices = await exportAllInvoices();
+      
+      // Create translations object
+      const translations = {
+        invoiceNumber: t("invoiceNumber"),
+        entityName: t("entityName"),
+        entityType: t("entityType"),
+        issueDate: t("issueDate"),
+        dueDate: t("dueDate"),
+        status: t("status"),
+        totalAmount: t("totalAmount"),
+        currency: t("currency"),
+        invoiceType: t("invoiceType"),
+        invoiceCategory: t("invoiceCategory"),
+        calculationReference: t("calculationReference"),
+        draft: t("draft"),
+        issued: t("issued"),
+        paid: t("paid"),
+        cancelled: t("cancelled"),
+        domestic: t("domestic"),
+        foreign: t("foreign"),
+        automatic: t("automatic"),
+        manual: t("manual")
+      };
+      
+      exportInvoicesToExcel(allInvoices, translations);
+      
+      toast({
+        title: t("exportCompleted"),
+        description: t("invoicesExportedSuccessfully"),
+      });
+    } catch (error) {
+      console.error("Error exporting invoices:", error);
+      toast({
+        title: t("errorExportingInvoices"),
+        description: t("errorExportingInvoicesDescription"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -58,9 +105,10 @@ const Invoicing = () => {
             size="sm"
             className="h-9"
             onClick={handleExportInvoices}
+            disabled={isExporting || isLoading || totalCount === 0}
           >
             <FileDown className="h-4 w-4 mr-2" />
-            {t("exportInvoices")}
+            {isExporting ? t("exporting") : t("exportInvoices")}
           </Button>
           <Button 
             size="sm" 

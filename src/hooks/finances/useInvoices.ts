@@ -13,6 +13,8 @@ export type InvoiceFilterOptions = {
   endDate: Date | null;
   entityType?: string;
   entityId?: string;
+  invoiceType?: string;
+  invoiceCategory?: string;
 };
 
 export const useInvoices = () => {
@@ -32,54 +34,70 @@ export const useInvoices = () => {
     totalCount: 0,
   });
 
+  const buildQuery = () => {
+    // Cast the query builder to 'any' to prevent deep type instantiation
+    let query: any = supabase
+      .from('invoices')
+      .select('*', { count: 'exact' });
+    
+    // Apply company filter if available
+    if (companyId) {
+      query = query.eq('company_id', companyId);
+    }
+    
+    // Apply status filter
+    if (filters.status && filters.status !== 'all') {
+      query = query.eq('status', filters.status);
+    }
+    
+    // Apply search term filter to invoice number or entity name
+    if (filters.searchTerm) {
+      query = query.or(
+        `invoice_number.ilike.%${filters.searchTerm}%,entity_name.ilike.%${filters.searchTerm}%`
+      );
+    }
+    
+    // Apply date range filters
+    if (filters.startDate) {
+      query = query.gte('issue_date', filters.startDate.toISOString().split('T')[0]);
+    }
+    
+    if (filters.endDate) {
+      // Add one day to include the end date fully
+      const endDate = new Date(filters.endDate);
+      endDate.setDate(endDate.getDate() + 1);
+      query = query.lt('issue_date', endDate.toISOString().split('T')[0]);
+    }
+    
+    // Apply entity type filter if provided
+    if (filters.entityType) {
+      query = query.eq('entity_type', filters.entityType);
+    }
+    
+    // Apply entity id filter if provided
+    if (filters.entityId) {
+      query = query.eq('entity_id', filters.entityId);
+    }
+    
+    // Apply invoice type filter if provided
+    if (filters.invoiceType) {
+      query = query.eq('invoice_type', filters.invoiceType);
+    }
+    
+    // Apply invoice category filter if provided
+    if (filters.invoiceCategory) {
+      query = query.eq('invoice_category', filters.invoiceCategory);
+    }
+    
+    return query;
+  };
+
   const fetchInvoices = async () => {
     try {
       const pageIndex = pagination.page - 1;
       const { pageSize } = pagination;
       
-      // Cast the query builder to 'any' to prevent deep type instantiation
-      let query: any = supabase
-        .from('invoices')
-        .select('*', { count: 'exact' });
-      
-      // Apply company filter if available
-      if (companyId) {
-        query = query.eq('company_id', companyId);
-      }
-      
-      // Apply status filter
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
-      }
-      
-      // Apply search term filter to invoice number or entity name
-      if (filters.searchTerm) {
-        query = query.or(
-          `invoice_number.ilike.%${filters.searchTerm}%,entity_name.ilike.%${filters.searchTerm}%`
-        );
-      }
-      
-      // Apply date range filters
-      if (filters.startDate) {
-        query = query.gte('issue_date', filters.startDate.toISOString().split('T')[0]);
-      }
-      
-      if (filters.endDate) {
-        // Add one day to include the end date fully
-        const endDate = new Date(filters.endDate);
-        endDate.setDate(endDate.getDate() + 1);
-        query = query.lt('issue_date', endDate.toISOString().split('T')[0]);
-      }
-      
-      // Apply entity type filter if provided
-      if (filters.entityType) {
-        query = query.eq('entity_type', filters.entityType);
-      }
-      
-      // Apply entity id filter if provided
-      if (filters.entityId) {
-        query = query.eq('entity_id', filters.entityId);
-      }
+      const query = buildQuery();
       
       // Apply pagination
       const from = pageIndex * pageSize;
@@ -105,6 +123,22 @@ export const useInvoices = () => {
     queryKey: ['invoices', pagination, filters],
     queryFn: fetchInvoices,
   });
+  
+  const exportAllInvoices = async (): Promise<InvoiceType[]> => {
+    try {
+      const query = buildQuery();
+      
+      const { data, error } = await query
+        .order('issue_date', { ascending: false });
+      
+      if (error) throw error;
+      
+      return data as InvoiceType[];
+    } catch (error) {
+      console.error("Error fetching invoices for export:", error);
+      throw error;
+    }
+  };
   
   const setPage = (page: number) => {
     setPagination(prev => ({ ...prev, page }));
@@ -139,6 +173,7 @@ export const useInvoices = () => {
       totalPages: Math.ceil((data?.totalCount || 0) / pagination.pageSize)
     },
     refetch,
-    clearFilters
+    clearFilters,
+    exportAllInvoices
   };
 };
