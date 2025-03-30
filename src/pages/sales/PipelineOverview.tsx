@@ -1,34 +1,38 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { KanbanSquare } from "lucide-react";
-import EmptyState from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
+import PipelineOverviewHeader from "@/components/sales/pipeline/PipelineOverviewHeader";
+import PipelineSummary from "@/components/sales/pipeline/PipelineSummary";
+import PipelineKanbanBoard from "@/components/sales/pipeline/PipelineKanbanBoard";
+import { toast } from "sonner";
 
 const PipelineOverview = () => {
   const { t } = useLanguage();
+  const [selectedPeriod, setSelectedPeriod] = useState("30days");
   
+  const handleRefresh = () => {
+    // In a real app, this would refresh data from API
+    toast.success(t("pipelineRefreshed"), {
+      description: t("pipelineRefreshedDescription"),
+    });
+  };
+  
+  const handleFilterChange = (period: string) => {
+    setSelectedPeriod(period);
+    // In a real app, this would update data based on the selected period
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">{t("pipelineOverview")}</h1>
-        <Button variant="outline" size="sm">
-          {t("filters")}
-        </Button>
-      </div>
+      <PipelineOverviewHeader 
+        onRefresh={handleRefresh}
+        onFilterChange={handleFilterChange}
+        selectedPeriod={selectedPeriod}
+      />
       
-      <div className="bg-card rounded-lg border shadow-sm">
-        <EmptyState
-          title={t("pipelineEmpty")}
-          description={t("pipelineEmptyDescription")}
-          icon="file-search"
-          action={
-            <Button className="mt-4" size="sm">
-              {t("createSalesProcess")}
-            </Button>
-          }
-        />
-      </div>
+      <PipelineSummary />
+      
+      <PipelineKanbanBoard />
     </div>
   );
 };

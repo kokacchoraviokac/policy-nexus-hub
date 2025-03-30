@@ -93,5 +93,25 @@
   "selectLeadOrProcess": "Izaberite potencijalnog klijenta ili prodajni proces",
   "assignResponsibilityDescription": "Dodelite odgovornog zaposlenog potencijalnom klijentu ili prodajnom procesu.",
   "responsibilityAssigned": "Odgovornost dodeljena",
-  "responsibilityAssignedDescription": "{employee} je sada odgovoran za {lead}."
+  "responsibilityAssignedDescription": "{employee} je sada odgovoran za {lead}.",
+  
+  "filters": "Filteri",
+  "selectTimePeriod": "Izaberite period",
+  "last7Days": "Poslednjih 7 dana",
+  "last30Days": "Poslednjih 30 dana",
+  "last90Days": "Poslednjih 90 dana",
+  "allTime": "Sve vreme",
+  "activeLeads": "Aktivni potencijalni klijenti",
+  "conversionRate": "Stopa konverzije",
+  "potentialRevenue": "Potencijalni prihod",
+  "leadProspect": "Potencijalni klijenti",
+  "insurerQuotes": "Ponude osiguravača",
+  "clientSelection": "Izbor klijenta",
+  "details": "Detalji",
+  "noItemsInStage": "Nema stavki u ovoj fazi",
+  "pipelineRefreshed": "Prodajni kanal osvežen",
+  "pipelineRefreshedDescription": "Podaci prodajnog kanala su uspešno osveženi.",
+  "life": "Životno",
+  "nonLife": "Neživotno",
+  "delete": "Obriši"
 }
