@@ -18,7 +18,7 @@ import CommissionsFilters from "@/components/finances/commissions/CommissionsFil
 import CommissionStatusBadge from "@/components/finances/commissions/CommissionStatusBadge";
 import CalculationUploadDialog from "@/components/finances/commissions/CalculationUploadDialog";
 import UpdateCommissionStatusDialog from "@/components/finances/commissions/UpdateCommissionStatusDialog";
-import { PaginationController } from "@/components/ui/pagination-controller";
+import PaginationController from "@/components/ui/pagination-controller";
 
 const Commissions = () => {
   const { t, formatCurrency, formatDate } = useLanguage();
@@ -181,17 +181,9 @@ const Commissions = () => {
                 totalItems={totalCount}
                 itemsPerPage={pagination.pageSize}
                 onPageChange={handlePageChange}
-                onItemsPerPageChange={handleRowsPerPageChange}
-                itemsPerPageOptions={[10, 25, 50, 100]}
-                showingText={t("showingItemsOf")}
-                ofText={t("of")}
-                itemsText={t("commissions").toLowerCase()}
-                nextText={t("next")}
-                previousText={t("previous")}
-                pageText={t("page")}
-                pageXOfYText={t("pageXOfY")}
-                rowsPerPageText={t("rowsPerPage")}
-                goToText={t("goTo")}
+                onPageSizeChange={handleRowsPerPageChange}
+                pageSizeOptions={[10, 25, 50, 100]}
+                showPageSize={true}
               />
             )}
           </div>

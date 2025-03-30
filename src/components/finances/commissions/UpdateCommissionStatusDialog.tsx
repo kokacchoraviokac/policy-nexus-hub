@@ -22,6 +22,8 @@ import { CommissionType } from "@/types/finances";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 
+type CommissionStatus = 'due' | 'paid' | 'partially_paid' | 'calculating';
+
 interface UpdateCommissionStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -45,7 +47,7 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
   isUpdating
 }) => {
   const { t, formatCurrency } = useLanguage();
-  const [status, setStatus] = useState(commission.status);
+  const [status, setStatus] = useState<CommissionStatus>(commission.status as CommissionStatus);
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(
     commission.payment_date ? new Date(commission.payment_date) : undefined
   );
@@ -54,7 +56,7 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
   );
 
   const handleStatusChange = (value: string) => {
-    setStatus(value);
+    setStatus(value as CommissionStatus);
     
     // If changing to paid and no payment date is set, set to today
     if (value === 'paid' && !paymentDate) {

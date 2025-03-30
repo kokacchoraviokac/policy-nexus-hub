@@ -58,7 +58,7 @@ export interface CommissionType {
   calculated_amount: number;
   payment_date?: string;
   paid_amount?: number;
-  status: 'due' | 'partially_paid' | 'paid';
+  status: 'due' | 'partially_paid' | 'paid' | 'calculating';
   company_id: string;
   created_at: string;
   updated_at: string;

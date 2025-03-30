@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CommissionType } from "@/types/finances";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 export interface CommissionFilterOptions {
   searchTerm?: string;
@@ -18,6 +19,7 @@ export interface CommissionFilterOptions {
 export const useCommissions = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { session } = useAuthSession();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<CommissionFilterOptions>({
     searchTerm: "",
@@ -30,6 +32,9 @@ export const useCommissions = () => {
     pageIndex: 0,
     pageSize: 10
   });
+
+  // Get the current user's company_id
+  const companyId = session?.user?.user_metadata?.company_id;
 
   const fetchCommissions = async ({ pageIndex, pageSize, filters }: { 
     pageIndex: number, 
@@ -50,6 +55,11 @@ export const useCommissions = () => {
           ),
           agents(name)
         `);
+      
+      // Apply company filter if available
+      if (companyId) {
+        query = query.eq('company_id', companyId);
+      }
       
       // Apply status filter
       if (filters.status && filters.status !== 'all') {
@@ -105,14 +115,7 @@ export const useCommissions = () => {
       }));
       
       return {
-        data: transformedData as (CommissionType & {
-          policy_number?: string;
-          policyholder_name?: string;
-          insurer_name?: string;
-          product_name?: string;
-          agent_name?: string;
-          currency?: string;
-        })[],
+        data: transformedData,
         totalCount: count || 0
       };
     } catch (error) {
@@ -146,7 +149,8 @@ export const useCommissions = () => {
           base_amount: baseAmount,
           rate: rate,
           calculated_amount: calculatedAmount,
-          status: 'due'
+          status: 'due',
+          company_id: companyId
         })
         .select()
         .single();
@@ -236,6 +240,11 @@ export const useCommissions = () => {
           ),
           agents(name)
         `);
+      
+      // Apply company filter if available
+      if (companyId) {
+        query = query.eq('company_id', companyId);
+      }
       
       if (filters.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);

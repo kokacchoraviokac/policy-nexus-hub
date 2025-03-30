@@ -15,29 +15,58 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export interface PaginationControllerProps {
   currentPage: number;
   totalPages: number;
-  pageSize: number;
   totalItems: number;
+  itemsPerPage: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   pageSizeOptions?: number[];
   showPageSize?: boolean;
+  showingText?: string;
+  ofText?: string;
+  itemsText?: string;
+  nextText?: string;
+  previousText?: string;
+  pageText?: string;
+  pageXOfYText?: string;
+  rowsPerPageText?: string;
+  goToText?: string;
 }
 
 const PaginationController: React.FC<PaginationControllerProps> = ({
   currentPage,
   totalPages,
-  pageSize,
   totalItems,
+  itemsPerPage,
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 25, 50, 100],
   showPageSize = true,
+  showingText,
+  ofText,
+  itemsText,
+  nextText,
+  previousText,
+  pageText,
+  pageXOfYText,
+  rowsPerPageText,
+  goToText,
 }) => {
   const { t } = useLanguage();
   
+  // Use provided text or fallback to translations
+  const localizedShowingText = showingText || t('showingItemsOf');
+  const localizedOfText = ofText || t('of');
+  const localizedItemsText = itemsText || t('items');
+  const localizedNextText = nextText || t('next');
+  const localizedPreviousText = previousText || t('previous');
+  const localizedPageText = pageText || t('page');
+  const localizedPageXOfYText = pageXOfYText || t('pageXOfY');
+  const localizedRowsPerPageText = rowsPerPageText || t('rowsPerPage');
+  const localizedGoToText = goToText || t('goTo');
+  
   // Calculate start and end items on current page
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(currentPage * pageSize, totalItems);
+  const startItem = totalItems === 0 ? 0 : (currentPage * itemsPerPage) + 1;
+  const endItem = Math.min((currentPage + 1) * itemsPerPage, totalItems);
   
   // Generate page numbers to display
   const getPageNumbers = () => {
@@ -45,30 +74,30 @@ const PaginationController: React.FC<PaginationControllerProps> = ({
     
     if (totalPages <= 7) {
       // If fewer than 7 pages, show all
-      for (let i = 1; i <= totalPages; i++) {
+      for (let i = 0; i < totalPages; i++) {
         pages.push(i);
       }
     } else {
       // Always include first page
-      pages.push(1);
+      pages.push(0);
       
       // Add ellipsis or additional pages
-      if (currentPage > 3) {
+      if (currentPage > 2) {
         pages.push("ellipsis-start");
       }
       
       // Pages around current page
-      let startPage = Math.max(2, currentPage - 1);
-      let endPage = Math.min(totalPages - 1, currentPage + 1);
+      let startPage = Math.max(1, currentPage - 1);
+      let endPage = Math.min(totalPages - 2, currentPage + 1);
       
       // Adjust if at the beginning
-      if (currentPage <= 3) {
-        endPage = 4;
+      if (currentPage <= 2) {
+        endPage = 3;
       }
       
       // Adjust if at the end
-      if (currentPage >= totalPages - 2) {
-        startPage = totalPages - 3;
+      if (currentPage >= totalPages - 3) {
+        startPage = totalPages - 4;
       }
       
       // Add the pages around current page
@@ -77,12 +106,12 @@ const PaginationController: React.FC<PaginationControllerProps> = ({
       }
       
       // Add ellipsis or additional pages
-      if (currentPage < totalPages - 2) {
+      if (currentPage < totalPages - 3) {
         pages.push("ellipsis-end");
       }
       
       // Always include last page
-      pages.push(totalPages);
+      pages.push(totalPages - 1);
     }
     
     return pages;
@@ -94,7 +123,7 @@ const PaginationController: React.FC<PaginationControllerProps> = ({
     <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 py-2">
       <div className="text-sm text-muted-foreground">
         {totalItems > 0 
-          ? t('showingItemsOf')
+          ? localizedShowingText
             .replace('{0}', startItem.toString())
             .replace('{1}', endItem.toString())
             .replace('{2}', totalItems.toString())
@@ -105,13 +134,13 @@ const PaginationController: React.FC<PaginationControllerProps> = ({
       <div className="flex items-center space-x-6">
         {showPageSize && (
           <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium">{t('rowsPerPage')}:</span>
+            <span className="text-sm font-medium">{localizedRowsPerPageText}:</span>
             <Select
-              value={pageSize.toString()}
+              value={itemsPerPage.toString()}
               onValueChange={(value) => onPageSizeChange(Number(value))}
             >
               <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={pageSize.toString()} />
+                <SelectValue placeholder={itemsPerPage.toString()} />
               </SelectTrigger>
               <SelectContent>
                 {pageSizeOptions.map((option) => (
@@ -128,9 +157,9 @@ const PaginationController: React.FC<PaginationControllerProps> = ({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious 
-                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-                aria-disabled={currentPage === 1}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+                aria-disabled={currentPage === 0}
+                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
             
@@ -143,7 +172,7 @@ const PaginationController: React.FC<PaginationControllerProps> = ({
                     isActive={page === currentPage}
                     onClick={() => onPageChange(page as number)}
                   >
-                    {page}
+                    {(page as number) + 1}
                   </PaginationLink>
                 )}
               </PaginationItem>
@@ -151,9 +180,9 @@ const PaginationController: React.FC<PaginationControllerProps> = ({
             
             <PaginationItem>
               <PaginationNext 
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-                aria-disabled={currentPage === totalPages}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
+                aria-disabled={currentPage === totalPages - 1}
+                className={currentPage === totalPages - 1 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
           </PaginationContent>
