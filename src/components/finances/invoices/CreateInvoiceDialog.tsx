@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,13 +100,11 @@ const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInv
     },
   });
   
-  // Update form items when state items change
   useEffect(() => {
     form.setValue("items", items);
   }, [items, form]);
   
   const onSubmit = (values: InvoiceFormValues) => {
-    // Calculate total amount
     const totalAmount = values.items.reduce((sum, item) => sum + item.amount, 0);
     
     createInvoice({
@@ -131,14 +128,12 @@ const CreateInvoiceDialog = ({ open, onOpenChange, onInvoiceCreated }: CreateInv
       calculation_reference: values.calculation_reference
     });
     
-    // Close dialog and notify parent
     onOpenChange(false);
     if (onInvoiceCreated) {
       onInvoiceCreated();
     }
   };
   
-  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       form.reset({

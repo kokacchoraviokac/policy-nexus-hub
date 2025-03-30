@@ -88,7 +88,7 @@ const InvoicesFilters = ({
                 <SelectValue placeholder={t("status")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t("all")}</SelectItem>
+                <SelectItem value="all">{t("all")}</SelectItem>
                 <SelectItem value="draft">{t("draft")}</SelectItem>
                 <SelectItem value="issued">{t("issued")}</SelectItem>
                 <SelectItem value="paid">{t("paid")}</SelectItem>
@@ -106,7 +106,7 @@ const InvoicesFilters = ({
                 <SelectValue placeholder={t("invoiceType")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t("all")}</SelectItem>
+                <SelectItem value="all">{t("all")}</SelectItem>
                 <SelectItem value="domestic">{t("domestic")}</SelectItem>
                 <SelectItem value="foreign">{t("foreign")}</SelectItem>
               </SelectContent>
@@ -122,7 +122,7 @@ const InvoicesFilters = ({
                 <SelectValue placeholder={t("invoiceCategory")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t("all")}</SelectItem>
+                <SelectItem value="all">{t("all")}</SelectItem>
                 <SelectItem value="automatic">{t("automatic")}</SelectItem>
                 <SelectItem value="manual">{t("manual")}</SelectItem>
               </SelectContent>
