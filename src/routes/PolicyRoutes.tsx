@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -16,6 +15,8 @@ import PolicyReview from "@/pages/policies/workflow/PolicyReview";
 // Finance Pages
 import FinancesModule from "@/pages/finances/FinancesModule";
 import Commissions from "@/pages/finances/Commissions";
+import BankStatements from "@/pages/finances/BankStatements";
+import BankStatementDetail from "@/pages/finances/BankStatementDetail";
 
 export const PolicyRoutes = [
   // Policy Directory Routes
@@ -128,6 +129,29 @@ export const PolicyRoutes = [
       </ProtectedRoute>
     }
   />,
+  <Route
+    key="finances-statements"
+    path="/finances/statements"
+    element={
+      <ProtectedRoute requiredPrivilege="finances:view">
+        <AppLayout>
+          <BankStatements />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="finances-statement-detail"
+    path="/finances/statements/:statementId"
+    element={
+      <ProtectedRoute requiredPrivilege="finances:view">
+        <AppLayout>
+          <BankStatementDetail />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
   <Route
     key="finances-unlinked-payments"
     path="/finances/unlinked-payments"
