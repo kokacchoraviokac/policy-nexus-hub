@@ -1,251 +1,192 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Policy } from "@/types/policies";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { 
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious
+} from "@/components/ui/pagination";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Upload, AlertTriangle, Check, X } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-interface ValidatedPolicy {
-  policy: any;
-  isValid: boolean;
-  errors: string[];
-}
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatCurrency, formatDate } from "@/utils/format";
+import { AlertTriangle, CheckCircle, MoreHorizontal } from "lucide-react";
 
 interface PolicyImportReviewProps {
-  policies: any[];
-  onBack: () => void;
-  onImport: () => void;
+  policies: Partial<Policy>[];
+  invalidPolicies: { policy: Partial<Policy>; errors: string[] }[];
 }
 
 const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
   policies,
-  onBack,
-  onImport
+  invalidPolicies,
 }) => {
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [reviewTab, setReviewTab] = useState<string>("valid");
+  const itemsPerPage = 10;
+
+  const displayPolicies = reviewTab === "valid" ? policies : invalidPolicies.map(item => item.policy);
+  const totalPages = Math.ceil(displayPolicies.length / itemsPerPage);
   
-  // Validate policies
-  const validatedPolicies: ValidatedPolicy[] = useMemo(() => {
-    return policies.map(policy => {
-      const errors: string[] = [];
-      
-      // Required fields to check
-      const requiredFields = [
-        { field: 'policy_number', label: t("policyNumber") },
-        { field: 'insurer_name', label: t("insurer") },
-        { field: 'policyholder_name', label: t("policyholder") },
-        { field: 'start_date', label: t("startDate") },
-        { field: 'expiry_date', label: t("expiryDate") },
-        { field: 'premium', label: t("premium") },
-        { field: 'currency', label: t("currency") }
-      ];
-      
-      // Check required fields
-      requiredFields.forEach(({ field, label }) => {
-        if (!policy[field]) {
-          errors.push(`${label} ${t("isRequired")}`);
-        }
-      });
-      
-      // Validate date formats
-      const dateFields = [
-        { field: 'start_date', label: t("startDate") },
-        { field: 'expiry_date', label: t("expiryDate") }
-      ];
-      
-      dateFields.forEach(({ field, label }) => {
-        if (policy[field] && !/^\d{4}-\d{2}-\d{2}$/.test(policy[field])) {
-          errors.push(`${label} ${t("invalidDateFormat")}`);
-        }
-      });
-      
-      // Validate premium is a number
-      if (policy.premium && isNaN(Number(policy.premium))) {
-        errors.push(`${t("premium")} ${t("mustBeNumber")}`);
-      }
-      
-      // Validate commission percentage is a number if present
-      if (policy.commission_percentage && isNaN(Number(policy.commission_percentage))) {
-        errors.push(`${t("commissionPercentage")} ${t("mustBeNumber")}`);
-      }
-      
-      return {
-        policy,
-        isValid: errors.length === 0,
-        errors
-      };
-    });
-  }, [policies, t]);
-  
-  // Count of valid and invalid policies
-  const validCount = validatedPolicies.filter(p => p.isValid).length;
-  const invalidCount = validatedPolicies.length - validCount;
-  
-  // Paginate policies
-  const paginatedPolicies = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    return validatedPolicies.slice(start, end);
-  }, [validatedPolicies, page, pageSize]);
-  
-  const totalPages = Math.ceil(validatedPolicies.length / pageSize);
-  
-  const handlePrevPage = () => {
-    if (page > 1) setPage(page - 1);
+  const paginatedPolicies = displayPolicies.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
+    }
   };
-  
-  const handleNextPage = () => {
-    if (page < totalPages) setPage(page + 1);
-  };
-  
+
   return (
-    <div className="space-y-6 py-4">
-      <div className="space-y-2">
-        <h3 className="text-lg font-medium">{t("reviewPolicies")}</h3>
-        <p className="text-sm text-muted-foreground">
-          {t("reviewPoliciesDescription")}
-        </p>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">
+          {reviewTab === "valid" 
+            ? t("validPolicies", { count: policies.length }) 
+            : t("invalidPolicies", { count: invalidPolicies.length })}
+        </h3>
+        
+        <Tabs 
+          value={reviewTab} 
+          onValueChange={setReviewTab}
+          className="w-auto"
+        >
+          <TabsList>
+            <TabsTrigger value="valid" className="flex items-center">
+              <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
+              {t("valid")} ({policies.length})
+            </TabsTrigger>
+            <TabsTrigger value="invalid" className="flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-1 text-amber-500" />
+              {t("invalid")} ({invalidPolicies.length})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
-      
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-slate-50 p-3 rounded-md text-center">
-          <p className="text-sm text-muted-foreground">{t("totalPolicies")}</p>
-          <p className="text-xl font-semibold">{validatedPolicies.length}</p>
-        </div>
-        <div className="bg-green-50 p-3 rounded-md text-center">
-          <p className="text-sm text-green-600">{t("validPolicies")}</p>
-          <p className="text-xl font-semibold text-green-700">{validCount}</p>
-        </div>
-        <div className={`p-3 rounded-md text-center ${invalidCount > 0 ? 'bg-red-50' : 'bg-slate-50'}`}>
-          <p className={`text-sm ${invalidCount > 0 ? 'text-red-600' : 'text-muted-foreground'}`}>{t("invalidPolicies")}</p>
-          <p className={`text-xl font-semibold ${invalidCount > 0 ? 'text-red-700' : 'text-slate-700'}`}>{invalidCount}</p>
-        </div>
-      </div>
-      
-      {invalidCount > 0 && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4 mr-2" />
-          <AlertDescription>
-            {t("importContainsErrors", { count: invalidCount })}
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <ScrollArea className="h-[300px] border rounded-md">
+
+      <div className="border rounded-md">
         <Table>
-          <TableHeader className="sticky top-0 bg-white z-10">
+          <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">{t("status")}</TableHead>
               <TableHead>{t("policyNumber")}</TableHead>
               <TableHead>{t("insurer")}</TableHead>
               <TableHead>{t("policyholder")}</TableHead>
-              <TableHead>{t("premium")}</TableHead>
               <TableHead>{t("startDate")}</TableHead>
               <TableHead>{t("expiryDate")}</TableHead>
+              <TableHead>{t("premium")}</TableHead>
+              <TableHead>{t("insuranceType")}</TableHead>
+              {reviewTab === "invalid" && <TableHead>{t("errors")}</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedPolicies.map((item, index) => (
-              <TableRow key={index} className={!item.isValid ? 'bg-red-50' : ''}>
-                <TableCell>
-                  {item.isValid ? (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      <Check className="h-3 w-3 mr-1" />
-                      {t("valid")}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                      <X className="h-3 w-3 mr-1" />
-                      {t("invalid")}
-                    </Badge>
+            {paginatedPolicies.length > 0 ? (
+              paginatedPolicies.map((policy, index) => (
+                <TableRow key={index}>
+                  <TableCell>{policy.policy_number}</TableCell>
+                  <TableCell>{policy.insurer_name}</TableCell>
+                  <TableCell>{policy.policyholder_name}</TableCell>
+                  <TableCell>
+                    {policy.start_date 
+                      ? formatDate(new Date(policy.start_date)) 
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {policy.expiry_date 
+                      ? formatDate(new Date(policy.expiry_date)) 
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {policy.premium && policy.currency 
+                      ? formatCurrency(policy.premium, policy.currency) 
+                      : policy.premium || "-"}
+                  </TableCell>
+                  <TableCell>{policy.insurance_type || "-"}</TableCell>
+                  {reviewTab === "invalid" && (
+                    <TableCell>
+                      {invalidPolicies.find(
+                        item => item.policy === policy
+                      )?.errors.map((error, i) => (
+                        <Badge key={i} variant="destructive" className="mr-1 mb-1">
+                          {error}
+                        </Badge>
+                      ))}
+                    </TableCell>
                   )}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={reviewTab === "invalid" ? 8 : 7} className="text-center py-4">
+                  {reviewTab === "valid" 
+                    ? t("noValidPolicies") 
+                    : t("noInvalidPolicies")}
                 </TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span>{item.policy.policy_number || '-'}</span>
-                    {!item.isValid && (
-                      <div className="mt-1">
-                        {item.errors.map((error, i) => (
-                          <div key={i} className="text-xs text-red-600">{error}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>{item.policy.insurer_name || '-'}</TableCell>
-                <TableCell>{item.policy.policyholder_name || '-'}</TableCell>
-                <TableCell>
-                  {item.policy.premium 
-                    ? `${item.policy.premium} ${item.policy.currency || ''}`
-                    : '-'
-                  }
-                </TableCell>
-                <TableCell>{item.policy.start_date || '-'}</TableCell>
-                <TableCell>{item.policy.expiry_date || '-'}</TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
-      </ScrollArea>
-      
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handlePrevPage} 
-            disabled={page === 1}
-          >
-            {t("previous")}
-          </Button>
-          <span className="text-sm">
-            {t("page")} {page} {t("of")} {totalPages}
-          </span>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleNextPage} 
-            disabled={page === totalPages}
-          >
-            {t("next")}
-          </Button>
-        </div>
-      )}
-      
-      <Alert className="bg-blue-50 border-blue-200">
-        <AlertDescription className="text-blue-800 text-sm">
-          {invalidCount > 0 
-            ? t("importContainsErrorsWarning") 
-            : t("allPoliciesValidProceed")}
-        </AlertDescription>
-      </Alert>
-      
-      <div className="flex justify-between items-center">
-        <Button 
-          variant="outline"
-          className="flex items-center gap-2"
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t("back")}
-        </Button>
-        
-        <Button 
-          onClick={onImport}
-          className="flex items-center gap-2"
-          variant={invalidCount > 0 ? "outline" : "default"}
-        >
-          <Upload className="h-4 w-4" />
-          {invalidCount > 0 
-            ? t("importWithErrors") 
-            : t("importPolicies")}
-        </Button>
       </div>
+
+      {totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+              >
+                <PaginationPrevious />
+              </Button>
+            </PaginationItem>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+              <PaginationItem key={pageNum}>
+                <Button
+                  variant={pageNum === page ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => handlePageChange(pageNum)}
+                >
+                  <PaginationLink>{pageNum}</PaginationLink>
+                </Button>
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page === totalPages}
+              >
+                <PaginationNext />
+              </Button>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 };

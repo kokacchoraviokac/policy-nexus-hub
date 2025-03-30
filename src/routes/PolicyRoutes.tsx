@@ -1,98 +1,34 @@
 
 import React from "react";
-import { Route, Navigate } from "react-router-dom";
+import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import AppLayout from "@/components/layout/AppLayout";
-
-// Policy Pages
+import Policies from "@/pages/Policies";
 import AllPolicies from "@/pages/policies/AllPolicies";
+import NewPolicy from "@/pages/policies/NewPolicy";
 import PolicyDetail from "@/pages/policies/PolicyDetail";
+import PolicyWorkflow from "@/pages/policies/PolicyWorkflow";
 import PolicyAddendums from "@/pages/policies/PolicyAddendums";
 import PolicyDocuments from "@/pages/policies/PolicyDocuments";
-import PolicyWorkflow from "@/pages/policies/workflow/PolicyWorkflow";
 import PolicyReview from "@/pages/policies/workflow/PolicyReview";
+import PolicyImportPage from "@/components/policies/import/PolicyImportPage";
 
 export const PolicyRoutes = [
-  // Policy Directory Routes
   <Route
     key="policies"
     path="/policies"
     element={
-      <ProtectedRoute requiredPrivilege="policies:view">
-        <AppLayout>
-          <AllPolicies />
-        </AppLayout>
+      <ProtectedRoute>
+        <Policies />
       </ProtectedRoute>
     }
-  />,
-  <Route
-    key="policy-detail"
-    path="/policies/:policyId"
-    element={
-      <ProtectedRoute requiredPrivilege="policies:view">
-        <AppLayout>
-          <PolicyDetail />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Policy Workflow Routes
-  <Route
-    key="policy-workflow"
-    path="/policies/workflow"
-    element={
-      <ProtectedRoute requiredPrivilege="policies:view">
-        <AppLayout>
-          <PolicyWorkflow />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="policy-review"
-    path="/policies/workflow/:policyId"
-    element={
-      <ProtectedRoute requiredPrivilege="policies:edit">
-        <AppLayout>
-          <PolicyReview />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Policy Addendums Route
-  <Route
-    key="policy-addendums"
-    path="/policies/addendums"
-    element={
-      <ProtectedRoute requiredPrivilege="policies:view">
-        <AppLayout>
-          <PolicyAddendums />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Policy Documents Route
-  <Route
-    key="policy-documents"
-    path="/policies/documents"
-    element={
-      <ProtectedRoute requiredPrivilege="policies:view">
-        <AppLayout>
-          <PolicyDocuments />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Redirect from old unlinked payments path to new one
-  <Route
-    key="unlinked-payments-redirect"
-    path="/policies/unlinked-payments"
-    element={<Navigate to="/finances/unlinked-payments" replace />}
-  />
+  >
+    <Route index element={<AllPolicies />} />
+    <Route path="new" element={<NewPolicy />} />
+    <Route path="detail/:id" element={<PolicyDetail />} />
+    <Route path="addendums" element={<PolicyAddendums />} />
+    <Route path="documents" element={<PolicyDocuments />} />
+    <Route path="workflow" element={<PolicyWorkflow />} />
+    <Route path="workflow/review/:id" element={<PolicyReview />} />
+    <Route path="import" element={<PolicyImportPage />} />
+  </Route>
 ];
-
-export default PolicyRoutes;

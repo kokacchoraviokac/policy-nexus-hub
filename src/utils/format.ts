@@ -1,51 +1,47 @@
 
 /**
- * Format a number as currency
- * @param amount The amount to format
- * @param currency The currency code (e.g., "USD", "EUR")
- * @returns Formatted currency string
+ * Format a date as a string using the specified locale
  */
-export const formatCurrency = (amount: number, currency = "EUR"): string => {
-  return new Intl.NumberFormat('en-US', {
+export const formatDate = (date: Date, locale = 'en-US'): string => {
+  if (!date) return '';
+  
+  return new Date(date).toLocaleDateString(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Format a number as currency with the specified currency code
+ */
+export const formatCurrency = (amount: number, currency = 'USD', locale = 'en-US'): string => {
+  if (amount === undefined || amount === null) return '';
+  
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(amount);
 };
 
 /**
- * Format a date string to a human-readable format
- * @param dateString The date string to format
- * @param format The format style ("short", "medium", "long", "full")
- * @returns Formatted date string
+ * Format a number with commas for thousands
  */
-export const formatDate = (
-  dateString: string, 
-  format: "short" | "medium" | "long" | "full" = "medium"
-): string => {
-  if (!dateString) return "";
+export const formatNumber = (num: number, locale = 'en-US'): string => {
+  if (num === undefined || num === null) return '';
   
-  try {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
-      dateStyle: format 
-    }).format(date);
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return dateString;
-  }
+  return new Intl.NumberFormat(locale).format(num);
 };
 
 /**
- * Format a percentage value
- * @param value The decimal value (e.g., 0.05 for 5%)
- * @returns Formatted percentage string
+ * Truncate a string to a maximum length and add ellipsis
  */
-export const formatPercentage = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'percent',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+export const truncateString = (str: string, maxLength = 50): string => {
+  if (!str) return '';
+  
+  if (str.length <= maxLength) return str;
+  
+  return `${str.substring(0, maxLength)}...`;
 };
