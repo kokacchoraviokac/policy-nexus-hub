@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -56,7 +55,7 @@ const AddendumList: React.FC<AddendumListProps> = ({ addendums, policyNumber, on
     }
   };
   
-  const getWorkflowStatusVariant = (status: string): "default" | "secondary" | "destructive" | "success" | "outline" => {
+  const getWorkflowStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status?.toLowerCase()) {
       case 'draft':
         return "outline";
@@ -65,7 +64,7 @@ const AddendumList: React.FC<AddendumListProps> = ({ addendums, policyNumber, on
       case 'ready':
         return "default";
       case 'complete':
-        return "success";
+        return "default";
       default:
         return "outline";
     }
@@ -87,7 +86,6 @@ const AddendumList: React.FC<AddendumListProps> = ({ addendums, policyNumber, on
   };
   
   const handleViewAddendum = (id: string) => {
-    // To be implemented - open a details view
     console.log("View addendum:", id);
   };
   
@@ -184,7 +182,7 @@ const AddendumList: React.FC<AddendumListProps> = ({ addendums, policyNumber, on
         newStatus = "complete";
         break;
       case "complete":
-        return; // Cannot progress further
+        return;
     }
     
     updateWorkflowStatusMutation.mutate({ id, status: newStatus });

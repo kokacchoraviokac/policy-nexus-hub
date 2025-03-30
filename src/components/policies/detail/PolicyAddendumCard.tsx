@@ -42,7 +42,7 @@ const PolicyAddendumCard: React.FC<PolicyAddendumCardProps> = ({
     }
   };
   
-  const getWorkflowStatusVariant = (status: string): "default" | "secondary" | "destructive" | "success" | "outline" => {
+  const getWorkflowStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status?.toLowerCase()) {
       case 'draft':
         return "outline";
@@ -51,7 +51,7 @@ const PolicyAddendumCard: React.FC<PolicyAddendumCardProps> = ({
       case 'ready':
         return "default";
       case 'complete':
-        return "success";
+        return "default"; // Changed from "success" to "default"
       default:
         return "outline";
     }
