@@ -1,12 +1,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
+// Modified to be compatible with Json type
 export interface StatusHistoryEntry {
   from: string;
   to: string;
   timestamp: string;
   note?: string;
+  [key: string]: Json | undefined; // Add index signature for compatibility with Json type
 }
 
 export const useClaimDetail = (claimId: string | undefined) => {

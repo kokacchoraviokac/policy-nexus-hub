@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, AlertTriangle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { StatusHistoryEntry } from "@/hooks/claims/useClaimDetail";
+import { Json } from "@/integrations/supabase/types";
 
 interface UpdateClaimStatusDialogProps {
   open: boolean;
@@ -101,9 +103,13 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
       
       if (fetchError) throw fetchError;
       
-      const statusHistory = Array.isArray(existingClaim.status_history) 
-        ? [...existingClaim.status_history, statusChange]
-        : [statusChange];
+      // Ensure we have an array of history entries
+      let statusHistory: Json;
+      if (Array.isArray(existingClaim.status_history)) {
+        statusHistory = [...existingClaim.status_history, statusChange] as Json;
+      } else {
+        statusHistory = [statusChange] as Json;
+      }
       
       // Update claim with new status and history
       const { data, error } = await supabase
