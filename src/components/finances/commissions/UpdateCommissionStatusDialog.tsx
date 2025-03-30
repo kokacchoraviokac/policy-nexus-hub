@@ -81,11 +81,12 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
     path: ["paidAmount"]
   });
 
-  // Initialize form with default values
+  // Initialize form with default values - Fix the status default value to ensure it's valid
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      status: commission.status,
+      // Ensure the default status is one of the allowed values in the schema
+      status: (commission.status === 'calculating' ? 'due' : commission.status) as 'due' | 'partially_paid' | 'paid',
       paymentDate: commission.payment_date || '',
       paidAmount: commission.paid_amount || undefined
     },
