@@ -3,7 +3,7 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, CreditCard, CalendarRange, CircleDollarSign, ClipboardList } from "lucide-react";
-import PolicyDetailsTab from "./PolicyDetailsTab";
+import PolicyDetailSummary from "./PolicyDetailSummary";
 import PolicyDocumentsTab from "./PolicyDocumentsTab";
 import PolicyClaimsTab from "./PolicyClaimsTab";
 import PolicyFinancialsTab from "./PolicyFinancialsTab";
@@ -43,7 +43,7 @@ const PolicyTabs: React.FC<PolicyTabsProps> = ({ policy }) => {
       </TabsList>
       
       <TabsContent value="details">
-        <PolicyDetailsTab policy={policy} />
+        <PolicyDetailSummary policy={policy} />
       </TabsContent>
       
       <TabsContent value="documents">
