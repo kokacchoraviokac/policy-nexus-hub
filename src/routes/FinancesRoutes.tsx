@@ -24,7 +24,7 @@ export const FinancesRoutes = [
     key="finances-commissions"
     path="/finances/commissions" 
     element={
-      <ProtectedRoute requiredPrivilege="finances.commissions:view">
+      <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
           <Commissions />
         </AppLayout>
@@ -37,7 +37,7 @@ export const FinancesRoutes = [
     key="finances-invoicing"
     path="/finances/invoicing" 
     element={
-      <ProtectedRoute requiredPrivilege="finances.invoicing:view">
+      <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
           <FinancesModule title="invoicing" />
         </AppLayout>
@@ -50,7 +50,7 @@ export const FinancesRoutes = [
     key="finances-statements"
     path="/finances/statements" 
     element={
-      <ProtectedRoute requiredPrivilege="finances.statements:view">
+      <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
           <BankStatements />
         </AppLayout>
@@ -63,7 +63,7 @@ export const FinancesRoutes = [
     key="finances-statement-detail"
     path="/finances/statements/:statementId" 
     element={
-      <ProtectedRoute requiredPrivilege="finances.statements:view">
+      <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
           <BankStatementDetail />
         </AppLayout>
@@ -76,7 +76,7 @@ export const FinancesRoutes = [
     key="finances-unlinked-payments"
     path="/finances/unlinked-payments" 
     element={
-      <ProtectedRoute requiredPrivilege="finances.payments:view">
+      <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
           <UnlinkedPayments />
         </AppLayout>

@@ -9,6 +9,9 @@ const Unauthorized = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
+  // Add console log to help debug unauthorized redirects
+  console.log("Unauthorized component rendered - access denied");
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="text-center max-w-md mb-8">

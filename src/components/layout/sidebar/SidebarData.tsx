@@ -78,25 +78,25 @@ export const sidebarItems = [
       {
         label: "commissions",
         path: "/finances/commissions",
-        requiredPrivilege: "finances.commissions:view",
+        requiredPrivilege: "finances:view",
         icon: CircleDollarSign
       },
       {
         label: "invoicing",
         path: "/finances/invoicing",
-        requiredPrivilege: "finances.invoicing:view",
+        requiredPrivilege: "finances:view",
         icon: FileText
       },
       {
         label: "statementProcessing",
         path: "/finances/statements",
-        requiredPrivilege: "finances.statements:view",
+        requiredPrivilege: "finances:view",
         icon: FileArchive
       },
       {
         label: "unlinkedPayments",
         path: "/finances/unlinked-payments",
-        requiredPrivilege: "finances.payments:view",
+        requiredPrivilege: "finances:view",
         icon: CreditCard
       }
     ]
