@@ -51,11 +51,11 @@ export const useInvoices = () => {
     queryFn: async () => {
       if (!companyId) return { data: [], count: 0 };
       
-      // Start building the query
+      // Start building the query - use type assertion to prevent excessive type inference
       let query = supabase
         .from('invoices')
         .select('*', { count: 'exact' })
-        .eq('company_id', companyId);
+        .eq('company_id', companyId) as any;
       
       // Apply filters
       if (filters.search) {
@@ -86,8 +86,7 @@ export const useInvoices = () => {
       const from = pagination.pageIndex * pagination.pageSize;
       const to = from + pagination.pageSize - 1;
       
-      // Add range and ordering
-      // Store the query in a separate variable to break the type recursion
+      // Add range and ordering - using any to break type recursion
       const paginatedQuery = query.order('created_at', { ascending: false }).range(from, to);
       
       // Execute the query
@@ -107,11 +106,11 @@ export const useInvoices = () => {
   const exportAllInvoices = async () => {
     if (!companyId) return [];
     
-    // Start building the query
+    // Start building the query with type assertion
     let query = supabase
       .from('invoices')
       .select('*')
-      .eq('company_id', companyId);
+      .eq('company_id', companyId) as any;
     
     // Apply filters (same as above but without pagination)
     if (filters.search) {
@@ -138,7 +137,7 @@ export const useInvoices = () => {
       query = query.eq('invoice_category', filters.invoiceCategory);
     }
     
-    // Order by created_at descending - break the type recursion
+    // Order by created_at descending - using any to break type recursion
     const exportQuery = query.order('created_at', { ascending: false });
     
     // Execute the query
