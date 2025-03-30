@@ -25,7 +25,8 @@ export const useCommissionsData = (
     filters: CommissionFilterOptions 
   }) => {
     try {
-      let query = supabase
+      // Cast the query builder to 'any' to prevent deep type instantiation
+      let query: any = supabase
         .from('commissions')
         .select(`
           *,
@@ -70,7 +71,7 @@ export const useCommissionsData = (
         query = query.eq('policies.insurer_id', filters.insurerId);
       }
       
-      // Apply agent filter if provided - removed the join with agents table to fix the infinite type issue
+      // Apply agent filter if provided
       if (filters.agentId) {
         query = query.eq('agent_id', filters.agentId);
       }
@@ -86,7 +87,7 @@ export const useCommissionsData = (
       if (error) throw error;
 
       // Transform data to include policy details
-      const transformedData = data.map((commission) => {
+      const transformedData = data.map((commission: any) => {
         // Ensure that the status is one of the valid values
         let validStatus: CommissionType["status"] = "due";
         
