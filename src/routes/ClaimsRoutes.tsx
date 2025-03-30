@@ -45,5 +45,18 @@ export const ClaimsRoutes = [
         </AppLayout>
       </ProtectedRoute>
     }
+  />,
+  
+  // Claim edit page
+  <Route 
+    key="claim-edit"
+    path="/claims/:claimId/edit" 
+    element={
+      <ProtectedRoute requiredPrivilege="claims:edit">
+        <AppLayout>
+          <ClaimDetailPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
   />
 ];

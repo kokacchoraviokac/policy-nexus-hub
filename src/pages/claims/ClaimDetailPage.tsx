@@ -181,7 +181,7 @@ const ClaimDetailPage = () => {
                           {claim.approved_amount !== null && (
                             <p><span className="font-medium">{t("approvedAmount")}:</span> {formatCurrency(claim.approved_amount)}</p>
                           )}
-                          {claim.deductible && (
+                          {claim.deductible !== null && claim.deductible !== undefined && (
                             <p><span className="font-medium">{t("deductible")}:</span> {formatCurrency(claim.deductible)}</p>
                           )}
                         </div>

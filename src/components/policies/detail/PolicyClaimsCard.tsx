@@ -7,22 +7,49 @@ import { AlertCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PolicyClaimsCardProps {
   policyId: string;
-  claimsCount: number;
-  activeClaimsCount?: number;
-  totalClaimedAmount?: number;
 }
 
 const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
   policyId,
-  claimsCount,
-  activeClaimsCount = 0,
-  totalClaimedAmount = 0,
 }) => {
   const { t, formatCurrency } = useLanguage();
   const navigate = useNavigate();
+
+  // Fetch claims stats
+  const { data: claimsStats } = useQuery({
+    queryKey: ['policy-claims-stats', policyId],
+    queryFn: async () => {
+      if (!policyId) return { activeClaimsCount: 0, totalClaimedAmount: 0, claimsCount: 0 };
+      
+      const { data: claims, error } = await supabase
+        .from('claims')
+        .select('status, claimed_amount')
+        .eq('policy_id', policyId);
+      
+      if (error) throw error;
+      
+      const activeStatuses = ['in processing', 'reported', 'appealed'];
+      const activeClaimsCount = claims.filter(claim => 
+        activeStatuses.includes(claim.status.toLowerCase())
+      ).length;
+      
+      const totalClaimedAmount = claims.reduce((sum, claim) => 
+        sum + (claim.claimed_amount || 0), 0
+      );
+      
+      return {
+        activeClaimsCount,
+        totalClaimedAmount,
+        claimsCount: claims.length
+      };
+    },
+    enabled: !!policyId
+  });
 
   const handleViewClaims = () => {
     // Navigate to claims tab
@@ -38,8 +65,8 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
   };
 
   // Calculate the percentage of active claims
-  const activeClaimsPercentage = claimsCount > 0 
-    ? Math.round((activeClaimsCount / claimsCount) * 100)
+  const activeClaimsPercentage = claimsStats?.claimsCount > 0 
+    ? Math.round((claimsStats.activeClaimsCount / claimsStats.claimsCount) * 100)
     : 0;
 
   return (
@@ -53,25 +80,25 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{t("totalClaims")}</span>
-            <Badge variant={claimsCount > 0 ? "secondary" : "outline"}>
-              {claimsCount}
+            <Badge variant={claimsStats?.claimsCount > 0 ? "secondary" : "outline"}>
+              {claimsStats?.claimsCount || 0}
             </Badge>
           </div>
 
-          {claimsCount > 0 && (
+          {claimsStats?.claimsCount > 0 && (
             <>
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t("activeClaims")}</span>
-                  <span>{activeClaimsCount} / {claimsCount}</span>
+                  <span>{claimsStats.activeClaimsCount} / {claimsStats.claimsCount}</span>
                 </div>
                 <Progress value={activeClaimsPercentage} className="h-2" />
               </div>
 
-              {totalClaimedAmount > 0 && (
+              {claimsStats.totalClaimedAmount > 0 && (
                 <div className="flex items-center justify-between text-sm pt-1">
                   <span className="text-muted-foreground">{t("totalClaimedAmount")}</span>
-                  <span className="font-medium">{formatCurrency(totalClaimedAmount)}</span>
+                  <span className="font-medium">{formatCurrency(claimsStats.totalClaimedAmount)}</span>
                 </div>
               )}
             </>
@@ -83,7 +110,7 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
               size="sm"
               className="w-full"
               onClick={handleViewClaims}
-              disabled={claimsCount === 0}
+              disabled={!claimsStats?.claimsCount || claimsStats.claimsCount === 0}
             >
               <FileText className="mr-2 h-4 w-4" />
               {t("viewClaims")}

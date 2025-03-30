@@ -118,6 +118,33 @@ const NewClaimPage = () => {
     enabled: !!form.watch('policy_id')
   });
 
+  // Fetch current user for reported_by field
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      return user;
+    }
+  });
+
+  // Fetch company ID
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', currentUser.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!currentUser?.id
+  });
+
   // Fetch policies for search dialog
   const { data: policies, isLoading: isPoliciesLoading } = useQuery({
     queryKey: ['policies-search', policySearchTerm],
@@ -143,9 +170,20 @@ const NewClaimPage = () => {
   // Create claim mutation
   const { mutate: createClaim, isPending: isSubmitting } = useMutation({
     mutationFn: async (values: ClaimFormValues) => {
+      if (!currentUser?.id || !userProfile?.company_id) {
+        throw new Error("User information is missing");
+      }
+
+      // Prepare claim data with required fields
+      const claimData = {
+        ...values,
+        reported_by: currentUser.id,
+        company_id: userProfile.company_id
+      };
+      
       const { data, error } = await supabase
         .from('claims')
-        .insert([values])
+        .insert([claimData])
         .select('id')
         .single();
         
@@ -390,7 +428,7 @@ const NewClaimPage = () => {
                 <Button type="button" variant="outline" onClick={handleCancel}>
                   {t("cancel")}
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting || !currentUser || !userProfile}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

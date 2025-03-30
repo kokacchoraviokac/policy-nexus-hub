@@ -97,8 +97,7 @@ const PolicyDetailPage = () => {
           <PolicyDetailSummary policy={policy} />
           
           <PolicyDetailTabs 
-            policy={policy} 
-            claimsStats={claimsStats} 
+            policy={policy}
           />
         </>
       )}
