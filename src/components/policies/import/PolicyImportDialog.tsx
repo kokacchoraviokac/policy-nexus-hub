@@ -188,15 +188,17 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
           <PolicyImportFileUpload 
             file={file} 
             onFileChange={handleFileChange} 
+            onFileUpload={handleFileChange}
             onBack={handleGoBackToInstructions}
             onImport={handleReviewPolicies}
-            isLoading={isUploading}
+            isUploading={isUploading}
           />
         )}
         
         {uploadStep === "review" && (
           <PolicyImportReview
             policies={parsedPolicies}
+            invalidPolicies={[]}
             onBack={handleBackToFileUpload}
             onImport={handleImport}
           />

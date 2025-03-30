@@ -49,10 +49,20 @@ export const usePolicyImport = () => {
     setIsImporting(true);
     
     try {
+      // Prepare policies with required fields for insertion
+      const policiesToInsert = importedPolicies.map(policy => ({
+        ...policy,
+        company_id: 'demo-company-id', // Use a default or get from context
+        status: 'active',
+        workflow_status: 'draft',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+      
       // Insert policies into database
       const { data, error } = await supabase
         .from("policies")
-        .insert(importedPolicies)
+        .insert(policiesToInsert)
         .select();
       
       if (error) {

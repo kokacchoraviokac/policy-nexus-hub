@@ -3,8 +3,13 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const PolicyImportInstructions: React.FC = () => {
+interface PolicyImportInstructionsProps {
+  onContinue?: () => void;
+}
+
+const PolicyImportInstructions: React.FC<PolicyImportInstructionsProps> = ({ onContinue }) => {
   const { t } = useLanguage();
 
   return (
@@ -40,13 +45,19 @@ const PolicyImportInstructions: React.FC = () => {
         </ul>
       </div>
 
-      <Alert variant="warning">
+      <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>{t("importWarning")}</AlertTitle>
         <AlertDescription>
           {t("policyImportWarningDescription")}
         </AlertDescription>
       </Alert>
+
+      {onContinue && (
+        <div className="flex justify-end">
+          <Button onClick={onContinue}>{t("continue")}</Button>
+        </div>
+      )}
     </div>
   );
 };

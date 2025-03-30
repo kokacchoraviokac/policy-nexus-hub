@@ -28,16 +28,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, formatDate } from "@/utils/format";
-import { AlertTriangle, CheckCircle, MoreHorizontal } from "lucide-react";
+import { AlertTriangle, CheckCircle, MoreHorizontal, ArrowLeft } from "lucide-react";
 
 interface PolicyImportReviewProps {
   policies: Partial<Policy>[];
   invalidPolicies: { policy: Partial<Policy>; errors: string[] }[];
+  onBack?: () => void;
+  onImport?: () => Promise<void>;
 }
 
 const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
   policies,
   invalidPolicies,
+  onBack,
+  onImport,
 }) => {
   const { t } = useLanguage();
   const [page, setPage] = useState(1);
@@ -60,6 +64,13 @@ const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
 
   return (
     <div className="space-y-4">
+      {onBack && (
+        <Button variant="outline" size="sm" onClick={onBack} className="mb-2">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          {t("back")}
+        </Button>
+      )}
+      
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">
           {reviewTab === "valid" 
@@ -121,7 +132,7 @@ const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
                       ? formatCurrency(policy.premium, policy.currency) 
                       : policy.premium || "-"}
                   </TableCell>
-                  <TableCell>{policy.insurance_type || "-"}</TableCell>
+                  <TableCell>{policy.product_name || "-"}</TableCell>
                   {reviewTab === "invalid" && (
                     <TableCell>
                       {invalidPolicies.find(
@@ -186,6 +197,14 @@ const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
             </PaginationItem>
           </PaginationContent>
         </Pagination>
+      )}
+
+      {onImport && (
+        <div className="flex justify-end mt-4">
+          <Button onClick={onImport}>
+            {t("importPolicies")}
+          </Button>
+        </div>
       )}
     </div>
   );

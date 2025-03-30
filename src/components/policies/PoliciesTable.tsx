@@ -155,7 +155,7 @@ const PoliciesTable = ({
     {
       header: t("expiryDate"),
       accessorKey: "expiry_date",
-      cell: (row) => formatDate(row.expiry_date),
+      cell: (row) => row.expiry_date ? formatDate(new Date(row.expiry_date)) : "-",
       sortable: true,
     },
     {

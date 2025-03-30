@@ -4,24 +4,36 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generatePolicyCSVTemplate } from "@/utils/policies/importUtils";
-import { Download, Upload, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Download, Upload, FileSpreadsheet, Loader2, ArrowLeft } from "lucide-react";
 
 interface PolicyImportFileUploadProps {
   onFileUpload: (file: File) => void;
   isUploading: boolean;
+  file?: File | null;
+  onFileChange?: (file: File | null) => void;
+  onBack?: () => void;
+  onImport?: () => Promise<void>;
+  isLoading?: boolean;
 }
 
 const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
   onFileUpload,
   isUploading,
+  file,
+  onFileChange,
+  onBack,
+  onImport,
+  isLoading,
 }) => {
   const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(file || null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
+      const newFile = e.target.files[0];
+      setSelectedFile(newFile);
+      if (onFileChange) onFileChange(newFile);
     }
   };
 
@@ -34,6 +46,7 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
   const handleSubmit = () => {
     if (selectedFile) {
       onFileUpload(selectedFile);
+      if (onImport) onImport();
     }
   };
 
@@ -52,6 +65,13 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
 
   return (
     <div className="space-y-6">
+      {onBack && (
+        <Button variant="outline" size="sm" onClick={onBack} className="mb-2">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          {t("back")}
+        </Button>
+      )}
+      
       <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center">
         <Input
           type="file"
@@ -66,7 +86,7 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
           type="button"
           variant="outline"
           onClick={handleUploadClick}
-          disabled={isUploading}
+          disabled={isUploading || isLoading}
         >
           <Upload className="h-4 w-4 mr-2" />
           {t("selectCSVFile")}
@@ -83,11 +103,11 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
             </span>
           </div>
           <Button
-            onClick={handleSubmit}
-            disabled={isUploading}
+            onClick={onImport ? onImport : handleSubmit}
+            disabled={isUploading || isLoading}
             size="sm"
           >
-            {isUploading ? (
+            {(isUploading || isLoading) ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 {t("processing")}

@@ -1,4 +1,3 @@
-
 import { Policy } from "@/types/policies";
 import Papa from "papaparse";
 
@@ -17,7 +16,7 @@ export const parsePolicyCSV = (csvData: string): Partial<Policy>[] => {
   }
 
   return result.data.map((row: any) => {
-    // Convert CSV fields to Policy object
+    // Convert CSV fields to Policy object with string dates
     return {
       policy_number: row.policy_number || row.PolicyNumber,
       insurer_name: row.insurer_name || row.InsurerName,
@@ -26,15 +25,15 @@ export const parsePolicyCSV = (csvData: string): Partial<Policy>[] => {
       policyholder_id: row.policyholder_id,
       insured_name: row.insured_name || row.InsuredName,
       insured_id: row.insured_id,
-      start_date: row.start_date ? new Date(row.start_date) : undefined,
-      expiry_date: row.expiry_date ? new Date(row.expiry_date) : undefined,
+      // Keep dates as strings to match the Policy type
+      start_date: row.start_date || undefined,
+      expiry_date: row.expiry_date || undefined,
       premium: row.premium ? parseFloat(row.premium) : undefined,
       currency: row.currency,
-      insurance_type: row.insurance_type || row.InsuranceType,
-      product: row.product,
+      product_name: row.product_name || row.product,
       notes: row.notes,
       workflow_status: 'draft',
-      import_date: new Date()
+      status: 'active'
     };
   });
 };
@@ -80,8 +79,7 @@ export const generatePolicyCSVTemplate = (): string => {
     "expiry_date",
     "premium",
     "currency",
-    "insurance_type",
-    "product",
+    "product_name",
     "notes"
   ];
 
@@ -94,7 +92,6 @@ export const generatePolicyCSVTemplate = (): string => {
     "2024-01-01",
     "1000",
     "EUR",
-    "Property",
     "Business Insurance",
     "Sample policy"
   ];
