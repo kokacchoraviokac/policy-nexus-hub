@@ -1,46 +1,59 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useBankStatements } from "@/hooks/useBankStatements";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Plus } from "lucide-react";
-
-// For now, we'll use a mock list of bank statements
-const mockStatements = [
-  {
-    id: "1",
-    bank_name: "UniCredit",
-    account_number: "170-123456789-01",
-    statement_date: "2023-12-15",
-    status: "processed"
-  },
-  {
-    id: "2",
-    bank_name: "Raiffeisen",
-    account_number: "265-987654321-10",
-    statement_date: "2023-12-10",
-    status: "confirmed"
-  },
-  {
-    id: "3",
-    bank_name: "Komercijalna",
-    account_number: "205-111222333-20",
-    statement_date: "2023-12-01",
-    status: "in_progress"
-  }
-];
+import { FileText, Plus, Download, ArrowUpDown, Filter } from "lucide-react";
+import BankStatementsFilters from "@/components/finances/statements/BankStatementsFilters";
+import BankStatementsList from "@/components/finances/statements/BankStatementsList";
+import BankStatementUploadDialog from "@/components/finances/statements/BankStatementUploadDialog";
 
 const BankStatements = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   
+  const [showFilters, setShowFilters] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [bankFilter, setBankFilter] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<Date | null>(null);
+  const [dateTo, setDateTo] = useState<Date | null>(null);
   
-  // Function to handle statement selection
+  const { 
+    statements, 
+    totalCount, 
+    isLoading, 
+    refetch, 
+    processStatement, 
+    isProcessing,
+    confirmStatement,
+    isConfirming
+  } = useBankStatements({
+    searchTerm,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    bankName: bankFilter || undefined,
+    dateFrom,
+    dateTo
+  });
+  
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setBankFilter("");
+    setDateFrom(null);
+    setDateTo(null);
+  };
+  
   const handleStatementClick = (statementId: string) => {
     navigate(`/finances/statements/${statementId}`);
+  };
+  
+  const handleUploadComplete = () => {
+    refetch();
   };
   
   return (
@@ -48,51 +61,67 @@ const BankStatements = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">{t("bankStatements")}</h1>
         <div className="flex space-x-2">
-          <Button onClick={() => navigate("/finances")} variant="outline">
+          <Button 
+            onClick={() => navigate("/finances")} 
+            variant="outline"
+          >
             {t("backToFinances")}
           </Button>
-          <Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            {t("filters")}
+          </Button>
+          <Button onClick={() => setShowUploadDialog(true)}>
             <Plus className="mr-2 h-4 w-4" />
             {t("uploadStatement")}
           </Button>
         </div>
       </div>
       
+      {showFilters && (
+        <BankStatementsFilters 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          bankFilter={bankFilter}
+          onBankChange={setBankFilter}
+          dateFrom={dateFrom}
+          onDateFromChange={setDateFrom}
+          dateTo={dateTo}
+          onDateToChange={setDateTo}
+          onClearFilters={handleClearFilters}
+        />
+      )}
+      
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{t("statementsList")}</CardTitle>
+          <div className="text-sm text-muted-foreground">
+            {totalCount} {t("statements")}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {mockStatements.map((statement) => (
-              <div 
-                key={statement.id}
-                className="flex items-center justify-between p-4 border rounded-md cursor-pointer hover:bg-muted/50"
-                onClick={() => handleStatementClick(statement.id)}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="bg-primary/10 p-3 rounded-full">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{statement.bank_name}</h3>
-                    <p className="text-sm text-muted-foreground">{statement.account_number}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <div className="text-right mr-4">
-                    <p className="text-sm font-medium">{statement.statement_date}</p>
-                    <p className="text-xs text-muted-foreground">{t(statement.status)}</p>
-                  </div>
-                  <Button variant="ghost" size="sm">
-                    {t("view")}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <BankStatementsList 
+            statements={statements}
+            isLoading={isLoading}
+            onStatementClick={handleStatementClick}
+            onProcess={processStatement}
+            onConfirm={confirmStatement}
+            isProcessing={isProcessing}
+            isConfirming={isConfirming}
+          />
         </CardContent>
       </Card>
+      
+      <BankStatementUploadDialog 
+        open={showUploadDialog}
+        onOpenChange={setShowUploadDialog}
+        onUploadComplete={handleUploadComplete}
+      />
     </div>
   );
 };

@@ -1,182 +1,138 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Search, RefreshCw, Calendar as CalendarIcon, X } from "lucide-react";
-import { format } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, Search, X } from "lucide-react";
 
 interface BankStatementsFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  bankFilter: string;
-  onBankFilterChange: (value: string) => void;
   statusFilter: string;
-  onStatusFilterChange: (value: string) => void;
-  dateRange: {
-    from: Date | null;
-    to: Date | null;
-  };
-  onDateRangeChange: (range: { from: Date | null; to: Date | null }) => void;
-  onRefresh: () => void;
+  onStatusChange: (value: string) => void;
+  bankFilter: string;
+  onBankChange: (value: string) => void;
+  dateFrom: Date | null;
+  onDateFromChange: (date: Date | null) => void;
+  dateTo: Date | null;
+  onDateToChange: (date: Date | null) => void;
+  onClearFilters: () => void;
+  isLoading?: boolean;
 }
 
 const BankStatementsFilters: React.FC<BankStatementsFiltersProps> = ({
   searchTerm,
   onSearchChange,
-  bankFilter,
-  onBankFilterChange,
   statusFilter,
-  onStatusFilterChange,
-  dateRange,
-  onDateRangeChange,
-  onRefresh
+  onStatusChange,
+  bankFilter,
+  onBankChange,
+  dateFrom,
+  onDateFromChange,
+  dateTo,
+  onDateToChange,
+  onClearFilters,
+  isLoading = false
 }) => {
   const { t } = useLanguage();
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
-
-  const banks = [
-    { value: "all", label: t("allBanks") },
-    { value: "unicredit", label: "UniCredit" },
-    { value: "kombank", label: "Komercijalna Banka" },
-    { value: "intesa", label: "Banca Intesa" }
+  
+  // Mock bank options for now - in a real app, fetch from the database
+  const bankOptions = [
+    { label: t("allBanks"), value: "" },
+    { label: "UniCredit", value: "UniCredit" },
+    { label: "Raiffeisen", value: "Raiffeisen" },
+    { label: "Komercijalna", value: "Komercijalna" }
   ];
-
-  const statuses = [
-    { value: "all", label: t("allStatuses") },
-    { value: "in_progress", label: t("inProgress") },
-    { value: "processed", label: t("processed") },
-    { value: "confirmed", label: t("confirmed") }
-  ];
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSearchChange(e.target.value);
-  };
-
-  const handleClearDateRange = () => {
-    onDateRangeChange({ from: null, to: null });
-    setDatePickerOpen(false);
-  };
-
+  
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder={t("searchStatements")}
-            className="pl-8"
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-        
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onRefresh}
-          title={t("refresh")}
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      <div className="flex flex-col md:flex-row gap-4">
-        <Select
-          value={bankFilter}
-          onValueChange={onBankFilterChange}
-        >
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder={t("filterByBank")} />
-          </SelectTrigger>
-          <SelectContent>
-            {banks.map(bank => (
-              <SelectItem key={bank.value} value={bank.value}>
-                {bank.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select
-          value={statusFilter}
-          onValueChange={onStatusFilterChange}
-        >
-          <SelectTrigger className="w-full md:w-[200px]">
-            <SelectValue placeholder={t("filterByStatus")} />
-          </SelectTrigger>
-          <SelectContent>
-            {statuses.map(status => (
-              <SelectItem key={status.value} value={status.value}>
-                {status.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full md:w-auto justify-start text-left font-normal"
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "LLL dd, y")} -{" "}
-                    {format(dateRange.to, "LLL dd, y")}
-                  </>
-                ) : (
-                  format(dateRange.from, "LLL dd, y")
-                )
-              ) : (
-                t("selectDateRange")
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="range"
-              selected={{
-                from: dateRange.from || undefined,
-                to: dateRange.to || undefined,
-              }}
-              onSelect={(range) => {
-                onDateRangeChange({
-                  from: range?.from || null,
-                  to: range?.to || null,
-                });
-              }}
-              initialFocus
-            />
-            <div className="flex items-center justify-between p-3 border-t">
-              <Button variant="ghost" size="sm" onClick={handleClearDateRange}>
-                <X className="w-4 h-4 mr-2" />
-                {t("clearDates")}
-              </Button>
-              <Button size="sm" onClick={() => setDatePickerOpen(false)}>
-                {t("apply")}
-              </Button>
+    <Card>
+      <CardContent className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("search")}</label>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder={t("searchPlaceholder")}
+                value={searchTerm}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="pl-8"
+              />
             </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-    </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("status")}</label>
+            <Select value={statusFilter} onValueChange={onStatusChange}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("selectStatus")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("all")}</SelectItem>
+                <SelectItem value="in_progress">{t("in_progress")}</SelectItem>
+                <SelectItem value="processed">{t("processed")}</SelectItem>
+                <SelectItem value="confirmed">{t("confirmed")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("bank")}</label>
+            <Select value={bankFilter} onValueChange={onBankChange}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("selectBank")} />
+              </SelectTrigger>
+              <SelectContent>
+                {bankOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("dateFrom")}</label>
+            <DatePicker 
+              date={dateFrom} 
+              setDate={onDateFromChange}
+              placeholder={t("fromDate")}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t("dateTo")}</label>
+            <DatePicker 
+              date={dateTo} 
+              setDate={onDateToChange}
+              placeholder={t("toDate")}
+            />
+          </div>
+          
+          <div className="flex items-end col-span-1 md:col-span-5 justify-end space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={onClearFilters}
+              size="sm"
+            >
+              <X className="mr-2 h-4 w-4" />
+              {t("clearFilters")}
+            </Button>
+            
+            {isLoading && (
+              <Button disabled size="sm">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("loading")}
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

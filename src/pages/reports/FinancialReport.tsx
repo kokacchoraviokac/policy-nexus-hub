@@ -1,70 +1,89 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ChevronLeft, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import FinancialReportFilters from "@/components/reports/financial/FinancialReportFilters";
-import FinancialReportSummary from "@/components/reports/financial/FinancialReportSummary";
 import FinancialReportTable from "@/components/reports/financial/FinancialReportTable";
-import { useFinancialReport } from "@/hooks/reports/useFinancialReport";
-import { FinancialReportFilters as FinancialFiltersType } from "@/utils/reports/financialReportUtils";
+import FinancialReportSummary from "@/components/reports/financial/FinancialReportSummary";
+import { FinancialTransaction } from "@/utils/reports/financialReportUtils";
+import { useToast } from "@/hooks/use-toast";
 
 const FinancialReport = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [filters, setFilters] = useState<FinancialFiltersType>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    new Date(new Date().setDate(1)), // First day of current month
+    new Date()
+  ]);
+  const [transactionType, setTransactionType] = useState<string | null>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   
-  const {
-    data,
-    isLoading,
-    refetch,
-    isExporting,
-    setIsExporting,
-    exportReport
-  } = useFinancialReport(filters);
-
-  const handleFiltersChange = (newFilters: FinancialFiltersType) => {
-    setFilters(newFilters);
-  };
-  
-  const handleRefresh = () => {
-    refetch();
-  };
-  
-  const handleExport = async () => {
-    if (!data?.transactions || data.transactions.length === 0) {
-      toast({
-        title: t("noDataToExport"),
-        description: t("pleaseAdjustYourFiltersAndTryAgain"),
-        variant: "destructive"
-      });
-      return;
+  // Mock data for demonstration
+  const mockTransactions: FinancialTransaction[] = [
+    {
+      id: "1",
+      date: "2023-12-15T10:30:00Z",
+      description: "Commission Payment - Policy #12345",
+      type: "income",
+      category: "commission",
+      reference: "INV-2023-001",
+      status: "completed",
+      amount: 1250.00,
+      currency: "EUR"
+    },
+    {
+      id: "2",
+      date: "2023-12-10T11:15:00Z",
+      description: "Premium Collection - Client ABC",
+      type: "income",
+      category: "premium",
+      reference: "PMT-2023-123",
+      status: "completed",
+      amount: 3500.00,
+      currency: "EUR"
+    },
+    {
+      id: "3",
+      date: "2023-12-05T09:45:00Z",
+      description: "Office Rent Payment",
+      type: "expense",
+      category: "operational",
+      reference: "EXP-2023-42",
+      status: "completed",
+      amount: 1800.00,
+      currency: "EUR"
+    },
+    {
+      id: "4",
+      date: "2023-12-01T14:00:00Z",
+      description: "Agent Commission - John Doe",
+      type: "expense",
+      category: "commission",
+      reference: "PAY-2023-89",
+      status: "pending",
+      amount: 950.00,
+      currency: "EUR"
     }
+  ];
+  
+  const handleExport = () => {
+    setIsLoading(true);
     
-    try {
-      setIsExporting(true);
-      await exportReport();
-      
+    // Simulate export process
+    setTimeout(() => {
+      setIsLoading(false);
       toast({
-        title: t("exportSuccessful"),
-        description: t("reportHasBeenDownloaded")
+        title: t("exportComplete"),
+        description: t("financialReportExported"),
       });
-    } catch (error) {
-      console.error("Export error:", error);
-      toast({
-        title: t("exportFailed"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive"
-      });
-    } finally {
-      setIsExporting(false);
-    }
+    }, 1500);
   };
   
   const handleBackToReports = () => {
@@ -90,43 +109,44 @@ const FinancialReport = () => {
         </p>
       </div>
       
+      <div className="flex justify-between items-center">
+        <FinancialReportFilters 
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          transactionType={transactionType}
+          onTransactionTypeChange={setTransactionType}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+        />
+        
+        <Button 
+          onClick={handleExport} 
+          disabled={isLoading}
+          className="whitespace-nowrap"
+        >
+          <FileDown className="mr-2 h-4 w-4" />
+          {isLoading ? t("exporting") : t("exportCSV")}
+        </Button>
+      </div>
+      
+      <FinancialReportSummary data={mockTransactions} isLoading={false} />
+      
       <Card>
         <CardHeader>
-          <CardTitle>{t("filters")}</CardTitle>
+          <CardTitle>{t("transactionHistory")}</CardTitle>
           <CardDescription>
-            {t("adjustFiltersToRefineResults")}
+            {t("viewAllFinancialTransactions")}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <FinancialReportFilters
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            onExport={handleExport}
-            onRefresh={handleRefresh}
-            isExporting={isExporting}
+          <FinancialReportTable 
+            data={mockTransactions} 
+            isLoading={isLoading} 
           />
         </CardContent>
       </Card>
-
-      {data && (
-        <FinancialReportSummary data={data} />
-      )}
-      
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{t("transactions")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {data?.totalCount ? t("showingResults", { count: data.totalCount }) : t("noResults")}
-          </p>
-        </div>
-        
-        <Separator />
-        
-        <FinancialReportTable
-          data={data?.transactions || []}
-          isLoading={isLoading}
-        />
-      </div>
     </div>
   );
 };

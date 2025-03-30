@@ -31,7 +31,7 @@ const MatchTransactionDialog: React.FC<MatchTransactionDialogProps> = ({
   const [selectedPolicyId, setSelectedPolicyId] = useState("");
   
   // Query to fetch policies based on search term
-  const { data: policies, isLoading: isPoliciesLoading } = useQuery({
+  const { data: policies, isPending: isPoliciesLoading } = useQuery({
     queryKey: ['policies-search', searchTerm],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return [];
