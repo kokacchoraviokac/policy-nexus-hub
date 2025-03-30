@@ -14,9 +14,10 @@ import {
 interface DatePickerProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
+  className?: string; // Added className as an optional prop
 }
 
-export function DatePicker({ date, setDate }: DatePickerProps) {
+export function DatePicker({ date, setDate, className }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -24,7 +25,8 @@ export function DatePicker({ date, setDate }: DatePickerProps) {
           variant={"outline"}
           className={cn(
             "w-full justify-start text-left font-normal",
-            !date && "text-muted-foreground"
+            !date && "text-muted-foreground",
+            className // Apply the className if provided
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -37,6 +39,7 @@ export function DatePicker({ date, setDate }: DatePickerProps) {
           selected={date}
           onSelect={setDate}
           initialFocus
+          className="pointer-events-auto" // Added to ensure calendar is interactive
         />
       </PopoverContent>
     </Popover>
