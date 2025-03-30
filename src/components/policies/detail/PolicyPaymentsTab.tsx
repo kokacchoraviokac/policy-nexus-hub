@@ -6,12 +6,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Plus, Filter, Download, RefreshCw, Loader2 } from "lucide-react";
+import { 
+  DollarSign, 
+  Plus, 
+  Filter, 
+  Download, 
+  RefreshCw, 
+  Loader2,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Link
+} from "lucide-react";
 import { UnlinkedPaymentType } from "@/types/policies";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PolicyPaymentsTabProps {
   policyId: string;
@@ -65,12 +75,38 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
   const paymentPercentage = premium > 0 ? Math.min(100, (totalPaid / premium) * 100) : 0;
   const remainingAmount = Math.max(0, premium - totalPaid);
   const isFullyPaid = totalPaid >= premium;
+  const isOverpaid = totalPaid > premium;
   const displayedPayments = showAllPayments ? paymentsData : paymentsData?.slice(0, 3);
 
   const handleAddPayment = () => {
     navigate('/finances/unlinked-payments', { 
       state: { fromPolicyId: policyId } 
     });
+  };
+
+  const handleExportPayments = () => {
+    // Create CSV of payments
+    if (!paymentsData || paymentsData.length === 0) return;
+    
+    const csvContent = [
+      ["Payment Date", "Reference", "Payer Name", "Amount", "Currency"].join(","),
+      ...paymentsData.map(payment => [
+        formatDate(payment.payment_date),
+        payment.reference || "",
+        payment.payer_name || "",
+        payment.amount,
+        payment.currency
+      ].join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `policy-payments-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -111,9 +147,22 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
                     {formatCurrency(totalPaid, policyData?.currency)}
                   </p>
                 </div>
-                <Badge variant={isFullyPaid ? "default" : "outline"} className="ml-2">
-                  {isFullyPaid ? t("fullyPaid") : t("partiallyPaid")}
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant={isFullyPaid ? (isOverpaid ? "destructive" : "default") : "outline"} className="ml-2">
+                        {isOverpaid ? t("overpaid") : isFullyPaid ? t("fullyPaid") : t("partiallyPaid")}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isOverpaid 
+                        ? t("policyIsOverpaidBy", { amount: formatCurrency(totalPaid - premium, policyData?.currency) }) 
+                        : isFullyPaid 
+                          ? t("policyIsFullyPaid") 
+                          : t("policyIsPartiallyPaid", { percent: Math.round(paymentPercentage) })}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
             
@@ -125,6 +174,11 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
                     {formatCurrency(remainingAmount, policyData?.currency)}
                   </p>
                 </div>
+                {isOverpaid && (
+                  <div className="bg-red-100 p-2 rounded-full">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -143,11 +197,12 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>{t("paymentHistory")}</CardTitle>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              {t("filter")}
-            </Button>
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={!paymentsData || paymentsData.length === 0}
+              onClick={handleExportPayments}
+            >
               <Download className="h-4 w-4 mr-2" />
               {t("export")}
             </Button>
@@ -168,6 +223,7 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
                       <th className="px-4 py-3 text-left text-sm font-medium">{t("reference")}</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">{t("payerName")}</th>
                       <th className="px-4 py-3 text-right text-sm font-medium">{t("amount")}</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium">{t("linkedAt")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -179,6 +235,9 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
                         <td className="px-4 py-3 text-sm text-right font-medium">
                           {formatCurrency(payment.amount, payment.currency)}
                         </td>
+                        <td className="px-4 py-3 text-sm text-right">
+                          {payment.linked_at ? formatDate(payment.linked_at, "PP p") : "-"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -188,6 +247,7 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
                       <td className="px-4 py-3 text-sm text-right font-semibold">
                         {formatCurrency(totalPaid, policyData?.currency)}
                       </td>
+                      <td></td>
                     </tr>
                   </tfoot>
                 </table>
@@ -199,7 +259,19 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
                   onClick={() => setShowAllPayments(true)} 
                   className="w-full text-muted-foreground"
                 >
+                  <ChevronDown className="h-4 w-4 mr-2" />
                   {t("showAllPayments", { count: paymentsData.length })}
+                </Button>
+              )}
+              
+              {paymentsData.length > 3 && showAllPayments && (
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setShowAllPayments(false)} 
+                  className="w-full text-muted-foreground"
+                >
+                  <ChevronUp className="h-4 w-4 mr-2" />
+                  {t("showLessPayments")}
                 </Button>
               )}
             </div>
@@ -211,6 +283,7 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
                 {t("noPaymentsDescription")}
               </p>
               <Button onClick={handleAddPayment}>
+                <Link className="mr-2 h-4 w-4" />
                 {t("recordFirstPayment")}
               </Button>
             </div>

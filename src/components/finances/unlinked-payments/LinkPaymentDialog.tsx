@@ -1,11 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Link, Loader2, Search } from "lucide-react";
+import { Link, Loader2, Search, X } from "lucide-react";
 import { usePoliciesSearch } from "@/hooks/usePoliciesSearch";
 import { Policy } from "@/types/policies";
 
@@ -49,7 +49,7 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
   };
 
   // Reset selected policy when dialog opens/closes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) {
       setSelectedPolicyId("");
       setSearchTerm("");
@@ -103,6 +103,18 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+              {searchTerm && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 h-7 w-7 p-0"
+                  onClick={() => setSearchTerm("")}
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">{t("clearSearch")}</span>
+                </Button>
+              )}
             </div>
           </div>
           

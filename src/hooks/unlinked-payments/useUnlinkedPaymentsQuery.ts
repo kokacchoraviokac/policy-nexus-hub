@@ -15,7 +15,7 @@ export const useUnlinkedPaymentsQuery = (pagination: PaginationState, filters: F
   }) => {
     let query = supabase
       .from('unlinked_payments')
-      .select('*', { count: 'exact' });
+      .select('*, policies!unlinked_payments_linked_policy_id_fkey(policy_number)', { count: 'exact' });
     
     // Apply status filter
     if (filters.status === 'linked') {

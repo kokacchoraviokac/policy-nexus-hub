@@ -4,13 +4,16 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import Papa from "papaparse";
 import { FilterOptions } from "./useUnlinkedPaymentsFilters";
+import { useState } from "react";
 
 export const useUnlinkedPaymentsExport = (filters: FilterOptions) => {
-  const { t } = useLanguage();
+  const { t, formatDate, formatCurrency } = useLanguage();
   const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
 
   const exportPayments = async (): Promise<void> => {
     try {
+      setIsExporting(true);
       toast({
         title: t("exportStarted"),
         description: t("preparingExportData"),
@@ -18,7 +21,7 @@ export const useUnlinkedPaymentsExport = (filters: FilterOptions) => {
       
       let query = supabase
         .from('unlinked_payments')
-        .select('*, policies(policy_number)');
+        .select('*, policies!unlinked_payments_linked_policy_id_fkey(policy_number)');
       
       // Apply the same filters as in fetchUnlinkedPayments but without pagination
       if (filters.status === 'linked') {
@@ -48,6 +51,7 @@ export const useUnlinkedPaymentsExport = (filters: FilterOptions) => {
           title: t("noDataToExport"),
           description: t("noPaymentsFoundToExport"),
         });
+        setIsExporting(false);
         return;
       }
       
@@ -55,12 +59,12 @@ export const useUnlinkedPaymentsExport = (filters: FilterOptions) => {
       const exportData = data.map(payment => ({
         [t("reference")]: payment.reference || "-",
         [t("payerName")]: payment.payer_name || "-",
-        [t("amount")]: payment.amount,
+        [t("amount")]: formatCurrency(payment.amount, payment.currency),
         [t("currency")]: payment.currency,
-        [t("paymentDate")]: payment.payment_date,
+        [t("paymentDate")]: formatDate(payment.payment_date),
         [t("status")]: payment.linked_policy_id ? t("linked") : t("unlinked"),
         [t("linkedPolicy")]: payment.policies?.policy_number || "-",
-        [t("linkedAt")]: payment.linked_at ? new Date(payment.linked_at).toLocaleString() : "-"
+        [t("linkedAt")]: payment.linked_at ? formatDate(payment.linked_at, "PP p") : "-"
       }));
       
       // Convert to CSV
@@ -87,8 +91,13 @@ export const useUnlinkedPaymentsExport = (filters: FilterOptions) => {
         description: error instanceof Error ? error.message : t("unknownError"),
         variant: "destructive",
       });
+    } finally {
+      setIsExporting(false);
     }
   };
 
-  return { exportPayments };
+  return { 
+    exportPayments,
+    isExporting
+  };
 };

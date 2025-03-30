@@ -3,10 +3,8 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { CalendarIcon, CreditCard, User, FileText } from "lucide-react";
 import { UnlinkedPaymentType } from "@/types/policies";
-import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
-import { DollarSign, Calendar, User, FileText, Link, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 
 interface PaymentDetailsDialogProps {
@@ -20,96 +18,64 @@ const PaymentDetailsDialog: React.FC<PaymentDetailsDialogProps> = ({
   onOpenChange,
   payment
 }) => {
-  const { t, formatCurrency, formatDate } = useLanguage();
-  const navigate = useNavigate();
-
-  // Create a function to format date and time
-  const formatDateTime = (dateString: string) => {
-    if (!dateString) return "-";
-    return format(new Date(dateString), "PPP p"); // This will format the date with time
-  };
-
-  const viewLinkedPolicy = () => {
-    if (payment.linked_policy_id) {
-      onOpenChange(false);
-      navigate(`/policies/${payment.linked_policy_id}`);
-    }
-  };
-
+  const { t, formatCurrency } = useLanguage();
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t("paymentDetails")}</DialogTitle>
         </DialogHeader>
         
-        <div className="py-4 space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">{payment.reference || t("paymentReference")}</h3>
-            <Badge variant={payment.linked_policy_id ? "default" : "outline"}>
-              {payment.linked_policy_id ? t("linked") : t("unlinked")}
-            </Badge>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t("amount")}: </span>
-                <span className="font-medium">{formatCurrency(payment.amount, payment.currency)}</span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t("paymentDate")}: </span>
-                <span className="font-medium">{formatDate(payment.payment_date)}</span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm">
-                <FileText className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t("reference")}: </span>
-                <span className="font-medium">{payment.reference || "-"}</span>
+        <div className="grid gap-4 py-4">
+          <div className="border rounded-md p-4 space-y-4">
+            <div className="flex items-start space-x-3">
+              <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">{t("reference")}</p>
+                <p className="font-medium">{payment.reference || "-"}</p>
               </div>
             </div>
             
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t("payerName")}: </span>
-                <span className="font-medium">{payment.payer_name || "-"}</span>
+            <div className="flex items-start space-x-3">
+              <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">{t("payerName")}</p>
+                <p className="font-medium">{payment.payer_name || "-"}</p>
               </div>
-              
-              <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t("currency")}: </span>
-                <span className="font-medium">{payment.currency}</span>
+            </div>
+            
+            <div className="flex items-start space-x-3">
+              <CreditCard className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">{t("amount")}</p>
+                <p className="font-medium">
+                  {formatCurrency(payment.amount, payment.currency)}
+                </p>
               </div>
-              
-              {payment.linked_at && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t("linkedAt")}: </span>
-                  <span className="font-medium">{formatDateTime(payment.linked_at)}</span>
-                </div>
-              )}
+            </div>
+            
+            <div className="flex items-start space-x-3">
+              <CalendarIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">{t("paymentDate")}</p>
+                <p className="font-medium">
+                  {format(new Date(payment.payment_date), "PP")}
+                </p>
+              </div>
             </div>
           </div>
           
           {payment.linked_policy_id && (
-            <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
-              <div className="flex items-center text-blue-800 mb-2">
-                <Link className="h-4 w-4 mr-2" />
-                <span className="font-medium">{t("linkedPolicy")}</span>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-1" 
-                onClick={viewLinkedPolicy}
-              >
-                <ExternalLink className="h-3.5 w-3.5 mr-2" />
-                {t("viewPolicy")}
-              </Button>
+            <div className="bg-muted p-4 rounded-md">
+              <p className="font-medium">{t("paymentLinked")}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("paymentAlreadyLinked")}
+              </p>
+              <p className="text-sm mt-2">
+                <span className="text-muted-foreground">{t("linkedAt")}: </span>
+                {payment.linked_at ? format(new Date(payment.linked_at), "PPp") : "-"}
+              </p>
             </div>
           )}
         </div>
