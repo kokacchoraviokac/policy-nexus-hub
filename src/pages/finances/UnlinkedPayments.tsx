@@ -4,16 +4,20 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Link as LinkIcon } from "lucide-react";
+import { Download, Link as LinkIcon, Eye, Loader2 } from "lucide-react";
 import { useUnlinkedPayments } from "@/hooks/useUnlinkedPayments";
 import LinkPaymentDialog from "@/components/finances/unlinked-payments/LinkPaymentDialog";
 import UnlinkedPaymentsFilters from "@/components/finances/unlinked-payments/UnlinkedPaymentsFilters";
+import PaymentDetailsDialog from "@/components/finances/unlinked-payments/PaymentDetailsDialog";
 import PaginationController from "@/components/ui/pagination-controller";
+import { UnlinkedPaymentType } from "@/types/policies";
+import { Badge } from "@/components/ui/badge";
 
 const UnlinkedPayments = () => {
   const { t, formatCurrency, formatDate } = useLanguage();
   const [showLinkDialog, setShowLinkDialog] = useState(false);
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<UnlinkedPaymentType | null>(null);
   
   const {
     payments,
@@ -24,19 +28,24 @@ const UnlinkedPayments = () => {
     pagination,
     setPagination,
     linkPayment,
-    isLinking
+    isLinking,
+    refetch
   } = useUnlinkedPayments();
   
-  const handleLinkPayment = (paymentId: string) => {
-    setSelectedPaymentId(paymentId);
+  const handleLinkPayment = (payment: UnlinkedPaymentType) => {
+    setSelectedPayment(payment);
     setShowLinkDialog(true);
   };
   
+  const handleViewPaymentDetails = (payment: UnlinkedPaymentType) => {
+    setSelectedPayment(payment);
+    setShowDetailsDialog(true);
+  };
+  
   const handleConfirmLink = (policyId: string) => {
-    if (selectedPaymentId) {
-      linkPayment({ paymentId: selectedPaymentId, policyId });
+    if (selectedPayment) {
+      linkPayment({ paymentId: selectedPayment.id, policyId });
       setShowLinkDialog(false);
-      setSelectedPaymentId(null);
     }
   };
   
@@ -69,7 +78,8 @@ const UnlinkedPayments = () => {
           <UnlinkedPaymentsFilters
             filters={filters}
             onFiltersChange={setFilters}
-            onRefresh={() => console.log("Refreshing payments")}
+            onRefresh={refetch}
+            isLoading={isLoading}
           />
           
           <div className="rounded-md border mt-6">
@@ -80,23 +90,27 @@ const UnlinkedPayments = () => {
                   <TableHead>{t("payerName")}</TableHead>
                   <TableHead className="text-right">{t("amount")}</TableHead>
                   <TableHead>{t("paymentDate")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      {t("loadingPayments")}
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        <span className="mt-2 text-sm text-muted-foreground">{t("loadingPayments")}</span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : payments && payments.length > 0 ? (
                   payments.map((payment) => (
                     <TableRow key={payment.id}>
                       <TableCell className="font-medium">
-                        {payment.reference}
+                        {payment.reference || "-"}
                       </TableCell>
-                      <TableCell>{payment.payer_name}</TableCell>
+                      <TableCell>{payment.payer_name || "-"}</TableCell>
                       <TableCell className="text-right">
                         {formatCurrency(payment.amount, payment.currency || "EUR")}
                       </TableCell>
@@ -104,22 +118,47 @@ const UnlinkedPayments = () => {
                         {formatDate(payment.payment_date)}
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleLinkPayment(payment.id)}
-                          disabled={!!payment.linked_policy_id}
-                        >
-                          <LinkIcon className="h-4 w-4 mr-2" />
-                          {payment.linked_policy_id ? t("linked") : t("link")}
-                        </Button>
+                        <Badge variant={payment.linked_policy_id ? "default" : "outline"}>
+                          {payment.linked_policy_id ? t("linked") : t("unlinked")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleViewPaymentDetails(payment)}
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">{t("view")}</span>
+                          </Button>
+                          
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleLinkPayment(payment)}
+                            disabled={!!payment.linked_policy_id}
+                          >
+                            <LinkIcon className="h-4 w-4 mr-2" />
+                            {payment.linked_policy_id ? t("linked") : t("link")}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      {t("noPaymentsFound")}
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      <div className="flex flex-col items-center justify-center">
+                        <p className="text-muted-foreground">{t("noPaymentsFound")}</p>
+                        <Button 
+                          variant="link" 
+                          className="mt-2" 
+                          onClick={() => handleClearFilters()}
+                        >
+                          {t("clearFilters")}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -142,14 +181,36 @@ const UnlinkedPayments = () => {
         </CardContent>
       </Card>
       
-      <LinkPaymentDialog
-        open={showLinkDialog}
-        onOpenChange={setShowLinkDialog}
-        onConfirm={handleConfirmLink}
-        isLoading={isLinking}
-      />
+      {selectedPayment && (
+        <>
+          <LinkPaymentDialog
+            open={showLinkDialog}
+            onOpenChange={setShowLinkDialog}
+            onConfirm={handleConfirmLink}
+            isLoading={isLinking}
+            paymentReference={selectedPayment.reference}
+            paymentAmount={selectedPayment.amount}
+            payerName={selectedPayment.payer_name}
+          />
+          
+          <PaymentDetailsDialog
+            open={showDetailsDialog}
+            onOpenChange={setShowDetailsDialog}
+            payment={selectedPayment}
+          />
+        </>
+      )}
     </div>
   );
+  
+  function handleClearFilters() {
+    setFilters({
+      searchTerm: "",
+      startDate: null,
+      endDate: null,
+      status: "unlinked"
+    });
+  }
 };
 
 export default UnlinkedPayments;

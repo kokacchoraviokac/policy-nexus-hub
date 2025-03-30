@@ -118,6 +118,47 @@ export const useUnlinkedPayments = () => {
     },
   });
 
+  const exportPayments = async (): Promise<UnlinkedPayment[]> => {
+    try {
+      let query = supabase
+        .from('unlinked_payments')
+        .select('*');
+      
+      // Apply the same filters as in fetchUnlinkedPayments but without pagination
+      if (filters.status === 'linked') {
+        query = query.not('linked_policy_id', 'is', null);
+      } else if (filters.status === 'unlinked') {
+        query = query.is('linked_policy_id', null);
+      }
+      
+      if (filters.searchTerm) {
+        query = query.or(`reference.ilike.%${filters.searchTerm}%,payer_name.ilike.%${filters.searchTerm}%`);
+      }
+      
+      if (filters.startDate) {
+        query = query.gte('payment_date', filters.startDate.toISOString().split('T')[0]);
+      }
+      
+      if (filters.endDate) {
+        query = query.lte('payment_date', filters.endDate.toISOString().split('T')[0]);
+      }
+      
+      const { data, error } = await query.order('payment_date', { ascending: false });
+      
+      if (error) throw error;
+      
+      return data as UnlinkedPayment[];
+    } catch (error) {
+      console.error('Error exporting payments:', error);
+      toast({
+        title: t("errorExportingPayments"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "destructive",
+      });
+      return [];
+    }
+  };
+
   return {
     payments: data?.data || [],
     totalCount: data?.totalCount || 0,
@@ -130,6 +171,7 @@ export const useUnlinkedPayments = () => {
     pagination,
     setPagination,
     linkPayment: linkPaymentMutation.mutate,
-    isLinking: linkPaymentMutation.isPending
+    isLinking: linkPaymentMutation.isPending,
+    exportPayments
   };
 };

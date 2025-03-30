@@ -6,37 +6,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, Loader2, Search } from "lucide-react";
+import { usePoliciesSearch } from "@/hooks/usePoliciesSearch";
+import { Policy } from "@/types/policies";
 
 export interface LinkPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (policyId: string) => void;
   isLoading: boolean;
+  paymentReference?: string;
+  paymentAmount?: number;
+  payerName?: string;
 }
 
 const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
   open,
   onOpenChange,
   onConfirm,
-  isLoading
+  isLoading,
+  paymentReference,
+  paymentAmount,
+  payerName
 }) => {
-  const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState("");
+  const { t, formatCurrency } = useLanguage();
   const [selectedPolicyId, setSelectedPolicyId] = useState("");
   
-  // Mock policy search results for now
-  const mockPolicies = [
-    { id: "p1", policy_number: "POL-2023-001", policyholder_name: "Acme Inc." },
-    { id: "p2", policy_number: "POL-2023-002", policyholder_name: "XYZ Corporation" },
-    { id: "p3", policy_number: "POL-2023-003", policyholder_name: "ABC Ltd." }
-  ];
-  
-  const filteredPolicies = searchTerm 
-    ? mockPolicies.filter(p => 
-        p.policy_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.policyholder_name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  const {
+    policies,
+    isLoading: isSearching,
+    searchTerm,
+    setSearchTerm
+  } = usePoliciesSearch();
   
   const handleConfirm = () => {
     if (selectedPolicyId) {
@@ -48,12 +48,48 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
     setSelectedPolicyId(policyId);
   };
 
+  // Reset selected policy when dialog opens/closes
+  React.useEffect(() => {
+    if (!open) {
+      setSelectedPolicyId("");
+      setSearchTerm("");
+    }
+  }, [open, setSearchTerm]);
+
+  const selectedPolicy = policies.find(p => p.id === selectedPolicyId);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t("linkPaymentToPolicy")}</DialogTitle>
         </DialogHeader>
+        
+        {paymentReference || paymentAmount || payerName ? (
+          <div className="bg-muted/50 p-3 rounded-md mb-4">
+            <h4 className="text-sm font-medium mb-2">{t("paymentDetails")}:</h4>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {paymentReference && (
+                <div>
+                  <span className="text-muted-foreground">{t("reference")}: </span>
+                  <span className="font-medium">{paymentReference}</span>
+                </div>
+              )}
+              {paymentAmount && (
+                <div>
+                  <span className="text-muted-foreground">{t("amount")}: </span>
+                  <span className="font-medium">{formatCurrency(paymentAmount, "EUR")}</span>
+                </div>
+              )}
+              {payerName && (
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">{t("payerName")}: </span>
+                  <span className="font-medium">{payerName}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
         
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
@@ -70,24 +106,30 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
             </div>
           </div>
           
-          {searchTerm && (
-            <div className="border rounded-md max-h-40 overflow-auto">
-              {filteredPolicies.length === 0 ? (
+          {searchTerm.length >= 2 && (
+            <div className="border rounded-md max-h-60 overflow-auto">
+              {isSearching ? (
+                <div className="p-4 text-center">
+                  <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+                  <p className="text-sm text-muted-foreground mt-2">{t("searching")}</p>
+                </div>
+              ) : policies.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
                   {t("noPoliciesFound")}
                 </div>
               ) : (
                 <div className="divide-y">
-                  {filteredPolicies.map((policy) => (
+                  {policies.map((policy) => (
                     <div 
                       key={policy.id}
-                      className={`p-2 hover:bg-muted cursor-pointer ${
+                      className={`p-3 hover:bg-muted cursor-pointer ${
                         selectedPolicyId === policy.id ? "bg-muted" : ""
                       }`}
                       onClick={() => handlePolicySelect(policy.id)}
                     >
                       <div className="font-medium">{policy.policy_number}</div>
-                      <div className="text-sm text-muted-foreground">{policy.policyholder_name}</div>
+                      <div className="text-sm">{policy.policyholder_name}</div>
+                      <div className="text-xs text-muted-foreground">{policy.insurer_name}</div>
                     </div>
                   ))}
                 </div>
@@ -95,14 +137,14 @@ const LinkPaymentDialog: React.FC<LinkPaymentDialogProps> = ({
             </div>
           )}
           
-          {selectedPolicyId && (
+          {selectedPolicy && (
             <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
               <div className="flex items-center text-blue-800">
                 <Link className="h-4 w-4 mr-2" />
                 {t("willLinkPaymentToPolicy")}:
               </div>
               <div className="text-sm font-medium mt-1">
-                {mockPolicies.find(p => p.id === selectedPolicyId)?.policy_number}
+                {selectedPolicy.policy_number} - {selectedPolicy.policyholder_name}
               </div>
             </div>
           )}
