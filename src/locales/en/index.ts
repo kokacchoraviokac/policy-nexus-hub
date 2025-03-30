@@ -7,6 +7,7 @@ import codebook from './codebook.json';
 import settings from './settings.json';
 import errors from './errors.json';
 import policyTranslations from './policies/index';
+import finances from './finances.json';
 
 // Merge all translation objects
 const translations = {
@@ -17,7 +18,8 @@ const translations = {
   ...codebook,
   ...settings,
   ...errors,
-  ...policyTranslations
+  ...policyTranslations,
+  ...finances
 };
 
 export default translations;

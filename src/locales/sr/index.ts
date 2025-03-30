@@ -8,6 +8,7 @@ import modules from './modules.json';
 import settings from './settings.json';
 import errors from './errors.json';
 import policies from './policies';
+import finances from './finances.json';
 
 // Merge all translation objects
 const translations = {
@@ -19,7 +20,8 @@ const translations = {
   ...modules,
   ...settings,
   ...errors,
-  ...policies
+  ...policies,
+  ...finances
 };
 
 export default translations;
