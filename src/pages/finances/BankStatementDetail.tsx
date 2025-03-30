@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -32,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useBankTransactions } from "@/hooks/useBankTransactions";
+import { BankStatement } from "@/types/finances";
 
 const BankStatementDetail = () => {
   const { statementId } = useParams<{ statementId: string }>();
@@ -43,14 +43,14 @@ const BankStatementDetail = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   
   // This is a mock for demonstration. In a real implementation, you'd fetch the statement details.
-  const mockStatement = {
+  const mockStatement: BankStatement = {
     id: statementId || "1",
     bank_name: "UniCredit",
     account_number: "170-123456789-01",
     statement_date: new Date().toISOString(),
     starting_balance: 10000,
     ending_balance: 12500,
-    status: "processed" as const,
+    status: "processed",
     file_path: "/statements/statement1.pdf",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -156,9 +156,9 @@ const BankStatementDetail = () => {
           <div className="flex items-center justify-between">
             <CardTitle>{t("statementDetails")}</CardTitle>
             <Badge variant={
-              mockStatement.status === "in_progress" ? 'secondary' : 
-              mockStatement.status === "processed" ? 'outline' : 
-              'default'
+              mockStatement.status === "in_progress" ? "secondary" : 
+              mockStatement.status === "processed" ? "outline" : 
+              "default"
             }>
               {t(mockStatement.status)}
             </Badge>
@@ -282,15 +282,15 @@ const BankStatementDetail = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant={
-                          transaction.status === 'unmatched' ? 'secondary' : 
-                          transaction.status === 'matched' ? 'default' : 
-                          'outline'
+                          transaction.status === "unmatched" ? "secondary" : 
+                          transaction.status === "matched" ? "default" : 
+                          "outline"
                         }>
                           {t(transaction.status)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {transaction.status === 'unmatched' && (
+                        {transaction.status === "unmatched" && (
                           <div className="flex justify-end space-x-2">
                             <Button
                               variant="outline"
@@ -311,7 +311,7 @@ const BankStatementDetail = () => {
                             </Button>
                           </div>
                         )}
-                        {transaction.status === 'matched' && (
+                        {transaction.status === "matched" && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -323,7 +323,7 @@ const BankStatementDetail = () => {
                             {t("viewPolicy")}
                           </Button>
                         )}
-                        {transaction.status === 'ignored' && (
+                        {transaction.status === "ignored" && (
                           <Button
                             variant="outline"
                             size="sm"
