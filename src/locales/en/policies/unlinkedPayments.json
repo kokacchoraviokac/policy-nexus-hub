@@ -3,5 +3,22 @@
   "unlinkedPayments": "Unlinked Payments",
   "unlinkedPaymentsDescription": "Manage payments not linked to a policy",
   "noUnlinkedPayments": "No unlinked payments",
-  "allPaymentsLinked": "All payments have been successfully linked to policies"
+  "allPaymentsLinked": "All payments have been successfully linked to policies",
+  "linkPayment": "Link Payment",
+  "unlinkPayment": "Unlink Payment",
+  "paymentDetails": "Payment Details",
+  "paymentAmount": "Payment Amount",
+  "paymentDate": "Payment Date",
+  "paymentMethod": "Payment Method",
+  "paymentReference": "Payment Reference",
+  "paymentStatus": "Payment Status",
+  "policyNumber": "Policy Number",
+  "selectPolicy": "Select Policy",
+  "paymentSuccessfullyLinked": "Payment successfully linked to policy",
+  "paymentSuccessfullyUnlinked": "Payment successfully unlinked from policy",
+  "confirmUnlink": "Are you sure you want to unlink this payment?",
+  "searchPolicies": "Search policies",
+  "policyDetails": "Policy Details",
+  "policyholder": "Policyholder",
+  "premiumAmount": "Premium Amount"
 }
