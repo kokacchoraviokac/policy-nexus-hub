@@ -26,7 +26,7 @@ interface DocumentApprovalPanelProps {
   onApprovalComplete?: () => void;
 }
 
-// Define a type for activity log details
+// Define a type for activity log details that doesn't use recursive types
 interface ApprovalDetails {
   approval_status?: DocumentApprovalStatus;
   document_id?: string;
@@ -68,7 +68,8 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       if (!document.entity_type || !document.entity_id || !document.id) return;
       
       try {
-        const { data, error } = await supabase
+        // Use explicit typecasting to avoid deep type instantiation
+        const response = await supabase
           .from('activity_logs')
           .select('*')
           .eq('entity_type', document.entity_type)
@@ -78,6 +79,8 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           .order('created_at', { ascending: false })
           .limit(1);
           
+        const { data, error } = response;
+        
         if (error) {
           console.error("Error fetching approval info:", error);
           return;
@@ -85,17 +88,23 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
         
         if (data && data.length > 0) {
           const latestApproval = data[0] as ActivityLogRow;
+          
+          // Safely access details properties with type checks
           const details = latestApproval.details;
-          
-          setApprovalInfo({
-            status: details.approval_status || "pending",
-            approved_by: latestApproval.user_id,
-            approved_at: latestApproval.created_at,
-            notes: details.notes
-          });
-          
-          if (details.notes) {
-            setNotes(details.notes);
+          if (typeof details === 'object' && details !== null) {
+            const approvalStatus = details.approval_status as DocumentApprovalStatus | undefined;
+            const notes = details.notes as string | undefined;
+            
+            setApprovalInfo({
+              status: approvalStatus || "pending",
+              approved_by: latestApproval.user_id,
+              approved_at: latestApproval.created_at,
+              notes: notes
+            });
+            
+            if (notes) {
+              setNotes(notes);
+            }
           }
         }
       } catch (error) {
