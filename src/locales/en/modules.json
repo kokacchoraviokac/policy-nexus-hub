@@ -210,5 +210,8 @@
   "errorLoadingDocuments": "Error loading documents",
   "tryRefreshingPage": "Try refreshing the page",
   "selectFile": "Select file",
-  "policiesWorkflow": "Policy Processing"
+  "policiesWorkflow": "Policy Processing",
+  "workflowManagement": "Workflow Management",
+  "policyStatus": "Policy Status",
+  "lastUpdated": "Last Updated"
 }
