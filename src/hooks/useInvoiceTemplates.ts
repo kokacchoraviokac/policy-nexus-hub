@@ -47,8 +47,8 @@ export const useInvoiceTemplates = () => {
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('invoice_templates') as any
+      const { data, error } = await (supabase
+        .from('invoice_templates') as any)
         .select('*')
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
@@ -89,8 +89,8 @@ export const useInvoiceTemplates = () => {
     if (!companyId) return;
     
     try {
-      const { data, error } = await supabase
-        .from('invoice_templates') as any
+      const { data, error } = await (supabase
+        .from('invoice_templates') as any)
         .insert([
           {
             company_id: companyId,
@@ -144,8 +144,8 @@ export const useInvoiceTemplates = () => {
     }
     
     try {
-      const { error } = await supabase
-        .from('invoice_templates') as any
+      const { error } = await (supabase
+        .from('invoice_templates') as any)
         .delete()
         .eq('id', templateId);
       
@@ -178,16 +178,16 @@ export const useInvoiceTemplates = () => {
     
     try {
       // First, unset default on all templates
-      const { error: updateError } = await supabase
-        .from('invoice_templates') as any
+      const { error: updateError } = await (supabase
+        .from('invoice_templates') as any)
         .update({ is_default: false })
         .eq('company_id', companyId);
       
       if (updateError) throw updateError;
       
       // Then set the selected template as default
-      const { error } = await supabase
-        .from('invoice_templates') as any
+      const { error } = await (supabase
+        .from('invoice_templates') as any)
         .update({ is_default: true })
         .eq('id', templateId);
       
@@ -219,15 +219,15 @@ export const useInvoiceTemplates = () => {
         // Check if this will be the default template
         if (values.is_default) {
           // Unset default on all templates
-          await supabase
-            .from('invoice_templates') as any
+          await (supabase
+            .from('invoice_templates') as any)
             .update({ is_default: false })
             .eq('company_id', companyId);
         }
         
         // Create new template
-        const { data, error } = await supabase
-          .from('invoice_templates') as any
+        const { data, error } = await (supabase
+          .from('invoice_templates') as any)
           .insert([
             {
               company_id: companyId,
@@ -259,15 +259,15 @@ export const useInvoiceTemplates = () => {
         // Check if this template is being set as default
         if (values.is_default && !existingTemplate.is_default) {
           // Unset default on all templates
-          await supabase
-            .from('invoice_templates') as any
+          await (supabase
+            .from('invoice_templates') as any)
             .update({ is_default: false })
             .eq('company_id', companyId);
         }
         
         // Update template
-        const { data, error } = await supabase
-          .from('invoice_templates') as any
+        const { data, error } = await (supabase
+          .from('invoice_templates') as any)
           .update({
             name: values.name,
             is_default: values.is_default,
@@ -326,3 +326,4 @@ export const useInvoiceTemplates = () => {
     saveTemplate
   };
 };
+
