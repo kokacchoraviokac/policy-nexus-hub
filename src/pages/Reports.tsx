@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FileBarChart, Users, UserCog, FileText } from "lucide-react";
+import { FileBarChart, Users, UserCog, FileText, DollarSign } from "lucide-react";
 
 const Reports = () => {
   const { t } = useLanguage();
@@ -34,6 +34,12 @@ const Reports = () => {
       description: "claimsReportDescription",
       path: "/reports/claims",
       icon: FileText
+    },
+    {
+      title: "financialReport",
+      description: "financialReportDescription",
+      path: "/reports/financial",
+      icon: DollarSign
     }
   ];
 
@@ -61,7 +67,7 @@ const Reports = () => {
                 variant="outline" 
                 className="w-full"
                 onClick={() => navigate(module.path)}
-                disabled={module.path !== "/reports/policies"}
+                disabled={module.path !== "/reports/policies" && module.path !== "/reports/financial"}
               >
                 {t("viewReport")}
               </Button>
