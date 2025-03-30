@@ -1,4 +1,3 @@
-
 export interface Policy {
   id: string;
   policy_number: string;
@@ -53,4 +52,19 @@ export interface PolicyStatistic {
   label: string;
   count: number;
   icon?: React.ReactNode;
+}
+
+export interface UnlinkedPaymentType {
+  id: string;
+  reference: string;
+  payer_name: string;
+  amount: number;
+  payment_date: string;
+  currency: string;
+  status: string;
+  linked_policy_id?: string;
+  linked_at?: string;
+  linked_by?: string;
+  created_at: string;
+  company_id: string;
 }
