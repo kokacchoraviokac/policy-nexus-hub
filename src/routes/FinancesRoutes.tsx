@@ -6,6 +6,8 @@ import AppLayout from "@/components/layout/AppLayout";
 import BankStatements from "@/pages/finances/BankStatements";
 import BankStatementDetail from "@/pages/finances/BankStatementDetail";
 import Commissions from "@/pages/finances/Commissions";
+import Invoicing from "@/pages/finances/Invoicing";
+import InvoiceDetail from "@/pages/finances/InvoiceDetail";
 import FinancesModule from "@/pages/finances/FinancesModule";
 import UnlinkedPayments from "@/pages/finances/UnlinkedPayments";
 
@@ -39,7 +41,20 @@ export const FinancesRoutes = [
     element={
       <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
-          <FinancesModule title="invoicing" />
+          <Invoicing />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // Invoice Detail
+  <Route 
+    key="finances-invoice-detail"
+    path="/finances/invoicing/:invoiceId" 
+    element={
+      <ProtectedRoute requiredPrivilege="finances:view">
+        <AppLayout>
+          <InvoiceDetail />
         </AppLayout>
       </ProtectedRoute>
     }
