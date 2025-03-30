@@ -8,16 +8,9 @@ import AppLayout from "@/components/layout/AppLayout";
 import AllPolicies from "@/pages/policies/AllPolicies";
 import PolicyDetail from "@/pages/policies/PolicyDetail";
 import PolicyAddendums from "@/pages/policies/PolicyAddendums";
-import UnlinkedPayments from "@/pages/policies/UnlinkedPayments";
 import PolicyDocuments from "@/pages/policies/PolicyDocuments";
 import PolicyWorkflow from "@/pages/policies/workflow/PolicyWorkflow";
 import PolicyReview from "@/pages/policies/workflow/PolicyReview";
-
-// Finance Pages
-import FinancesModule from "@/pages/finances/FinancesModule";
-import Commissions from "@/pages/finances/Commissions";
-import BankStatements from "@/pages/finances/BankStatements";
-import BankStatementDetail from "@/pages/finances/BankStatementDetail";
 
 export const PolicyRoutes = [
   // Policy Directory Routes
@@ -81,19 +74,6 @@ export const PolicyRoutes = [
     }
   />,
   
-  // Unlinked Payments Route
-  <Route
-    key="unlinked-payments"
-    path="/policies/unlinked-payments"
-    element={
-      <ProtectedRoute requiredPrivilege="policies:view">
-        <AppLayout>
-          <UnlinkedPayments />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
   // Policy Documents Route
   <Route
     key="policy-documents"
@@ -102,64 +82,6 @@ export const PolicyRoutes = [
       <ProtectedRoute requiredPrivilege="policies:view">
         <AppLayout>
           <PolicyDocuments />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Finances Routes
-  <Route
-    key="finances-base"
-    path="/finances"
-    element={
-      <ProtectedRoute requiredPrivilege="finances:view">
-        <AppLayout>
-          <FinancesModule title="finances" />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="finances-commissions"
-    path="/finances/commissions"
-    element={
-      <ProtectedRoute requiredPrivilege="finances:view">
-        <AppLayout>
-          <Commissions />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="finances-statements"
-    path="/finances/statements"
-    element={
-      <ProtectedRoute requiredPrivilege="finances:view">
-        <AppLayout>
-          <BankStatements />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="finances-statement-detail"
-    path="/finances/statements/:statementId"
-    element={
-      <ProtectedRoute requiredPrivilege="finances:view">
-        <AppLayout>
-          <BankStatementDetail />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  <Route
-    key="finances-unlinked-payments"
-    path="/finances/unlinked-payments"
-    element={
-      <ProtectedRoute requiredPrivilege="finances:view">
-        <AppLayout>
-          <UnlinkedPayments />
         </AppLayout>
       </ProtectedRoute>
     }

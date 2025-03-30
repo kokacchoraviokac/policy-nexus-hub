@@ -8,6 +8,7 @@ import BankStatements from "@/pages/finances/BankStatements";
 import BankStatementDetail from "@/pages/finances/BankStatementDetail";
 import Commissions from "@/pages/finances/Commissions";
 import FinancesModule from "@/pages/finances/FinancesModule";
+import UnlinkedPayments from "@/pages/finances/UnlinkedPayments";
 
 export const FinancesRoutes = [
   // Main finances page
@@ -82,7 +83,7 @@ export const FinancesRoutes = [
     element={
       <ProtectedRoute requiredPrivilege="finances.payments:view">
         <AppLayout>
-          <FinancesModule title="unlinkedPayments" />
+          <UnlinkedPayments />
         </AppLayout>
       </ProtectedRoute>
     }
