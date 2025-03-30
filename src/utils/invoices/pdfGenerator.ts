@@ -82,7 +82,8 @@ export const generateInvoicePdf = async (
   if (companyLogoUrl) {
     // In a real implementation, you would load the image and add it
     // For this example, we'll simulate a logo with a colored rectangle
-    doc.setFillColor(...getPrimaryColorRGB());
+    const rgbColors = getPrimaryColorRGB();
+    doc.setFillColor(rgbColors[0], rgbColors[1], rgbColors[2]);
     doc.rect(margin, margin, 40, 15, 'F');
     
     // Add placeholder text for logo
@@ -95,7 +96,8 @@ export const generateInvoicePdf = async (
   // Add invoice header
   const headerY = companyLogoUrl ? margin + 25 : margin + 10;
   doc.setFontSize(22);
-  doc.setTextColor(...getPrimaryColorRGB());
+  const rgbPrimaryColor = getPrimaryColorRGB();
+  doc.setTextColor(rgbPrimaryColor[0], rgbPrimaryColor[1], rgbPrimaryColor[2]);
   doc.text('INVOICE', margin, headerY);
   
   doc.setFontSize(12);
@@ -165,7 +167,10 @@ export const generateInvoicePdf = async (
   
   // Draw details box
   doc.setDrawColor(230, 230, 230);
-  doc.setFillColor(...secondaryColor);
+  const rgbSecondary = Array.isArray(secondaryColor) 
+    ? secondaryColor 
+    : [245, 247, 250]; // Default if not array
+  doc.setFillColor(rgbSecondary[0], rgbSecondary[1], rgbSecondary[2]);
   doc.roundedRect(margin, detailsY, pageWidth - (margin * 2), 40, 3, 3, 'FD');
   
   doc.setFontSize(10);
@@ -329,29 +334,35 @@ export const getInvoiceTemplate = async (
   try {
     const { supabase } = await import('@/integrations/supabase/client');
     
-    // If templateId is provided, fetch that specific template
-    if (templateId) {
+    try {
+      // If templateId is provided, fetch that specific template
+      if (templateId) {
+        // Using a more generic approach to work around type issues
+        const { data, error } = await supabase
+          .from('invoice_templates' as any)
+          .select('*')
+          .eq('id', templateId)
+          .eq('company_id', companyId)
+          .single();
+          
+        if (error || !data) return null;
+        return data as unknown as InvoiceTemplateSettings;
+      }
+      
+      // Otherwise, fetch the default template
       const { data, error } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .select('*')
-        .eq('id', templateId)
         .eq('company_id', companyId)
+        .eq('is_default', true)
         .single();
         
       if (error || !data) return null;
       return data as unknown as InvoiceTemplateSettings;
+    } catch (error) {
+      console.error('Error in Supabase query:', error);
+      return null;
     }
-    
-    // Otherwise, fetch the default template
-    const { data, error } = await supabase
-      .from('invoice_templates')
-      .select('*')
-      .eq('company_id', companyId)
-      .eq('is_default', true)
-      .single();
-      
-    if (error || !data) return null;
-    return data as unknown as InvoiceTemplateSettings;
   } catch (error) {
     console.error('Error fetching invoice template:', error);
     return null;

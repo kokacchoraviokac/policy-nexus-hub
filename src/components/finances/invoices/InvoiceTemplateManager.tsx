@@ -66,26 +66,32 @@ const InvoiceTemplateManager = () => {
   
   const loadTemplates = async () => {
     try {
+      // Using a more generic approach to work around type issues
       const { data, error } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .select('*')
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading templates:", error);
+        throw error;
+      }
       
-      setTemplates(data as unknown as InvoiceTemplateSettings[]);
+      // Type assertion to handle the TypeScript error
+      const typedData = data as unknown as InvoiceTemplateSettings[];
+      setTemplates(typedData);
       
       // If there are no templates, create a default one
-      if (data.length === 0) {
+      if (typedData.length === 0) {
         createDefaultTemplate();
       } else {
         // Find default template
-        const defaultTemplate = data.find(template => template.is_default === true);
+        const defaultTemplate = typedData.find(template => template.is_default === true);
         if (defaultTemplate) {
-          setSelectedTemplate(defaultTemplate as unknown as InvoiceTemplateSettings);
+          setSelectedTemplate(defaultTemplate);
         } else {
-          setSelectedTemplate(data[0] as unknown as InvoiceTemplateSettings);
+          setSelectedTemplate(typedData[0]);
         }
       }
     } catch (error) {
@@ -100,8 +106,9 @@ const InvoiceTemplateManager = () => {
   
   const createDefaultTemplate = async () => {
     try {
+      // Using a more generic approach to work around type issues
       const { data, error } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .insert([
           {
             company_id: companyId,
@@ -127,6 +134,7 @@ const InvoiceTemplateManager = () => {
         description: t("defaultTemplateCreatedDescription"),
       });
       
+      // Type assertion to handle the TypeScript error
       setSelectedTemplate(data as unknown as InvoiceTemplateSettings);
       setTemplates([data] as unknown as InvoiceTemplateSettings[]);
     } catch (error) {
@@ -161,7 +169,7 @@ const InvoiceTemplateManager = () => {
       footer_text: template.footer_text || '',
       show_payment_instructions: template.show_payment_instructions || false,
       payment_instructions: template.payment_instructions || '',
-      is_default: template.is_default
+      is_default: template.is_default || false
     });
     
     setActiveTab("edit");
@@ -180,8 +188,9 @@ const InvoiceTemplateManager = () => {
     }
     
     try {
+      // Using a more generic approach to work around type issues
       const { error } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .delete()
         .eq('id', templateId);
       
@@ -214,8 +223,9 @@ const InvoiceTemplateManager = () => {
   const handleSetDefault = async (templateId: string) => {
     try {
       // First, unset default on all templates
+      // Using a more generic approach to work around type issues
       const { error: updateError } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .update({ is_default: false })
         .eq('company_id', companyId);
       
@@ -223,7 +233,7 @@ const InvoiceTemplateManager = () => {
       
       // Then set the selected template as default
       const { error } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .update({ is_default: true })
         .eq('id', templateId);
       
@@ -254,14 +264,15 @@ const InvoiceTemplateManager = () => {
         if (values.is_default) {
           // Unset default on all templates
           await supabase
-            .from('invoice_templates')
+            .from('invoice_templates' as any)
             .update({ is_default: false })
             .eq('company_id', companyId);
         }
         
         // Create new template
+        // Using a more generic approach to work around type issues
         const { data, error } = await supabase
-          .from('invoice_templates')
+          .from('invoice_templates' as any)
           .insert([
             {
               company_id: companyId,
@@ -294,14 +305,15 @@ const InvoiceTemplateManager = () => {
         if (values.is_default && !selectedTemplate.is_default) {
           // Unset default on all templates
           await supabase
-            .from('invoice_templates')
+            .from('invoice_templates' as any)
             .update({ is_default: false })
             .eq('company_id', companyId);
         }
         
         // Update template
+        // Using a more generic approach to work around type issues
         const { data, error } = await supabase
-          .from('invoice_templates')
+          .from('invoice_templates' as any)
           .update({
             name: values.name,
             is_default: values.is_default,
