@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CreditCard, Link2, DownloadCloud, Eye, CircleDollarSign } from "lucide-react";
@@ -6,7 +5,7 @@ import { useUnlinkedPayments, UnlinkedPayment } from "@/hooks/useUnlinkedPayment
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import DataTable from "@/components/ui/data-table";
+import DataTable, { Column } from "@/components/ui/data-table";
 import EmptyState from "@/components/ui/empty-state";
 import UnlinkedPaymentsFilters from "@/components/policies/unlinked-payments/UnlinkedPaymentsFilters";
 import LinkPaymentDialog from "@/components/policies/unlinked-payments/LinkPaymentDialog";
@@ -56,10 +55,10 @@ const UnlinkedPayments = () => {
     console.log("Export payments");
   };
 
-  const columns = [
+  const columns: Column<UnlinkedPayment>[] = [
     {
       header: t("reference"),
-      accessorKey: "reference",
+      accessorKey: "reference" as keyof UnlinkedPayment,
       sortable: true,
       cell: (row: UnlinkedPayment) => (
         <div>
@@ -74,24 +73,24 @@ const UnlinkedPayments = () => {
     },
     {
       header: t("payer"),
-      accessorKey: "payer_name",
+      accessorKey: "payer_name" as keyof UnlinkedPayment,
       sortable: true,
     },
     {
       header: t("amount"),
-      accessorKey: "amount",
+      accessorKey: "amount" as keyof UnlinkedPayment,
       sortable: true,
       cell: (row: UnlinkedPayment) => formatCurrency(row.amount, row.currency),
     },
     {
       header: t("paymentDate"),
-      accessorKey: "payment_date",
+      accessorKey: "payment_date" as keyof UnlinkedPayment,
       sortable: true,
       cell: (row: UnlinkedPayment) => formatDate(row.payment_date),
     },
     {
       header: t("actions"),
-      accessorKey: "id",
+      accessorKey: ((row: UnlinkedPayment) => row.id) as any,
       cell: (row: UnlinkedPayment) => (
         <div className="flex space-x-2">
           {!row.linked_policy_id && (
@@ -116,7 +115,7 @@ const UnlinkedPayments = () => {
     if (payments.length === 0 && !isLoading && filters.status === "unlinked") {
       return (
         <EmptyState
-          icon={<CircleDollarSign className="h-8 w-8" />}
+          icon={<CircleDollarSign className="h-6 w-6 text-muted-foreground" />}
           title={t("noUnlinkedPayments")}
           description={t("allPaymentsLinked")}
         />

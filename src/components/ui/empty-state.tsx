@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
   title: string;
-  description: string;
-  icon?: "file" | "file-plus" | "file-edit" | "file-search" | "alert";
+  description?: string;
+  icon?: React.ReactNode | "file" | "file-plus" | "file-edit" | "file-search" | "alert";
   action?: React.ReactNode;
   className?: string;
 }
@@ -19,13 +19,19 @@ const EmptyState = ({
   action,
   className,
 }: EmptyStateProps) => {
-  const IconComponent = {
-    file: FileText,
-    "file-plus": FilePlus,
-    "file-edit": FileEdit,
-    "file-search": FileSearch,
-    alert: AlertCircle,
-  }[icon];
+  let IconComponent;
+  
+  if (typeof icon === "string") {
+    IconComponent = {
+      file: FileText,
+      "file-plus": FilePlus,
+      "file-edit": FileEdit,
+      "file-search": FileSearch,
+      alert: AlertCircle,
+    }[icon];
+    
+    icon = <IconComponent className="h-6 w-6 text-muted-foreground" />;
+  }
 
   return (
     <div
@@ -35,14 +41,16 @@ const EmptyState = ({
       )}
     >
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-        <IconComponent className="h-6 w-6 text-muted-foreground" />
+        {icon}
       </div>
       <h3 className="mt-4 font-semibold tracking-tight text-foreground">
         {title}
       </h3>
-      <p className="mb-4 mt-2 text-sm text-muted-foreground max-w-sm">
-        {description}
-      </p>
+      {description && (
+        <p className="mb-4 mt-2 text-sm text-muted-foreground max-w-sm">
+          {description}
+        </p>
+      )}
       {action}
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Table,
@@ -81,7 +80,6 @@ function DataTable<T>({
     setSortConfig({ key, direction });
   };
 
-  // Sort the data if a sort configuration exists
   const sortedData = React.useMemo(() => {
     if (!sortConfig) return data;
 
@@ -109,7 +107,6 @@ function DataTable<T>({
       : <ArrowDown className="ml-2 h-4 w-4" />;
   };
 
-  // Calculate the total number of pages
   const totalPages = pagination 
     ? Math.ceil(pagination.totalItems / pagination.pageSize) 
     : 1;

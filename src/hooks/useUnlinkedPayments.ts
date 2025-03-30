@@ -1,24 +1,11 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { UnlinkedPaymentType } from "@/types/policies";
 
-export interface UnlinkedPayment {
-  id: string;
-  reference: string;
-  payer_name: string;
-  amount: number;
-  payment_date: string;
-  currency: string;
-  status: string;
-  linked_policy_id?: string;
-  linked_at?: string;
-  linked_by?: string;
-  created_at: string;
-  company_id: string;
-}
+export type UnlinkedPayment = UnlinkedPaymentType;
 
 export interface FilterOptions {
   searchTerm?: string;
