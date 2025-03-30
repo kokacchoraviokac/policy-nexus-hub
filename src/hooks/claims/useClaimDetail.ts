@@ -1,0 +1,41 @@
+
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export const useClaimDetail = (claimId: string | undefined) => {
+  const { 
+    data: claim, 
+    isLoading, 
+    isError, 
+    refetch 
+  } = useQuery({
+    queryKey: ['claim', claimId],
+    queryFn: async () => {
+      if (!claimId) throw new Error("Claim ID is required");
+      
+      const { data, error } = await supabase
+        .from('claims')
+        .select(`
+          *,
+          policies:policy_id (
+            policy_number,
+            policyholder_name,
+            insurer_name
+          )
+        `)
+        .eq('id', claimId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!claimId
+  });
+
+  return {
+    claim,
+    isLoading,
+    isError,
+    refetch
+  };
+};
