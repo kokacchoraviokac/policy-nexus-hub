@@ -1,16 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import enCommon from '@/locales/en/common.json';
-import enLayout from '@/locales/en/layout.json';
-import enAuth from '@/locales/en/auth.json';
-import enErrors from '@/locales/en/errors.json';
-import enDashboard from '@/locales/en/dashboard.json';
-import enModules from '@/locales/en/modules.json';
-import enPolicies from '@/locales/en/policies/index';
-import enCodebook from '@/locales/en/codebook.json';
-import enSettings from '@/locales/en/settings.json';
-import enFinances from '@/locales/en/finances.json';
-import enClaims from '@/locales/en/claims.json';
+import en from '@/locales/en/index'; 
+import sr from '@/locales/sr/index';
+import mk from '@/locales/mk/index';
+import es from '@/locales/es/index';
 import { format } from 'date-fns';
 
 // Define supported languages
@@ -43,40 +36,12 @@ const LanguageContext = createContext<LanguageContextProps>({
 // Hook for using the language context
 export const useLanguage = () => useContext(LanguageContext);
 
-// Define the translations for each language
-const en = {
-  ...enCommon,
-  ...enLayout,
-  ...enAuth,
-  ...enErrors,
-  ...enDashboard,
-  ...enModules,
-  ...enPolicies,
-  ...enCodebook,
-  ...enSettings,
-  ...enFinances,
-  ...enClaims
-};
-// Add other language imports and translation objects here, e.g.,
-// import frCommon from '@/locales/fr/common.json';
-// const fr = { ...frCommon, ... };
-
 // Merge all translations
 const translations = {
-  en: {
-    ...enCommon,
-    ...enLayout,
-    ...enAuth,
-    ...enErrors,
-    ...enDashboard,
-    ...enModules,
-    ...enPolicies,
-    ...enCodebook,
-    ...enSettings,
-    ...enFinances,
-    ...enClaims
-  },
-  // fr, // Add other languages here
+  en,
+  sr,
+  mk,
+  es,
 };
 
 // Language provider component

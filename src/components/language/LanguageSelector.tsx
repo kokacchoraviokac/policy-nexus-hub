@@ -32,6 +32,9 @@ interface LanguageSelectorProps {
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default' }) => {
   const { language, setLanguage } = useLanguage();
+  
+  // Safety check to ensure language is defined
+  const currentLanguage = language || 'en';
 
   return (
     <DropdownMenu>
@@ -42,7 +45,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default'
             size="sm" 
             className="flex items-center gap-1.5 h-8 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <span className="text-base">{languageFlags[language]}</span>
+            <span className="text-base">{languageFlags[currentLanguage]}</span>
             <span className="sr-only">Select language</span>
           </Button>
         ) : variant === 'compact' ? (
@@ -52,7 +55,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default'
             className="h-8 px-2 py-1 rounded-md"
           >
             <Globe className="h-4 w-4 mr-1" />
-            <span className="text-sm">{language.toUpperCase()}</span>
+            <span className="text-sm">{currentLanguage.toUpperCase()}</span>
           </Button>
         ) : variant === 'outline' ? (
           <Button 
@@ -61,8 +64,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default'
             className="h-8 bg-background/60 backdrop-blur-sm border-muted flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-background/80"
           >
             <Globe className="h-4 w-4" />
-            <span className="hidden sm:inline text-sm font-normal">{languageNames[language]}</span>
-            <span className="text-xs opacity-80">{language.toUpperCase()}</span>
+            <span className="hidden sm:inline text-sm font-normal">{languageNames[currentLanguage]}</span>
+            <span className="text-xs opacity-80">{currentLanguage.toUpperCase()}</span>
           </Button>
         ) : (
           <Button 
@@ -71,8 +74,8 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default'
             className="h-8 bg-background/60 backdrop-blur-sm border-muted flex items-center gap-2 text-muted-foreground hover:text-foreground hover:bg-background/80"
           >
             <Globe className="h-4 w-4" />
-            <span className="hidden sm:inline text-sm font-normal">{languageNames[language]}</span>
-            <span className="text-xs opacity-80">{language.toUpperCase()}</span>
+            <span className="hidden sm:inline text-sm font-normal">{languageNames[currentLanguage]}</span>
+            <span className="text-xs opacity-80">{currentLanguage.toUpperCase()}</span>
           </Button>
         )}
       </DropdownMenuTrigger>
@@ -81,7 +84,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ variant = 'default'
           <DropdownMenuItem
             key={code}
             onClick={() => setLanguage(code as Language)}
-            className={`cursor-pointer flex items-center gap-2 ${code === language ? 'bg-accent/50 font-medium' : ''}`}
+            className={`cursor-pointer flex items-center gap-2 ${code === currentLanguage ? 'bg-accent/50 font-medium' : ''}`}
           >
             <span className="text-base">{languageFlags[code as Language]}</span>
             <span className="text-sm">{name}</span>
