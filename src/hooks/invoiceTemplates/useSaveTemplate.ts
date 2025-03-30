@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTemplateApi } from "@/services/invoiceTemplates/templateApi";
 import { InvoiceTemplateSettings } from "@/types/finances";
-import { TemplateFormValues } from "@/hooks/useInvoiceTemplates";
+import { TemplateFormValues } from "@/components/finances/invoices/templates/TemplateFormTypes";
 
 export const useSaveTemplate = (
   companyId: string | undefined,
@@ -37,6 +37,7 @@ export const useSaveTemplate = (
           primary_color: values.primary_color,
           secondary_color: values.secondary_color,
           font_family: values.font_family,
+          font_size: values.font_size,
           font_weight: values.font_weight,
           font_style: values.font_style,
           logo_position: values.logo_position,
@@ -71,6 +72,7 @@ export const useSaveTemplate = (
           primary_color: values.primary_color,
           secondary_color: values.secondary_color,
           font_family: values.font_family,
+          font_size: values.font_size,
           font_weight: values.font_weight,
           font_style: values.font_style,
           logo_position: values.logo_position,

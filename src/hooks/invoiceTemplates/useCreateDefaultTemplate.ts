@@ -23,6 +23,7 @@ export const useCreateDefaultTemplate = (
         primary_color: defaultTemplateValues.primary_color,
         secondary_color: defaultTemplateValues.secondary_color,
         font_family: defaultTemplateValues.font_family,
+        font_size: defaultTemplateValues.font_size,
         font_weight: defaultTemplateValues.font_weight,
         font_style: defaultTemplateValues.font_style,
         logo_position: defaultTemplateValues.logo_position,

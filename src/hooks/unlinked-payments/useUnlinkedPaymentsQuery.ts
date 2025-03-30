@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FilterOptions } from "./useUnlinkedPaymentsFilters";
 import { PaginationState } from "./useUnlinkedPaymentsPagination";
+import { UnlinkedPaymentType } from "@/types/finances";
 
 export interface UnlinkedPayment {
   id: string;
@@ -15,10 +16,14 @@ export interface UnlinkedPayment {
   linked_policy_id?: string;
 }
 
-export const useUnlinkedPaymentsQuery = (
-  pagination: PaginationState,
-  filters: FilterOptions
-) => {
+export interface UnlinkedPaymentsQueryParams {
+  filters: FilterOptions;
+  pagination: PaginationState;
+}
+
+export const useUnlinkedPaymentsQuery = (params: UnlinkedPaymentsQueryParams) => {
+  const { filters, pagination } = params;
+  
   return useQuery({
     queryKey: ["unlinked-payments", pagination, filters],
     queryFn: async () => {
@@ -55,7 +60,7 @@ export const useUnlinkedPaymentsQuery = (
       if (error) throw error;
 
       return {
-        data: data as UnlinkedPayment[],
+        data: data as UnlinkedPaymentType[],
         totalCount: count || 0,
       };
     },

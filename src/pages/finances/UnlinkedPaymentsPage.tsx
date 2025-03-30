@@ -12,6 +12,7 @@ import { useUnlinkedPaymentsQuery } from "@/hooks/unlinked-payments/useUnlinkedP
 import { useUnlinkedPaymentsPagination } from "@/hooks/unlinked-payments/useUnlinkedPaymentsPagination";
 import { useUnlinkedPaymentsExport } from "@/hooks/unlinked-payments/useUnlinkedPaymentsExport";
 import UnlinkedPaymentsPagination from "@/components/finances/unlinked-payments/UnlinkedPaymentsPagination";
+import { UnlinkedPaymentType } from "@/types/finances";
 
 const UnlinkedPaymentsPage = () => {
   const { t } = useLanguage();
@@ -30,7 +31,7 @@ const UnlinkedPaymentsPage = () => {
     pagination
   });
   
-  const unlinkedPayments = data?.data || [];
+  const unlinkedPayments = data?.data as UnlinkedPaymentType[] || [];
   const totalItems = data?.totalCount || 0;
   
   const { exportPayments } = useUnlinkedPaymentsExport(filters);

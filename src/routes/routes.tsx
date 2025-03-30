@@ -15,15 +15,15 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // This file now returns an array of route elements
 const AppRoutes = [
-  // Simply spread the route arrays - they're already arrays of React elements
-  ...DashboardRoutes,
-  ...PolicyRoutes,
-  ...SalesRoutes,
-  ...ClaimsRoutes,
-  ...FinancesRoutes,
-  ...CodebookRoutes,
-  ...ReportsRoutes,
-  ...SettingsRoutes,
+  // Spread all route arrays - they're already arrays of React elements
+  ...(Array.isArray(DashboardRoutes) ? DashboardRoutes : [DashboardRoutes]),
+  ...(Array.isArray(PolicyRoutes) ? PolicyRoutes : [PolicyRoutes]),
+  ...(Array.isArray(SalesRoutes) ? SalesRoutes : [SalesRoutes]),
+  ...(Array.isArray(ClaimsRoutes) ? ClaimsRoutes : [ClaimsRoutes]),
+  ...(Array.isArray(FinancesRoutes) ? FinancesRoutes : [FinancesRoutes]),
+  ...(Array.isArray(CodebookRoutes) ? CodebookRoutes : [CodebookRoutes]),
+  ...(Array.isArray(ReportsRoutes) ? ReportsRoutes : [ReportsRoutes]),
+  ...(Array.isArray(SettingsRoutes) ? SettingsRoutes : [SettingsRoutes]),
   
   // 404
   <Route
