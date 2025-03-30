@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
@@ -24,10 +23,8 @@ function App() {
       <ThemeProvider>
         <LanguageProvider>
           <AuthProvider>
-            <Router>
-              <Toaster position="top-right" />
-              <AppRoutes />
-            </Router>
+            <Toaster position="top-right" />
+            <AppRoutes />
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
