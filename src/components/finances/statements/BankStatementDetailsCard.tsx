@@ -3,7 +3,7 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Bank, PieChart, ListFilter } from "lucide-react";
+import { Calendar, Building, PieChart, ListFilter } from "lucide-react";
 import { BankStatement } from "@/types/finances";
 
 interface BankStatementDetailsCardProps {
@@ -37,7 +37,7 @@ const BankStatementDetailsCard: React.FC<BankStatementDetailsCardProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1">
             <div className="flex items-center text-muted-foreground text-sm">
-              <Bank className="mr-1 h-4 w-4" />
+              <Building className="mr-1 h-4 w-4" />
               {t("bank")}
             </div>
             <div className="font-medium">{statement.bank_name}</div>

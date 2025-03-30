@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
+import { useAuthSession } from "@/hooks/useAuthSession";
 
 interface BankStatementUploadDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ const BankStatementUploadDialog: React.FC<BankStatementUploadDialogProps> = ({
 }) => {
   const { t, formatDate } = useLanguage();
   const { toast } = useToast();
+  const { session } = useAuthSession();
   
   const [bankName, setBankName] = useState<string>("");
   const [accountNumber, setAccountNumber] = useState<string>("");
@@ -63,6 +65,21 @@ const BankStatementUploadDialog: React.FC<BankStatementUploadDialogProps> = ({
     setIsUploading(true);
     
     try {
+      // Get the user's company_id from session
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', session?.user?.id)
+        .single();
+      
+      if (userError) {
+        throw new Error(t("failedToGetCompanyId"));
+      }
+      
+      if (!userData?.company_id) {
+        throw new Error(t("noCompanyAssociated"));
+      }
+      
       // Create bank statement record
       const { data: statement, error: statementError } = await supabase
         .from('bank_statements')
@@ -74,6 +91,7 @@ const BankStatementUploadDialog: React.FC<BankStatementUploadDialogProps> = ({
           ending_balance: parseFloat(endingBalance),
           status: 'in_progress',
           file_path: file.name, // This will be updated with the actual path
+          company_id: userData.company_id
         })
         .select()
         .single();
