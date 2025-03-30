@@ -1,17 +1,10 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, FileText, CheckCircle, Loader2 } from "lucide-react";
+import { Loader2, FileText, CheckCircle2, PlayCircle } from "lucide-react";
 import { BankStatement } from "@/types/finances";
 
 interface BankStatementsListProps {
@@ -24,19 +17,6 @@ interface BankStatementsListProps {
   isConfirming: boolean;
 }
 
-const getBadgeVariant = (status: string) => {
-  switch (status) {
-    case 'in_progress':
-      return 'secondary';
-    case 'processed':
-      return 'outline';
-    case 'confirmed':
-      return 'default';
-    default:
-      return 'outline';
-  }
-};
-
 const BankStatementsList: React.FC<BankStatementsListProps> = ({
   statements,
   isLoading,
@@ -44,19 +24,19 @@ const BankStatementsList: React.FC<BankStatementsListProps> = ({
   onProcessStatement,
   onConfirmStatement,
   isProcessing,
-  isConfirming
+  isConfirming,
 }) => {
   const { t, formatDate, formatCurrency } = useLanguage();
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-8">
+      <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!statements || statements.length === 0) {
+  if (!statements.length) {
     return (
       <div className="text-center p-8 border rounded-lg bg-background">
         <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
@@ -73,10 +53,11 @@ const BankStatementsList: React.FC<BankStatementsListProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>{t("bankName")}</TableHead>
+            <TableHead>{t("bank")}</TableHead>
             <TableHead>{t("accountNumber")}</TableHead>
-            <TableHead>{t("statementDate")}</TableHead>
-            <TableHead>{t("balance")}</TableHead>
+            <TableHead>{t("date")}</TableHead>
+            <TableHead>{t("startingBalance")}</TableHead>
+            <TableHead>{t("endingBalance")}</TableHead>
             <TableHead>{t("status")}</TableHead>
             <TableHead className="text-right">{t("actions")}</TableHead>
           </TableRow>
@@ -84,51 +65,53 @@ const BankStatementsList: React.FC<BankStatementsListProps> = ({
         <TableBody>
           {statements.map((statement) => (
             <TableRow key={statement.id}>
-              <TableCell className="font-medium">{statement.bank_name}</TableCell>
+              <TableCell>{statement.bank_name}</TableCell>
               <TableCell>{statement.account_number}</TableCell>
               <TableCell>{formatDate(statement.statement_date)}</TableCell>
+              <TableCell>{formatCurrency(statement.starting_balance)}</TableCell>
               <TableCell>{formatCurrency(statement.ending_balance)}</TableCell>
               <TableCell>
-                <Badge variant={getBadgeVariant(statement.status)}>
+                <Badge 
+                  variant={
+                    statement.status === 'in_progress' 
+                      ? 'outline' 
+                      : statement.status === 'processed' 
+                        ? 'secondary' 
+                        : 'default'
+                  }
+                >
                   {t(statement.status)}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
                     onClick={() => onStatementClick(statement.id)}
                   >
-                    <Eye className="h-4 w-4" />
+                    {t("view")}
                   </Button>
                   
                   {statement.status === 'in_progress' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
                       onClick={() => onProcessStatement(statement.id)}
                       disabled={isProcessing}
                     >
-                      {isProcessing ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : null}
+                      <PlayCircle className="h-4 w-4 mr-1" />
                       {t("process")}
                     </Button>
                   )}
                   
                   {statement.status === 'processed' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <Button 
+                      size="sm" 
                       onClick={() => onConfirmStatement(statement.id)}
                       disabled={isConfirming}
                     >
-                      {isConfirming ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : (
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                      )}
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
                       {t("confirm")}
                     </Button>
                   )}

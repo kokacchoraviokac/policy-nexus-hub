@@ -1,3 +1,4 @@
+
 export interface BankStatement {
   id: string;
   statement_number?: string;

@@ -1,12 +1,17 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarIcon, Upload, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 
 interface BankStatementUploadDialogProps {
   open: boolean;
@@ -17,105 +22,195 @@ interface BankStatementUploadDialogProps {
 const BankStatementUploadDialog: React.FC<BankStatementUploadDialogProps> = ({
   open,
   onOpenChange,
-  onUploadComplete
+  onUploadComplete,
 }) => {
-  const { t } = useLanguage();
-  const [bank, setBank] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [statementFile, setStatementFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const { t, formatDate } = useLanguage();
+  const { toast } = useToast();
+  
+  const [bankName, setBankName] = useState<string>("");
+  const [accountNumber, setAccountNumber] = useState<string>("");
+  const [statementDate, setStatementDate] = useState<Date | undefined>(undefined);
+  const [startingBalance, setStartingBalance] = useState<string>("");
+  const [endingBalance, setEndingBalance] = useState<string>("");
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setStatementFile(file);
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+  
+  const resetForm = () => {
+    setBankName("");
+    setAccountNumber("");
+    setStatementDate(undefined);
+    setStartingBalance("");
+    setEndingBalance("");
+    setFile(null);
   };
   
   const handleSubmit = async () => {
-    if (!bank || !accountNumber || !statementFile) return;
+    if (!bankName || !accountNumber || !statementDate || !startingBalance || !endingBalance || !file) {
+      toast({
+        title: t("missingFields"),
+        description: t("allFieldsRequired"),
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsUploading(true);
     
-    // Simulate upload - replace with actual API call
-    setTimeout(() => {
-      setIsUploading(false);
+    try {
+      // Create bank statement record
+      const { data: statement, error: statementError } = await supabase
+        .from('bank_statements')
+        .insert({
+          bank_name: bankName,
+          account_number: accountNumber,
+          statement_date: statementDate.toISOString().split('T')[0],
+          starting_balance: parseFloat(startingBalance),
+          ending_balance: parseFloat(endingBalance),
+          status: 'in_progress',
+          file_path: file.name, // This will be updated with the actual path
+        })
+        .select()
+        .single();
+      
+      if (statementError) throw statementError;
+      
+      // In a real implementation, you'd upload the file to storage and process it
+      // For demonstration purposes, we'll just simulate a success
+      
+      toast({
+        title: t("statementUploaded"),
+        description: t("statementUploadedSuccess"),
+      });
+      
       onUploadComplete();
       onOpenChange(false);
-      
-      // Reset form
-      setBank("");
-      setAccountNumber("");
-      setStatementFile(null);
-    }, 1500);
+      resetForm();
+    } catch (error) {
+      console.error('Error uploading statement:', error);
+      toast({
+        title: t("errorUploadingStatement"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
   
-  const banks = [
-    { value: "unicredit", label: "UniCredit" },
-    { value: "kombank", label: "Komercijalna Banka" },
-    { value: "intesa", label: "Banca Intesa" }
-  ];
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) resetForm();
+      onOpenChange(newOpen);
+    }}>
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>{t("uploadBankStatement")}</DialogTitle>
         </DialogHeader>
         
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="bank">{t("selectBank")}</Label>
-            <Select value={bank} onValueChange={setBank}>
-              <SelectTrigger id="bank">
-                <SelectValue placeholder={t("selectBank")} />
-              </SelectTrigger>
-              <SelectContent>
-                {banks.map(bank => (
-                  <SelectItem key={bank.value} value={bank.value}>
-                    {bank.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="bankName">{t("bankName")}</Label>
+              <Select value={bankName} onValueChange={setBankName}>
+                <SelectTrigger id="bankName">
+                  <SelectValue placeholder={t("selectBank")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UNICREDIT">UniCredit</SelectItem>
+                  <SelectItem value="KOMBANK">Komercijalna Banka</SelectItem>
+                  <SelectItem value="RAIFFEISEN">Raiffeisen Bank</SelectItem>
+                  <SelectItem value="INTESA">Banca Intesa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="accountNumber">{t("accountNumber")}</Label>
+              <Input 
+                id="accountNumber" 
+                value={accountNumber} 
+                onChange={(e) => setAccountNumber(e.target.value)} 
+              />
+            </div>
           </div>
           
-          <div className="grid gap-2">
-            <Label htmlFor="accountNumber">{t("accountNumber")}</Label>
-            <Input
-              id="accountNumber"
-              value={accountNumber}
-              onChange={(e) => setAccountNumber(e.target.value)}
-              placeholder={t("enterAccountNumber")}
-            />
+          <div className="space-y-2">
+            <Label htmlFor="statementDate">{t("statementDate")}</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left"
+                  id="statementDate"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {statementDate ? formatDate(statementDate.toISOString()) : t("selectDate")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={statementDate}
+                  onSelect={setStatementDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           
-          <div className="grid gap-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startingBalance">{t("startingBalance")}</Label>
+              <Input 
+                id="startingBalance" 
+                type="number" 
+                step="0.01" 
+                value={startingBalance} 
+                onChange={(e) => setStartingBalance(e.target.value)} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="endingBalance">{t("endingBalance")}</Label>
+              <Input 
+                id="endingBalance" 
+                type="number" 
+                step="0.01" 
+                value={endingBalance} 
+                onChange={(e) => setEndingBalance(e.target.value)} 
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
             <Label htmlFor="statementFile">{t("statementFile")}</Label>
-            <Input
-              id="statementFile"
-              type="file"
-              accept=".pdf,.csv,.txt"
-              onChange={handleFileChange}
-            />
-            {statementFile && (
-              <p className="text-sm text-muted-foreground">
-                {t("selectedFile")}: {statementFile.name} ({Math.round(statementFile.size / 1024)} KB)
-              </p>
-            )}
+            <div className="flex items-center gap-2">
+              <Input 
+                id="statementFile" 
+                type="file" 
+                accept=".pdf,.csv,.txt,.xlsx" 
+                onChange={handleFileChange} 
+              />
+              {file && (
+                <div className="text-sm text-muted-foreground">
+                  {file.name}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
         <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={isUploading}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
             {t("cancel")}
           </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={!bank || !accountNumber || !statementFile || isUploading}
-          >
+          <Button onClick={handleSubmit} disabled={isUploading}>
             {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

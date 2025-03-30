@@ -1,18 +1,18 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, Download, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, FileDown, Play, Check } from "lucide-react";
 
 interface BankStatementHeaderProps {
   backLink: string;
-  statementStatus: 'in_progress' | 'processed' | 'confirmed';
+  statementStatus: "in_progress" | "processed" | "confirmed";
   onDownload: () => void;
   onProcess: () => void;
   onConfirm: () => void;
-  isProcessing?: boolean;
-  isConfirming?: boolean;
+  isProcessing: boolean;
+  isConfirming: boolean;
 }
 
 const BankStatementHeader: React.FC<BankStatementHeaderProps> = ({
@@ -21,52 +21,64 @@ const BankStatementHeader: React.FC<BankStatementHeaderProps> = ({
   onDownload,
   onProcess,
   onConfirm,
-  isProcessing = false,
-  isConfirming = false
+  isProcessing,
+  isConfirming,
 }) => {
-  const navigate = useNavigate();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="w-fit"
-        onClick={() => navigate(backLink)}
-      >
-        <ChevronLeft className="mr-2 h-4 w-4" />
-        {t("backToStatements")}
-      </Button>
+    <div className="flex flex-col sm:flex-row justify-between gap-4">
+      <div className="flex items-center">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="mr-4" 
+          onClick={() => navigate(backLink)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          {t("backToStatements")}
+        </Button>
+        <h1 className="text-2xl font-bold tracking-tight">{t("statementDetails")}</h1>
+      </div>
       
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
+      <div className="flex flex-wrap items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
           onClick={onDownload}
         >
-          <Download className="mr-2 h-4 w-4" />
+          <FileDown className="h-4 w-4 mr-1" />
           {t("downloadStatement")}
         </Button>
         
         {statementStatus === "in_progress" && (
-          <Button
-            size="sm"
+          <Button 
+            size="sm" 
+            variant="outline" 
             onClick={onProcess}
             disabled={isProcessing}
           >
-            <CheckCircle className="mr-2 h-4 w-4" />
+            {isProcessing ? (
+              <div className="h-4 w-4 mr-1 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : (
+              <Play className="h-4 w-4 mr-1" />
+            )}
             {t("processStatement")}
           </Button>
         )}
         
         {statementStatus === "processed" && (
-          <Button
-            size="sm"
+          <Button 
+            size="sm" 
             onClick={onConfirm}
             disabled={isConfirming}
           >
-            <CheckCircle className="mr-2 h-4 w-4" />
+            {isConfirming ? (
+              <div className="h-4 w-4 mr-1 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : (
+              <Check className="h-4 w-4 mr-1" />
+            )}
             {t("confirmStatement")}
           </Button>
         )}
