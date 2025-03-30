@@ -16,7 +16,7 @@ export interface DatePickerProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
   className?: string;
-  placeholder?: string; // Add placeholder prop
+  placeholder?: string;
 }
 
 export function DatePicker({ date, setDate, className, placeholder }: DatePickerProps) {

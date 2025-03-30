@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useBankTransactions } from "@/hooks/useBankTransactions";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +40,12 @@ const BankStatementDetail = () => {
         
         if (error) throw error;
         
-        setStatement(data);
+        // Ensure we're setting a valid BankStatement object with the correct status type
+        const validStatus = data.status as "in_progress" | "processed" | "confirmed";
+        setStatement({
+          ...data,
+          status: validStatus
+        });
       } catch (error) {
         console.error('Error fetching statement:', error);
         toast({
@@ -89,7 +95,9 @@ const BankStatementDetail = () => {
     
     try {
       await processStatement(statementId);
-      setStatement(prev => prev ? { ...prev, status: 'processed' } : null);
+      if (statement) {
+        setStatement({ ...statement, status: 'processed' });
+      }
     } catch (error) {
       console.error("Error processing statement:", error);
     }
@@ -100,7 +108,9 @@ const BankStatementDetail = () => {
     
     try {
       await confirmStatement(statementId);
-      setStatement(prev => prev ? { ...prev, status: 'confirmed' } : null);
+      if (statement) {
+        setStatement({ ...statement, status: 'confirmed' });
+      }
     } catch (error) {
       console.error("Error confirming statement:", error);
     }
@@ -222,7 +232,6 @@ const BankStatementDetail = () => {
       <BankStatementDetailsCard 
         statement={statement}
         transactionCount={transactions.length}
-        isLoading={isLoadingTransactions}
       />
       
       <Card>

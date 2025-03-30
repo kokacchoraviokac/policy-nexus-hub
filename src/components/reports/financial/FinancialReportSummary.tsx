@@ -2,17 +2,62 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FinancialReportData } from "@/utils/reports/financialReportUtils";
+import { FinancialTransaction } from "@/utils/reports/financialReportUtils";
 import { ArrowDownIcon, ArrowUpIcon, CircleDollarSign, Receipt, CreditCard, ArrowRightLeft } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 
 interface FinancialReportSummaryProps {
-  data: FinancialReportData;
+  data: FinancialTransaction[];
+  isLoading?: boolean;
 }
 
-const FinancialReportSummary: React.FC<FinancialReportSummaryProps> = ({ data }) => {
+interface SummaryData {
+  totalIncome: number;
+  totalExpenses: number;
+  netIncome: number;
+  commissionEarned: number;
+  invoicesPaid: number;
+  outstandingInvoices: number;
+}
+
+const FinancialReportSummary: React.FC<FinancialReportSummaryProps> = ({ data, isLoading }) => {
   const { t, language } = useLanguage();
-  const { summary } = data;
+  
+  // Calculate summary data from transactions
+  const summary: SummaryData = React.useMemo(() => {
+    const result = {
+      totalIncome: 0,
+      totalExpenses: 0,
+      netIncome: 0,
+      commissionEarned: 0,
+      invoicesPaid: 0,
+      outstandingInvoices: 0
+    };
+    
+    data.forEach(transaction => {
+      if (transaction.type === 'income') {
+        result.totalIncome += transaction.amount;
+        
+        if (transaction.category === 'commission') {
+          result.commissionEarned += transaction.amount;
+        }
+        
+        if (transaction.category === 'invoice' && transaction.status === 'paid') {
+          result.invoicesPaid += transaction.amount;
+        }
+        
+        if (transaction.category === 'invoice' && transaction.status === 'pending') {
+          result.outstandingInvoices += transaction.amount;
+        }
+      } else if (transaction.type === 'expense') {
+        result.totalExpenses += transaction.amount;
+      }
+    });
+    
+    result.netIncome = result.totalIncome - result.totalExpenses;
+    
+    return result;
+  }, [data]);
   
   const cards = [
     {
@@ -64,6 +109,26 @@ const FinancialReportSummary: React.FC<FinancialReportSummaryProps> = ({ data })
       currency: "EUR"
     }
   ];
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">{t("financialSummary")}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((_, index) => (
+            <Card key={index} className="animate-pulse">
+              <CardHeader className="pb-2">
+                <div className="h-6 bg-gray-200 rounded w-24"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-gray-200 rounded w-32"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4">

@@ -10,6 +10,17 @@ import BankStatementsFilters from "@/components/finances/statements/BankStatemen
 import BankStatementsList from "@/components/finances/statements/BankStatementsList";
 import BankStatementUploadDialog from "@/components/finances/statements/BankStatementUploadDialog";
 
+// Add a type definition for the needed props to avoid TypeScript errors
+interface BankStatementsListProps {
+  statements: any[];
+  isLoading: boolean;
+  onStatementClick: (statementId: string) => void;
+  onProcess: (statementId: string) => void;
+  onConfirm: (statementId: string) => void;
+  isProcessing: boolean;
+  isConfirming: boolean;
+}
+
 const BankStatements = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();

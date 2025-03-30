@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { FinancialReportFilters as FiltersType } from "@/utils/reports/financialReportUtils";
 import { Filter, RefreshCw, Download } from "lucide-react";
+import { FinancialReportFilters as FiltersType } from "@/utils/reports/financialReportUtils";
 
 interface FinancialReportFiltersProps {
   filters: FiltersType;

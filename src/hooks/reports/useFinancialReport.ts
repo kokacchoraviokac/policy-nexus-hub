@@ -1,14 +1,25 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { 
-  FinancialReportFilters, 
   FinancialTransaction, 
-  FinancialReportData, 
+  FinancialReportFilters, 
   exportFinancialReportToCsv,
   calculateFinancialSummary
 } from "@/utils/reports/financialReportUtils";
+
+interface FinancialReportData {
+  transactions: FinancialTransaction[];
+  totalCount: number;
+  summary: {
+    totalIncome: number;
+    totalExpenses: number;
+    netIncome: number;
+    commissionEarned: number;
+    invoicesPaid: number;
+    outstandingInvoices: number;
+  };
+}
 
 export const useFinancialReport = (filters: FinancialReportFilters) => {
   const [isExporting, setIsExporting] = useState(false);
@@ -102,13 +113,13 @@ export const useFinancialReport = (filters: FinancialReportFilters) => {
         );
       }
       
-      if (filters.transactionType) {
+      if (filters.transactionType && filters.transactionType !== 'all') {
         filteredTransactions = filteredTransactions.filter(
           t => t.type === filters.transactionType
         );
       }
       
-      if (filters.category) {
+      if (filters.category && filters.category !== 'all') {
         filteredTransactions = filteredTransactions.filter(
           t => t.category === filters.category
         );
@@ -124,25 +135,44 @@ export const useFinancialReport = (filters: FinancialReportFilters) => {
       }
       
       // Calculate summary data
-      const summary = calculateFinancialSummary(filteredTransactions);
+      const incomeTx = filteredTransactions.filter(t => t.type === 'income');
+      const expenseTx = filteredTransactions.filter(t => t.type === 'expense');
+      const commissionTx = filteredTransactions.filter(t => t.category === 'commission' && t.type === 'income');
+      const paidInvoiceTx = filteredTransactions.filter(t => t.category === 'invoice' && t.status === 'paid');
+      const pendingInvoiceTx = filteredTransactions.filter(t => t.category === 'invoice' && t.status === 'pending');
+      
+      const totalIncome = incomeTx.reduce((sum, t) => sum + t.amount, 0);
+      const totalExpenses = expenseTx.reduce((sum, t) => sum + t.amount, 0);
       
       return {
         transactions: filteredTransactions,
         totalCount: filteredTransactions.length,
-        summary
+        summary: {
+          totalIncome,
+          totalExpenses,
+          netIncome: totalIncome - totalExpenses,
+          commissionEarned: commissionTx.reduce((sum, t) => sum + t.amount, 0),
+          invoicesPaid: paidInvoiceTx.reduce((sum, t) => sum + t.amount, 0),
+          outstandingInvoices: pendingInvoiceTx.reduce((sum, t) => sum + t.amount, 0)
+        }
       };
     }
   });
 
   const exportReport = async () => {
     if (!query.data?.transactions) return;
-    exportFinancialReportToCsv(query.data.transactions);
+    
+    setIsExporting(true);
+    try {
+      await exportFinancialReportToCsv(query.data.transactions);
+    } finally {
+      setTimeout(() => setIsExporting(false), 1000);
+    }
   };
 
   return {
     ...query,
     isExporting,
-    setIsExporting,
     exportReport
   };
 };

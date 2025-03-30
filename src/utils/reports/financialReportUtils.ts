@@ -19,6 +19,27 @@ export interface FinancialSummary {
   expenseByCategory: Record<string, number>;
 }
 
+export interface FinancialReportFilters {
+  searchTerm?: string;
+  startDate?: Date;
+  endDate?: Date;
+  transactionType?: string;
+  category?: string;
+}
+
+export interface FinancialReportData {
+  transactions: FinancialTransaction[];
+  totalCount: number;
+  summary: {
+    totalIncome: number;
+    totalExpenses: number;
+    netIncome: number;
+    commissionEarned: number;
+    invoicesPaid: number;
+    outstandingInvoices: number;
+  };
+}
+
 export const calculateFinancialSummary = (transactions: FinancialTransaction[]): FinancialSummary => {
   const summary: FinancialSummary = {
     totalIncome: 0,
@@ -123,4 +144,9 @@ export const exportToCSV = (transactions: FinancialTransaction[], filename = 'fi
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+};
+
+// Add the missing export function
+export const exportFinancialReportToCsv = (transactions: FinancialTransaction[], filename = 'financial_report'): void => {
+  exportToCSV(transactions, filename);
 };
