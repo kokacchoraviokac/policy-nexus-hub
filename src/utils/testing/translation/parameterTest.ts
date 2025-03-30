@@ -1,65 +1,80 @@
 
-import en from '../../../locales/en/index';
-import sr from '../../../locales/sr/index';
-import mk from '../../../locales/mk/index';
-import es from '../../../locales/es/index';
 import { Language } from '@/contexts/LanguageContext';
-import { TestResult } from './types';
+import en from '@/locales/en/index';
+import sr from '@/locales/sr/index';
+import mk from '@/locales/mk/index';
+import es from '@/locales/es/index';
 
 /**
- * Tests if a translation has format parameters (like {0}) in all languages
+ * Test if all parameters in English translations exist in other languages
  */
-export const testTranslationParameters = (key: string): TestResult[] => {
-  const results: TestResult[] = [];
-  const translations = { en, sr, mk, es };
-  const languages = Object.keys(translations) as Language[];
+export const testTranslationParameters = () => {
+  const issues: Record<string, string[]> = {};
+  const allKeys = Object.keys(en);
+  const languages: Record<Language, any> = { en, sr, mk, es };
   
-  // First check if English has any parameters
-  const englishText = translations.en[key];
-  if (!englishText) {
-    return [{ passed: false, message: `Key "${key}" does not exist in English` }];
-  }
+  // Regex to find all {key} parameters
+  const paramRegex = /\{([^}]+)\}/g;
   
-  const paramRegex = /\{(\d+|[a-zA-Z]+)\}/g;
-  const englishParams = [...englishText.matchAll(paramRegex)].map(match => match[1]);
-  
-  if (englishParams.length === 0) {
-    // No parameters to check
-    return [{ passed: true, message: `No parameters found in "${key}"` }];
-  }
-  
-  // Check if all other languages have the same parameters
-  languages.forEach(lang => {
-    if (lang === 'en') return; // Skip English as it's our reference
+  // Skip English as it's the source
+  ['sr', 'mk', 'es'].forEach(langCode => {
+    const lang = langCode as Language;
+    const langData = languages[lang];
+    const inconsistent: string[] = [];
     
-    const text = translations[lang][key];
-    if (!text) {
-      results.push({
-        passed: false,
-        message: `Translation missing for "${key}" in ${lang.toUpperCase()}`
-      });
-      return;
-    }
-    
-    const langParams = [...text.matchAll(paramRegex)].map(match => match[1]);
-    const missingParams = englishParams.filter(p => !langParams.includes(p));
-    const extraParams = langParams.filter(p => !englishParams.includes(p));
-    
-    if (missingParams.length > 0 || extraParams.length > 0) {
-      const missingParamsText = missingParams.length > 0 ? `Missing: {${missingParams.join('}, {')}} ` : '';
-      const extraParamsText = extraParams.length > 0 ? `Extra: {${extraParams.join('}, {')}}` : '';
+    allKeys.forEach(key => {
+      // Skip if translation doesn't exist
+      if (!langData[key]) return;
       
-      results.push({
-        passed: false,
-        message: `Parameter mismatch in ${lang.toUpperCase()} for "${key}": ${missingParamsText}${extraParamsText}`.trim()
+      const enValue = en[key];
+      const translatedValue = langData[key];
+      
+      // Find all params in English
+      const enParams = new Set();
+      let match;
+      while ((match = paramRegex.exec(enValue)) !== null) {
+        enParams.add(match[1]);
+      }
+      
+      // Reset regex lastIndex
+      paramRegex.lastIndex = 0;
+      
+      // Find all params in translation
+      const translatedParams = new Set();
+      while ((match = paramRegex.exec(translatedValue)) !== null) {
+        translatedParams.add(match[1]);
+      }
+      
+      // Check if all params in English are in translation
+      let missingParams = false;
+      enParams.forEach(param => {
+        if (!translatedParams.has(param)) {
+          missingParams = true;
+        }
       });
-    } else {
-      results.push({
-        passed: true,
-        message: `Parameters match in ${lang.toUpperCase()} for "${key}"`
+      
+      // Check if translation has extra params
+      let extraParams = false;
+      translatedParams.forEach(param => {
+        if (!enParams.has(param)) {
+          extraParams = true;
+        }
       });
+      
+      if (missingParams || extraParams) {
+        inconsistent.push(key);
+      }
+    });
+    
+    if (inconsistent.length > 0) {
+      issues[lang] = inconsistent;
     }
   });
   
-  return results;
+  return {
+    passed: Object.keys(issues).length === 0,
+    issues
+  };
 };
+
+export default testTranslationParameters;

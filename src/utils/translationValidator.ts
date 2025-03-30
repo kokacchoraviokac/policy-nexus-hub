@@ -1,102 +1,65 @@
 
-import en from '../locales/en/index';
-import sr from '../locales/sr/index';
-import mk from '../locales/mk/index';
-import es from '../locales/es/index';
 import { Language } from '@/contexts/LanguageContext';
+import en from '@/locales/en/index';
+import sr from '@/locales/sr/index';
+import mk from '@/locales/mk/index';
+import es from '@/locales/es/index';
 
-export type TranslationReport = {
-  missingKeys: Record<string, string[]>;
+interface TranslationReport {
   totalKeys: number;
-  missingCount: Record<string, number>;
-  completionPercentage: Record<string, number>;
-};
+  missingKeys: Record<Language, string[]>;
+  missingCount: Record<Language, number>;
+  completionPercentage: Record<Language, number>;
+}
 
 /**
- * Checks if a key exists in the given translations object
- */
-export const hasTranslation = (
-  key: string,
-  translations: Record<string, string>
-): boolean => {
-  return Object.prototype.hasOwnProperty.call(translations, key);
-};
-
-/**
- * Finds keys that exist in the source language but are missing in the target language
- */
-export const findMissingTranslations = (
-  source: Record<string, string>,
-  target: Record<string, string>
-): string[] => {
-  return Object.keys(source).filter(key => !hasTranslation(key, target));
-};
-
-/**
- * Generates a comprehensive report of missing translations across all languages
+ * Generate a comprehensive report about the translation status
  */
 export const generateTranslationReport = (): TranslationReport => {
-  const translations = {
-    en,
-    sr,
-    mk,
-    es
+  const allKeys = Object.keys(en);
+  const languages: Record<Language, any> = { en, sr, mk, es };
+  
+  const missingKeys: Record<Language, string[]> = {
+    en: [],
+    sr: [],
+    mk: [],
+    es: []
   };
   
-  // English is considered the source language
-  const sourceKeys = Object.keys(translations.en);
-  const totalKeys = sourceKeys.length;
+  // Find missing keys for each language
+  Object.keys(languages).forEach(langCode => {
+    const lang = langCode as Language;
+    if (lang === 'en') return; // Skip English as it's the source
+    
+    const langData = languages[lang];
+    allKeys.forEach(key => {
+      if (!langData[key]) {
+        missingKeys[lang].push(key);
+      }
+    });
+  });
   
-  const missingKeys: Record<string, string[]> = {
-    sr: findMissingTranslations(translations.en, translations.sr),
-    mk: findMissingTranslations(translations.en, translations.mk),
-    es: findMissingTranslations(translations.en, translations.es),
-    // Also check for keys that exist in other languages but not in English
-    en: [
-      ...findMissingTranslations(translations.sr, translations.en),
-      ...findMissingTranslations(translations.mk, translations.en),
-      ...findMissingTranslations(translations.es, translations.en)
-    ].filter((value, index, self) => self.indexOf(value) === index) // Remove duplicates
-  };
-  
-  const missingCount: Record<string, number> = {
-    en: missingKeys.en.length,
+  // Calculate stats
+  const missingCount: Record<Language, number> = {
+    en: 0,
     sr: missingKeys.sr.length,
     mk: missingKeys.mk.length,
     es: missingKeys.es.length
   };
   
-  const completionPercentage: Record<string, number> = {
-    en: 100, // English is the reference
-    sr: Math.round(((totalKeys - missingKeys.sr.length) / totalKeys) * 100),
-    mk: Math.round(((totalKeys - missingKeys.mk.length) / totalKeys) * 100),
-    es: Math.round(((totalKeys - missingKeys.es.length) / totalKeys) * 100)
+  const completionPercentage: Record<Language, number> = {
+    en: 100,
+    sr: Math.round(((allKeys.length - missingCount.sr) / allKeys.length) * 100),
+    mk: Math.round(((allKeys.length - missingCount.mk) / allKeys.length) * 100),
+    es: Math.round(((allKeys.length - missingCount.es) / allKeys.length) * 100)
   };
   
   return {
+    totalKeys: allKeys.length,
     missingKeys,
-    totalKeys,
     missingCount,
     completionPercentage
   };
 };
 
-/**
- * For development use - logs a warning when a translation is missing
- */
-export const logMissingTranslation = (key: string, language: Language): void => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.warn(`Missing translation for key "${key}" in language "${language}"`);
-  }
-};
-
-/**
- * Development helper to visually highlight missing translations in the UI
- */
-export const formatMissingTranslation = (key: string): string => {
-  if (process.env.NODE_ENV === 'production') {
-    return key;
-  }
-  
-  return `[MISSING: ${key}]`;
-};
+export default generateTranslationReport;

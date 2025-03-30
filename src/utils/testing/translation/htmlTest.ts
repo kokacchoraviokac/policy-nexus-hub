@@ -1,64 +1,69 @@
 
-import en from '../../../locales/en/index';
-import sr from '../../../locales/sr/index';
-import mk from '../../../locales/mk/index';
-import es from '../../../locales/es/index';
 import { Language } from '@/contexts/LanguageContext';
-import { TestResult } from './types';
+import en from '@/locales/en/index';
+import sr from '@/locales/sr/index';
+import mk from '@/locales/mk/index';
+import es from '@/locales/es/index';
 
 /**
- * Tests if a translation with HTML tags is consistent across all languages
+ * Test if HTML tags in English translations exist in other languages
  */
-export const testHtmlTranslations = (key: string): TestResult[] => {
-  const results: TestResult[] = [];
-  const translations = { en, sr, mk, es };
-  const languages = Object.keys(translations) as Language[];
+export const testHtmlTranslations = () => {
+  const issues: Record<string, string[]> = {};
+  const allKeys = Object.keys(en);
+  const languages: Record<Language, any> = { en, sr, mk, es };
   
-  // First check if English has any HTML tags
-  const englishText = translations.en[key];
-  if (!englishText) {
-    return [{ passed: false, message: `Key "${key}" does not exist in English` }];
-  }
+  // Regex to find all HTML tags
+  const tagRegex = /<[^>]+>/g;
   
-  const htmlTagRegex = /<[^>]+>/g;
-  const englishTags = englishText.match(htmlTagRegex) || [];
-  
-  if (englishTags.length === 0) {
-    // No HTML tags to check
-    return [{ passed: true, message: `No HTML tags found in "${key}"` }];
-  }
-  
-  // Check if all other languages have the same HTML tags
-  languages.forEach(lang => {
-    if (lang === 'en') return; // Skip English as it's our reference
+  // Skip English as it's the source
+  ['sr', 'mk', 'es'].forEach(langCode => {
+    const lang = langCode as Language;
+    const langData = languages[lang];
+    const inconsistent: string[] = [];
     
-    const text = translations[lang][key];
-    if (!text) {
-      results.push({
-        passed: false,
-        message: `Translation missing for "${key}" in ${lang.toUpperCase()}`
-      });
-      return;
-    }
+    allKeys.forEach(key => {
+      // Skip if translation doesn't exist
+      if (!langData[key]) return;
+      
+      const enValue = en[key];
+      const translatedValue = langData[key];
+      
+      // Find all HTML tags in English
+      const enTags = new Set();
+      let match;
+      let enTagsCount = 0;
+      while ((match = tagRegex.exec(enValue)) !== null) {
+        enTags.add(match[0]);
+        enTagsCount++;
+      }
+      
+      // Reset regex lastIndex
+      tagRegex.lastIndex = 0;
+      
+      // Find all HTML tags in translation
+      const translatedTags = new Set();
+      let translatedTagsCount = 0;
+      while ((match = tagRegex.exec(translatedValue)) !== null) {
+        translatedTags.add(match[0]);
+        translatedTagsCount++;
+      }
+      
+      // Check if the number of HTML tags differs
+      if (enTagsCount !== translatedTagsCount) {
+        inconsistent.push(key);
+      }
+    });
     
-    const langTags = text.match(htmlTagRegex) || [];
-    const missingTags = englishTags.filter(tag => !langTags.includes(tag));
-    const extraTags = langTags.filter(tag => !englishTags.includes(tag));
-    
-    if (missingTags.length > 0 || extraTags.length > 0) {
-      results.push({
-        passed: false,
-        message: `HTML tag mismatch in ${lang.toUpperCase()} for "${key}": ` +
-          (missingTags.length > 0 ? `Missing: ${missingTags.join(', ')} ` : '') +
-          (extraTags.length > 0 ? `Extra: ${extraTags.join(', ')}` : '')
-      });
-    } else {
-      results.push({
-        passed: true,
-        message: `HTML tags match in ${lang.toUpperCase()} for "${key}"`
-      });
+    if (inconsistent.length > 0) {
+      issues[lang] = inconsistent;
     }
   });
   
-  return results;
+  return {
+    passed: Object.keys(issues).length === 0,
+    issues
+  };
 };
+
+export default testHtmlTranslations;

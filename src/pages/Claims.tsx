@@ -37,13 +37,17 @@ import {
 import { format } from "date-fns";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
+import { DateRange } from "react-day-picker";
 
 const Claims = () => {
   const { t, formatDate, formatCurrency } = useLanguage();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: undefined,
+    to: undefined
+  });
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
 
   // Fetch claims
@@ -72,12 +76,12 @@ const Claims = () => {
       }
       
       // Apply date range filter
-      if (dateRange.from) {
+      if (dateRange?.from) {
         const fromDate = format(dateRange.from, 'yyyy-MM-dd');
         query = query.gte('incident_date', fromDate);
       }
       
-      if (dateRange.to) {
+      if (dateRange?.to) {
         const toDate = format(dateRange.to, 'yyyy-MM-dd');
         query = query.lte('incident_date', toDate);
       }
@@ -118,8 +122,8 @@ const Claims = () => {
 
   const hasActiveFilters = 
     statusFilter !== "all" || 
-    dateRange.from !== undefined || 
-    dateRange.to !== undefined || 
+    dateRange?.from !== undefined || 
+    dateRange?.to !== undefined || 
     searchTerm !== "";
 
   return (

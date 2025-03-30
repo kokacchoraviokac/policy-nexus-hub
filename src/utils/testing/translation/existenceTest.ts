@@ -1,28 +1,39 @@
 
-import en from '../../../locales/en/index';
-import sr from '../../../locales/sr/index';
-import mk from '../../../locales/mk/index';
-import es from '../../../locales/es/index';
 import { Language } from '@/contexts/LanguageContext';
-import { TestResult } from './types';
+import en from '@/locales/en/index';
+import sr from '@/locales/sr/index';
+import mk from '@/locales/mk/index';
+import es from '@/locales/es/index';
 
 /**
- * Tests if a translation exists for all languages
+ * Test if all keys in English exist in other languages
  */
-export const testTranslationExists = (key: string): TestResult[] => {
-  const results: TestResult[] = [];
-  const translations = { sr, mk, es };
-  const languages = Object.keys(translations) as Language[];
+export const testTranslationExistence = () => {
+  const issues: Record<string, string[]> = {};
+  const allKeys = Object.keys(en);
+  const languages: Record<Language, any> = { en, sr, mk, es };
   
-  languages.forEach(lang => {
-    const exists = Object.prototype.hasOwnProperty.call(translations[lang], key);
-    results.push({
-      passed: exists,
-      message: exists 
-        ? `Translation exists for "${key}" in ${lang.toUpperCase()}` 
-        : `Missing translation for "${key}" in ${lang.toUpperCase()}`
+  // Skip English as it's the source
+  ['sr', 'mk', 'es'].forEach(langCode => {
+    const lang = langCode as Language;
+    const langData = languages[lang];
+    const missing: string[] = [];
+    
+    allKeys.forEach(key => {
+      if (!langData[key]) {
+        missing.push(key);
+      }
     });
+    
+    if (missing.length > 0) {
+      issues[lang] = missing;
+    }
   });
   
-  return results;
+  return {
+    passed: Object.keys(issues).length === 0,
+    issues
+  };
 };
+
+export default testTranslationExistence;
