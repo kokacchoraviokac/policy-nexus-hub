@@ -3,20 +3,25 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Progress } from "@/components/ui/progress";
 
 interface PolicyClaimsCardProps {
   policyId: string;
   claimsCount: number;
+  activeClaimsCount?: number;
+  totalClaimedAmount?: number;
 }
 
 const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
   policyId,
   claimsCount,
+  activeClaimsCount = 0,
+  totalClaimedAmount = 0,
 }) => {
-  const { t } = useLanguage();
+  const { t, formatCurrency } = useLanguage();
   const navigate = useNavigate();
 
   const handleViewClaims = () => {
@@ -28,9 +33,14 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
   };
 
   const handleNewClaim = () => {
-    // To be implemented - navigate to new claim form
+    // Navigate to new claim form
     navigate(`/claims/new?policyId=${policyId}`);
   };
+
+  // Calculate the percentage of active claims
+  const activeClaimsPercentage = claimsCount > 0 
+    ? Math.round((activeClaimsCount / claimsCount) * 100)
+    : 0;
 
   return (
     <Card>
@@ -48,7 +58,26 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
             </Badge>
           </div>
 
-          <div className="flex flex-col space-y-2">
+          {claimsCount > 0 && (
+            <>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">{t("activeClaims")}</span>
+                  <span>{activeClaimsCount} / {claimsCount}</span>
+                </div>
+                <Progress value={activeClaimsPercentage} className="h-2" />
+              </div>
+
+              {totalClaimedAmount > 0 && (
+                <div className="flex items-center justify-between text-sm pt-1">
+                  <span className="text-muted-foreground">{t("totalClaimedAmount")}</span>
+                  <span className="font-medium">{formatCurrency(totalClaimedAmount)}</span>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="flex flex-col space-y-2 pt-2">
             <Button
               variant="outline"
               size="sm"
@@ -56,6 +85,7 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
               onClick={handleViewClaims}
               disabled={claimsCount === 0}
             >
+              <FileText className="mr-2 h-4 w-4" />
               {t("viewClaims")}
             </Button>
             <Button

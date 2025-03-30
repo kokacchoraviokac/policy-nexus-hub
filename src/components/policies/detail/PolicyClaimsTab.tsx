@@ -2,14 +2,22 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { FilePlus, AlertTriangle, ArrowRight } from "lucide-react";
+import { FilePlus, AlertTriangle, ArrowRight, FileText, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface PolicyClaimsTabProps {
   policyId: string;
@@ -24,6 +32,7 @@ interface Claim {
   claimed_amount: number;
   approved_amount: number | null;
   created_at: string;
+  documents_count?: number;
 }
 
 const PolicyClaimsTab: React.FC<PolicyClaimsTabProps> = ({ policyId }) => {
@@ -33,19 +42,38 @@ const PolicyClaimsTab: React.FC<PolicyClaimsTabProps> = ({ policyId }) => {
   const { data: claims, isLoading, isError, refetch } = useQuery({
     queryKey: ['policy-claims', policyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get claims for this policy
+      const { data: claimsData, error: claimsError } = await supabase
         .from('claims')
         .select('*')
         .eq('policy_id', policyId)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data as Claim[];
+      if (claimsError) throw claimsError;
+      
+      // If there are claims, get document counts for each claim
+      if (claimsData && claimsData.length > 0) {
+        const claimsWithDocs = await Promise.all(claimsData.map(async (claim) => {
+          const { count, error: countError } = await supabase
+            .from('claim_documents')
+            .select('*', { count: 'exact', head: true })
+            .eq('claim_id', claim.id);
+            
+          return {
+            ...claim,
+            documents_count: count || 0
+          };
+        }));
+        
+        return claimsWithDocs;
+      }
+      
+      return claimsData as Claim[];
     },
   });
 
   const handleCreateClaim = () => {
-    // Navigate to create claim page or open modal
+    // Navigate to create claim page with policy ID pre-filled
     navigate(`/claims/new?policyId=${policyId}`);
   };
 
@@ -132,61 +160,63 @@ const PolicyClaimsTab: React.FC<PolicyClaimsTabProps> = ({ policyId }) => {
 
   return (
     <Card>
-      <CardContent className="pt-6 pb-4">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold">{t("policyClaims")}</h3>
+      <CardHeader className="pb-0">
+        <div className="flex justify-between items-center">
+          <CardTitle>{t("policyClaims")}</CardTitle>
           <Button size="sm" onClick={handleCreateClaim}>
             <FilePlus className="mr-2 h-4 w-4" />
             {t("createClaim")}
           </Button>
         </div>
-
+      </CardHeader>
+      <CardContent className="pt-4">
         {claims && claims.length > 0 ? (
-          <div className="space-y-4">
-            {claims.map((claim) => (
-              <div key={claim.id} className="border rounded-md p-4 hover:border-primary transition-colors">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">{claim.claim_number}</h4>
-                    <p className="text-sm text-muted-foreground line-clamp-1">{claim.damage_description}</p>
-                  </div>
-                  {getStatusBadge(claim.status)}
-                </div>
-                
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs text-muted-foreground">{t("incidentDate")}</p>
-                    <p className="font-medium">{formatDate(claim.incident_date)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">{t("claimedAmount")}</p>
-                    <p className="font-medium">{formatCurrency(claim.claimed_amount)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">{t("approvedAmount")}</p>
-                    <p className="font-medium">
-                      {claim.approved_amount !== null 
-                        ? formatCurrency(claim.approved_amount) 
-                        : '—'
-                      }
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="mt-4 flex justify-end">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-xs"
-                    onClick={() => handleViewClaim(claim.id)}
-                  >
-                    {t("viewDetails")}
-                    <ArrowRight className="ml-1 h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("claimNumber")}</TableHead>
+                <TableHead>{t("incidentDate")}</TableHead>
+                <TableHead>{t("claimedAmount")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("documents")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {claims.map((claim) => (
+                <TableRow key={claim.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewClaim(claim.id)}>
+                  <TableCell className="font-medium">
+                    <div>
+                      <div>{claim.claim_number}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-1">{claim.damage_description}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatDate(claim.incident_date)}</TableCell>
+                  <TableCell>{formatCurrency(claim.claimed_amount)}</TableCell>
+                  <TableCell>{getStatusBadge(claim.status)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <FileText className="h-4 w-4 mr-1 text-muted-foreground" />
+                      <span>{claim.documents_count || 0}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewClaim(claim.id);
+                      }}
+                    >
+                      {t("viewDetails")}
+                      <ArrowRight className="ml-1 h-3 w-3" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         ) : (
           <div className="text-center py-10 border rounded-md bg-muted/30">
             <AlertTriangle className="h-10 w-10 text-muted-foreground mx-auto mb-2" />

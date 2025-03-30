@@ -1,8 +1,10 @@
 
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { usePolicyDetail } from "@/hooks/usePolicyDetail";
+import { supabase } from "@/integrations/supabase/client";
 import BackToPoliciesButton from "@/components/policies/detail/BackToPoliciesButton";
 import PolicyDetailHeader from "@/components/policies/detail/PolicyDetailHeader";
 import PolicyDetailSummary from "@/components/policies/detail/PolicyDetailSummary";
@@ -18,6 +20,36 @@ const PolicyDetailPage = () => {
   const { toast } = useToast();
 
   const { data: policy, isLoading, isError, error } = usePolicyDetail(policyId);
+  
+  // Get active claims and total claimed amount
+  const { data: claimsStats } = useQuery({
+    queryKey: ['policy-claims-stats', policyId],
+    queryFn: async () => {
+      if (!policyId) return { activeClaimsCount: 0, totalClaimedAmount: 0 };
+      
+      const { data: claims, error } = await supabase
+        .from('claims')
+        .select('status, claimed_amount')
+        .eq('policy_id', policyId);
+      
+      if (error) throw error;
+      
+      const activeStatuses = ['in processing', 'reported', 'appealed'];
+      const activeClaimsCount = claims.filter(claim => 
+        activeStatuses.includes(claim.status.toLowerCase())
+      ).length;
+      
+      const totalClaimedAmount = claims.reduce((sum, claim) => 
+        sum + (claim.claimed_amount || 0), 0
+      );
+      
+      return {
+        activeClaimsCount,
+        totalClaimedAmount
+      };
+    },
+    enabled: !!policyId
+  });
 
   const handleEditPolicy = () => {
     if (policyId) {
@@ -64,7 +96,10 @@ const PolicyDetailPage = () => {
           
           <PolicyDetailSummary policy={policy} />
           
-          <PolicyDetailTabs policy={policy} />
+          <PolicyDetailTabs 
+            policy={policy} 
+            claimsStats={claimsStats} 
+          />
         </>
       )}
     </div>
