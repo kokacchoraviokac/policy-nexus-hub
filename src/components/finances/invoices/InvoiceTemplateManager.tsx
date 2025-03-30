@@ -44,6 +44,8 @@ const InvoiceTemplateManager = () => {
       primary_color: template.primary_color || defaultTemplateValues.primary_color,
       secondary_color: template.secondary_color || defaultTemplateValues.secondary_color,
       font_family: template.font_family || defaultTemplateValues.font_family,
+      font_weight: template.font_weight || defaultTemplateValues.font_weight,
+      font_style: template.font_style || defaultTemplateValues.font_style,
       logo_position: (template.logo_position as 'left' | 'center' | 'right') || defaultTemplateValues.logo_position,
       header_text: template.header_text || '',
       footer_text: template.footer_text || '',

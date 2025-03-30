@@ -32,7 +32,11 @@ export const InvoiceTemplateCard = ({
       )}
       <CardHeader>
         <CardTitle>{template.name}</CardTitle>
-        <CardDescription>{t("fontFamily")}: {template.font_family || "Default"}</CardDescription>
+        <CardDescription>
+          {t("fontFamily")}: {template.font_family || "Default"}
+          {template.font_weight && template.font_weight !== 'normal' && `, ${t(template.font_weight)}`}
+          {template.font_style && template.font_style !== 'normal' && `, ${t(template.font_style)}`}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex gap-2 mb-4">
@@ -47,7 +51,7 @@ export const InvoiceTemplateCard = ({
         </div>
         
         <p className="text-sm text-muted-foreground">
-          {t("logoPosition")}: {template.logo_position || "Left"}
+          {t("logoPosition")}: {template.logo_position ? t(template.logo_position) : t("left")}
         </p>
         
         {template.header_text && (

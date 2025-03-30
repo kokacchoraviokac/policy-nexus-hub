@@ -11,7 +11,8 @@ import {
   TextFields,
   PaymentInstructionsFields,
   DefaultTemplateField,
-  FormActions
+  FormActions,
+  FontStyleFields
 } from "./form-fields";
 
 interface TemplateFormProps {
@@ -28,6 +29,7 @@ export const TemplateForm = ({ form, onSubmit, onCancel, isEditing }: TemplateFo
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <NameAndFontFields form={form} />
+        <FontStyleFields form={form} />
         <ColorFields form={form} />
         <LogoPositionField form={form} />
         <TextFields form={form} />

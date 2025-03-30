@@ -55,6 +55,8 @@ export const generateInvoicePdf = async (
   const primaryColor = template?.primary_color || [41, 98, 255]; // RGB array for blue
   const secondaryColor = template?.secondary_color || [245, 247, 250]; // Light blue/gray
   const fontFamily = template?.font_family || 'helvetica';
+  const fontWeight = template?.font_weight || 'normal';
+  const fontStyle = template?.font_style || 'normal';
   
   // Parse string colors to RGB arrays if needed
   const getPrimaryColorRGB = (): number[] => {
@@ -70,6 +72,13 @@ export const generateInvoicePdf = async (
   
   // Configure fonts
   doc.setFont(fontFamily);
+  
+  // Set font style based on template settings
+  let fontStyleSetting = fontWeight === 'bold' ? 'bold' : 'normal';
+  if (fontStyle === 'italic') {
+    fontStyleSetting = fontWeight === 'bold' ? 'bolditalic' : 'italic';
+  }
+  doc.setFont(fontFamily, fontStyleSetting);
   
   // Add custom header if provided
   if (customHeader || template?.header_text) {

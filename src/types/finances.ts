@@ -113,6 +113,8 @@ export interface InvoiceTemplateSettings {
   primary_color?: string;
   secondary_color?: string;
   font_family?: string;
+  font_weight?: 'normal' | 'bold' | 'light';
+  font_style?: 'normal' | 'italic';
   logo_position?: 'left' | 'center' | 'right';
   footer_text?: string;
   header_text?: string;

@@ -15,6 +15,8 @@ export type TemplateFormValues = {
   primary_color: string;
   secondary_color: string;
   font_family: string;
+  font_weight: 'normal' | 'bold' | 'light';
+  font_style: 'normal' | 'italic';
   logo_position: 'left' | 'center' | 'right';
   header_text: string;
   footer_text: string;
@@ -28,6 +30,8 @@ export const defaultTemplateValues: TemplateFormValues = {
   primary_color: "#3b82f6", // blue-500
   secondary_color: "#f3f4f6", // gray-100
   font_family: "helvetica",
+  font_weight: "normal",
+  font_style: "normal",
   logo_position: "left",
   header_text: "",
   footer_text: "",

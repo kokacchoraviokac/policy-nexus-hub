@@ -6,3 +6,4 @@ export * from './TextFields';
 export * from './PaymentInstructionsFields';
 export * from './DefaultTemplateField';
 export * from './FormActions';
+export * from './FontStyleFields';
