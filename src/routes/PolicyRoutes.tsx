@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -113,7 +114,7 @@ export const PolicyRoutes = [
     element={
       <ProtectedRoute requiredPrivilege="finances:view">
         <AppLayout>
-          <FinancesModule />
+          <FinancesModule title="finances" />
         </AppLayout>
       </ProtectedRoute>
     }
