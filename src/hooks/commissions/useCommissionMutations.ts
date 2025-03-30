@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import { useContext } from "react";
+import { CommissionType } from "@/types/finances";
 
 export const useCommissionMutations = () => {
   const { t } = useLanguage();
@@ -35,7 +36,7 @@ export const useCommissionMutations = () => {
           base_amount: baseAmount,
           rate: rate,
           calculated_amount: calculatedAmount,
-          status: 'due',
+          status: 'due' as CommissionType["status"],
           company_id: companyId
         })
         .select()
@@ -64,7 +65,7 @@ export const useCommissionMutations = () => {
   const updateCommissionStatusMutation = useMutation({
     mutationFn: async ({ commissionId, status, paymentDate, paidAmount }: { 
       commissionId: string; 
-      status: string;
+      status: CommissionType["status"];
       paymentDate?: string;
       paidAmount?: number;
     }) => {

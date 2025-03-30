@@ -154,7 +154,7 @@ const InsurersDirectory: React.FC = () => {
         }}
         pagination={{
           currentPage: pagination.page,
-          pageSize: pagination.pageSize,
+          itemsPerPage: pagination.pageSize,
           totalItems: pagination.totalCount,
           onPageChange: pagination.setPage,
           onPageSizeChange: pagination.setPageSize,

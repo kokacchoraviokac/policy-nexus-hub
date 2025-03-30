@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CommissionFilterOptions } from "./useCommissionFilters";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import { useContext } from "react";
+import { CommissionType } from "@/types/finances";
 
 export const useCommissionExport = (filters: CommissionFilterOptions) => {
   const { t } = useLanguage();
@@ -32,8 +33,7 @@ export const useCommissionExport = (filters: CommissionFilterOptions) => {
             insurer_name,
             product_name,
             currency
-          ),
-          agents(name)
+          )
         `);
       
       // Apply company filter if available
@@ -79,20 +79,28 @@ export const useCommissionExport = (filters: CommissionFilterOptions) => {
         return;
       }
       
-      // Transform and prepare data for CSV export
-      const exportData = data.map((commission: any) => ({
-        [t("policyNumber")]: commission.policies?.policy_number || "-",
-        [t("policyholder")]: commission.policies?.policyholder_name || "-",
-        [t("insurer")]: commission.policies?.insurer_name || "-",
-        [t("agent")]: commission.agents?.name || "-",
-        [t("baseAmount")]: commission.base_amount,
-        [t("rate")]: commission.rate,
-        [t("calculatedAmount")]: commission.calculated_amount,
-        [t("status")]: t(commission.status),
-        [t("paymentDate")]: commission.payment_date || "-",
-        [t("paidAmount")]: commission.paid_amount || "-",
-        [t("createdAt")]: new Date(commission.created_at).toLocaleString()
-      }));
+      // Transform data for export, ensuring status is a valid CommissionType status
+      const exportData = data.map((commission: any) => {
+        let validStatus: CommissionType["status"] = "due";
+        if (commission.status === "paid" || 
+            commission.status === "partially_paid" || 
+            commission.status === "calculating") {
+          validStatus = commission.status;
+        }
+        
+        return {
+          [t("policyNumber")]: commission.policies?.policy_number || "-",
+          [t("policyholder")]: commission.policies?.policyholder_name || "-",
+          [t("insurer")]: commission.policies?.insurer_name || "-",
+          [t("baseAmount")]: commission.base_amount,
+          [t("rate")]: commission.rate,
+          [t("calculatedAmount")]: commission.calculated_amount,
+          [t("status")]: t(validStatus),
+          [t("paymentDate")]: commission.payment_date || "-",
+          [t("paidAmount")]: commission.paid_amount || "-",
+          [t("createdAt")]: new Date(commission.created_at).toLocaleString()
+        };
+      });
       
       // Convert to CSV using Papa Parse
       const Papa = await import('papaparse');

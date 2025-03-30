@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,17 +54,14 @@ const PoliciesTable = ({
   } = useQuery({
     queryKey: ['policies', searchTerm, statusFilter, currentPage, pageSize],
     queryFn: async () => {
-      // Calculate pagination parameters
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
       
-      // Start building the query
       let query = supabase
         .from('policies')
         .select('id, policy_number, insurer_name, product_name, policyholder_name, start_date, expiry_date, premium, currency, status', 
           { count: 'exact' });
       
-      // Apply search filter if provided
       if (searchTerm) {
         query = query.or(
           `policy_number.ilike.%${searchTerm}%,` +
@@ -75,15 +71,12 @@ const PoliciesTable = ({
         );
       }
       
-      // Apply status filter if provided
       if (statusFilter && statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
       
-      // Apply pagination
       query = query.range(from, to).order('expiry_date');
       
-      // Execute the query
       const { data, error, count } = await query;
       
       if (error) {
@@ -128,7 +121,7 @@ const PoliciesTable = ({
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page when changing page size
+    setCurrentPage(1);
   };
 
   const columns: Column<Policy>[] = [
@@ -211,8 +204,8 @@ const PoliciesTable = ({
         ),
       }}
       pagination={{
-        pageSize,
-        currentPage,
+        currentPage: currentPage,
+        itemsPerPage: pageSize,
         totalItems: data?.totalCount || 0,
         onPageChange: handlePageChange,
         onPageSizeChange: handlePageSizeChange,

@@ -29,15 +29,13 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { CommissionType } from "@/types/finances";
 
-type CommissionStatus = 'due' | 'partially_paid' | 'paid' | 'calculating';
-
 interface UpdateCommissionStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   commission: CommissionType & { currency?: string };
   onUpdateStatus: (params: {
     commissionId: string;
-    status: string;
+    status: CommissionType["status"];
     paymentDate?: string;
     paidAmount?: number;
   }) => void;
@@ -52,7 +50,7 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
   isUpdating,
 }) => {
   const { t, formatCurrency } = useLanguage();
-  const [status, setStatus] = useState<CommissionStatus>(commission.status as CommissionStatus);
+  const [status, setStatus] = useState<CommissionType["status"]>(commission.status);
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(
     commission.payment_date ? new Date(commission.payment_date) : undefined
   );
@@ -109,7 +107,7 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
             <Label htmlFor="status">{t("newStatus")}</Label>
             <Select
               value={status}
-              onValueChange={(value) => setStatus(value as CommissionStatus)}
+              onValueChange={(value) => setStatus(value as CommissionType["status"])}
             >
               <SelectTrigger id="status">
                 <SelectValue placeholder={t("selectStatus")} />
