@@ -1,47 +1,19 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDocumentApproval } from "@/hooks/useDocumentApproval";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  Loader2, 
-  Clock,
-  ShieldCheck,
-  ShieldX,
-  ShieldQuestion,
-  FileQuestion
-} from "lucide-react";
-import { Document, DocumentApprovalStatus } from "@/types/documents";
+import { FileQuestion } from "lucide-react";
+import { Document } from "@/types/documents";
 import { formatDate } from "@/utils/format";
-import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
+import { ApprovalStatusBadge, getStatusIcon } from "./approval/ApprovalStatusBadge";
+import { ApprovalActions } from "./approval/ApprovalActions";
+import { useDocumentApprovalInfo } from "@/hooks/useDocumentApprovalInfo";
 
 interface DocumentApprovalPanelProps {
   document: Document;
   onApprovalComplete?: () => void;
-}
-
-// Define activity log details interface
-interface ApprovalActivityDetails {
-  document_id?: string;
-  action_type?: string;
-  approval_status?: DocumentApprovalStatus;
-  approved_by?: string;
-  approved_at?: string;
-  notes?: string;
-}
-
-// Define activity log row type
-interface ActivityLogRow {
-  id: string;
-  user_id: string;
-  created_at: string;
-  details: ApprovalActivityDetails;
 }
 
 const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
@@ -51,79 +23,13 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
   const { t } = useLanguage();
   const [notes, setNotes] = useState(document.approval_notes || "");
   const { mutate: approveDocument, isPending } = useDocumentApproval();
-  const [approvalInfo, setApprovalInfo] = useState<{
-    status: DocumentApprovalStatus;
-    approved_by?: string;
-    approved_at?: string;
-    notes?: string;
-  }>({
-    status: document.approval_status || "pending",
-    approved_by: document.approved_by,
-    approved_at: document.approved_at,
-    notes: document.approval_notes
-  });
-  
-  useEffect(() => {
-    const fetchApprovalInfo = async () => {
-      if (!document.entity_type || !document.entity_id || !document.id) return;
-      
-      try {
-        // Fetch the activity logs directly
-        const { data, error } = await supabase
-          .from('activity_logs')
-          .select('id, user_id, created_at, details')
-          .eq('entity_type', document.entity_type)
-          .eq('entity_id', document.entity_id)
-          .order('created_at', { ascending: false })
-          .limit(10);
-          
-        if (error) {
-          console.error("Error fetching approval info:", error);
-          return;
-        }
-        
-        // Type-safe filtering of logs in JavaScript
-        if (data && data.length > 0) {
-          // Safe type assertion
-          const activityLogs = data as ActivityLogRow[];
-          
-          // Find relevant approval logs
-          const filteredLogs = activityLogs.filter(log => {
-            const details = log.details as ApprovalActivityDetails;
-            return details && 
-                  details.action_type === 'document_approval' && 
-                  details.document_id === document.id;
-          });
-          
-          if (filteredLogs.length > 0) {
-            const latestApproval = filteredLogs[0];
-            const details = latestApproval.details as ApprovalActivityDetails;
-            
-            setApprovalInfo({
-              status: details.approval_status || "pending",
-              approved_by: latestApproval.user_id,
-              approved_at: latestApproval.created_at,
-              notes: details.notes
-            });
-            
-            if (details.notes) {
-              setNotes(details.notes);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error in fetchApprovalInfo:", error);
-      }
-    };
-    
-    fetchApprovalInfo();
-  }, [document, document.entity_type, document.entity_id, document.id]);
+  const { approvalInfo } = useDocumentApprovalInfo(document);
   
   if (!document.entity_type || !document.entity_id) {
     return null;
   }
   
-  const handleUpdateStatus = (status: DocumentApprovalStatus) => {
+  const handleUpdateStatus = (status: typeof approvalInfo.status) => {
     approveDocument({
       documentId: document.id,
       status,
@@ -132,43 +38,11 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       entityId: document.entity_id
     }, {
       onSuccess: () => {
-        setApprovalInfo(prev => ({
-          ...prev,
-          status,
-          notes
-        }));
-        
         if (onApprovalComplete) {
           onApprovalComplete();
         }
       }
     });
-  };
-  
-  const getStatusIcon = () => {
-    switch (approvalInfo.status) {
-      case "approved":
-        return <ShieldCheck className="h-5 w-5 text-green-500" />;
-      case "rejected":
-        return <ShieldX className="h-5 w-5 text-red-500" />;
-      case "needs_review":
-        return <ShieldQuestion className="h-5 w-5 text-amber-500" />;
-      default:
-        return <Clock className="h-5 w-5 text-muted-foreground" />;
-    }
-  };
-  
-  const getStatusBadge = () => {
-    switch (approvalInfo.status) {
-      case "approved":
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{t("approved")}</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">{t("rejected")}</Badge>;
-      case "needs_review":
-        return <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-100">{t("needsReview")}</Badge>;
-      default:
-        return <Badge variant="outline" className="bg-slate-100">{t("pending")}</Badge>;
-    }
   };
   
   return (
@@ -184,8 +58,8 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           <div className="flex items-center justify-between">
             <span className="font-medium">{t("status")}:</span>
             <div className="flex items-center gap-2">
-              {getStatusIcon()}
-              {getStatusBadge()}
+              {getStatusIcon(approvalInfo.status)}
+              <ApprovalStatusBadge status={approvalInfo.status} />
             </div>
           </div>
           
@@ -208,33 +82,13 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
         </div>
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row gap-2 pt-2">
-        <Button 
-          variant="default" 
-          className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
-          onClick={() => handleUpdateStatus("approved")}
-          disabled={isPending || approvalInfo.status === "approved"}
-        >
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-          {t("approve")}
-        </Button>
-        <Button 
-          variant="default"
-          className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600"
-          onClick={() => handleUpdateStatus("needs_review")}
-          disabled={isPending || approvalInfo.status === "needs_review"}
-        >
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertCircle className="mr-2 h-4 w-4" />}
-          {t("needsReview")}
-        </Button>
-        <Button 
-          variant="destructive"
-          className="w-full sm:w-auto"
-          onClick={() => handleUpdateStatus("rejected")}
-          disabled={isPending || approvalInfo.status === "rejected"}
-        >
-          {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
-          {t("reject")}
-        </Button>
+        <ApprovalActions 
+          onApprove={() => handleUpdateStatus("approved")}
+          onReject={() => handleUpdateStatus("rejected")}
+          onNeedsReview={() => handleUpdateStatus("needs_review")}
+          currentStatus={approvalInfo.status}
+          isPending={isPending}
+        />
       </CardFooter>
     </Card>
   );

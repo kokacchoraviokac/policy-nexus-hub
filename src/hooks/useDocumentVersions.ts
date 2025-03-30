@@ -30,6 +30,13 @@ interface DocumentDbRow {
   sales_process_id?: string;
 }
 
+// Define a simplified document entity mapping type
+interface DocumentEntityInfo {
+  tableName: DocumentTableName;
+  entityType: 'policy' | 'claim' | 'sales_process';
+  entityId: string;
+}
+
 export const useDocumentVersions = ({ 
   documentId, 
   originalDocumentId,
@@ -46,146 +53,22 @@ export const useDocumentVersions = ({
     queryKey: ['document-versions', queryDocumentId],
     queryFn: async () => {
       try {
-        // First find document table and entity information
-        let entityType = '';
-        let entityId = '';
-        let tableName: DocumentTableName | null = null;
+        // Find the document table and entity information first
+        const documentInfo = await findDocumentInfo(queryDocumentId);
         
-        // Check policy_documents
-        const { data: policyDoc, error: policyError } = await supabase
-          .from('policy_documents')
-          .select('id, policy_id')
-          .eq('id', queryDocumentId)
-          .limit(1)
-          .single();
-          
-        if (!policyError && policyDoc) {
-          tableName = 'policy_documents';
-          entityType = 'policy';
-          entityId = policyDoc.policy_id;
-        } else {
-          // Check claim_documents
-          const { data: claimDoc, error: claimError } = await supabase
-            .from('claim_documents')
-            .select('id, claim_id')
-            .eq('id', queryDocumentId)
-            .limit(1)
-            .single();
-            
-          if (!claimError && claimDoc) {
-            tableName = 'claim_documents';
-            entityType = 'claim';
-            entityId = claimDoc.claim_id;
-          } else {
-            // Check sales_documents
-            const { data: salesDoc, error: salesError } = await supabase
-              .from('sales_documents')
-              .select('id, sales_process_id')
-              .eq('id', queryDocumentId)
-              .limit(1)
-              .single();
-              
-            if (!salesError && salesDoc) {
-              tableName = 'sales_documents';
-              entityType = 'sales_process';
-              entityId = salesDoc.sales_process_id;
-            }
-          }
-        }
-        
-        if (!tableName || !entityType || !entityId) {
+        if (!documentInfo) {
           throw new Error("Document not found or could not determine document type");
         }
         
         // Get original document ID if needed
-        let originalId = originalDocumentId;
+        const resolvedOriginalId = originalDocumentId || await findOriginalDocumentId(documentId, documentInfo.tableName);
+        const finalQueryId = resolvedOriginalId || documentId;
         
-        if (!originalId) {
-          if (tableName === 'policy_documents') {
-            const { data: docInfo } = await supabase
-              .from('policy_documents')
-              .select('original_document_id')
-              .eq('id', documentId)
-              .single();
-              
-            originalId = docInfo?.original_document_id || documentId;
-          } else if (tableName === 'claim_documents') {
-            const { data: docInfo } = await supabase
-              .from('claim_documents')
-              .select('original_document_id')
-              .eq('id', documentId)
-              .single();
-              
-            originalId = docInfo?.original_document_id || documentId;
-          } else if (tableName === 'sales_documents') {
-            const { data: docInfo } = await supabase
-              .from('sales_documents')
-              .select('original_document_id')
-              .eq('id', documentId)
-              .single();
-              
-            originalId = docInfo?.original_document_id || documentId;
-          }
-        }
-        
-        // Use separate queries for each table to avoid type issues
-        let allVersions: DocumentDbRow[] = [];
-        
-        if (tableName === 'policy_documents') {
-          const { data } = await supabase
-            .from('policy_documents')
-            .select('*')
-            .eq('policy_id', entityId)
-            .or(`original_document_id.eq.${originalId || documentId},id.eq.${originalId || documentId}`);
-            
-          if (data) {
-            allVersions = data as DocumentDbRow[];
-          }
-        } else if (tableName === 'claim_documents') {
-          const { data } = await supabase
-            .from('claim_documents')
-            .select('*')
-            .eq('claim_id', entityId)
-            .or(`original_document_id.eq.${originalId || documentId},id.eq.${originalId || documentId}`);
-            
-          if (data) {
-            allVersions = data as DocumentDbRow[];
-          }
-        } else if (tableName === 'sales_documents') {
-          const { data } = await supabase
-            .from('sales_documents')
-            .select('*')
-            .eq('sales_process_id', entityId)
-            .or(`original_document_id.eq.${originalId || documentId},id.eq.${originalId || documentId}`);
-            
-          if (data) {
-            allVersions = data as DocumentDbRow[];
-          }
-        }
+        // Get all versions based on the document info we found
+        const allVersions = await fetchAllVersions(finalQueryId, documentInfo);
         
         // Transform to Document type
-        return allVersions.map((doc: DocumentDbRow) => {
-          return {
-            id: doc.id,
-            document_name: doc.document_name,
-            document_type: doc.document_type,
-            created_at: doc.created_at,
-            file_path: doc.file_path,
-            entity_type: entityType,
-            entity_id: entityType === 'policy' 
-              ? doc.policy_id 
-              : entityType === 'claim' 
-                ? doc.claim_id 
-                : doc.sales_process_id,
-            uploaded_by_id: doc.uploaded_by,
-            version: doc.version || 1,
-            is_latest_version: doc.is_latest_version || false,
-            original_document_id: doc.original_document_id || null,
-            category: doc.category || null,
-            approval_status: 'pending',
-            mime_type: doc.mime_type || null
-          } as Document;
-        });
+        return transformToDocuments(allVersions, documentInfo.entityType);
       } catch (error) {
         console.error("Error fetching document versions:", error);
         return [];
@@ -201,3 +84,106 @@ export const useDocumentVersions = ({
     hasMultipleVersions: versions.length > 1
   };
 };
+
+// Helper function to find the document table and entity information
+async function findDocumentInfo(documentId: string): Promise<DocumentEntityInfo | null> {
+  // Check policy_documents
+  const { data: policyDoc, error: policyError } = await supabase
+    .from('policy_documents')
+    .select('id, policy_id')
+    .eq('id', documentId)
+    .limit(1)
+    .single();
+    
+  if (!policyError && policyDoc) {
+    return {
+      tableName: 'policy_documents',
+      entityType: 'policy',
+      entityId: policyDoc.policy_id
+    };
+  }
+  
+  // Check claim_documents
+  const { data: claimDoc, error: claimError } = await supabase
+    .from('claim_documents')
+    .select('id, claim_id')
+    .eq('id', documentId)
+    .limit(1)
+    .single();
+    
+  if (!claimError && claimDoc) {
+    return {
+      tableName: 'claim_documents',
+      entityType: 'claim',
+      entityId: claimDoc.claim_id
+    };
+  }
+  
+  // Check sales_documents
+  const { data: salesDoc, error: salesError } = await supabase
+    .from('sales_documents')
+    .select('id, sales_process_id')
+    .eq('id', documentId)
+    .limit(1)
+    .single();
+    
+  if (!salesError && salesDoc) {
+    return {
+      tableName: 'sales_documents',
+      entityType: 'sales_process',
+      entityId: salesDoc.sales_process_id
+    };
+  }
+  
+  return null;
+}
+
+// Helper function to find the original document ID
+async function findOriginalDocumentId(documentId: string, tableName: DocumentTableName): Promise<string | null> {
+  const { data: docInfo } = await supabase
+    .from(tableName)
+    .select('original_document_id')
+    .eq('id', documentId)
+    .single();
+    
+  return docInfo?.original_document_id || null;
+}
+
+// Helper function to fetch all versions
+async function fetchAllVersions(documentId: string, info: DocumentEntityInfo): Promise<DocumentDbRow[]> {
+  const { tableName, entityType, entityId } = info;
+  
+  const { data } = await supabase
+    .from(tableName)
+    .select('*')
+    .eq(entityType === 'policy' ? 'policy_id' : entityType === 'claim' ? 'claim_id' : 'sales_process_id', entityId)
+    .or(`original_document_id.eq.${documentId},id.eq.${documentId}`);
+    
+  return (data || []) as DocumentDbRow[];
+}
+
+// Helper function to transform DB rows to Document objects
+function transformToDocuments(documents: DocumentDbRow[], entityType: 'policy' | 'claim' | 'sales_process'): Document[] {
+  return documents.map((doc: DocumentDbRow) => {
+    return {
+      id: doc.id,
+      document_name: doc.document_name,
+      document_type: doc.document_type,
+      created_at: doc.created_at,
+      file_path: doc.file_path,
+      entity_type: entityType,
+      entity_id: entityType === 'policy' 
+        ? doc.policy_id 
+        : entityType === 'claim' 
+          ? doc.claim_id 
+          : doc.sales_process_id,
+      uploaded_by_id: doc.uploaded_by,
+      version: doc.version || 1,
+      is_latest_version: doc.is_latest_version || false,
+      original_document_id: doc.original_document_id || null,
+      category: doc.category || null,
+      approval_status: 'pending',
+      mime_type: doc.mime_type || null
+    } as Document;
+  });
+}
