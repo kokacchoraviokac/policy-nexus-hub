@@ -15,15 +15,24 @@ import { Eye, Edit, Trash } from "lucide-react";
 import { PolicyAddendum } from "@/types/policies";
 
 export interface AddendumListProps {
-  searchTerm: string;
-  statusFilter: string;
+  searchTerm?: string;
+  statusFilter?: string;
+  addendums?: PolicyAddendum[];
+  policyNumber?: string;
+  onRefresh?: () => void;
 }
 
-const AddendumList: React.FC<AddendumListProps> = ({ searchTerm, statusFilter }) => {
+const AddendumList: React.FC<AddendumListProps> = ({ 
+  searchTerm = "", 
+  statusFilter = "all",
+  addendums = [],
+  policyNumber,
+  onRefresh
+}) => {
   const { t, formatDate, formatCurrency } = useLanguage();
   
-  // Mock data for now
-  const mockAddendums: PolicyAddendum[] = [
+  // Use provided addendums or fall back to mock data if none provided
+  const addendumsToShow = addendums.length > 0 ? addendums : [
     {
       id: "1",
       policy_id: "p1",
@@ -40,7 +49,7 @@ const AddendumList: React.FC<AddendumListProps> = ({ searchTerm, statusFilter })
     }
   ];
   
-  const filteredAddendums = mockAddendums.filter(addendum => {
+  const filteredAddendums = addendumsToShow.filter(addendum => {
     const matchesSearch = !searchTerm || 
       addendum.addendum_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       addendum.description.toLowerCase().includes(searchTerm.toLowerCase());

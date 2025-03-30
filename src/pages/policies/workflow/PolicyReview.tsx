@@ -11,6 +11,7 @@ import PolicyReviewSummary from "@/components/policies/workflow/PolicyReviewSumm
 import PolicyEditForm from "@/components/policies/workflow/PolicyEditForm";
 import PolicyReviewChecklist from "@/components/policies/workflow/PolicyReviewChecklist";
 import PolicyDocumentsCheck from "@/components/policies/workflow/PolicyDocumentsCheck";
+import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
 
 const PolicyReview = () => {
   const { policyId } = useParams<{ policyId: string }>();
@@ -18,11 +19,16 @@ const PolicyReview = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("summary");
   const [isFormComplete, setIsFormComplete] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   
   const { data: policy, isLoading, isError } = usePolicyDetail(policyId);
   
   const handleBackClick = () => {
     navigate('/policies/workflow');
+  };
+  
+  const handleUploadClick = () => {
+    setUploadDialogOpen(true);
   };
   
   if (isLoading) {
@@ -86,9 +92,21 @@ const PolicyReview = () => {
         </TabsContent>
         
         <TabsContent value="documents" className="mt-0">
-          <PolicyDocumentsCheck policy={policy} />
+          <PolicyDocumentsCheck 
+            policy={policy} 
+            onUploadClick={handleUploadClick} 
+          />
         </TabsContent>
       </Tabs>
+      
+      {uploadDialogOpen && policy && (
+        <DocumentUploadDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          entityType="policy"
+          entityId={policy.id}
+        />
+      )}
     </div>
   );
 };
