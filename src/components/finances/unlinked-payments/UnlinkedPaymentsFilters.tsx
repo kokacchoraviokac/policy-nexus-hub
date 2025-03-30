@@ -26,12 +26,12 @@ const UnlinkedPaymentsFilters: React.FC<UnlinkedPaymentsFiltersProps> = ({
     onFiltersChange({ ...filters, status: value });
   };
   
-  const handleStartDateChange = (date: Date | null) => {
-    onFiltersChange({ ...filters, startDate: date });
+  const handleStartDateChange = (date: Date | undefined) => {
+    onFiltersChange({ ...filters, startDate: date || null });
   };
   
-  const handleEndDateChange = (date: Date | null) => {
-    onFiltersChange({ ...filters, endDate: date });
+  const handleEndDateChange = (date: Date | undefined) => {
+    onFiltersChange({ ...filters, endDate: date || null });
   };
   
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -88,18 +88,16 @@ const UnlinkedPaymentsFilters: React.FC<UnlinkedPaymentsFiltersProps> = ({
           <div>
             <label className="text-sm font-medium mb-1 block">{t("from")}</label>
             <DatePicker
-              date={filters.startDate}
-              onSelect={handleStartDateChange}
-              placeholder={t("select")}
+              date={filters.startDate || undefined}
+              setDate={handleStartDateChange}
             />
           </div>
           
           <div>
             <label className="text-sm font-medium mb-1 block">{t("to")}</label>
             <DatePicker
-              date={filters.endDate}
-              onSelect={handleEndDateChange}
-              placeholder={t("select")}
+              date={filters.endDate || undefined}
+              setDate={handleEndDateChange}
             />
           </div>
           
