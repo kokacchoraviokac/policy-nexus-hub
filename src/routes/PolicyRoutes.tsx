@@ -12,6 +12,7 @@ import PolicyAddendums from "@/pages/policies/PolicyAddendums";
 import PolicyDocuments from "@/pages/policies/PolicyDocuments";
 import PolicyReview from "@/pages/policies/workflow/PolicyReview";
 import PolicyImportPage from "@/pages/policies/PolicyImportPage";
+import UnlinkedPayments from "@/pages/policies/UnlinkedPayments";
 
 export const PolicyRoutes = [
   <Route
@@ -28,10 +29,10 @@ export const PolicyRoutes = [
     <Route index element={<AllPolicies />} />
     <Route path="new" element={<NewPolicy />} />
     <Route path="detail/:id" element={<PolicyDetail />} />
-    <Route path="addendums" element={<PolicyAddendums />} />
-    <Route path="documents" element={<PolicyDocuments />} />
     <Route path="workflow" element={<PolicyWorkflow />} />
     <Route path="workflow/review/:id" element={<PolicyReview />} />
+    <Route path="addendums" element={<PolicyAddendums />} />
+    <Route path="documents" element={<PolicyDocuments />} />
     <Route path="import" element={<PolicyImportPage />} />
   </Route>
 ];
