@@ -31,6 +31,7 @@ const ClaimsFilters: React.FC<ClaimsFiltersProps> = ({
   };
 
   const handleStatusChange = (value: string) => {
+    // Ensure we don't pass empty string but use "all" instead
     onFilterChange({ ...filters, status: value === "all" ? "" : value });
   };
 
