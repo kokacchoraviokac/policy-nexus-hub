@@ -1,10 +1,12 @@
 
 {
   "policiesDescription": "Upravljanje polisama osiguranja tokom celokupnog životnog ciklusa",
+  "allPoliciesDescription": "Sveobuhvatni direktorijum svih polisa sa detaljnim informacijama",
   "policiesWorkflowDescription": "Pregled uvezenih polisa kroz proces radnog toka",
   "policyAddendumsDescription": "Upravljanje izmenama i dopunama polisa",
   "unlinkedPaymentsDescription": "Upravljanje uplatama koje nisu povezane sa polisom",
   "policyDocumentsDescription": "Pregledajte i upravljajte dokumentima povezanim sa polisama",
+  "documentsDescription": "Pregledajte i upravljajte dokumentima povezanim sa polisama",
   
   "newPolicy": "Nova polisa",
   "createNewPolicy": "Kreiraj novu polisu",
@@ -140,6 +142,16 @@
   "importNoteDuplicates": "Sistem će proveriti potencijalne duplikate na osnovu broja polise",
   
   "export": "Izvoz",
+  "exportStarted": "Izvoz započet",
+  "exportComplete": "Izvoz završen",
+  "exportFailed": "Izvoz nije uspeo",
+  "preparingPolicyExport": "Priprema podataka polisa za izvoz...",
+  "policiesExportedSuccessfully": "Polise uspešno izvezene u CSV",
+  "policyExportedSuccessfully": "Polisa uspešno izvezena u CSV",
+  "errorExportingPolicies": "Došlo je do greške prilikom izvoza polisa",
+  "errorExportingPolicy": "Došlo je do greške prilikom izvoza polise",
+  "noDataToExport": "Nema podataka za izvoz",
+  "noPoliciesFoundForExport": "Nisu pronađene polise koje odgovaraju vašim kriterijumima",
   "searchPolicies": "Pretraži polise",
   "allStatuses": "Svi statusi",
   "noPoliciesFound": "Nema pronađenih polisa",

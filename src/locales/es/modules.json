@@ -1,10 +1,12 @@
 
 {
   "policiesDescription": "Gestionar pólizas de seguro a lo largo de todo su ciclo de vida",
+  "allPoliciesDescription": "Directorio completo de todas las pólizas con información detallada",
   "policiesWorkflowDescription": "Pólizas que requieren atención o están en estado de procesamiento",
   "policyAddendumsDescription": "Gestionar modificaciones y cambios en las pólizas",
   "unlinkedPaymentsDescription": "Gestionar pagos que no han sido asociados a una póliza",
   "policyDocumentsDescription": "Ver y gestionar documentos asociados a pólizas",
+  "documentsDescription": "Ver y gestionar documentos relacionados con pólizas",
   
   "newPolicy": "Nueva póliza",
   "createNewPolicy": "Crear nueva póliza",
@@ -12,6 +14,16 @@
   "importPolicies": "Importar pólizas",
   "exportPolicies": "Exportar pólizas",
   "export": "Exportar",
+  "exportStarted": "Exportación iniciada",
+  "exportComplete": "Exportación completa",
+  "exportFailed": "Error en la exportación",
+  "preparingPolicyExport": "Preparando datos de pólizas para exportación...",
+  "policiesExportedSuccessfully": "Pólizas exportadas exitosamente a CSV",
+  "policyExportedSuccessfully": "Póliza exportada exitosamente a CSV",
+  "errorExportingPolicies": "Hubo un error al exportar las pólizas",
+  "errorExportingPolicy": "Hubo un error al exportar la póliza",
+  "noDataToExport": "No hay datos para exportar",
+  "noPoliciesFoundForExport": "No se encontraron pólizas que coincidan con sus criterios",
   
   "noPoliciesInWorkflow": "No hay pólizas en flujo de trabajo",
   "noPoliciesInWorkflowDescription": "No hay pólizas que requieran atención o estén en estado de procesamiento",
@@ -45,6 +57,46 @@
   "reviewImportedPolicyAndFinalizeIt": "Revise la póliza importada y finalícela cuando esté lista",
   "policyDetails": "Detalles de la póliza",
   "basicInformationAboutPolicy": "Información básica sobre la póliza",
+  
+  "workflowActions": "Acciones del flujo de trabajo",
+  "manageWorkflowStatusOfPolicy": "Gestione el estado del flujo de trabajo de esta póliza",
+  
+  "moveToReview": "Mover a revisión",
+  "markAsReady": "Marcar como listo",
+  "finalizePolicy": "Finalizar póliza",
+  "backToWorkflow": "Volver al flujo de trabajo",
+  
+  "missingRequiredFields": "Faltan campos obligatorios",
+  "followingFieldsAreRequired": "Los siguientes campos son obligatorios para continuar",
+  
+  "statusUpdated": "Estado actualizado",
+  "policyWorkflowStatusUpdated": "Estado del flujo de trabajo de la póliza actualizado a {status}",
+  "errorUpdatingStatus": "Error al actualizar el estado",
+  
+  "reviewChecklist": "Lista de verificación",
+  "ensureAllRequiredInformationIsComplete": "Asegúrese de que toda la información requerida esté completa antes de continuar",
+  "complete": "Completo",
+  "required": "Obligatorio",
+  "missing": "Faltante",
+  "optional": "Opcional",
+  
+  "documentsCheck": "Verificación de documentos",
+  "documentsAttached": "{count} documento(s) adjuntos",
+  "noDocuments": "Sin documentos",
+  
+  "notProvided": "No proporcionado",
+  "completeAllRequiredFieldsToProgress": "Complete todos los campos obligatorios para avanzar. Algunos datos de la póliza importada pueden requerir verificación o corrección manual.",
+  "updatingStatus": "Actualizando estado",
+  
+  "policyImportInfo": "Las pólizas se importan desde compañías de seguros y requieren revisión antes de finalizar",
+  "policyImportNote": "Después de importar, verifique toda la información para comprobar su precisión y completitud",
+  "importAndReviewProcess": "Proceso de importación y revisión",
+  "importedFrom": "Importado de",
+  "importDate": "Fecha de importación",
+  "readyForFinalization": "Listo para finalización",
+  "missingInformation": "Información faltante",
+  "validationErrors": "Errores de validación",
+  "importSource": "Fuente de importación",
   
   "importInstructions": "Instrucciones de importación",
   "policyImportInstructionsDescription": "Por favor revise los requisitos antes de importar pólizas",

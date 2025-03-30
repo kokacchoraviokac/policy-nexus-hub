@@ -5,6 +5,7 @@
   "policiesWorkflowDescription": "Policies requiring attention or in processing stage",
   "policyAddendumsDescription": "Manage amendments to policies",
   "unlinkedPaymentsDescription": "Manage payments not linked to a policy",
+  "policyDocumentsDescription": "View and manage policy-related documents",
   "documentsDescription": "View and manage policy-related documents",
   
   "newPolicy": "New Policy",

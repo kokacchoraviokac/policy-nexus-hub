@@ -80,7 +80,7 @@ const Policies = () => {
     },
     {
       title: "documents",
-      description: "documentsDescription",
+      description: "policyDocumentsDescription",
       path: "/policies/documents",
       icon: FileImage
     }

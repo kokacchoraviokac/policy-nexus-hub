@@ -1,10 +1,12 @@
 
 {
   "policiesDescription": "Управувајте со полиси за осигурување низ целиот нивен животен циклус",
+  "allPoliciesDescription": "Сеопфатен директориум на сите полиси со детални информации",
   "policiesWorkflowDescription": "Полиси што бараат внимание или се во фаза на обработка",
   "policyAddendumsDescription": "Управувајте со измени и дополнувања на полиси",
   "unlinkedPaymentsDescription": "Управувајте со плаќања што не се поврзани со полиса",
   "policyDocumentsDescription": "Преглед и управување со документи поврзани со полиси",
+  "documentsDescription": "Преглед и управување со документи поврзани со полиси",
   
   "newPolicy": "Нова полиса",
   "createNewPolicy": "Креирај нова полиса",
@@ -139,6 +141,16 @@
   "updatingStatus": "Ажурирање на статусот",
   
   "export": "Извоз",
+  "exportStarted": "Извозот започна",
+  "exportComplete": "Извозот е комплетиран",
+  "exportFailed": "Извозот не успеа",
+  "preparingPolicyExport": "Подготовка на податоци за полиси за извоз...",
+  "policiesExportedSuccessfully": "Полисите успешно извезени во CSV",
+  "policyExportedSuccessfully": "Полисата успешно извезена во CSV",
+  "errorExportingPolicies": "Се појави грешка при извоз на полисите",
+  "errorExportingPolicy": "Се појави грешка при извоз на полисата",
+  "noDataToExport": "Нема податоци за извоз",
+  "noPoliciesFoundForExport": "Не се најдени полиси што одговараат на вашите критериуми",
   "searchPolicies": "Пребарај полиси",
   "allStatuses": "Сите статуси",
   "noPoliciesFound": "Не се најдени полиси",
