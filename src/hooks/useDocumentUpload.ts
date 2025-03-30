@@ -76,7 +76,11 @@ export const useDocumentUpload = ({
           document_type: documentType,
           file_path: filePath,
           uploaded_by: userId,
-          company_id: user.data.user?.user_metadata?.company_id
+          company_id: user.data.user?.user_metadata?.company_id,
+          version: version,
+          is_latest_version: true,
+          original_document_id: originalDocumentId || null,
+          category: documentCategory || null
         };
         
         // Create entity-specific document data

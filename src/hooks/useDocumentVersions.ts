@@ -26,7 +26,6 @@ export const useDocumentVersions = ({
     queryFn: async () => {
       // First check if this document has an original ID
       let documentToQuery = queryDocumentId;
-      let documentFound = false;
       
       // Get all versions including the original - only query basic fields that are guaranteed to exist
       const { data: allVersions, error } = await supabase
@@ -38,6 +37,7 @@ export const useDocumentVersions = ({
       if (error) throw error;
       
       // Transform to Document type with only the fields we know exist
+      // Add default values for fields that might not exist in the claim_documents table
       return (allVersions || []).map(doc => ({
         id: doc.id,
         document_name: doc.document_name,
@@ -46,7 +46,16 @@ export const useDocumentVersions = ({
         file_path: doc.file_path,
         entity_type: 'claim',
         entity_id: doc.claim_id,
-        uploaded_by_id: doc.uploaded_by
+        uploaded_by_id: doc.uploaded_by,
+        // Add default values for fields that aren't in claim_documents
+        version: 1, // Default version
+        is_latest_version: true, // Assume latest by default
+        original_document_id: null, // No original by default
+        category: null, // No category by default
+        approval_status: "pending", // Default status
+        approval_notes: null, // No notes by default
+        approved_by: null, // No approver by default
+        approved_at: null // No approval date by default
       })) as Document[];
     },
     enabled: enabled && !!queryDocumentId

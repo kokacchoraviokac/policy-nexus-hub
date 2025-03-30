@@ -53,14 +53,27 @@ export const insertDocumentRecord = async (
     version: number;
     is_latest_version: boolean;
     original_document_id?: string | null;
-    category?: DocumentCategory;
+    category?: DocumentCategory | null;
     approval_status?: string;
     [key: string]: any; // For entity-specific fields
   }
 ) => {
+  // Remove fields that don't exist in the database table
+  const dbFieldsToSend = { ...documentData };
+  
+  // Determine which fields to include based on table name
+  if (documentTable === "claim_documents") {
+    // Claim documents table might not have all fields
+    delete dbFieldsToSend.version;
+    delete dbFieldsToSend.is_latest_version;
+    delete dbFieldsToSend.original_document_id;
+    delete dbFieldsToSend.category;
+    delete dbFieldsToSend.approval_status;
+  }
+  
   const { error: insertError } = await supabase
     .from(documentTable)
-    .insert(documentData as any); // Use type assertion to bypass type checking
+    .insert(dbFieldsToSend);
     
   if (insertError) {
     throw insertError;
@@ -77,11 +90,11 @@ export const createDocumentData = (
     document_type: string;
     file_path: string;
     uploaded_by: string;
-    company_id: string;
+    company_id: string | any;
     version: number;
     is_latest_version: boolean;
     original_document_id?: string | null;
-    category?: DocumentCategory;
+    category?: DocumentCategory | null;
     approval_status?: string;
   },
   entityType: EntityType,

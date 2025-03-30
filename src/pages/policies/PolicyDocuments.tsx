@@ -26,7 +26,7 @@ const PolicyDocuments = () => {
     setDocumentType(value);
   };
   
-  const handleUploadComplete = () => {
+  const handleUploadSuccess = () => {
     toast({
       title: t("documentUploaded"),
       description: t("documentUploadedSuccess"),

@@ -32,12 +32,11 @@ export const useDocumentApproval = () => {
       
       // For claim documents, we update the claim_documents table
       if (entityType === "claim") {
+        // Since we don't want to add columns to the DB table, we'll just update the timestamp
+        // and then log the approval info in the activity log
         const { data, error } = await supabase
           .from('claim_documents')
           .update({
-            // Only update fields that actually exist in the table
-            // We'll add notes as a separate field
-            // We'll store approval info in metadata for now
             updated_at: new Date().toISOString()
           })
           .eq('id', documentId)

@@ -2,7 +2,7 @@
 /**
  * Format a date as a string using the specified locale
  */
-export const formatDate = (date: Date, locale = 'en-US'): string => {
+export const formatDate = (date: Date | string, locale = 'en-US'): string => {
   if (!date) return '';
   
   return new Date(date).toLocaleDateString(locale, {
