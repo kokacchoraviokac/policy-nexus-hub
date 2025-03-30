@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useContext } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { InvoiceTemplateSettings } from "@/types/finances";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 
 export type TemplateFormValues = {
   name: string;
@@ -39,6 +39,7 @@ export const useInvoiceTemplates = () => {
   const [templates, setTemplates] = useState<InvoiceTemplateSettings[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateSettings | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const supabase = useSupabaseClient();
   
   const companyId = user?.companyId;
 
@@ -47,9 +48,9 @@ export const useInvoiceTemplates = () => {
     
     setIsLoading(true);
     try {
-      // Use generic types to bypass TypeScript checking for table name
+      // Use a type assertion with any to bypass TypeScript checking
       const { data, error } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .select('*')
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
@@ -90,9 +91,9 @@ export const useInvoiceTemplates = () => {
     if (!companyId) return;
     
     try {
-      // Use generic types to bypass TypeScript checking for table name
+      // Use a type assertion with any to bypass TypeScript checking
       const { data, error } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .insert([
           {
             company_id: companyId,
@@ -146,9 +147,9 @@ export const useInvoiceTemplates = () => {
     }
     
     try {
-      // Use generic types to bypass TypeScript checking for table name
+      // Use a type assertion with any to bypass TypeScript checking
       const { error } = await supabase
-        .from('invoice_templates')
+        .from('invoice_templates' as any)
         .delete()
         .eq('id', templateId);
       
@@ -181,18 +182,18 @@ export const useInvoiceTemplates = () => {
     
     try {
       // First, unset default on all templates
-      // Use generic types to bypass TypeScript checking for table name
+      // Use a type assertion with any to bypass TypeScript checking
       const { error: updateError } = await supabase
-        .from('invoice_templates')
-        .update({ is_default: false })
+        .from('invoice_templates' as any)
+        .update({ is_default: false } as any)
         .eq('company_id', companyId);
       
       if (updateError) throw updateError;
       
       // Then set the selected template as default
       const { error } = await supabase
-        .from('invoice_templates')
-        .update({ is_default: true })
+        .from('invoice_templates' as any)
+        .update({ is_default: true } as any)
         .eq('id', templateId);
       
       if (error) throw error;
@@ -224,14 +225,14 @@ export const useInvoiceTemplates = () => {
         if (values.is_default) {
           // Unset default on all templates
           await supabase
-            .from('invoice_templates')
-            .update({ is_default: false })
+            .from('invoice_templates' as any)
+            .update({ is_default: false } as any)
             .eq('company_id', companyId);
         }
         
         // Create new template
         const { data, error } = await supabase
-          .from('invoice_templates')
+          .from('invoice_templates' as any)
           .insert([
             {
               company_id: companyId,
@@ -264,14 +265,14 @@ export const useInvoiceTemplates = () => {
         if (values.is_default && !existingTemplate.is_default) {
           // Unset default on all templates
           await supabase
-            .from('invoice_templates')
-            .update({ is_default: false })
+            .from('invoice_templates' as any)
+            .update({ is_default: false } as any)
             .eq('company_id', companyId);
         }
         
         // Update template
         const { data, error } = await supabase
-          .from('invoice_templates')
+          .from('invoice_templates' as any)
           .update({
             name: values.name,
             is_default: values.is_default,
@@ -283,7 +284,7 @@ export const useInvoiceTemplates = () => {
             footer_text: values.footer_text,
             show_payment_instructions: values.show_payment_instructions,
             payment_instructions: values.payment_instructions
-          })
+          } as any)
           .eq('id', existingTemplate.id)
           .select()
           .single();
