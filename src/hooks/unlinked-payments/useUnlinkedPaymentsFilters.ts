@@ -6,6 +6,8 @@ export interface FilterOptions {
   status?: string;
   dateFrom?: Date | null;
   dateTo?: Date | null;
+  startDate?: Date | null;  // Added to match the usage in components
+  endDate?: Date | null;    // Added to match the usage in components
 }
 
 export const useUnlinkedPaymentsFilters = () => {

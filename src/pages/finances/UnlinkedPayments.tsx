@@ -1,152 +1,134 @@
 
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { useUnlinkedPayments } from "@/hooks/useUnlinkedPayments";
-import { UnlinkedPaymentType } from "@/types/policies";
-import { useLocation } from "react-router-dom";
-
-// Import the new components
-import LinkPaymentDialog from "@/components/finances/unlinked-payments/LinkPaymentDialog";
+import { useUnlinkedPaymentsFilters, FilterOptions } from "@/hooks/unlinked-payments/useUnlinkedPaymentsFilters";
+import { useUnlinkedPaymentsPagination } from "@/hooks/unlinked-payments/useUnlinkedPaymentsPagination";
+import UnlinkedPaymentsTable from "@/components/finances/unlinked-payments/UnlinkedPaymentsTable";
 import UnlinkedPaymentsFilters from "@/components/finances/unlinked-payments/UnlinkedPaymentsFilters";
-import PaymentDetailsDialog from "@/components/finances/unlinked-payments/PaymentDetailsDialog";
-import PaginationController from "@/components/ui/pagination-controller";
-import UnlinkedPaymentsHeader from "@/components/finances/unlinked-payments/UnlinkedPaymentsHeader";
-import PaymentsTable from "@/components/finances/unlinked-payments/PaymentsTable";
+import LinkPaymentDialog from "@/components/finances/unlinked-payments/LinkPaymentDialog";
+import { UnlinkedPaymentType } from "@/types/finances";
+import { RefreshCw } from "lucide-react";
+import { RefetchOptions } from "@tanstack/react-query";
 
-const UnlinkedPayments = () => {
+const UnlinkedPayments: React.FC = () => {
   const { t } = useLanguage();
-  const location = useLocation();
-  const [showLinkDialog, setShowLinkDialog] = useState(false);
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const { toast } = useToast();
+  const { pagination, setPagination } = useUnlinkedPaymentsPagination();
+  const { filters, setFilters } = useUnlinkedPaymentsFilters();
   const [selectedPayment, setSelectedPayment] = useState<UnlinkedPaymentType | null>(null);
   
-  const {
-    payments,
-    totalCount,
-    isLoading,
-    filters,
-    setFilters,
-    pagination,
-    setPagination,
-    linkPayment,
-    isLinking,
-    refetch,
-    exportPayments
-  } = useUnlinkedPayments();
+  const { 
+    payments, 
+    totalCount, 
+    isLoading, 
+    linkPayment, 
+    isLinking, 
+    refetch 
+  } = useUnlinkedPayments(pagination, filters);
   
-  // Check if we're coming from a policy page to record a payment
-  useEffect(() => {
-    const state = location.state as { fromPolicyId?: string } | undefined;
-    if (state?.fromPolicyId) {
-      // Automatically set the filters to show unlinked payments
-      setFilters({
-        ...filters,
-        status: "unlinked"
+  const handleFilterChange = (newFilters: FilterOptions) => {
+    // Reset pagination when filters change
+    setPagination(prev => ({ ...prev, page: 1, pageIndex: 0 }));
+    
+    // Handle date filters properly
+    if (newFilters.dateFrom) {
+      setFilters(prev => ({ 
+        ...prev, 
+        dateFrom: newFilters.dateFrom,
+        startDate: newFilters.dateFrom // Map to both properties
+      }));
+    }
+    
+    if (newFilters.dateTo) {
+      setFilters(prev => ({ 
+        ...prev, 
+        dateTo: newFilters.dateTo,
+        endDate: newFilters.dateTo // Map to both properties
+      }));
+    }
+    
+    // Handle other filters
+    setFilters(prev => ({
+      ...prev,
+      searchTerm: newFilters.searchTerm,
+      status: newFilters.status
+    }));
+  };
+  
+  const handleLinkPayment = async (paymentId: string, policyId: string) => {
+    try {
+      await linkPayment({ paymentId, policyId });
+      setSelectedPayment(null);
+      toast({
+        title: t("paymentLinkSuccess"),
+        description: t("paymentSuccessfullyLinked")
+      });
+    } catch (error) {
+      toast({
+        title: t("errorLinkingPayment"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "destructive"
       });
     }
-  }, [location]);
-  
-  const handleLinkPayment = (payment: UnlinkedPaymentType) => {
-    setSelectedPayment(payment);
-    setShowLinkDialog(true);
   };
   
-  const handleViewPaymentDetails = (payment: UnlinkedPaymentType) => {
-    setSelectedPayment(payment);
-    setShowDetailsDialog(true);
-  };
-  
-  const handleConfirmLink = (policyId: string) => {
-    if (selectedPayment) {
-      linkPayment({ paymentId: selectedPayment.id, policyId });
-      setShowLinkDialog(false);
-    }
-  };
-  
-  const handleClearFilters = () => {
-    setFilters({
-      searchTerm: "",
-      startDate: null,
-      endDate: null,
-      status: "unlinked"
-    });
-  };
-
   return (
-    <div className="space-y-6">
-      <UnlinkedPaymentsHeader onExport={exportPayments} />
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold tracking-tight">{t("unlinkedPayments")}</h1>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isLoading}
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          {t("refresh")}
+        </Button>
+      </div>
       
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle>{t("paymentManagement")}</CardTitle>
+        <CardHeader>
+          <CardTitle>{t("unlinkedPayments")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <UnlinkedPaymentsFilters
+          <UnlinkedPaymentsFilters 
             filters={filters}
-            onFiltersChange={setFilters}
+            onFilterChange={handleFilterChange} 
             onRefresh={refetch}
             isLoading={isLoading}
           />
           
-          <div className="rounded-md border mt-6">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("reference")}</TableHead>
-                  <TableHead>{t("payerName")}</TableHead>
-                  <TableHead className="text-right">{t("amount")}</TableHead>
-                  <TableHead>{t("paymentDate")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                  <TableHead>{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <PaymentsTable 
-                  payments={payments}
-                  isLoading={isLoading}
-                  onView={handleViewPaymentDetails}
-                  onLink={handleLinkPayment}
-                  onClearFilters={handleClearFilters}
-                />
-              </TableBody>
-            </Table>
+          <div className="mt-6">
+            <UnlinkedPaymentsTable 
+              payments={payments as UnlinkedPaymentType[]}
+              isLoading={isLoading}
+              onLinkPayment={(payment) => setSelectedPayment(payment)}
+              pagination={{
+                currentPage: pagination.page,
+                totalPages: Math.ceil(totalCount / pagination.pageSize),
+                itemsPerPage: pagination.pageSize,
+                totalItems: totalCount,
+                onPageChange: (page) => setPagination({ ...pagination, page, pageIndex: page - 1 }),
+                onPageSizeChange: (pageSize) => setPagination({ page: 1, pageSize, pageIndex: 0 })
+              }}
+            />
           </div>
-          
-          {totalCount > 0 && (
-            <div className="mt-4 flex justify-end">
-              <PaginationController
-                currentPage={pagination.pageIndex}
-                totalPages={Math.ceil(totalCount / pagination.pageSize)}
-                itemsPerPage={pagination.pageSize}
-                totalItems={totalCount}
-                onPageChange={(page) => setPagination({ ...pagination, pageIndex: page })}
-                onPageSizeChange={(size) => setPagination({ pageIndex: 0, pageSize: size })}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
       
       {selectedPayment && (
-        <>
-          <LinkPaymentDialog
-            open={showLinkDialog}
-            onOpenChange={setShowLinkDialog}
-            onConfirm={handleConfirmLink}
-            isLoading={isLinking}
-            paymentReference={selectedPayment.reference}
-            paymentAmount={selectedPayment.amount}
-            payerName={selectedPayment.payer_name}
-          />
-          
-          <PaymentDetailsDialog
-            open={showDetailsDialog}
-            onOpenChange={setShowDetailsDialog}
-            payment={selectedPayment}
-          />
-        </>
+        <LinkPaymentDialog 
+          open={!!selectedPayment}
+          payment={selectedPayment}
+          onOpenChange={(open) => !open && setSelectedPayment(null)}
+          onLink={handleLinkPayment}
+          isLinking={isLinking}
+        />
       )}
     </div>
   );
