@@ -87,12 +87,11 @@ export const useInvoices = () => {
       const to = from + pagination.pageSize - 1;
       
       // Add range and ordering
-      const finalQuery = query
-        .order('created_at', { ascending: false })
-        .range(from, to);
+      // Store the query in a separate variable to break the type recursion
+      const paginatedQuery = query.order('created_at', { ascending: false }).range(from, to);
       
       // Execute the query
-      const { data, error, count } = await finalQuery;
+      const { data, error, count } = await paginatedQuery;
       
       if (error) throw error;
       
@@ -139,11 +138,11 @@ export const useInvoices = () => {
       query = query.eq('invoice_category', filters.invoiceCategory);
     }
     
-    // Order by created_at descending
-    const finalQuery = query.order('created_at', { ascending: false });
+    // Order by created_at descending - break the type recursion
+    const exportQuery = query.order('created_at', { ascending: false });
     
     // Execute the query
-    const { data, error } = await finalQuery;
+    const { data, error } = await exportQuery;
     
     if (error) throw error;
     
