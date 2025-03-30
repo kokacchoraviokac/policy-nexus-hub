@@ -5,7 +5,6 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Sales from "@/pages/Sales";
 import Claims from "@/pages/Claims";
-import Finances from "@/pages/Finances";
 import Agent from "@/pages/Agent";
 import Reports from "@/pages/Reports";
 
@@ -31,19 +30,6 @@ export const ModuleRoutes = [
       <ProtectedRoute requiredPrivilege="claims:view">
         <AppLayout>
           <Claims />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Finances Module
-  <Route 
-    key="finances"
-    path="/finances" 
-    element={
-      <ProtectedRoute requiredPrivilege="finances:view">
-        <AppLayout>
-          <Finances />
         </AppLayout>
       </ProtectedRoute>
     }
