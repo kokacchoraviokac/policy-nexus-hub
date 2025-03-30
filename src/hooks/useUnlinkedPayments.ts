@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { UnlinkedPaymentType } from "@/types/policies";
+import Papa from "papaparse";
 
 export type UnlinkedPayment = UnlinkedPaymentType;
 
@@ -118,11 +119,16 @@ export const useUnlinkedPayments = () => {
     },
   });
 
-  const exportPayments = async (): Promise<UnlinkedPayment[]> => {
+  const exportPayments = async (): Promise<void> => {
     try {
+      toast({
+        title: t("exportStarted"),
+        description: t("preparingExportData"),
+      });
+      
       let query = supabase
         .from('unlinked_payments')
-        .select('*');
+        .select('*, policies(policy_number)');
       
       // Apply the same filters as in fetchUnlinkedPayments but without pagination
       if (filters.status === 'linked') {
@@ -147,7 +153,43 @@ export const useUnlinkedPayments = () => {
       
       if (error) throw error;
       
-      return data as UnlinkedPayment[];
+      if (!data || data.length === 0) {
+        toast({
+          title: t("noDataToExport"),
+          description: t("noPaymentsFoundToExport"),
+        });
+        return;
+      }
+      
+      // Transform data for CSV export
+      const exportData = data.map(payment => ({
+        [t("reference")]: payment.reference || "-",
+        [t("payerName")]: payment.payer_name || "-",
+        [t("amount")]: payment.amount,
+        [t("currency")]: payment.currency,
+        [t("paymentDate")]: payment.payment_date,
+        [t("status")]: payment.linked_policy_id ? t("linked") : t("unlinked"),
+        [t("linkedPolicy")]: payment.policies?.policy_number || "-",
+        [t("linkedAt")]: payment.linked_at ? new Date(payment.linked_at).toLocaleString() : "-"
+      }));
+      
+      // Convert to CSV
+      const csv = Papa.unparse(exportData);
+      
+      // Create download link
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `unlinked-payments-${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: t("exportCompleted"),
+        description: t("paymentsExportedSuccessfully"),
+      });
     } catch (error) {
       console.error('Error exporting payments:', error);
       toast({
@@ -155,7 +197,6 @@ export const useUnlinkedPayments = () => {
         description: error instanceof Error ? error.message : t("unknownError"),
         variant: "destructive",
       });
-      return [];
     }
   };
 

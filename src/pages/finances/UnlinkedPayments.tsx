@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,9 +12,11 @@ import PaymentDetailsDialog from "@/components/finances/unlinked-payments/Paymen
 import PaginationController from "@/components/ui/pagination-controller";
 import { UnlinkedPaymentType } from "@/types/policies";
 import { Badge } from "@/components/ui/badge";
+import { useLocation } from "react-router-dom";
 
 const UnlinkedPayments = () => {
   const { t, formatCurrency, formatDate } = useLanguage();
+  const location = useLocation();
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<UnlinkedPaymentType | null>(null);
@@ -29,8 +31,21 @@ const UnlinkedPayments = () => {
     setPagination,
     linkPayment,
     isLinking,
-    refetch
+    refetch,
+    exportPayments
   } = useUnlinkedPayments();
+  
+  // Check if we're coming from a policy page to record a payment
+  useEffect(() => {
+    const state = location.state as { fromPolicyId?: string } | undefined;
+    if (state?.fromPolicyId) {
+      // Automatically set the filters to show unlinked payments
+      setFilters({
+        ...filters,
+        status: "unlinked"
+      });
+    }
+  }, [location]);
   
   const handleLinkPayment = (payment: UnlinkedPaymentType) => {
     setSelectedPayment(payment);
@@ -50,8 +65,7 @@ const UnlinkedPayments = () => {
   };
   
   const handleExport = () => {
-    // Export logic would go here
-    console.log("Exporting payments");
+    exportPayments();
   };
 
   return (

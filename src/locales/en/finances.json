@@ -102,5 +102,11 @@
   "showAllPayments": "Show All Payments ({count})",
   "noPaymentsRecorded": "No Payments Recorded",
   "noPaymentsDescription": "There are no payments recorded for this policy yet.",
-  "recordFirstPayment": "Record First Payment"
+  "recordFirstPayment": "Record First Payment",
+  "exportStarted": "Export Started",
+  "preparingExportData": "Preparing export data, download will start shortly",
+  "exportCompleted": "Export Completed",
+  "paymentsExportedSuccessfully": "Payments have been exported successfully",
+  "noDataToExport": "No Data to Export",
+  "noPaymentsFoundToExport": "No payments found matching your filters for export"
 }

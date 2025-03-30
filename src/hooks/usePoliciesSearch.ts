@@ -1,42 +1,45 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Policy } from "@/types/policies";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export const usePoliciesSearch = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['policies-search', searchTerm],
-    queryFn: async () => {
-      if (!searchTerm || searchTerm.length < 2) {
-        return { data: [], count: 0 };
-      }
-      
-      const { data, error, count } = await supabase
-        .from('policies')
-        .select('id, policy_number, policyholder_name, insurer_name', { count: 'exact' })
-        .or(`policy_number.ilike.%${searchTerm}%,policyholder_name.ilike.%${searchTerm}%`)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      
-      return { 
-        data: data as Pick<Policy, 'id' | 'policy_number' | 'policyholder_name' | 'insurer_name'>[], 
-        count: count || 0 
-      };
-    },
-    enabled: searchTerm.length >= 2,
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const fetchPolicies = async (term: string) => {
+    if (!term || term.length < 2) return [];
+
+    const { data, error } = await supabase
+      .from('policies')
+      .select('id, policy_number, policyholder_name, insurer_name')
+      .or(`policy_number.ilike.%${term}%,policyholder_name.ilike.%${term}%`)
+      .order('policy_number', { ascending: true })
+      .limit(10);
+
+    if (error) throw error;
+    return data as Policy[];
+  };
+
+  const {
+    data = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['policies-search', debouncedSearchTerm],
+    queryFn: () => fetchPolicies(debouncedSearchTerm),
+    enabled: debouncedSearchTerm.length >= 2,
   });
 
   return {
-    policies: data?.data || [],
-    count: data?.count || 0,
+    policies: data,
     isLoading,
     error,
     searchTerm,
-    setSearchTerm
+    setSearchTerm,
+    refetch
   };
 };

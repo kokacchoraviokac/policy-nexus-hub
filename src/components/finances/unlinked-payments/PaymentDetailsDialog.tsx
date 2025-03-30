@@ -4,13 +4,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UnlinkedPaymentType } from "@/types/policies";
-import { CalendarClock, CreditCard, Hash, User, DollarSign, CheckCircle, Link, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { DollarSign, Calendar, User, FileText, Link, ExternalLink } from "lucide-react";
 
 interface PaymentDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  payment: UnlinkedPaymentType | null;
+  payment: UnlinkedPaymentType;
 }
 
 const PaymentDetailsDialog: React.FC<PaymentDetailsDialogProps> = ({
@@ -18,104 +19,90 @@ const PaymentDetailsDialog: React.FC<PaymentDetailsDialogProps> = ({
   onOpenChange,
   payment
 }) => {
-  const { t, formatCurrency, formatDate } = useLanguage();
+  const { t, formatCurrency, formatDate, formatDateTime } = useLanguage();
   const navigate = useNavigate();
 
-  if (!payment) return null;
-
-  const detailItems = [
-    {
-      icon: <Hash className="h-4 w-4 text-muted-foreground" />,
-      label: t("reference"),
-      value: payment.reference || "-"
-    },
-    {
-      icon: <User className="h-4 w-4 text-muted-foreground" />,
-      label: t("payerName"),
-      value: payment.payer_name || "-"
-    },
-    {
-      icon: <DollarSign className="h-4 w-4 text-muted-foreground" />,
-      label: t("amount"),
-      value: formatCurrency(payment.amount, payment.currency)
-    },
-    {
-      icon: <CalendarClock className="h-4 w-4 text-muted-foreground" />,
-      label: t("paymentDate"),
-      value: formatDate(payment.payment_date)
-    },
-    {
-      icon: <CreditCard className="h-4 w-4 text-muted-foreground" />,
-      label: t("currency"),
-      value: payment.currency
-    }
-  ];
-
-  const handleViewPolicy = () => {
+  const viewLinkedPolicy = () => {
     if (payment.linked_policy_id) {
       onOpenChange(false);
-      navigate(`/policies/detail/${payment.linked_policy_id}`);
+      navigate(`/policies/${payment.linked_policy_id}`);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>{t("paymentDetails")}</DialogTitle>
         </DialogHeader>
         
-        <div className="my-4">
-          <div className="flex items-center space-x-2 mb-4">
-            {payment.linked_policy_id ? (
-              <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full flex items-center text-sm">
-                <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                {t("linked")}
-              </div>
-            ) : (
-              <div className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full flex items-center text-sm">
-                <Link className="h-3.5 w-3.5 mr-1" />
-                {t("unlinked")}
-              </div>
-            )}
+        <div className="py-4 space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">{payment.reference || t("paymentReference")}</h3>
+            <Badge variant={payment.linked_policy_id ? "default" : "outline"}>
+              {payment.linked_policy_id ? t("linked") : t("unlinked")}
+            </Badge>
           </div>
-        
-          <div className="space-y-3">
-            {detailItems.map((item, index) => (
-              <div key={index} className="flex items-center py-2 border-b last:border-b-0">
-                <div className="flex items-center w-1/3 text-sm">
-                  {item.icon}
-                  <span className="ml-2 text-muted-foreground">{item.label}</span>
-                </div>
-                <div className="w-2/3 font-medium">{item.value}</div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{t("amount")}: </span>
+                <span className="font-medium">{formatCurrency(payment.amount, payment.currency)}</span>
               </div>
-            ))}
+              
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{t("paymentDate")}: </span>
+                <span className="font-medium">{formatDate(payment.payment_date)}</span>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{t("reference")}: </span>
+                <span className="font-medium">{payment.reference || "-"}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{t("payerName")}: </span>
+                <span className="font-medium">{payment.payer_name || "-"}</span>
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">{t("currency")}: </span>
+                <span className="font-medium">{payment.currency}</span>
+              </div>
+              
+              {payment.linked_at && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{t("linkedAt")}: </span>
+                  <span className="font-medium">{formatDateTime(payment.linked_at)}</span>
+                </div>
+              )}
+            </div>
           </div>
           
           {payment.linked_policy_id && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-              <h4 className="text-sm font-medium flex items-center text-green-800">
-                <Link className="h-4 w-4 mr-1" />
-                {t("linkedPolicy")}
-              </h4>
-              
+            <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+              <div className="flex items-center text-blue-800 mb-2">
+                <Link className="h-4 w-4 mr-2" />
+                <span className="font-medium">{t("linkedPolicy")}</span>
+              </div>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
-                className="mt-2 text-green-800" 
-                onClick={handleViewPolicy}
+                className="w-full mt-1" 
+                onClick={viewLinkedPolicy}
               >
-                <ExternalLink className="h-4 w-4 mr-1" />
+                <ExternalLink className="h-3.5 w-3.5 mr-2" />
                 {t("viewPolicy")}
               </Button>
-            </div>
-          )}
-          
-          {payment.linked_at && (
-            <div className="mt-4 p-3 bg-muted/30 rounded-md">
-              <p className="text-sm text-muted-foreground">
-                {t("linkedAt")}: {formatDate(payment.linked_at)}
-              </p>
             </div>
           )}
         </div>
