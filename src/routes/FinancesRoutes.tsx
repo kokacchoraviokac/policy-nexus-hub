@@ -1,9 +1,8 @@
 
 import React from "react";
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
-import Finances from "@/pages/Finances";
 import BankStatements from "@/pages/finances/BankStatements";
 import BankStatementDetail from "@/pages/finances/BankStatementDetail";
 import Commissions from "@/pages/finances/Commissions";
@@ -11,14 +10,36 @@ import FinancesModule from "@/pages/finances/FinancesModule";
 import UnlinkedPayments from "@/pages/finances/UnlinkedPayments";
 
 export const FinancesRoutes = [
-  // Main finances page
+  // Redirect from main finances page to commissions (first sub-item)
   <Route 
-    key="finances"
+    key="finances-redirect"
     path="/finances" 
     element={
-      <ProtectedRoute requiredPrivilege="finances:view">
+      <Navigate to="/finances/commissions" replace />
+    }
+  />,
+  
+  // Commissions
+  <Route 
+    key="finances-commissions"
+    path="/finances/commissions" 
+    element={
+      <ProtectedRoute requiredPrivilege="finances.commissions:view">
         <AppLayout>
-          <Finances />
+          <Commissions />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // Invoicing
+  <Route 
+    key="finances-invoicing"
+    path="/finances/invoicing" 
+    element={
+      <ProtectedRoute requiredPrivilege="finances.invoicing:view">
+        <AppLayout>
+          <FinancesModule title="invoicing" />
         </AppLayout>
       </ProtectedRoute>
     }
@@ -45,32 +66,6 @@ export const FinancesRoutes = [
       <ProtectedRoute requiredPrivilege="finances.statements:view">
         <AppLayout>
           <BankStatementDetail />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Commissions
-  <Route 
-    key="finances-commissions"
-    path="/finances/commissions" 
-    element={
-      <ProtectedRoute requiredPrivilege="finances.commissions:view">
-        <AppLayout>
-          <Commissions />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  // Invoicing
-  <Route 
-    key="finances-invoicing"
-    path="/finances/invoicing" 
-    element={
-      <ProtectedRoute requiredPrivilege="finances.invoicing:view">
-        <AppLayout>
-          <FinancesModule title="invoicing" />
         </AppLayout>
       </ProtectedRoute>
     }
