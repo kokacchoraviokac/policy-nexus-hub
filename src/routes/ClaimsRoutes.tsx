@@ -47,14 +47,14 @@ export const ClaimsRoutes = [
     }
   />,
   
-  // Claim edit page
+  // Claim edit page - uses the same component as detail but with edit mode
   <Route 
     key="claim-edit"
     path="/claims/:claimId/edit" 
     element={
       <ProtectedRoute requiredPrivilege="claims:edit">
         <AppLayout>
-          <ClaimDetailPage />
+          <ClaimDetailPage isEditMode={true} />
         </AppLayout>
       </ProtectedRoute>
     }

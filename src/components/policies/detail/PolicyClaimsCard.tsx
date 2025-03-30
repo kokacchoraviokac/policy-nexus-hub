@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -20,7 +19,6 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
   const { t, formatCurrency } = useLanguage();
   const navigate = useNavigate();
 
-  // Fetch claims stats
   const { data: claimsStats } = useQuery({
     queryKey: ['policy-claims-stats', policyId],
     queryFn: async () => {
@@ -52,7 +50,6 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
   });
 
   const handleViewClaims = () => {
-    // Navigate to claims tab
     const claimsTab = document.querySelector('[data-value="claims"]');
     if (claimsTab instanceof HTMLElement) {
       claimsTab.click();
@@ -60,11 +57,9 @@ const PolicyClaimsCard: React.FC<PolicyClaimsCardProps> = ({
   };
 
   const handleNewClaim = () => {
-    // Navigate to new claim form
     navigate(`/claims/new?policyId=${policyId}`);
   };
 
-  // Calculate the percentage of active claims
   const activeClaimsPercentage = claimsStats?.claimsCount > 0 
     ? Math.round((claimsStats.activeClaimsCount / claimsStats.claimsCount) * 100)
     : 0;

@@ -49,7 +49,6 @@ const PolicyDetailSummary: React.FC<PolicyDetailSummaryProps> = ({ policy }) => 
       
       <PolicyClaimsCard
         policyId={policy.id}
-        claimsCount={policy.claims_count}
       />
       
       <PolicyDocumentsCard

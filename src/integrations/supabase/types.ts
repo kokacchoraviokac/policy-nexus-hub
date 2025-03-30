@@ -345,9 +345,11 @@ export type Database = {
           company_id: string
           created_at: string
           damage_description: string
+          deductible: number | null
           id: string
           incident_date: string
           incident_location: string | null
+          notes: string | null
           policy_id: string
           reported_by: string
           status: string
@@ -361,9 +363,11 @@ export type Database = {
           company_id: string
           created_at?: string
           damage_description: string
+          deductible?: number | null
           id?: string
           incident_date: string
           incident_location?: string | null
+          notes?: string | null
           policy_id: string
           reported_by: string
           status: string
@@ -377,9 +381,11 @@ export type Database = {
           company_id?: string
           created_at?: string
           damage_description?: string
+          deductible?: number | null
           id?: string
           incident_date?: string
           incident_location?: string | null
+          notes?: string | null
           policy_id?: string
           reported_by?: string
           status?: string

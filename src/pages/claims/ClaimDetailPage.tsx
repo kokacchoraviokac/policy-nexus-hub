@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -31,7 +30,6 @@ const ClaimDetailPage = () => {
   const { toast } = useToast();
   const [uploadDialogOpen, setUploadDialogOpen] = React.useState(false);
 
-  // Fetch claim details
   const { data: claim, isLoading, isError } = useQuery({
     queryKey: ['claim', claimId],
     queryFn: async () => {
@@ -61,12 +59,10 @@ const ClaimDetailPage = () => {
   };
 
   const handleEditClaim = () => {
-    // Navigate to claim edit page
     navigate(`/claims/${claimId}/edit`);
   };
 
   const handleExportClaim = () => {
-    // To be implemented
     toast({
       title: t("exportStarted"),
       description: t("claimExportInProgress")
@@ -101,7 +97,6 @@ const ClaimDetailPage = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      {/* Back button */}
       <Button
         variant="outline"
         size="sm"
@@ -112,7 +107,6 @@ const ClaimDetailPage = () => {
         {t("backToClaims")}
       </Button>
 
-      {/* Claim header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">{t("claim")} {claim.claim_number}</h1>
@@ -135,9 +129,7 @@ const ClaimDetailPage = () => {
         </div>
       </div>
 
-      {/* Main content */}
       <ResizablePanelGroup direction="horizontal" className="min-h-[600px]">
-        {/* Left panel - Claim details */}
         <ResizablePanel defaultSize={65}>
           <Card className="h-full">
             <CardHeader>
@@ -235,7 +227,6 @@ const ClaimDetailPage = () => {
         
         <ResizableHandle withHandle />
         
-        {/* Right panel - Additional information */}
         <ResizablePanel defaultSize={35}>
           <div className="space-y-4 h-full">
             <Card className="h-full">
@@ -245,7 +236,6 @@ const ClaimDetailPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {/* Status section */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <h3 className="font-medium">{t("currentStatus")}</h3>
@@ -259,7 +249,6 @@ const ClaimDetailPage = () => {
                     </div>
                   </div>
                   
-                  {/* Timeline placeholder */}
                   <div className="border-t pt-6">
                     <h3 className="font-medium mb-4">{t("claimTimeline")}</h3>
                     <div className="space-y-4">
@@ -287,7 +276,6 @@ const ClaimDetailPage = () => {
         </ResizablePanel>
       </ResizablePanelGroup>
       
-      {/* Document upload dialog */}
       <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
