@@ -27,7 +27,7 @@ const BankStatementUploadDialog: React.FC<BankStatementUploadDialogProps> = ({
 }) => {
   const { t, formatDate } = useLanguage();
   const { toast } = useToast();
-  const { session } = useAuthSession();
+  const { authState } = useAuthSession();
   
   const [bankName, setBankName] = useState<string>("");
   const [accountNumber, setAccountNumber] = useState<string>("");
@@ -69,7 +69,7 @@ const BankStatementUploadDialog: React.FC<BankStatementUploadDialogProps> = ({
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('company_id')
-        .eq('id', session?.user?.id)
+        .eq('id', authState.user?.id)
         .single();
       
       if (userError) {
