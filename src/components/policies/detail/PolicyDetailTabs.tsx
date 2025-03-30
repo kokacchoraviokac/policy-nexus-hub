@@ -42,7 +42,7 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
       </TabsContent>
       
       <TabsContent value="financials" className="space-y-4">
-        <PolicyFinancialsTab policy={policy} />
+        <PolicyFinancialsTab policyId={policy.id} />
       </TabsContent>
       
       <TabsContent value="documents" className="space-y-4">

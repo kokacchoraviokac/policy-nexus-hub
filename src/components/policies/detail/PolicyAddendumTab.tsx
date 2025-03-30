@@ -8,18 +8,33 @@ import { Separator } from "@/components/ui/separator";
 import EmptyState from "@/components/ui/empty-state";
 import AddendumList from "@/components/policies/addendums/AddendumList";
 import AddendumFormDialog from "@/components/policies/addendums/AddendumFormDialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PolicyAddendumTabProps {
   policyId: string;
-  policyNumber: string;
 }
 
 const PolicyAddendumTab: React.FC<PolicyAddendumTabProps> = ({
   policyId,
-  policyNumber,
 }) => {
   const { t } = useLanguage();
   const [showAddendumForm, setShowAddendumForm] = useState(false);
+  
+  // Get policy number
+  const { data: policy } = useQuery({
+    queryKey: ['policy-basic-info', policyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('policies')
+        .select('policy_number')
+        .eq('id', policyId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
   
   const {
     addendums,
@@ -70,7 +85,7 @@ const PolicyAddendumTab: React.FC<PolicyAddendumTabProps> = ({
   }
   
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">{t("policyAddendums")}</h2>
         <Button onClick={handleCreateAddendum}>
@@ -84,7 +99,7 @@ const PolicyAddendumTab: React.FC<PolicyAddendumTabProps> = ({
       {addendums && addendums.length > 0 ? (
         <AddendumList 
           addendums={addendums} 
-          policyNumber={policyNumber}
+          policyNumber={policy?.policy_number || ""}
           onRefresh={refetch} 
         />
       ) : (
@@ -103,7 +118,7 @@ const PolicyAddendumTab: React.FC<PolicyAddendumTabProps> = ({
       {showAddendumForm && (
         <AddendumFormDialog
           policyId={policyId}
-          policyNumber={policyNumber}
+          policyNumber={policy?.policy_number || ""}
           open={showAddendumForm}
           onClose={handleAddendumFormClose}
           onSuccess={handleAddendumCreated}
