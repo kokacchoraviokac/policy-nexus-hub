@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useContext } from "react";
 import { AuthContext } from "@/contexts/auth/AuthContext";
+import { updateInvoiceStatusFn } from "@/components/finances/invoices/UpdateInvoiceStatusDialog";
 
 interface InvoiceItem {
   description: string;
@@ -119,15 +120,7 @@ export const useInvoiceMutations = () => {
   // Mutation to update invoice status
   const updateInvoiceStatusMutation = useMutation({
     mutationFn: async ({ invoiceId, status }: UpdateInvoiceStatusParams) => {
-      const { data, error } = await supabase
-        .from('invoices')
-        .update({ status })
-        .eq('id', invoiceId)
-        .eq('company_id', companyId);
-
-      if (error) throw error;
-      
-      return data;
+      return updateInvoiceStatusFn(invoiceId, status);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });

@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
-import { updateInvoiceStatus } from "@/hooks/finances/useInvoiceMutations";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UpdateInvoiceStatusDialogProps {
@@ -43,7 +42,7 @@ const UpdateInvoiceStatusDialog: React.FC<UpdateInvoiceStatusDialogProps> = ({
   const { t } = useLanguage();
   const { toast } = useToast();
   const [status, setStatus] = useState<InvoiceStatus>(currentStatus as InvoiceStatus || 'draft');
-  const [paymentDate, setPaymentDate] = useState<Date | null>(null);
+  const [paymentDate, setPaymentDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Define available status options based on current status
@@ -137,7 +136,7 @@ const UpdateInvoiceStatusDialog: React.FC<UpdateInvoiceStatusDialogProps> = ({
               <DatePicker
                 date={paymentDate}
                 setDate={setPaymentDate}
-                placeholder={t("selectPaymentDate")}
+                className="w-full"
               />
             </div>
           )}
@@ -164,8 +163,8 @@ const UpdateInvoiceStatusDialog: React.FC<UpdateInvoiceStatusDialogProps> = ({
 
 export default UpdateInvoiceStatusDialog;
 
-// Separate function to update invoice status outside of component
-export const updateInvoiceStatus = async (invoiceId: string, status: InvoiceStatus) => {
+// Utility function for updating invoice status (separated from component)
+export async function updateInvoiceStatusFn(invoiceId: string, status: InvoiceStatus) {
   try {
     const { error } = await supabase
       .from('invoices')
@@ -179,4 +178,4 @@ export const updateInvoiceStatus = async (invoiceId: string, status: InvoiceStat
     console.error("Error updating invoice status:", error);
     throw error;
   }
-};
+}

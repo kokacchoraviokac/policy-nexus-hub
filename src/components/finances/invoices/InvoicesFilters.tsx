@@ -47,12 +47,12 @@ const InvoicesFilters: React.FC<InvoicesFiltersProps> = ({
     onFilterChange({ ...filters, status });
   };
   
-  const handleStartDateChange = (date: Date | null) => {
-    onFilterChange({ ...filters, startDate: date });
+  const handleStartDateChange = (date: Date | undefined) => {
+    onFilterChange({ ...filters, startDate: date || null });
   };
   
-  const handleEndDateChange = (date: Date | null) => {
-    onFilterChange({ ...filters, endDate: date });
+  const handleEndDateChange = (date: Date | undefined) => {
+    onFilterChange({ ...filters, endDate: date || null });
   };
   
   const activeFilterCount = [
@@ -116,17 +116,17 @@ const InvoicesFilters: React.FC<InvoicesFiltersProps> = ({
               <DropdownMenuItem className="flex flex-col items-start">
                 <span className="text-xs mb-1">{t("from")}</span>
                 <DatePicker
-                  date={filters.startDate}
+                  date={filters.startDate || undefined}
                   setDate={handleStartDateChange}
-                  placeholder={t("selectDate")}
+                  className="w-full"
                 />
               </DropdownMenuItem>
               <DropdownMenuItem className="flex flex-col items-start mt-2">
                 <span className="text-xs mb-1">{t("to")}</span>
                 <DatePicker
-                  date={filters.endDate}
+                  date={filters.endDate || undefined}
                   setDate={handleEndDateChange}
-                  placeholder={t("selectDate")}
+                  className="w-full"
                 />
               </DropdownMenuItem>
             </DropdownMenuGroup>
