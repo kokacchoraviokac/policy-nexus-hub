@@ -21,12 +21,60 @@ export const ReportsRoutes = [
         </AppLayout>
       </ProtectedRoute>
     }
-  >
-    <Route index element={<Reports />} />
-    <Route path="policies" element={<PolicyProductionReport />} />
-    <Route path="clients" element={<ClientsReport />} />
-    <Route path="agents" element={<AgentsReport />} />
-    <Route path="claims" element={<ClaimsReport />} />
-    <Route path="financial" element={<FinancialReport />} />
-  </Route>
+  />,
+  <Route
+    key="reports-policies"
+    path="/reports/policies"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <PolicyProductionReport />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="reports-clients"
+    path="/reports/clients"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <ClientsReport />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="reports-agents"
+    path="/reports/agents"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <AgentsReport />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="reports-claims"
+    path="/reports/claims"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <ClaimsReport />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="reports-financial"
+    path="/reports/financial"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <FinancialReport />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />
 ];
