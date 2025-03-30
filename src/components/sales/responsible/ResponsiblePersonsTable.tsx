@@ -93,7 +93,9 @@ const ResponsiblePersonsTable: React.FC<ResponsiblePersonsTableProps> = ({
               </TableCell>
               <TableCell>{formatDate(assignment.assignedDate)}</TableCell>
               <TableCell>
-                <Badge variant="success">{t(assignment.status)}</Badge>
+                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                  {t(assignment.status)}
+                </Badge>
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
