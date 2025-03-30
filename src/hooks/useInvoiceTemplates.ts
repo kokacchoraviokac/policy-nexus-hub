@@ -78,7 +78,7 @@ export const useInvoiceTemplates = () => {
       toast({
         title: t("errorLoadingTemplates"),
         description: t("errorLoadingTemplatesDescription"),
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -113,7 +113,7 @@ export const useInvoiceTemplates = () => {
       
       toast({
         title: t("defaultTemplateCreated"),
-        description: t("defaultTemplateCreatedDescription"),
+        description: t("defaultTemplateCreatedDescription")
       });
       
       // Type assertion to handle TypeScript error
@@ -124,7 +124,7 @@ export const useInvoiceTemplates = () => {
       toast({
         title: t("errorCreatingTemplate"),
         description: t("errorCreatingTemplateDescription"),
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -138,7 +138,7 @@ export const useInvoiceTemplates = () => {
       toast({
         title: t("cannotDeleteDefaultTemplate"),
         description: t("cannotDeleteDefaultTemplateDescription"),
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -156,7 +156,7 @@ export const useInvoiceTemplates = () => {
       
       toast({
         title: t("templateDeleted"),
-        description: t("templateDeletedDescription"),
+        description: t("templateDeletedDescription")
       });
       
       // If the deleted template was selected, reset the form
@@ -168,7 +168,7 @@ export const useInvoiceTemplates = () => {
       toast({
         title: t("errorDeletingTemplate"),
         description: t("errorDeletingTemplateDescription"),
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -198,14 +198,14 @@ export const useInvoiceTemplates = () => {
       
       toast({
         title: t("defaultTemplateUpdated"),
-        description: t("defaultTemplateUpdatedDescription"),
+        description: t("defaultTemplateUpdatedDescription")
       });
     } catch (error) {
       console.error("Error setting default template:", error);
       toast({
         title: t("errorSettingDefaultTemplate"),
         description: t("errorSettingDefaultTemplateDescription"),
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
@@ -250,7 +250,7 @@ export const useInvoiceTemplates = () => {
         
         toast({
           title: t("templateCreated"),
-          description: t("templateCreatedDescription"),
+          description: t("templateCreatedDescription")
         });
         
         setSelectedTemplate(data as unknown as InvoiceTemplateSettings);
@@ -288,7 +288,7 @@ export const useInvoiceTemplates = () => {
         
         toast({
           title: t("templateUpdated"),
-          description: t("templateUpdatedDescription"),
+          description: t("templateUpdatedDescription")
         });
         
         setSelectedTemplate(data as unknown as InvoiceTemplateSettings);
@@ -302,7 +302,7 @@ export const useInvoiceTemplates = () => {
       toast({
         title: t("errorSavingTemplate"),
         description: t("errorSavingTemplateDescription"),
-        variant: "destructive",
+        variant: "destructive"
       });
       return false;
     }
@@ -323,6 +323,6 @@ export const useInvoiceTemplates = () => {
     loadTemplates,
     deleteTemplate,
     setDefaultTemplate,
-    saveTemplate,
+    saveTemplate
   };
 };
