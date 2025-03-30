@@ -7,6 +7,7 @@ import { UnlinkedPaymentType } from "@/types/policies";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { DollarSign, Calendar, User, FileText, Link, ExternalLink } from "lucide-react";
+import { format } from "date-fns";
 
 interface PaymentDetailsDialogProps {
   open: boolean;
@@ -19,8 +20,14 @@ const PaymentDetailsDialog: React.FC<PaymentDetailsDialogProps> = ({
   onOpenChange,
   payment
 }) => {
-  const { t, formatCurrency, formatDate, formatDateTime } = useLanguage();
+  const { t, formatCurrency, formatDate } = useLanguage();
   const navigate = useNavigate();
+
+  // Create a function to format date and time
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return "-";
+    return format(new Date(dateString), "PPP p"); // This will format the date with time
+  };
 
   const viewLinkedPolicy = () => {
     if (payment.linked_policy_id) {
