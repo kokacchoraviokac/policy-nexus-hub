@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileUp, FileDown, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileUp, FileDown, Check, AlertTriangle, CheckCircle } from "lucide-react"; // Added CheckCircle import
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import PolicyImportFileUpload from "@/components/policies/import/PolicyImportFileUpload";

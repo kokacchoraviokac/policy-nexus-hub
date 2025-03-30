@@ -80,7 +80,7 @@ export const usePolicyImport = () => {
           insurer_name: policy.insurer_name || '',
           insurer_id: policy.insurer_id,
           policyholder_name: policy.policyholder_name || '',
-          client_id: policy.policyholder_id,
+          client_id: policy.client_id, // Fixed: changed from policyholder_id to client_id
           insured_name: policy.insured_name || policy.policyholder_name || '',
           insured_id: policy.insured_id,
           product_name: policy.product_name || '',
