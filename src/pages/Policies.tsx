@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, FileBox, Workflow, FileArchive, CreditCard, FileImage } from "lucide-react";
+import { FilePlus, FileBox, Workflow, FileArchive, FileImage } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -71,12 +70,6 @@ const Policies = () => {
       description: "policyAddendumsDescription",
       path: "/policies/addendums",
       icon: FileArchive
-    },
-    {
-      title: "unlinkedPayments",
-      description: "unlinkedPaymentsDescription",
-      path: "/policies/unlinked-payments",
-      icon: CreditCard
     },
     {
       title: "documents",

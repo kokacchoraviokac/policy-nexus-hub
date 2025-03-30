@@ -1,4 +1,3 @@
-
 import {
   Book,
   DollarSign,
@@ -62,12 +61,6 @@ export const sidebarItems = [
         path: "/policies/addendums",
         requiredPrivilege: "policies:view",
         icon: FileArchive
-      },
-      {
-        label: "unlinkedPayments",
-        path: "/policies/unlinked-payments",
-        requiredPrivilege: "policies:view",
-        icon: CreditCard
       },
       {
         label: "documents",
