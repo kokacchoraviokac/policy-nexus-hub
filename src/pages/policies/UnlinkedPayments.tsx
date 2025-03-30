@@ -1,19 +1,24 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CreditCard, Link2, DownloadCloud, Eye, CircleDollarSign } from "lucide-react";
-import { useUnlinkedPayments, UnlinkedPayment } from "@/hooks/useUnlinkedPayments";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import DataTable, { Column } from "@/components/ui/data-table";
-import EmptyState from "@/components/ui/empty-state";
-import UnlinkedPaymentsFilters from "@/components/policies/unlinked-payments/UnlinkedPaymentsFilters";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, Download, Link as LinkIcon, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useUnlinkedPayments } from "@/hooks/useUnlinkedPayments";
 import LinkPaymentDialog from "@/components/policies/unlinked-payments/LinkPaymentDialog";
+import UnlinkedPaymentsFilters from "@/components/policies/unlinked-payments/UnlinkedPaymentsFilters";
 
 const UnlinkedPayments = () => {
   const { t, formatCurrency, formatDate } = useLanguage();
-  const [selectedPayment, setSelectedPayment] = useState<UnlinkedPayment | null>(null);
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
   
   const {
     payments,
@@ -23,128 +28,45 @@ const UnlinkedPayments = () => {
     setFilters,
     pagination,
     setPagination,
-    refetch,
     linkPayment,
     isLinking
   } = useUnlinkedPayments();
-
-  const handlePageChange = (page: number) => {
-    setPagination({ ...pagination, pageIndex: page });
+  
+  const handleSearch = (term: string) => {
+    setFilters(prev => ({ ...prev, searchTerm: term }));
   };
-
-  const handlePageSizeChange = (size: number) => {
-    setPagination({ pageIndex: 0, pageSize: size });
+  
+  const handleDateRangeChange = (range: { from: Date | null; to: Date | null }) => {
+    setFilters(prev => ({ 
+      ...prev, 
+      startDate: range.from,
+      endDate: range.to
+    }));
   };
-
-  const handleLinkPayment = (payment: UnlinkedPayment) => {
-    setSelectedPayment(payment);
-    setLinkDialogOpen(true);
+  
+  const handleStatusChange = (status: string) => {
+    setFilters(prev => ({ ...prev, status }));
   };
-
-  const handleConfirmLinkPayment = (paymentId: string, policyId: string) => {
-    linkPayment({ paymentId, policyId });
+  
+  const handleLinkPayment = (paymentId: string) => {
+    setSelectedPaymentId(paymentId);
+    setShowLinkDialog(true);
   };
-
-  const handleCloseLinkDialog = () => {
-    setLinkDialogOpen(false);
-    setSelectedPayment(null);
-  };
-
-  const handleExportPayments = () => {
-    // For future implementation - export functionality
-    console.log("Export payments");
-  };
-
-  const columns: Column<UnlinkedPayment>[] = [
-    {
-      header: t("reference"),
-      accessorKey: "reference" as keyof UnlinkedPayment,
-      sortable: true,
-      cell: (row: UnlinkedPayment) => (
-        <div>
-          {row.reference || "-"}
-          {row.linked_policy_id && (
-            <Badge variant="outline" className="ml-2">
-              {t("linked")}
-            </Badge>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: t("payer"),
-      accessorKey: "payer_name" as keyof UnlinkedPayment,
-      sortable: true,
-    },
-    {
-      header: t("amount"),
-      accessorKey: "amount" as keyof UnlinkedPayment,
-      sortable: true,
-      cell: (row: UnlinkedPayment) => formatCurrency(row.amount, row.currency),
-    },
-    {
-      header: t("paymentDate"),
-      accessorKey: "payment_date" as keyof UnlinkedPayment,
-      sortable: true,
-      cell: (row: UnlinkedPayment) => formatDate(row.payment_date),
-    },
-    {
-      header: t("actions"),
-      accessorKey: ((row: UnlinkedPayment) => row.id) as any,
-      cell: (row: UnlinkedPayment) => (
-        <div className="flex space-x-2">
-          {!row.linked_policy_id && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => handleLinkPayment(row)}
-            >
-              <Link2 className="h-4 w-4 mr-1" />
-              {t("linkPolicy")}
-            </Button>
-          )}
-          <Button size="sm" variant="ghost">
-            <Eye className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ];
-
-  const renderPaymentsTable = () => {
-    if (payments.length === 0 && !isLoading && filters.status === "unlinked") {
-      return (
-        <EmptyState
-          icon={<CircleDollarSign className="h-6 w-6 text-muted-foreground" />}
-          title={t("noUnlinkedPayments")}
-          description={t("allPaymentsLinked")}
-        />
-      );
+  
+  const handleConfirmLink = (policyId: string) => {
+    if (selectedPaymentId) {
+      linkPayment({ paymentId: selectedPaymentId, policyId });
+      setShowLinkDialog(false);
+      setSelectedPaymentId(null);
     }
-
-    return (
-      <DataTable
-        data={payments}
-        columns={columns}
-        isLoading={isLoading}
-        emptyState={{
-          title: t("noResults"),
-          description: t("noResultsDescription"),
-        }}
-        pagination={{
-          pageSize: pagination.pageSize,
-          currentPage: pagination.pageIndex,
-          totalItems: totalCount,
-          onPageChange: handlePageChange,
-          onPageSizeChange: handlePageSizeChange,
-          pageSizeOptions: [10, 20, 50],
-        }}
-      />
-    );
+  };
+  
+  const handleExport = () => {
+    // Export logic would go here
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("unlinkedPayments")}</h1>
@@ -152,44 +74,97 @@ const UnlinkedPayments = () => {
             {t("unlinkedPaymentsDescription")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleExportPayments}>
-            <DownloadCloud className="mr-2 h-4 w-4" />
-            {t("exportPayments")}
-          </Button>
-        </div>
+        
+        <Button variant="outline" onClick={handleExport}>
+          <Download className="mr-2 h-4 w-4" />
+          {t("exportPayments")}
+        </Button>
       </div>
-
-      <Tabs defaultValue="all" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="all" onClick={() => setFilters({ ...filters, status: "all" })}>
-            {t("all")}
-          </TabsTrigger>
-          <TabsTrigger value="unlinked" onClick={() => setFilters({ ...filters, status: "unlinked" })}>
-            {t("unlinked")}
-          </TabsTrigger>
-          <TabsTrigger value="linked" onClick={() => setFilters({ ...filters, status: "linked" })}>
-            {t("linked")}
-          </TabsTrigger>
-        </TabsList>
-
-        <UnlinkedPaymentsFilters
-          filters={filters}
-          onFiltersChange={setFilters}
-          onRefresh={refetch}
-        />
-
-        <div className="mt-4 bg-white/80 backdrop-blur-sm rounded-lg border border-border">
-          {renderPaymentsTable()}
-        </div>
-      </Tabs>
-
+      
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>{t("paymentManagement")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UnlinkedPaymentsFilters
+            searchTerm={filters.searchTerm || ""}
+            onSearchChange={handleSearch}
+            dateRange={{ from: filters.startDate, to: filters.endDate }}
+            onDateRangeChange={handleDateRangeChange}
+            status={filters.status || "unlinked"}
+            onStatusChange={handleStatusChange}
+          />
+          
+          <div className="rounded-md border mt-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("reference")}</TableHead>
+                  <TableHead>{t("payerName")}</TableHead>
+                  <TableHead className="text-right">{t("baseAmount")}</TableHead>
+                  <TableHead className="text-center">{t("commissionRate")}</TableHead>
+                  <TableHead className="text-right">{t("paymentAmount")}</TableHead>
+                  <TableHead>{t("paymentDate")}</TableHead>
+                  <TableHead>{t("actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      {t("loadingPayments")}
+                    </TableCell>
+                  </TableRow>
+                ) : payments && payments.length > 0 ? (
+                  payments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="font-medium">
+                        {payment.reference}
+                      </TableCell>
+                      <TableCell>{payment.payer_name}</TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(payment.base_amount, "EUR")}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {payment.commission_rate}%
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(payment.payment_amount, "EUR")}
+                      </TableCell>
+                      <TableCell>
+                        {formatDate(payment.payment_date)}
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleLinkPayment(payment.id)}
+                          disabled={!!payment.linked_policy_id}
+                        >
+                          <LinkIcon className="h-4 w-4 mr-2" />
+                          {payment.linked_policy_id ? t("linked") : t("link")}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      {t("noPaymentsFound")}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+      
       <LinkPaymentDialog
-        payment={selectedPayment}
-        open={linkDialogOpen}
-        onClose={handleCloseLinkDialog}
-        onLinkPayment={handleConfirmLinkPayment}
-        isLinking={isLinking}
+        open={showLinkDialog}
+        onClose={() => setShowLinkDialog(false)}
+        onConfirm={handleConfirmLink}
+        isLoading={isLinking}
       />
     </div>
   );
