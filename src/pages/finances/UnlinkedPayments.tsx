@@ -8,7 +8,7 @@ import { Download, Link as LinkIcon } from "lucide-react";
 import { useUnlinkedPayments } from "@/hooks/useUnlinkedPayments";
 import LinkPaymentDialog from "@/components/finances/unlinked-payments/LinkPaymentDialog";
 import UnlinkedPaymentsFilters from "@/components/finances/unlinked-payments/UnlinkedPaymentsFilters";
-import { PaginationController } from "@/components/ui/pagination-controller";
+import PaginationController from "@/components/ui/pagination-controller";
 
 const UnlinkedPayments = () => {
   const { t, formatCurrency, formatDate } = useLanguage();
@@ -133,6 +133,7 @@ const UnlinkedPayments = () => {
                 currentPage={pagination.pageIndex + 1}
                 pageSize={pagination.pageSize}
                 totalItems={totalCount}
+                totalPages={Math.ceil(totalCount / pagination.pageSize)}
                 onPageChange={(page) => setPagination({ ...pagination, pageIndex: page - 1 })}
                 onPageSizeChange={(size) => setPagination({ pageIndex: 0, pageSize: size })}
               />
