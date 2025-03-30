@@ -26,7 +26,7 @@ interface DocumentApprovalPanelProps {
   onApprovalComplete?: () => void;
 }
 
-// Define a dedicated type for activity log details instead of using Json
+// Define activity log details interface
 interface ApprovalActivityDetails {
   document_id?: string;
   action_type?: string;
@@ -36,7 +36,7 @@ interface ApprovalActivityDetails {
   notes?: string;
 }
 
-// Define type for activity log row to avoid recursive types
+// Define activity log row type
 interface ActivityLogRow {
   id: string;
   user_id: string;
@@ -68,10 +68,10 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       if (!document.entity_type || !document.entity_id || !document.id) return;
       
       try {
-        // Use a query that won't cause deep type instantiation issues
+        // Fetch the activity logs directly
         const { data, error } = await supabase
           .from('activity_logs')
-          .select('*')
+          .select('id, user_id, created_at, details')
           .eq('entity_type', document.entity_type)
           .eq('entity_id', document.entity_id)
           .order('created_at', { ascending: false })
@@ -82,10 +82,13 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           return;
         }
         
-        // Filter in JavaScript to avoid complex SQL that causes type issues
-        // This is more reliable than trying to query against JSON fields
+        // Type-safe filtering of logs in JavaScript
         if (data && data.length > 0) {
-          const filteredLogs = data.filter(log => {
+          // Safe type assertion
+          const activityLogs = data as ActivityLogRow[];
+          
+          // Find relevant approval logs
+          const filteredLogs = activityLogs.filter(log => {
             const details = log.details as ApprovalActivityDetails;
             return details && 
                   details.action_type === 'document_approval' && 
@@ -93,7 +96,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           });
           
           if (filteredLogs.length > 0) {
-            const latestApproval = filteredLogs[0] as ActivityLogRow;
+            const latestApproval = filteredLogs[0];
             const details = latestApproval.details as ApprovalActivityDetails;
             
             setApprovalInfo({

@@ -46,41 +46,50 @@ export const useDocumentVersions = ({
     queryKey: ['document-versions', queryDocumentId],
     queryFn: async () => {
       try {
-        // First determine the document table and entity information
-        const tables: DocumentTableName[] = ['policy_documents', 'claim_documents', 'sales_documents'];
+        // First find document table and entity information
         let entityType = '';
         let entityId = '';
         let tableName: DocumentTableName | null = null;
-        let entityField = '';
         
-        // Check each table for the document
-        for (const table of tables) {
-          // Type-safe query using known table names
-          const query = supabase.from(table as DocumentTableName);
+        // Check policy_documents
+        const { data: policyDoc, error: policyError } = await supabase
+          .from('policy_documents')
+          .select('id, policy_id')
+          .eq('id', queryDocumentId)
+          .limit(1)
+          .single();
           
-          const { data, error } = await query
-            .select(table === 'policy_documents' 
-              ? 'id, policy_id' 
-              : table === 'claim_documents' 
-                ? 'id, claim_id' 
-                : 'id, sales_process_id')
+        if (!policyError && policyDoc) {
+          tableName = 'policy_documents';
+          entityType = 'policy';
+          entityId = policyDoc.policy_id;
+        } else {
+          // Check claim_documents
+          const { data: claimDoc, error: claimError } = await supabase
+            .from('claim_documents')
+            .select('id, claim_id')
             .eq('id', queryDocumentId)
+            .limit(1)
             .single();
             
-          if (!error && data) {
-            tableName = table;
-            entityType = table === 'policy_documents' 
-              ? 'policy' 
-              : table === 'claim_documents' 
-                ? 'claim' 
-                : 'sales_process';
-            entityField = entityType === 'policy' 
-              ? 'policy_id' 
-              : entityType === 'claim' 
-                ? 'claim_id' 
-                : 'sales_process_id';
-            entityId = data[entityField];
-            break;
+          if (!claimError && claimDoc) {
+            tableName = 'claim_documents';
+            entityType = 'claim';
+            entityId = claimDoc.claim_id;
+          } else {
+            // Check sales_documents
+            const { data: salesDoc, error: salesError } = await supabase
+              .from('sales_documents')
+              .select('id, sales_process_id')
+              .eq('id', queryDocumentId)
+              .limit(1)
+              .single();
+              
+            if (!salesError && salesDoc) {
+              tableName = 'sales_documents';
+              entityType = 'sales_process';
+              entityId = salesDoc.sales_process_id;
+            }
           }
         }
         
@@ -88,43 +97,74 @@ export const useDocumentVersions = ({
           throw new Error("Document not found or could not determine document type");
         }
         
-        // Get original document ID if available
+        // Get original document ID if needed
         let originalId = originalDocumentId;
         
         if (!originalId) {
-          // Check if this document has an original_document_id
-          const query = supabase.from(tableName);
-          const { data: docInfo, error: docError } = await query
-            .select('original_document_id')
-            .eq('id', documentId)
-            .single();
-            
-          if (!docError && docInfo && docInfo.original_document_id) {
-            originalId = docInfo.original_document_id;
-          } else {
-            // This might be the original document itself
-            originalId = documentId;
+          if (tableName === 'policy_documents') {
+            const { data: docInfo } = await supabase
+              .from('policy_documents')
+              .select('original_document_id')
+              .eq('id', documentId)
+              .single();
+              
+            originalId = docInfo?.original_document_id || documentId;
+          } else if (tableName === 'claim_documents') {
+            const { data: docInfo } = await supabase
+              .from('claim_documents')
+              .select('original_document_id')
+              .eq('id', documentId)
+              .single();
+              
+            originalId = docInfo?.original_document_id || documentId;
+          } else if (tableName === 'sales_documents') {
+            const { data: docInfo } = await supabase
+              .from('sales_documents')
+              .select('original_document_id')
+              .eq('id', documentId)
+              .single();
+              
+            originalId = docInfo?.original_document_id || documentId;
           }
         }
         
-        // Query for all versions using the type-safe table name
-        const query = supabase.from(tableName);
+        // Use separate queries for each table to avoid type issues
+        let allVersions: DocumentDbRow[] = [];
         
-        // Use separate filters to avoid the deep instantiation error
-        const { data: allVersions, error: versionsError } = await query
-          .select('*')
-          .eq(entityField, entityId)
-          .or(`original_document_id.eq.${originalId},id.eq.${originalId}`);
+        if (tableName === 'policy_documents') {
+          const { data } = await supabase
+            .from('policy_documents')
+            .select('*')
+            .eq('policy_id', entityId)
+            .or(`original_document_id.eq.${originalId || documentId},id.eq.${originalId || documentId}`);
+            
+          if (data) {
+            allVersions = data as DocumentDbRow[];
+          }
+        } else if (tableName === 'claim_documents') {
+          const { data } = await supabase
+            .from('claim_documents')
+            .select('*')
+            .eq('claim_id', entityId)
+            .or(`original_document_id.eq.${originalId || documentId},id.eq.${originalId || documentId}`);
+            
+          if (data) {
+            allVersions = data as DocumentDbRow[];
+          }
+        } else if (tableName === 'sales_documents') {
+          const { data } = await supabase
+            .from('sales_documents')
+            .select('*')
+            .eq('sales_process_id', entityId)
+            .or(`original_document_id.eq.${originalId || documentId},id.eq.${originalId || documentId}`);
+            
+          if (data) {
+            allVersions = data as DocumentDbRow[];
+          }
+        }
         
-        if (versionsError) throw versionsError;
-        
-        // Transform to Document type with explicit type safety
-        if (!allVersions) return [];
-        
-        // We need to type cast because the query can't guarantee DocumentDbRow
-        const result = allVersions.map((rawDoc: any) => {
-          const doc = rawDoc as DocumentDbRow;
-          
+        // Transform to Document type
+        return allVersions.map((doc: DocumentDbRow) => {
           return {
             id: doc.id,
             document_name: doc.document_name,
@@ -146,8 +186,6 @@ export const useDocumentVersions = ({
             mime_type: doc.mime_type || null
           } as Document;
         });
-        
-        return result;
       } catch (error) {
         console.error("Error fetching document versions:", error);
         return [];
