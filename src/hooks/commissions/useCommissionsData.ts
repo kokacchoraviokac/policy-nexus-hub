@@ -70,7 +70,7 @@ export const useCommissionsData = (
         query = query.eq('policies.insurer_id', filters.insurerId);
       }
       
-      // Apply agent filter if provided
+      // Apply agent filter if provided - removed the join with agents table to fix the infinite type issue
       if (filters.agentId) {
         query = query.eq('agent_id', filters.agentId);
       }

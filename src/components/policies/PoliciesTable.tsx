@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -189,6 +190,9 @@ const PoliciesTable = ({
     },
   ];
 
+  // Calculate totalPages from totalCount and pageSize
+  const totalPages = Math.ceil((data?.totalCount || 0) / pageSize);
+
   return (
     <DataTable
       data={data?.policies || []}
@@ -207,6 +211,7 @@ const PoliciesTable = ({
         currentPage: currentPage,
         itemsPerPage: pageSize,
         totalItems: data?.totalCount || 0,
+        totalPages: totalPages,
         onPageChange: handlePageChange,
         onPageSizeChange: handlePageSizeChange,
         pageSizeOptions: [10, 25, 50, 100],

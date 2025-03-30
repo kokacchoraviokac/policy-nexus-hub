@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PlusCircle, Info } from "lucide-react";
@@ -90,9 +89,10 @@ const InsurersDirectory: React.FC = () => {
   };
 
   const handleSaveFilter = (name: string) => {
-    // We need to pass the current filters here
     saveFilter(name);
   };
+
+  const totalPages = Math.ceil(pagination.totalCount / pagination.pageSize);
 
   return (
     <div className="space-y-6">
@@ -156,6 +156,7 @@ const InsurersDirectory: React.FC = () => {
           currentPage: pagination.page,
           itemsPerPage: pagination.pageSize,
           totalItems: pagination.totalCount,
+          totalPages: totalPages,
           onPageChange: pagination.setPage,
           onPageSizeChange: pagination.setPageSize,
           pageSizeOptions: [10, 25, 50, 100]
