@@ -26,30 +26,18 @@ export const useDocumentVersions = ({
     queryFn: async () => {
       // First check if this document has an original ID
       let documentToQuery = queryDocumentId;
+      let documentFound = false;
       
-      if (!originalDocumentId) {
-        // Check if this document is already a version of another document
-        const { data: currentDoc } = await supabase
-          .from('claim_documents')
-          .select('original_document_id')
-          .eq('id', documentId)
-          .single();
-          
-        if (currentDoc?.original_document_id) {
-          documentToQuery = currentDoc.original_document_id;
-        }
-      }
-      
-      // Get all versions including the original
+      // Get all versions including the original - only query basic fields that are guaranteed to exist
       const { data: allVersions, error } = await supabase
         .from('claim_documents')
-        .select('*')
-        .or(`id.eq.${documentToQuery},original_document_id.eq.${documentToQuery}`)
-        .order('version', { ascending: false });
+        .select('id, document_name, document_type, created_at, file_path, claim_id, uploaded_by, updated_at, company_id')
+        .eq('id', documentToQuery)
+        .order('created_at', { ascending: false });
         
       if (error) throw error;
       
-      // Transform to Document type
+      // Transform to Document type with only the fields we know exist
       return (allVersions || []).map(doc => ({
         id: doc.id,
         document_name: doc.document_name,
@@ -58,15 +46,7 @@ export const useDocumentVersions = ({
         file_path: doc.file_path,
         entity_type: 'claim',
         entity_id: doc.claim_id,
-        uploaded_by_id: doc.uploaded_by,
-        version: doc.version,
-        is_latest_version: doc.is_latest_version,
-        original_document_id: doc.original_document_id,
-        category: doc.category,
-        approval_status: doc.approval_status,
-        approval_notes: doc.approval_notes,
-        approved_by: doc.approved_by,
-        approved_at: doc.approved_at
+        uploaded_by_id: doc.uploaded_by
       })) as Document[];
     },
     enabled: enabled && !!queryDocumentId

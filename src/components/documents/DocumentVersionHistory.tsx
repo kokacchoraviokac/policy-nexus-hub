@@ -3,7 +3,7 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useDocumentVersions } from "@/hooks/useDocumentVersions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileHistory, Loader2, AlertCircle } from "lucide-react";
+import { History, Loader2, AlertCircle } from "lucide-react";
 import { Document } from "@/types/documents";
 import { formatDate } from "@/utils/format";
 import DocumentActions from "./DocumentActions";
@@ -66,7 +66,7 @@ const DocumentVersionHistory: React.FC<DocumentVersionHistoryProps> = ({
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
-          <FileHistory className="h-5 w-5" />
+          <History className="h-5 w-5" />
           {t("versionHistory")}
         </CardTitle>
       </CardHeader>
@@ -80,7 +80,7 @@ const DocumentVersionHistory: React.FC<DocumentVersionHistoryProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{t("version")} {version.version}</span>
+                    <span className="font-medium">{t("version")} {version.version || 1}</span>
                     {version.is_latest_version && (
                       <Badge variant="outline" className="bg-primary/10">
                         {t("latest")}

@@ -17,6 +17,7 @@ interface DocumentUploadDialogProps {
   entityType: "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
   entityId: string;
   selectedDocument?: Document; // For version control
+  onUploadComplete?: () => void; // Optional callback for when upload completes
 }
 
 const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
@@ -24,7 +25,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   onOpenChange,
   entityType,
   entityId,
-  selectedDocument
+  selectedDocument,
+  onUploadComplete
 }) => {
   const { t } = useLanguage();
   const [uploadMode, setUploadMode] = useState<"new" | "version">(selectedDocument ? "version" : "new");
@@ -45,7 +47,12 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   } = useDocumentUpload({ 
     entityType,
     entityId,
-    onSuccess: () => onOpenChange(false),
+    onSuccess: () => {
+      onOpenChange(false);
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
+    },
     originalDocumentId: isNewVersion ? (selectedDocument?.original_document_id || selectedDocument?.id) : undefined,
     currentVersion: isNewVersion ? (selectedDocument?.version || 1) : 0
   });

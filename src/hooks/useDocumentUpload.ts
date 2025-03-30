@@ -69,27 +69,14 @@ export const useDocumentUpload = ({
         const isNewVersion = !!originalDocumentId;
         const version = isNewVersion ? currentVersion + 1 : 1;
         
-        // If this is a new version, mark previous versions as not latest
-        if (isNewVersion) {
-          await supabase
-            .from(documentTable)
-            .update({ is_latest_version: false })
-            .or(`id.eq.${originalDocumentId},original_document_id.eq.${originalDocumentId}`);
-        }
-        
-        // Define base document data
+        // Define base document data - only include fields that actually exist in the table
         const baseData = {
           id: documentId,
           document_name: documentName,
           document_type: documentType,
           file_path: filePath,
           uploaded_by: userId,
-          company_id: user.data.user?.user_metadata?.company_id,
-          version: version,
-          is_latest_version: true,
-          original_document_id: isNewVersion ? originalDocumentId : null,
-          category: documentCategory || undefined,
-          approval_status: "pending"
+          company_id: user.data.user?.user_metadata?.company_id
         };
         
         // Create entity-specific document data

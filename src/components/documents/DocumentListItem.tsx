@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Document } from "@/types/documents";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import DocumentMetadata from "./DocumentMetadata";
 import DocumentActions from "./DocumentActions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, ShieldX, Clock, FileHistory, Shield, ChevronDown, ChevronUp } from "lucide-react";
+import { ShieldCheck, ShieldX, Clock, History, Shield, ChevronDown, ChevronUp } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DocumentVersionHistory from "./DocumentVersionHistory";
 import DocumentApprovalPanel from "./DocumentApprovalPanel";
@@ -85,7 +84,7 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
               
               {document.version && document.version > 1 && (
                 <Badge variant="outline" className="flex items-center gap-1">
-                  <FileHistory className="h-3 w-3" />
+                  <History className="h-3 w-3" />
                   {t("version")} {document.version}
                 </Badge>
               )}

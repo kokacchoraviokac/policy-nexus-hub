@@ -95,7 +95,6 @@ const PolicyDocuments = () => {
         onOpenChange={setIsUploadDialogOpen}
         entityType="policy" 
         entityId="general" // This would normally be a specific policy ID
-        onUploadComplete={handleUploadComplete}
       />
     </div>
   );
