@@ -163,5 +163,17 @@
   "activePolicies": "Aktivne polise",
   "acrossClients": "za sve klijente",
   "unassignedPolicies": "Nedodeljene polise",
-  "needAttention": "zahtevaju pažnju"
+  "needAttention": "zahtevaju pažnju",
+  
+  // Adding missing translations for policy form
+  "basicInfo": "Osnovne informacije",
+  "parties": "Strane",
+  "financialInfo": "Finansijske informacije",
+  "enterPolicyNumber": "Unesite broj polise",
+  "internal": "Interna",
+  "selectDate": "Izaberite datum",
+  "notes": "Napomene",
+  "enterNotes": "Unesite dodatne napomene",
+  "createPolicy": "Kreiraj polisu",
+  "newPolicyDescription": "Kreirajte novu polisu osiguranja"
 }

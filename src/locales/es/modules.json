@@ -159,5 +159,17 @@
   "importErrors": "Errores de importación",
   "andMoreErrors": "Y {count} errores más",
   "importedPoliciesInDraft": "Las pólizas importadas exitosamente ahora están en estado 'Borrador' y listas para revisión",
-  "done": "Hecho"
+  "done": "Hecho",
+  
+  // Adding missing translations for policy form
+  "basicInfo": "Información básica",
+  "parties": "Partes",
+  "financialInfo": "Información financiera",
+  "enterPolicyNumber": "Introduzca número de póliza",
+  "internal": "Interna",
+  "selectDate": "Seleccione una fecha",
+  "notes": "Notas",
+  "enterNotes": "Introduzca notas adicionales",
+  "createPolicy": "Crear póliza",
+  "newPolicyDescription": "Crear una nueva póliza de seguro"
 }

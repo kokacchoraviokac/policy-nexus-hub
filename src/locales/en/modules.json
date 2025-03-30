@@ -164,5 +164,17 @@
   "activePolicies": "Active Policies",
   "acrossClients": "across all clients",
   "unassignedPolicies": "Unassigned Policies",
-  "needAttention": "need attention"
+  "needAttention": "need attention",
+  
+  // Adding missing translations for policy form
+  "basicInfo": "Basic Information",
+  "parties": "Parties",
+  "financialInfo": "Financial Information",
+  "enterPolicyNumber": "Enter policy number",
+  "internal": "Internal",
+  "selectDate": "Select a date",
+  "notes": "Notes",
+  "enterNotes": "Enter additional notes",
+  "createPolicy": "Create Policy",
+  "newPolicyDescription": "Create a new insurance policy"
 }
