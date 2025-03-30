@@ -28,7 +28,10 @@ const PolicyDocumentsCheck: React.FC<PolicyDocumentsCheckProps> = ({
     );
   }
   
-  const hasDocuments = documentsCount > 0;
+  // Minimum required documents (policy and invoice)
+  const requiredDocumentsCount = 2;
+  const hasRequiredDocuments = documentsCount >= requiredDocumentsCount;
+  const progressValue = Math.min(100, (documentsCount / requiredDocumentsCount) * 100);
   
   return (
     <div className="space-y-4">
@@ -41,13 +44,16 @@ const PolicyDocumentsCheck: React.FC<PolicyDocumentsCheckProps> = ({
             {t("documentsAttached", { count: documentsCount })}
           </span>
           <span className="text-sm text-muted-foreground">
-            {documentsCount} / 2
+            {documentsCount} / {requiredDocumentsCount}
           </span>
         </div>
-        <Progress value={hasDocuments ? 50 : 0} className={hasDocuments ? "bg-blue-100" : "bg-amber-100"} />
+        <Progress 
+          value={progressValue} 
+          className={hasRequiredDocuments ? "bg-blue-100" : "bg-amber-100"} 
+        />
       </div>
       
-      {hasDocuments ? (
+      {hasRequiredDocuments ? (
         <div className="flex items-center text-sm text-green-600">
           <FileCheck className="mr-2 h-4 w-4" />
           {t("documentsUploaded")}
@@ -61,7 +67,7 @@ const PolicyDocumentsCheck: React.FC<PolicyDocumentsCheckProps> = ({
       
       <Button 
         onClick={onUploadClick}
-        variant={hasDocuments ? "outline" : "default"} 
+        variant={hasRequiredDocuments ? "outline" : "default"} 
         className="w-full"
       >
         <FileUp className="mr-2 h-4 w-4" />

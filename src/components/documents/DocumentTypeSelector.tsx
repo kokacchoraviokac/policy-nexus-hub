@@ -7,37 +7,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface DocumentTypeSelectorProps {
   value: string;
   onValueChange: (value: string) => void;
-  documentTypes?: Array<{value: string, label: string}>;
+  disabled?: boolean;
 }
 
 const DocumentTypeSelector: React.FC<DocumentTypeSelectorProps> = ({
   value,
   onValueChange,
-  documentTypes
+  disabled = false
 }) => {
   const { t } = useLanguage();
-  
-  const defaultDocumentTypes = [
-    { value: "document", label: t("document") },
-    { value: "contract", label: t("contract") },
-    { value: "other", label: t("other") }
-  ];
-  
-  const types = documentTypes || defaultDocumentTypes;
   
   return (
     <div className="grid gap-2">
       <Label htmlFor="documentType">{t("documentType")} *</Label>
-      <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger>
+      <Select
+        value={value}
+        onValueChange={onValueChange}
+        disabled={disabled}
+      >
+        <SelectTrigger id="documentType">
           <SelectValue placeholder={t("selectDocumentType")} />
         </SelectTrigger>
         <SelectContent>
-          {types.map((type) => (
-            <SelectItem key={type.value} value={type.value}>
-              {type.label}
-            </SelectItem>
-          ))}
+          <SelectItem value="policy">{t("policyDocument")}</SelectItem>
+          <SelectItem value="invoice">{t("invoice")}</SelectItem>
+          <SelectItem value="certificate">{t("certificate")}</SelectItem>
+          <SelectItem value="endorsement">{t("endorsement")}</SelectItem>
+          <SelectItem value="lien">{t("lien")}</SelectItem>
+          <SelectItem value="other">{t("other")}</SelectItem>
         </SelectContent>
       </Select>
     </div>

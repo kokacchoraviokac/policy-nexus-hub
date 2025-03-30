@@ -1,42 +1,62 @@
 
 import React from "react";
-import { FileText, FileImage, FileSpreadsheet, File, FileX, FileCode, FileArchive } from "lucide-react";
+import { 
+  FileText,
+  FileImage,
+  FilePdf,
+  FileSpreadsheet,
+  FileCode,
+  FileArchive,
+  FileX
+} from "lucide-react";
 
 export const getDocumentIcon = (filePath: string, mimeType?: string) => {
-  const path = filePath.toLowerCase();
-  
-  // Check file extension first
-  if (path.endsWith('.pdf')) {
-    return <FileText className="h-5 w-5 text-red-500" />;
-  } else if (path.endsWith('.jpg') || path.endsWith('.jpeg') || path.endsWith('.png') || path.endsWith('.gif') || path.endsWith('.svg')) {
-    return <FileImage className="h-5 w-5 text-blue-500" />;
-  } else if (path.endsWith('.xls') || path.endsWith('.xlsx') || path.endsWith('.csv')) {
-    return <FileSpreadsheet className="h-5 w-5 text-green-500" />;
-  } else if (path.endsWith('.doc') || path.endsWith('.docx') || path.endsWith('.txt')) {
-    return <FileText className="h-5 w-5 text-blue-700" />;
-  } else if (path.endsWith('.html') || path.endsWith('.css') || path.endsWith('.js') || path.endsWith('.json')) {
-    return <FileCode className="h-5 w-5 text-violet-500" />;
-  } else if (path.endsWith('.zip') || path.endsWith('.rar') || path.endsWith('.7z')) {
-    return <FileArchive className="h-5 w-5 text-amber-500" />;
-  }
-  
-  // If no match by extension, try MIME type if available
+  const extension = filePath?.toLowerCase().split('.').pop() || '';
+
+  // Use mime type first if available
   if (mimeType) {
-    if (mimeType.includes('pdf')) {
-      return <FileText className="h-5 w-5 text-red-500" />;
-    } else if (mimeType.includes('image')) {
-      return <FileImage className="h-5 w-5 text-blue-500" />;
-    } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType.includes('csv')) {
-      return <FileSpreadsheet className="h-5 w-5 text-green-500" />;
-    } else if (mimeType.includes('word') || mimeType.includes('text')) {
-      return <FileText className="h-5 w-5 text-blue-700" />;
-    } else if (mimeType.includes('html') || mimeType.includes('javascript') || mimeType.includes('json')) {
-      return <FileCode className="h-5 w-5 text-violet-500" />;
-    } else if (mimeType.includes('zip') || mimeType.includes('compressed') || mimeType.includes('archive')) {
-      return <FileArchive className="h-5 w-5 text-amber-500" />;
+    if (mimeType.startsWith('image/')) {
+      return <FileImage className="h-8 w-8 text-blue-500" />;
+    } else if (mimeType === 'application/pdf') {
+      return <FilePdf className="h-8 w-8 text-red-500" />;
+    } else if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
+      return <FileSpreadsheet className="h-8 w-8 text-green-500" />;
+    } else if (mimeType.includes('zip') || mimeType.includes('compressed')) {
+      return <FileArchive className="h-8 w-8 text-yellow-500" />;
+    } else if (mimeType.includes('code') || mimeType.includes('javascript') || mimeType.includes('html')) {
+      return <FileCode className="h-8 w-8 text-purple-500" />;
     }
   }
-  
-  // Default icon
-  return <File className="h-5 w-5 text-gray-500" />;
+
+  // Fallback to extension-based detection
+  switch (extension) {
+    case 'pdf':
+      return <FilePdf className="h-8 w-8 text-red-500" />;
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'webp':
+      return <FileImage className="h-8 w-8 text-blue-500" />;
+    case 'xls':
+    case 'xlsx':
+    case 'csv':
+      return <FileSpreadsheet className="h-8 w-8 text-green-500" />;
+    case 'zip':
+    case 'rar':
+    case '7z':
+      return <FileArchive className="h-8 w-8 text-yellow-500" />;
+    case 'js':
+    case 'html':
+    case 'css':
+    case 'json':
+      return <FileCode className="h-8 w-8 text-purple-500" />;
+    default:
+      return <FileText className="h-8 w-8 text-gray-500" />;
+  }
+};
+
+export const getFileExtensionFromPath = (filePath: string): string => {
+  if (!filePath) return '';
+  return filePath.toLowerCase().split('.').pop() || '';
 };

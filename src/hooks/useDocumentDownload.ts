@@ -45,7 +45,7 @@ export const useDocumentDownload = () => {
         logActivity({
           entityType: document.entity_type,
           entityId: document.entity_id,
-          action: "document_download", // Changed from "download" to "document_download"
+          action: "document_download", 
           details: {
             document_id: document.id,
             document_name: document.document_name

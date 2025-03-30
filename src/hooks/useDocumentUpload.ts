@@ -96,6 +96,7 @@ export const useDocumentUpload = ({
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["documents", entityType, entityId] });
+      queryClient.invalidateQueries({ queryKey: ["policy-documents", entityId] });
       
       toast({
         title: t("documentUploaded"),

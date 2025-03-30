@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Policy } from "@/types/policies";
-import { Loader2, FileEdit, Eye, Clock, CheckCircle2, FileSpreadsheet } from "lucide-react";
+import { Loader2, FileEdit, Eye, Clock, CheckCircle2, FileSpreadsheet, FileText, FileX } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
 
 interface WorkflowPoliciesListProps {
@@ -88,6 +88,16 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
       </Badge>
     );
   };
+  
+  const getDocumentStatusIcon = (documentsCount: number) => {
+    if (documentsCount === 0) {
+      return <FileX className="h-4 w-4 text-destructive" />;
+    } else if (documentsCount === 1) {
+      return <FileText className="h-4 w-4 text-amber-500" />;
+    } else {
+      return <FileText className="h-4 w-4 text-green-500" />;
+    }
+  };
 
   return (
     <div className="overflow-auto">
@@ -98,6 +108,7 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
             <TableHead>{t("policyholder")}</TableHead>
             <TableHead>{t("insurer")}</TableHead>
             <TableHead>{t("workflowStatus")}</TableHead>
+            <TableHead>{t("documents")}</TableHead>
             <TableHead>{t("lastUpdated")}</TableHead>
             <TableHead className="text-right">{t("actions")}</TableHead>
           </TableRow>
@@ -109,6 +120,12 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
               <TableCell>{policy.policyholder_name}</TableCell>
               <TableCell>{policy.insurer_name}</TableCell>
               <TableCell>{getWorkflowStatusBadge(policy.workflow_status)}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1">
+                  {getDocumentStatusIcon(policy.documents_count || 0)}
+                  <span>{policy.documents_count || 0}</span>
+                </div>
+              </TableCell>
               <TableCell>{formatDate(policy.updated_at)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">

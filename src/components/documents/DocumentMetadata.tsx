@@ -1,27 +1,32 @@
 
 import React from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Document } from "@/hooks/useDocuments";
 import { Badge } from "@/components/ui/badge";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DocumentMetadataProps {
   document: Document;
 }
 
 const DocumentMetadata: React.FC<DocumentMetadataProps> = ({ document }) => {
-  const { formatDate } = useLanguage();
+  const { t, formatDate } = useLanguage();
   
   return (
-    <div className="flex-1 min-w-0">
-      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-        <h4 className="font-medium truncate">{document.document_name}</h4>
-        <Badge variant="outline" className="w-fit">
-          {document.document_type}
-        </Badge>
+    <div className="flex-1">
+      <div className="flex flex-col">
+        <h3 className="font-medium">{document.document_name}</h3>
+        <div className="flex items-center gap-2 mt-1">
+          <Badge variant="outline">{document.document_type}</Badge>
+          <span className="text-xs text-muted-foreground">
+            {formatDate(document.created_at)}
+          </span>
+        </div>
+        {document.uploaded_by_name && (
+          <span className="text-xs text-muted-foreground mt-1">
+            {t("uploadedBy")}: {document.uploaded_by_name}
+          </span>
+        )}
       </div>
-      <p className="text-sm text-muted-foreground mt-1">
-        {formatDate(document.created_at)}
-      </p>
     </div>
   );
 };
