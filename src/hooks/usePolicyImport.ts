@@ -4,6 +4,7 @@ import { Policy } from "@/types/policies";
 import { parsePolicyCSV, validateImportedPolicies } from "@/utils/policies/importUtils";
 import { useSupabaseClient } from "@/hooks/useSupabaseClient";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 export const usePolicyImport = () => {
   const [isImporting, setIsImporting] = useState(false);
@@ -49,17 +50,37 @@ export const usePolicyImport = () => {
     setIsImporting(true);
     
     try {
+      // Get the user's data to get company_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("User authentication required");
+        return false;
+      }
+      
+      // Get the user's profile to get company_id
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", user.id)
+        .single();
+      
+      if (!userProfile?.company_id) {
+        toast.error("Company ID not found");
+        return false;
+      }
+      
+      const companyId = userProfile.company_id;
+      
       // Prepare policies with required fields for insertion
-      // Ensure each policy has all the required fields with proper types
       const policiesToInsert = importedPolicies.map(policy => {
-        // Make sure all required fields are present and not undefined
         return {
+          id: uuidv4(),
           policy_number: policy.policy_number || '',
           policy_type: policy.policy_type || 'Standard',
           insurer_name: policy.insurer_name || '',
           insurer_id: policy.insurer_id,
           policyholder_name: policy.policyholder_name || '',
-          client_id: policy.client_id,
+          client_id: policy.policyholder_id,
           insured_name: policy.insured_name || policy.policyholder_name || '',
           insured_id: policy.insured_id,
           product_name: policy.product_name || '',
@@ -76,16 +97,17 @@ export const usePolicyImport = () => {
           notes: policy.notes,
           status: 'active',
           workflow_status: 'draft',
-          company_id: 'demo-company-id', // Use a default or get from context
+          company_id: companyId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          created_by: undefined,  // This will be null if not provided
-          assigned_to: undefined, // This will be null if not provided
+          created_by: user.id
         };
       });
       
       // Insert policies into database one by one to avoid batch issues
       let successCount = 0;
+      let errorCount = 0;
+      let errors: string[] = [];
       
       for (const policy of policiesToInsert) {
         const { data, error } = await supabase
@@ -95,7 +117,8 @@ export const usePolicyImport = () => {
         
         if (error) {
           console.error("Error saving policy:", error, policy);
-          toast.error(`Error saving policy ${policy.policy_number}: ${error.message}`);
+          errors.push(`Error saving policy ${policy.policy_number}: ${error.message}`);
+          errorCount++;
         } else {
           successCount++;
         }
@@ -104,9 +127,10 @@ export const usePolicyImport = () => {
       if (successCount > 0) {
         toast.success(`Successfully imported ${successCount} policies.`);
         
-        // Reset state after successful import
-        setImportedPolicies([]);
-        setInvalidPolicies([]);
+        if (errorCount > 0) {
+          toast.error(`Failed to import ${errorCount} policies due to database errors.`);
+          console.error("Import errors:", errors);
+        }
         
         return true;
       } else {

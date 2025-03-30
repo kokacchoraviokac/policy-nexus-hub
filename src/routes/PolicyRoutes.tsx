@@ -10,7 +10,7 @@ import PolicyWorkflow from "@/pages/policies/PolicyWorkflow";
 import PolicyAddendums from "@/pages/policies/PolicyAddendums";
 import PolicyDocuments from "@/pages/policies/PolicyDocuments";
 import PolicyReview from "@/pages/policies/workflow/PolicyReview";
-import PolicyImportPage from "@/components/policies/import/PolicyImportPage";
+import PolicyImportPage from "@/pages/policies/PolicyImportPage";
 
 export const PolicyRoutes = [
   <Route
