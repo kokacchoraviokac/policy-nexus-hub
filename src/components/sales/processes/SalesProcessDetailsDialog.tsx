@@ -14,7 +14,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
 import ImportPolicyFromSalesDialog from "./ImportPolicyFromSalesDialog";
-import { FileImport } from "lucide-react";
+import { FileUp } from "lucide-react";
 
 interface SalesProcessDetailsDialogProps {
   process: SalesProcess;
@@ -30,7 +30,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
   const { t } = useLanguage();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
 
-  // Process stage badge styling
   const getStageBadge = (stage: string) => {
     switch (stage) {
       case 'quote':
@@ -48,7 +47,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
     }
   };
 
-  // Insurance type badge styling
   const getInsuranceTypeBadge = (type: string) => {
     switch (type) {
       case 'life':
@@ -70,7 +68,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
     }
   };
 
-  // Determine if the process is ready for policy import
   const isReadyForPolicyImport = process.stage === "concluded" && process.status === "completed";
 
   return (
@@ -188,7 +185,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
                   className="gap-1"
                   onClick={() => setImportDialogOpen(true)}
                 >
-                  <FileImport className="h-4 w-4" />
+                  <FileUp className="h-4 w-4" />
                   {t("importPolicy")}
                 </Button>
               )}

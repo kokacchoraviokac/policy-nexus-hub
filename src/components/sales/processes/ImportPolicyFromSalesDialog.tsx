@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -13,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, FileImport, AlertTriangle, ArrowRight } from "lucide-react";
+import { CheckCircle, FileUp, AlertTriangle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface ImportPolicyFromSalesDialogProps {
@@ -31,28 +30,22 @@ const ImportPolicyFromSalesDialog: React.FC<ImportPolicyFromSalesDialogProps> = 
   const navigate = useNavigate();
   const [isImporting, setIsImporting] = useState(false);
 
-  // Check if the sales process is in a completed state suitable for import
   const isReadyForImport = process.stage === "concluded" && process.status === "completed";
 
   const handlePolicyImport = async () => {
     try {
       setIsImporting(true);
       
-      // In a real implementation, this would make an API call to prepare data for policy import
       console.log("Preparing policy import from sales process:", process.id);
       
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Success - navigate to policy import page (can pass the sales process ID as a param)
       toast.success(t("salesProcessReadyForImport"), {
         description: t("redirectingToPolicyImport"),
       });
       
-      // Close dialog before navigation
       onOpenChange(false);
       
-      // Navigate to policy import page with sales process ID
       navigate(`/policies/import?from_sales=${process.id}`);
       
     } catch (error) {
@@ -124,7 +117,7 @@ const ImportPolicyFromSalesDialog: React.FC<ImportPolicyFromSalesDialogProps> = 
               <>{t("preparing")}...</>
             ) : (
               <>
-                <FileImport className="h-4 w-4" />
+                <FileUp className="h-4 w-4" />
                 {t("importPolicy")}
               </>
             )}

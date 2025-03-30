@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,7 +12,7 @@ import ImportStepIndicator from "@/components/policies/import/ImportStepIndicato
 import ImportingStep from "@/components/policies/import/ImportingStep";
 import CompleteStep from "@/components/policies/import/CompleteStep";
 import { usePolicyImport } from "@/hooks/usePolicyImport";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const PolicyImportPage = () => {
   const { t } = useLanguage();
@@ -33,7 +32,6 @@ const PolicyImportPage = () => {
     salesProcessData
   } = usePolicyImport();
   
-  // If we have imported data from a sales process, skip directly to review step
   useEffect(() => {
     if (salesProcessData && importedPolicies.length > 0) {
       setActiveStep("review");
@@ -54,7 +52,6 @@ const PolicyImportPage = () => {
   const handleImportComplete = async () => {
     setActiveStep("importing");
     
-    // Simulated progress for better UX
     const progressInterval = setInterval(() => {
       setImportProgress(prev => {
         const newProgress = prev + 5;
@@ -87,7 +84,6 @@ const PolicyImportPage = () => {
   
   const handleBack = () => {
     if (activeStep === "review") {
-      // If we're importing from a sales process, go back to the sales process
       if (salesProcessData) {
         navigate(`/sales/processes`);
       } else {
