@@ -21,12 +21,28 @@ const PolicyDetail = () => {
     navigate('/policies');
   };
   
+  const handleEdit = () => {
+    if (policyId) {
+      navigate(`/policies/workflow/${policyId}`);
+    }
+  };
+  
+  const handleRenew = () => {
+    // Placeholder for renew functionality
+    console.log("Renew policy:", policyId);
+  };
+  
+  const handleExport = () => {
+    // Placeholder for export functionality
+    console.log("Export policy:", policyId);
+  };
+  
   if (isLoading) {
     return <PolicyDetailLoading />;
   }
   
   if (isError || !policy) {
-    return <PolicyDetailError error={error} />;
+    return <PolicyDetailError error={error} onBackToList={handleBackClick} />;
   }
 
   return (
@@ -47,7 +63,12 @@ const PolicyDetail = () => {
         </div>
       </div>
       
-      <PolicyDetailHeader policy={policy} />
+      <PolicyDetailHeader 
+        policy={policy}
+        onEdit={handleEdit}
+        onRenew={handleRenew}
+        onExport={handleExport}
+      />
       <PolicyDetailTabs policy={policy} />
     </div>
   );

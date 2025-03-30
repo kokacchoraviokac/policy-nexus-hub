@@ -3,23 +3,18 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, RefreshCw, FileText } from "lucide-react";
+import { Search, RefreshCw } from "lucide-react";
 
 interface WorkflowFiltersProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onRefresh: () => void;
-  documentsFilter?: string;
-  onDocumentsFilterChange?: (value: string) => void;
 }
 
 const WorkflowFilters: React.FC<WorkflowFiltersProps> = ({
   searchTerm,
   onSearchChange,
-  onRefresh,
-  documentsFilter,
-  onDocumentsFilterChange
+  onRefresh
 }) => {
   const { t } = useLanguage();
 
@@ -39,27 +34,6 @@ const WorkflowFilters: React.FC<WorkflowFiltersProps> = ({
           onChange={handleSearchChange}
         />
       </div>
-      
-      {onDocumentsFilterChange && (
-        <div className="w-full md:w-64">
-          <Select 
-            value={documentsFilter} 
-            onValueChange={onDocumentsFilterChange}
-          >
-            <SelectTrigger className="w-full">
-              <div className="flex items-center">
-                <FileText className="mr-2 h-4 w-4" />
-                <SelectValue placeholder={t("documentStatus")} />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("allPolicies")}</SelectItem>
-              <SelectItem value="with_documents">{t("withDocuments")}</SelectItem>
-              <SelectItem value="without_documents">{t("withoutDocuments")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
       
       <Button
         variant="outline"

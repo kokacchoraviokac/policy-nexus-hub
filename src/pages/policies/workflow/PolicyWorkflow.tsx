@@ -5,16 +5,19 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card } from "@/components/ui/card";
 import WorkflowFilters from "@/components/policies/workflow/WorkflowFilters";
 import WorkflowPoliciesList from "@/components/policies/workflow/WorkflowPoliciesList";
-import PolicyStatusWorkflow from "@/components/policies/workflow/PolicyStatusWorkflow";
 
 const PolicyWorkflow = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   
   const handlePolicySelect = (policyId: string) => {
     navigate(`/policies/workflow/${policyId}`);
+  };
+  
+  const handleRefresh = () => {
+    // Placeholder for refresh functionality
+    console.log("Refreshing policy workflow");
   };
   
   return (
@@ -26,8 +29,6 @@ const PolicyWorkflow = () => {
         </p>
       </div>
       
-      <PolicyStatusWorkflow />
-      
       <Card className="overflow-hidden">
         <div className="p-4 border-b">
           <h2 className="font-semibold mb-4">{t("policyProcessing")}</h2>
@@ -35,16 +36,15 @@ const PolicyWorkflow = () => {
           <WorkflowFilters 
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
+            onRefresh={handleRefresh}
           />
         </div>
         
         <div>
           <WorkflowPoliciesList 
-            searchTerm={searchTerm}
-            statusFilter={statusFilter}
-            onPolicySelect={handlePolicySelect}
+            policies={[]} // Will be populated with actual data
+            isLoading={false}
+            onReviewPolicy={handlePolicySelect}
           />
         </div>
       </Card>

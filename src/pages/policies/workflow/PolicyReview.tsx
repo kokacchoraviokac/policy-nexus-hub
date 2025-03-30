@@ -17,6 +17,7 @@ const PolicyReview = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("summary");
+  const [isFormComplete, setIsFormComplete] = useState(false);
   
   const { data: policy, isLoading, isError } = usePolicyDetail(policyId);
   
@@ -61,7 +62,7 @@ const PolicyReview = () => {
           {t("backToWorkflow")}
         </Button>
         
-        <PolicyReviewActions policy={policy} />
+        <PolicyReviewActions policy={policy} isComplete={isFormComplete} />
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -85,7 +86,7 @@ const PolicyReview = () => {
         </TabsContent>
         
         <TabsContent value="documents" className="mt-0">
-          <PolicyDocumentsCheck policyId={policy.id} />
+          <PolicyDocumentsCheck policy={policy} />
         </TabsContent>
       </Tabs>
     </div>

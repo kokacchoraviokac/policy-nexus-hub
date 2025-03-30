@@ -3,14 +3,8 @@ import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Download, Link as LinkIcon, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Download, Link as LinkIcon } from "lucide-react";
 import { useUnlinkedPayments } from "@/hooks/useUnlinkedPayments";
 import LinkPaymentDialog from "@/components/policies/unlinked-payments/LinkPaymentDialog";
 import UnlinkedPaymentsFilters from "@/components/policies/unlinked-payments/UnlinkedPaymentsFilters";
@@ -32,22 +26,6 @@ const UnlinkedPayments = () => {
     isLinking
   } = useUnlinkedPayments();
   
-  const handleSearch = (term: string) => {
-    setFilters(prev => ({ ...prev, searchTerm: term }));
-  };
-  
-  const handleDateRangeChange = (range: { from: Date | null; to: Date | null }) => {
-    setFilters(prev => ({ 
-      ...prev, 
-      startDate: range.from,
-      endDate: range.to
-    }));
-  };
-  
-  const handleStatusChange = (status: string) => {
-    setFilters(prev => ({ ...prev, status }));
-  };
-  
   const handleLinkPayment = (paymentId: string) => {
     setSelectedPaymentId(paymentId);
     setShowLinkDialog(true);
@@ -63,6 +41,7 @@ const UnlinkedPayments = () => {
   
   const handleExport = () => {
     // Export logic would go here
+    console.log("Exporting payments");
   };
 
   return (
@@ -87,12 +66,9 @@ const UnlinkedPayments = () => {
         </CardHeader>
         <CardContent>
           <UnlinkedPaymentsFilters
-            searchTerm={filters.searchTerm || ""}
-            onSearchChange={handleSearch}
-            dateRange={{ from: filters.startDate, to: filters.endDate }}
-            onDateRangeChange={handleDateRangeChange}
-            status={filters.status || "unlinked"}
-            onStatusChange={handleStatusChange}
+            filters={filters}
+            onFiltersChange={setFilters}
+            onRefresh={() => console.log("Refreshing payments")}
           />
           
           <div className="rounded-md border mt-6">
@@ -101,9 +77,7 @@ const UnlinkedPayments = () => {
                 <TableRow>
                   <TableHead>{t("reference")}</TableHead>
                   <TableHead>{t("payerName")}</TableHead>
-                  <TableHead className="text-right">{t("baseAmount")}</TableHead>
-                  <TableHead className="text-center">{t("commissionRate")}</TableHead>
-                  <TableHead className="text-right">{t("paymentAmount")}</TableHead>
+                  <TableHead className="text-right">{t("amount")}</TableHead>
                   <TableHead>{t("paymentDate")}</TableHead>
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
@@ -111,7 +85,7 @@ const UnlinkedPayments = () => {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       {t("loadingPayments")}
                     </TableCell>
                   </TableRow>
@@ -123,13 +97,7 @@ const UnlinkedPayments = () => {
                       </TableCell>
                       <TableCell>{payment.payer_name}</TableCell>
                       <TableCell className="text-right">
-                        {formatCurrency(payment.base_amount, "EUR")}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {payment.commission_rate}%
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(payment.payment_amount, "EUR")}
+                        {formatCurrency(payment.amount, payment.currency || "EUR")}
                       </TableCell>
                       <TableCell>
                         {formatDate(payment.payment_date)}
@@ -149,7 +117,7 @@ const UnlinkedPayments = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       {t("noPaymentsFound")}
                     </TableCell>
                   </TableRow>
@@ -162,7 +130,7 @@ const UnlinkedPayments = () => {
       
       <LinkPaymentDialog
         open={showLinkDialog}
-        onClose={() => setShowLinkDialog(false)}
+        onOpenChange={setShowLinkDialog}
         onConfirm={handleConfirmLink}
         isLoading={isLinking}
       />

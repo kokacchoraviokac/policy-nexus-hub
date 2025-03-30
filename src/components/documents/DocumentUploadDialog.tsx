@@ -1,202 +1,124 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { v4 as uuidv4 } from "uuid";
-import { supabase } from "@/integrations/supabase/client";
-import { entityTypeToTable } from "@/utils/documentUtils";
-import type { EntityType } from "@/utils/activityLogger";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Upload } from "lucide-react";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Upload, Loader2 } from 'lucide-react';
 
-interface DocumentUploadDialogProps {
+export interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entityType: EntityType;
+  entityType: string;
   entityId: string;
+  onUploadComplete?: () => void;
 }
 
 const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   open,
   onOpenChange,
   entityType,
-  entityId
+  entityId,
+  onUploadComplete,
 }) => {
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  const [file, setFile] = useState<File | null>(null);
-  const [documentName, setDocumentName] = useState("");
-  const [documentType, setDocumentType] = useState("");
+  const [documentType, setDocumentType] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  
-  const resetForm = () => {
-    setFile(null);
-    setDocumentName("");
-    setDocumentType("");
-    setIsUploading(false);
-  };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      
-      // Set document name from file name if not already set
-      if (!documentName) {
-        const fileName = selectedFile.name.split('.').slice(0, -1).join('.');
-        setDocumentName(fileName);
-      }
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
     }
   };
-  
+
   const handleUpload = async () => {
-    if (!file || !documentName || !documentType) {
-      toast({
-        title: t("missingFields"),
-        description: t("pleaseCompleteAllFields"),
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!selectedFile || !documentType) return;
+
+    setIsUploading(true);
     
     try {
-      setIsUploading(true);
+      // Mock file upload for now
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Get the user ID for the upload path
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
       
-      // Generate unique file path
-      const fileExt = file.name.split('.').pop();
-      const uuid = uuidv4();
-      const filePath = `${user.id}/${entityType}/${entityId}/${uuid}.${fileExt}`;
-      
-      // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-        
-      if (uploadError) throw uploadError;
-      
-      // Determine which table to insert into based on entity type
-      const tableName = entityTypeToTable(entityType);
-      
-      // Insert document metadata into database
-      const { error: insertError } = await supabase
-        .from(tableName)
-        .insert({
-          document_name: documentName,
-          document_type: documentType,
-          file_path: filePath,
-          uploaded_by: user.id,
-          [`${entityType}_id`]: entityId !== "global" ? entityId : null,
-          version: 1,
-          company_id: user.app_metadata?.company_id
-        });
-        
-      if (insertError) throw insertError;
-      
-      toast({
-        title: t("uploadSuccess"),
-        description: t("documentUploadedSuccessfully"),
-      });
-      
-      // Invalidate query to refresh document list
-      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
-      
-      // Close dialog and reset form
       onOpenChange(false);
-      resetForm();
-      
     } catch (error) {
-      console.error("Error uploading document:", error);
-      toast({
-        title: t("uploadError"),
-        description: t("documentUploadErrorMessage"),
-        variant: "destructive",
-      });
+      console.error("Upload error:", error);
     } finally {
       setIsUploading(false);
     }
   };
-  
+
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!isUploading) {
-        onOpenChange(newOpen);
-        if (!newOpen) resetForm();
-      }
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t("uploadDocument")}</DialogTitle>
-          <DialogDescription>
-            {t("uploadDocumentDescription")}
-          </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-6 py-4">
-          {/* File Input */}
-          <div className="grid gap-2">
-            <Label htmlFor="file">{t("selectFile")}</Label>
-            <Input
-              id="file"
-              type="file"
-              onChange={handleFileChange}
-              disabled={isUploading}
-              className="cursor-pointer"
-            />
-          </div>
-          
-          {/* Document Name */}
-          <div className="grid gap-2">
-            <Label htmlFor="documentName">{t("documentName")}</Label>
-            <Input
-              id="documentName"
-              value={documentName}
-              onChange={(e) => setDocumentName(e.target.value)}
-              disabled={isUploading}
-              placeholder={t("enterDocumentName")}
-            />
-          </div>
-          
-          {/* Document Type */}
-          <div className="grid gap-2">
-            <Label htmlFor="documentType">{t("documentType")}</Label>
-            <Select
-              value={documentType}
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="documentType" className="text-right">
+              {t("documentType")}
+            </Label>
+            <Select 
+              value={documentType} 
               onValueChange={setDocumentType}
-              disabled={isUploading}
             >
-              <SelectTrigger id="documentType">
+              <SelectTrigger className="col-span-3">
                 <SelectValue placeholder={t("selectDocumentType")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="policy">{t("policyDocument")}</SelectItem>
+                <SelectItem value="policy">{t("policy")}</SelectItem>
+                <SelectItem value="addendum">{t("addendum")}</SelectItem>
                 <SelectItem value="invoice">{t("invoice")}</SelectItem>
-                <SelectItem value="certificate">{t("certificate")}</SelectItem>
-                <SelectItem value="endorsement">{t("endorsement")}</SelectItem>
-                <SelectItem value="lien">{t("lien")}</SelectItem>
+                <SelectItem value="claim">{t("claim")}</SelectItem>
                 <SelectItem value="other">{t("other")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
-          {/* Upload Button */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="documentFile" className="text-right">
+              {t("file")}
+            </Label>
+            <Input
+              id="documentFile"
+              type="file"
+              className="col-span-3"
+              onChange={handleFileChange}
+            />
+          </div>
+          
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label htmlFor="description" className="text-right pt-2">
+              {t("description")}
+            </Label>
+            <Textarea
+              id="description"
+              className="col-span-3"
+              placeholder={t("enterDocumentDescription")}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            {t("cancel")}
+          </Button>
           <Button 
             onClick={handleUpload} 
-            disabled={!file || !documentName || !documentType || isUploading}
-            className="w-full"
+            disabled={isUploading || !selectedFile || !documentType}
           >
             {isUploading ? (
               <>
@@ -210,7 +132,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
               </>
             )}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

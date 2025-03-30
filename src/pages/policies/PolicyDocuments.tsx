@@ -15,7 +15,7 @@ const PolicyDocuments = () => {
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [documentTypeFilter, setDocumentTypeFilter] = useState("all");
+  const [documentType, setDocumentType] = useState("all");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,11 +23,10 @@ const PolicyDocuments = () => {
   };
   
   const handleDocumentTypeChange = (value: string) => {
-    setDocumentTypeFilter(value);
+    setDocumentType(value);
   };
   
   const handleUploadComplete = () => {
-    setIsUploadDialogOpen(false);
     toast({
       title: t("documentUploaded"),
       description: t("documentUploadedSuccess"),
@@ -67,7 +66,7 @@ const PolicyDocuments = () => {
             </div>
             
             <Select
-              value={documentTypeFilter}
+              value={documentType}
               onValueChange={handleDocumentTypeChange}
             >
               <SelectTrigger className="w-[180px]">
@@ -86,14 +85,16 @@ const PolicyDocuments = () => {
           
           <PolicyDocumentsTable 
             searchTerm={searchTerm}
-            documentTypeFilter={documentTypeFilter}
+            documentType={documentType}
           />
         </CardContent>
       </Card>
       
       <DocumentUploadDialog
         open={isUploadDialogOpen}
-        onClose={() => setIsUploadDialogOpen(false)}
+        onOpenChange={setIsUploadDialogOpen}
+        entityType="policy" 
+        entityId="general" // This would normally be a specific policy ID
         onUploadComplete={handleUploadComplete}
       />
     </div>
