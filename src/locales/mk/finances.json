@@ -113,5 +113,17 @@
   "paymentDateRequired": "Потребен е датум на плаќање",
   "paidAmountRequired": "Потребен е платен износ",
   "paidAmountShouldBeAtLeastCalculated": "Платениот износ треба да биде најмалку еднаков на пресметаниот",
-  "selectStatus": "Избери статус"
+  "selectStatus": "Избери статус",
+  "createInvoice": "Креирај фактура",
+  "createInvoiceFromCommission": "Креирај фактура од провизија",
+  "createInvoiceFromCommissionDescription": "Ова ќе креира нова фактура врз основа на оваа провизија. Дали сакате да продолжите?",
+  "creating": "Креирање...",
+  "invoiceCreated": "Фактурата е креирана",
+  "invoiceFromCommissionSuccess": "Фактурата е успешно креирана од провизија",
+  "errorCreatingInvoice": "Грешка при креирање на фактура",
+  "errorCreatingInvoiceFromCommissionDescription": "Се случи грешка при креирање на фактура од оваа провизија",
+  "invoiceUpdated": "Фактурата е ажурирана",
+  "invoiceStatusUpdatedSuccess": "Статусот на фактурата е успешно ажуриран",
+  "errorUpdatingInvoice": "Грешка при ажурирање на фактура",
+  "errorUpdatingInvoiceDescription": "Се случи грешка при ажурирање на статусот на фактурата"
 }

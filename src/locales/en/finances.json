@@ -113,5 +113,17 @@
   "paymentDateRequired": "Payment date is required",
   "paidAmountRequired": "Paid amount is required",
   "paidAmountShouldBeAtLeastCalculated": "Paid amount should be at least equal to calculated amount",
-  "selectStatus": "Select status"
+  "selectStatus": "Select status",
+  "createInvoice": "Create Invoice",
+  "createInvoiceFromCommission": "Create Invoice from Commission",
+  "createInvoiceFromCommissionDescription": "This will create a new invoice based on this commission. Do you want to continue?",
+  "creating": "Creating...",
+  "invoiceCreated": "Invoice Created",
+  "invoiceFromCommissionSuccess": "Invoice has been successfully created from commission",
+  "errorCreatingInvoice": "Error Creating Invoice",
+  "errorCreatingInvoiceFromCommissionDescription": "There was an error creating the invoice from this commission",
+  "invoiceUpdated": "Invoice Updated",
+  "invoiceStatusUpdatedSuccess": "Invoice status has been updated successfully",
+  "errorUpdatingInvoice": "Error Updating Invoice",
+  "errorUpdatingInvoiceDescription": "There was an error updating the invoice status"
 }

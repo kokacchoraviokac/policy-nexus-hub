@@ -113,5 +113,17 @@
   "paymentDateRequired": "Se requiere fecha de pago",
   "paidAmountRequired": "Se requiere importe pagado",
   "paidAmountShouldBeAtLeastCalculated": "El importe pagado debe ser al menos igual al importe calculado",
-  "selectStatus": "Seleccionar estado"
+  "selectStatus": "Seleccionar estado",
+  "createInvoice": "Crear Factura",
+  "createInvoiceFromCommission": "Crear Factura desde Comisión",
+  "createInvoiceFromCommissionDescription": "Esto creará una nueva factura basada en esta comisión. ¿Desea continuar?",
+  "creating": "Creando...",
+  "invoiceCreated": "Factura Creada",
+  "invoiceFromCommissionSuccess": "La factura ha sido creada exitosamente desde la comisión",
+  "errorCreatingInvoice": "Error al Crear Factura",
+  "errorCreatingInvoiceFromCommissionDescription": "Ocurrió un error al crear la factura desde esta comisión",
+  "invoiceUpdated": "Factura Actualizada",
+  "invoiceStatusUpdatedSuccess": "El estado de la factura ha sido actualizado exitosamente",
+  "errorUpdatingInvoice": "Error al Actualizar Factura",
+  "errorUpdatingInvoiceDescription": "Ocurrió un error al actualizar el estado de la factura"
 }

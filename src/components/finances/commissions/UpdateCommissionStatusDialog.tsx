@@ -1,203 +1,242 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter,
-  DialogDescription
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
+import { CommissionType } from "@/types/finances";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CommissionType } from "@/types/finances";
-import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import CommissionStatusBadge from "./CommissionStatusBadge";
 
 interface UpdateCommissionStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  commission: CommissionType & { currency?: string };
-  onUpdateStatus: (params: { 
-    commissionId: string; 
-    status: string; 
-    paymentDate?: string; 
-    paidAmount?: number 
-  }) => void;
+  commission: CommissionType;
+  onUpdate: (data: { commissionId: string; status: CommissionType["status"]; paymentDate?: string; paidAmount?: number }) => void;
   isUpdating: boolean;
 }
 
-const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  commission, 
-  onUpdateStatus,
-  isUpdating
+// Type to use for form validation - only allow these status values
+type AllowedStatus = "due" | "partially_paid" | "paid";
+
+// This schema is for the form's values
+const formSchema = z.object({
+  status: z.enum(["due", "partially_paid", "paid"] as const),
+  paymentDate: z.date().optional(),
+  paidAmount: z.number().optional(),
+}).superRefine((data, ctx) => {
+  if (data.status === "paid" || data.status === "partially_paid") {
+    // Payment date is required
+    if (!data.paymentDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "paymentDateRequired",
+        path: ["paymentDate"],
+      });
+    }
+    
+    // Paid amount is required
+    if (data.paidAmount === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "paidAmountRequired",
+        path: ["paidAmount"],
+      });
+    } else if (data.paidAmount <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "amountMustBePositive",
+        path: ["paidAmount"],
+      });
+    }
+  }
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> = ({
+  open,
+  onOpenChange,
+  commission,
+  onUpdate,
+  isUpdating,
 }) => {
   const { t, formatCurrency } = useLanguage();
   
-  // Create schema for status update form
-  const formSchema = z.object({
-    status: z.enum(["due", "partially_paid", "paid"]),
-    paymentDate: z.string().optional(),
-    paidAmount: z.number().optional()
-  }).refine((data) => {
-    // If status is paid or partially_paid, paymentDate should be provided
-    if ((data.status === 'paid' || data.status === 'partially_paid') && !data.paymentDate) {
-      return false;
-    }
-    return true;
-  }, {
-    message: t("paymentDateRequired"),
-    path: ["paymentDate"]
-  }).refine((data) => {
-    // If status is partially_paid, paidAmount should be provided
-    if (data.status === 'partially_paid' && !data.paidAmount) {
-      return false;
-    }
-    return true;
-  }, {
-    message: t("paidAmountRequired"),
-    path: ["paidAmount"]
-  }).refine((data) => {
-    // If status is paid, paidAmount should be provided and equal to or greater than calculated amount
-    if (data.status === 'paid' && (!data.paidAmount || data.paidAmount < commission.calculated_amount)) {
-      return false;
-    }
-    return true;
-  }, {
-    message: t("paidAmountShouldBeAtLeastCalculated"),
-    path: ["paidAmount"]
-  });
-
-  // Initialize form with default values - Fix the status default value to ensure it's valid
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Default to "due" if current status is "calculating"
+  const defaultStatus: AllowedStatus = commission.status === "calculating" ? "due" : commission.status as AllowedStatus;
+  
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // Ensure the default status is one of the allowed values in the schema
-      status: (commission.status === 'calculating' ? 'due' : commission.status) as 'due' | 'partially_paid' | 'paid',
-      paymentDate: commission.payment_date || '',
-      paidAmount: commission.paid_amount || undefined
+      status: defaultStatus,
+      paymentDate: commission.payment_date ? new Date(commission.payment_date) : undefined,
+      paidAmount: commission.paid_amount,
     },
   });
-
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    onUpdateStatus({
+  
+  const selectedStatus = form.watch("status");
+  
+  const handleSubmit = (values: FormValues) => {
+    onUpdate({
       commissionId: commission.id,
       status: values.status,
-      paymentDate: values.paymentDate,
-      paidAmount: values.paidAmount
+      paymentDate: values.paymentDate ? values.paymentDate.toISOString() : undefined,
+      paidAmount: values.paidAmount,
     });
-    onOpenChange(false);
   };
-
-  // Watch status to show/hide additional fields
-  const currentStatus = form.watch("status");
-  const showPaymentFields = currentStatus === 'paid' || currentStatus === 'partially_paid';
-
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("updateCommissionStatus")}</DialogTitle>
-          <DialogDescription>
-            {t("calculatedCommission")}: {formatCurrency(commission.calculated_amount, commission.currency || 'EUR')}
-          </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
-            <div className="p-4 border rounded-md bg-muted/20 mb-4">
-              <p className="text-sm text-muted-foreground">{t("currentStatus")}</p>
-              <p className="font-medium capitalize">{t(commission.status)}</p>
+        <div className="py-4 space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-muted-foreground">{t("calculatedCommission")}</p>
+              <p className="text-xl font-semibold">{formatCurrency(commission.calculated_amount)}</p>
             </div>
-            
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("newStatus")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("selectStatus")} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="due">{t("due")}</SelectItem>
-                      <SelectItem value="partially_paid">{t("partially_paid")}</SelectItem>
-                      <SelectItem value="paid">{t("paid")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+            <div>
+              <p className="text-sm text-muted-foreground">{t("currentStatus")}</p>
+              <div className="mt-1">
+                <CommissionStatusBadge status={commission.status} />
+              </div>
+            </div>
+          </div>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t("newStatus")}</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("selectStatus")} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="due">{t("due")}</SelectItem>
+                        <SelectItem value="partially_paid">{t("partially_paid")}</SelectItem>
+                        <SelectItem value="paid">{t("paid")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              {(selectedStatus === "paid" || selectedStatus === "partially_paid") && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="paymentDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>{t("paymentDate")}</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={
+                                  "w-full pl-3 text-left font-normal " +
+                                  (!field.value && "text-muted-foreground")
+                                }
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>{t("selectDate")}</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) => 
+                                date > new Date() || 
+                                date < new Date("1900-01-01")
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="paidAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("paidAmount")}</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              field.onChange(value === "" ? undefined : parseFloat(value));
+                            }}
+                            step="0.01"
+                            min="0"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
               )}
-            />
-            
-            {showPaymentFields && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="paymentDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("paymentDate")}</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="paidAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("paidAmount")}</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          {...field} 
-                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-            
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={isUpdating}>
-                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t("updateStatus")}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              
+              <DialogFooter>
+                <Button
+                  type="submit"
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? t("processing") : t("updateStatus")}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

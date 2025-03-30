@@ -113,5 +113,17 @@
   "paymentDateRequired": "Datum plaćanja je obavezan",
   "paidAmountRequired": "Plaćeni iznos je obavezan",
   "paidAmountShouldBeAtLeastCalculated": "Plaćeni iznos mora biti najmanje jednak izračunatom iznosu",
-  "selectStatus": "Izaberite status"
+  "selectStatus": "Izaberite status",
+  "createInvoice": "Kreiraj fakturu",
+  "createInvoiceFromCommission": "Kreiraj fakturu iz provizije",
+  "createInvoiceFromCommissionDescription": "Ovo će kreirati novu fakturu na osnovu ove provizije. Da li želite da nastavite?",
+  "creating": "Kreiranje...",
+  "invoiceCreated": "Faktura kreirana",
+  "invoiceFromCommissionSuccess": "Faktura je uspešno kreirana iz provizije",
+  "errorCreatingInvoice": "Greška pri kreiranju fakture",
+  "errorCreatingInvoiceFromCommissionDescription": "Došlo je do greške pri kreiranju fakture iz ove provizije",
+  "invoiceUpdated": "Faktura ažurirana",
+  "invoiceStatusUpdatedSuccess": "Status fakture je uspešno ažuriran",
+  "errorUpdatingInvoice": "Greška pri ažuriranju fakture",
+  "errorUpdatingInvoiceDescription": "Došlo je do greške pri ažuriranju statusa fakture"
 }
