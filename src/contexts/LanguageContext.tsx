@@ -1,158 +1,131 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { formatDate, formatNumber, formatCurrency, formatRelativeTime } from '../utils/formatters';
-import { logMissingTranslation, formatMissingTranslation } from '../utils/translationValidator';
-import en from '../locales/en';
-import sr from '../locales/sr';
-import mk from '../locales/mk';
-import es from '../locales/es';
+import enCommon from '@/locales/en/common.json';
+import enLayout from '@/locales/en/layout.json';
+import enAuth from '@/locales/en/auth.json';
+import enErrors from '@/locales/en/errors.json';
+import enDashboard from '@/locales/en/dashboard.json';
+import enModules from '@/locales/en/modules.json';
+import enPolicies from '@/locales/en/policies/index';
+import enCodebook from '@/locales/en/codebook.json';
+import enSettings from '@/locales/en/settings.json';
+import enFinances from '@/locales/en/finances.json';
+import enClaims from '@/locales/en/claims.json';
+import { format } from 'date-fns';
 
-export type Language = 'en' | 'sr' | 'mk' | 'es';
+// Define the structure of your translations
+interface LanguageContextProps {
+  locale: string;
+  t: (key: string, args?: any) => string;
+  setLocale: (locale: string) => void;
+  formatCurrency: (amount: number, currency?: string) => string;
+  formatDate: (date: string | Date) => string;
+}
 
-type TranslationParams = Record<string, any>;
+// Create the context with a default value
+const LanguageContext = createContext<LanguageContextProps>({
+  locale: 'en',
+  t: (key: string) => key,
+  setLocale: () => {},
+  formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+  formatDate: (date: string | Date) => date.toString(),
+});
 
-type LanguageContextType = {
-  language: Language;
-  setLanguage: (language: Language) => void;
-  t: (key: string, params?: TranslationParams) => string;
-  formatDate: (date: Date | string | number) => string;
-  formatNumber: (number: number, options?: Intl.NumberFormatOptions) => string;
-  formatCurrency: (amount: number, currencyCode?: string) => string;
-  formatRelativeTime: (date: Date | string | number) => string;
-  getMissingTranslationsCount: () => number;
+// Hook for using the language context
+export const useLanguage = () => useContext(LanguageContext);
+
+// Define the translations for each language
+const en = {
+  ...enCommon,
+  ...enLayout,
+  ...enAuth,
+  ...enErrors,
+  ...enDashboard,
+  ...enModules,
+  ...enPolicies,
+  ...enCodebook,
+  ...enSettings,
+  ...enFinances,
+  ...enClaims
+};
+// Add other language imports and translation objects here, e.g.,
+// import frCommon from '@/locales/fr/common.json';
+// const fr = { ...frCommon, ... };
+
+// Merge all translations
+const translations = {
+  en: {
+    ...enCommon,
+    ...enLayout,
+    ...enAuth,
+    ...enErrors,
+    ...enDashboard,
+    ...enModules,
+    ...enPolicies,
+    ...enCodebook,
+    ...enSettings,
+    ...enFinances,
+    ...enClaims
+  },
+  // fr, // Add other languages here
 };
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
-};
-
-const LANGUAGE_STORAGE_KEY = 'policyhub_language';
-
-type LanguageProviderProps = {
-  children: React.ReactNode;
-};
-
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const getInitialLanguage = (): Language => {
-    const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    
-    if (savedLanguage && ['en', 'sr', 'mk', 'es'].includes(savedLanguage)) {
-      return savedLanguage as Language;
-    }
-    
-    const browserLang = navigator.language.split('-')[0];
-    if (['en', 'sr', 'mk', 'es'].includes(browserLang)) {
-      return browserLang as Language;
-    }
-    
-    return 'en';
-  };
-
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
-  const [translations, setTranslations] = useState<Record<string, string>>(en);
-  const [isLoading, setIsLoading] = useState(true);
-  const [missingTranslationsCount, setMissingTranslationsCount] = useState(0);
-
-  const setLanguage = (newLanguage: Language) => {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, newLanguage);
-    setLanguageState(newLanguage);
-  };
+// Language provider component
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [locale, setLocale] = useState<string>('en');
 
   useEffect(() => {
-    const loadTranslations = async () => {
-      try {
-        setIsLoading(true);
-        
-        let translationData: Record<string, string>;
-        
-        if (language === 'en') {
-          translationData = en;
-        } else if (language === 'sr') {
-          translationData = sr;
-        } else if (language === 'mk') {
-          translationData = mk;
-        } else if (language === 'es') {
-          translationData = es;
-        } else {
-          translationData = en; // Fallback to English
-        }
-        
-        setTranslations(translationData);
-        
-        if (language !== 'en') {
-          const englishKeys = Object.keys(en);
-          const currentKeys = Object.keys(translationData);
-          const missingCount = englishKeys.filter(key => !currentKeys.includes(key)).length;
-          setMissingTranslationsCount(missingCount);
-        } else {
-          setMissingTranslationsCount(0);
-        }
-      } catch (error) {
-        console.error(`Failed to load translations for ${language}:`, error);
-        if (language !== 'en') {
-          setTranslations(en);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadTranslations();
-  }, [language]);
-
-  const t = (key: string, params?: TranslationParams): string => {
-    if (isLoading) return key;
-    
-    let translation = translations[key];
-    if (!translation) {
-      logMissingTranslation(key, language);
-      return formatMissingTranslation(key);
+    // Load locale from localStorage
+    const storedLocale = localStorage.getItem('locale');
+    if (storedLocale && translations[storedLocale as keyof typeof translations]) {
+      setLocale(storedLocale);
     }
-    
-    if (params) {
-      Object.entries(params).forEach(([paramKey, paramValue]) => {
-        translation = translation.replace(new RegExp(`{${paramKey}}`, 'g'), String(paramValue));
+  }, []);
+
+  // Function to translate a key
+  const t = (key: string, args?: any): string => {
+    let translation = translations[locale as keyof typeof translations]?.[key] || key;
+
+    if (args) {
+      Object.keys(args).forEach(argKey => {
+        const regex = new RegExp(`\\{${argKey}\\}`, 'g');
+        translation = translation.replace(regex, args[argKey]);
       });
     }
-    
+
     return translation;
   };
 
-  const getMissingTranslationsCount = () => {
-    return missingTranslationsCount;
+  // Function to format currency
+  const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+    }).format(amount);
   };
 
-  const formatDateWithCurrentLang = (date: Date | string | number) => 
-    formatDate(date, language);
-    
-  const formatNumberWithCurrentLang = (number: number, options?: Intl.NumberFormatOptions) => 
-    formatNumber(number, language, options);
-    
-  const formatCurrencyWithCurrentLang = (amount: number, currencyCode: string = 'EUR') => 
-    formatCurrency(amount, language, currencyCode);
-    
-  const formatRelativeTimeWithCurrentLang = (date: Date | string | number) => 
-    formatRelativeTime(date, language);
+  // Function to format date
+  const formatDate = (date: string | Date): string => {
+    try {
+      const parsedDate = typeof date === 'string' ? new Date(date) : date;
+      return format(parsedDate, 'PPP'); // Customize the format as needed
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return 'Invalid Date';
+    }
+  };
 
-  const value = {
-    language,
-    setLanguage,
-    t,
-    formatDate: formatDateWithCurrentLang,
-    formatNumber: formatNumberWithCurrentLang,
-    formatCurrency: formatCurrencyWithCurrentLang,
-    formatRelativeTime: formatRelativeTimeWithCurrentLang,
-    getMissingTranslationsCount
+  // Update locale and store it in localStorage
+  const updateLocale = (newLocale: string) => {
+    if (translations[newLocale as keyof typeof translations]) {
+      setLocale(newLocale);
+      localStorage.setItem('locale', newLocale);
+    } else {
+      console.error(`Locale ${newLocale} not supported`);
+    }
   };
 
   return (
-    <LanguageContext.Provider value={value}>
+    <LanguageContext.Provider value={{ locale, t, setLocale: updateLocale, formatCurrency, formatDate }}>
       {children}
     </LanguageContext.Provider>
   );

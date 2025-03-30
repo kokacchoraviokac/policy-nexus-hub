@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FilePlus, Search, RefreshCw, Calendar, FileText, ArrowRight } from "lucide-react";
+import { FilePlus, Search, RefreshCw, Calendar, FileText, ArrowRight, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -23,6 +23,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
 
 const Claims = () => {
@@ -30,10 +43,12 @@ const Claims = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
 
   // Fetch claims
   const { data: claims, isLoading, isError, refetch } = useQuery({
-    queryKey: ['claims', searchTerm, statusFilter],
+    queryKey: ['claims', searchTerm, statusFilter, dateRange],
     queryFn: async () => {
       let query = supabase
         .from('claims')
@@ -48,12 +63,23 @@ const Claims = () => {
       
       // Apply search filter
       if (searchTerm) {
-        query = query.or(`claim_number.ilike.%${searchTerm}%,damage_description.ilike.%${searchTerm}%`);
+        query = query.or(`claim_number.ilike.%${searchTerm}%,damage_description.ilike.%${searchTerm}%,policies.policy_number.ilike.%${searchTerm}%,policies.policyholder_name.ilike.%${searchTerm}%`);
       }
       
       // Apply status filter
       if (statusFilter !== "all") {
         query = query.eq('status', statusFilter);
+      }
+      
+      // Apply date range filter
+      if (dateRange.from) {
+        const fromDate = format(dateRange.from, 'yyyy-MM-dd');
+        query = query.gte('incident_date', fromDate);
+      }
+      
+      if (dateRange.to) {
+        const toDate = format(dateRange.to, 'yyyy-MM-dd');
+        query = query.lte('incident_date', toDate);
       }
       
       const { data, error } = await query;
@@ -83,6 +109,19 @@ const Claims = () => {
     refetch();
   };
 
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setDateRange({});
+    setFilterMenuOpen(false);
+  };
+
+  const hasActiveFilters = 
+    statusFilter !== "all" || 
+    dateRange.from !== undefined || 
+    dateRange.to !== undefined || 
+    searchTerm !== "";
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -102,6 +141,7 @@ const Claims = () => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>{t("claimsRegistry")}</CardTitle>
+          <CardDescription>{t("manageAndTrackClaims")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
@@ -132,6 +172,45 @@ const Claims = () => {
               </Select>
             </div>
             
+            <Popover open={filterMenuOpen} onOpenChange={setFilterMenuOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="ml-auto">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="space-y-4">
+                  <h4 className="font-medium">{t("advancedFilters")}</h4>
+                  
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">{t("dateRange")}</h5>
+                    <CalendarComponent
+                      mode="range"
+                      selected={dateRange}
+                      onSelect={setDateRange as any}
+                      className="rounded-md border"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleClearFilters}
+                    >
+                      {t("clearFilters")}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={() => setFilterMenuOpen(false)}
+                    >
+                      {t("applyFilters")}
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
             <Button
               variant="outline"
               size="icon"
@@ -141,6 +220,35 @@ const Claims = () => {
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
+          
+          {hasActiveFilters && (
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{t("activeFilters")}:</span>
+              {statusFilter !== "all" && (
+                <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                  {t("status")}: {t(statusFilter.toLowerCase().replace(/ /g, ""))}
+                </div>
+              )}
+              {dateRange.from && (
+                <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                  {t("from")}: {format(dateRange.from, "PPP")}
+                </div>
+              )}
+              {dateRange.to && (
+                <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                  {t("to")}: {format(dateRange.to, "PPP")}
+                </div>
+              )}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-xs" 
+                onClick={handleClearFilters}
+              >
+                {t("clearAll")}
+              </Button>
+            </div>
+          )}
 
           {isLoading ? (
             <div className="text-center py-8">

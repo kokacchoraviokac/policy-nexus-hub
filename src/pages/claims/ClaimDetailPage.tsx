@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DocumentList from "@/components/documents/DocumentList";
 import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
 import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
+import UpdateClaimStatusDialog from "@/components/claims/UpdateClaimStatusDialog";
 
 interface ClaimDetailPageProps {
   isEditMode?: boolean;
@@ -33,9 +34,10 @@ const ClaimDetailPage: React.FC<ClaimDetailPageProps> = ({ isEditMode = false })
   const navigate = useNavigate();
   const { t, formatDate, formatCurrency } = useLanguage();
   const { toast } = useToast();
-  const [uploadDialogOpen, setUploadDialogOpen] = React.useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
 
-  const { data: claim, isLoading, isError } = useQuery({
+  const { data: claim, isLoading, isError, refetch } = useQuery({
     queryKey: ['claim', claimId],
     queryFn: async () => {
       if (!claimId) throw new Error("Claim ID is required");
@@ -168,6 +170,9 @@ const ClaimDetailPage: React.FC<ClaimDetailPageProps> = ({ isEditMode = false })
                           <p><span className="font-medium">{t("claimNumber")}:</span> {claim.claim_number}</p>
                           <p><span className="font-medium">{t("incidentDate")}:</span> {formatDate(claim.incident_date)}</p>
                           <p><span className="font-medium">{t("reportedDate")}:</span> {formatDate(claim.created_at)}</p>
+                          {claim.incident_location && (
+                            <p><span className="font-medium">{t("incident_location")}:</span> {claim.incident_location}</p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -250,7 +255,10 @@ const ClaimDetailPage: React.FC<ClaimDetailPageProps> = ({ isEditMode = false })
                     </div>
                     
                     <div className="space-y-4 mt-4">
-                      <Button className="w-full" disabled={claim.status === 'accepted' || claim.status === 'rejected'}>
+                      <Button 
+                        className="w-full" 
+                        onClick={() => setStatusDialogOpen(true)}
+                      >
                         {t("updateStatus")}
                       </Button>
                     </div>
@@ -288,6 +296,14 @@ const ClaimDetailPage: React.FC<ClaimDetailPageProps> = ({ isEditMode = false })
         onOpenChange={setUploadDialogOpen}
         entityType="claim"
         entityId={claimId}
+      />
+      
+      <UpdateClaimStatusDialog
+        open={statusDialogOpen}
+        onOpenChange={setStatusDialogOpen}
+        claimId={claimId}
+        currentStatus={claim.status}
+        onSuccess={refetch}
       />
     </div>
   );

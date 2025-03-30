@@ -1,8 +1,8 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { FilePlus, AlertTriangle, ArrowRight, FileText, Loader2 } from "lucide-react";
+import { FilePlus, AlertTriangle, ArrowRight, FileText, Loader2, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -18,6 +18,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PolicyClaimsTabProps {
   policyId: string;
@@ -38,16 +45,26 @@ interface Claim {
 const PolicyClaimsTab: React.FC<PolicyClaimsTabProps> = ({ policyId }) => {
   const { t, formatCurrency, formatDate } = useLanguage();
   const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: claims, isLoading, isError, refetch } = useQuery({
-    queryKey: ['policy-claims', policyId],
+    queryKey: ['policy-claims', policyId, statusFilter],
     queryFn: async () => {
-      // Get claims for this policy
-      const { data: claimsData, error: claimsError } = await supabase
+      // Build query
+      let query = supabase
         .from('claims')
         .select('*')
-        .eq('policy_id', policyId)
-        .order('created_at', { ascending: false });
+        .eq('policy_id', policyId);
+      
+      // Apply status filter
+      if (statusFilter !== "all") {
+        query = query.eq('status', statusFilter);
+      }
+      
+      // Order by created date
+      query = query.order('created_at', { ascending: false });
+      
+      const { data: claimsData, error: claimsError } = await query;
       
       if (claimsError) throw claimsError;
       
@@ -106,6 +123,10 @@ const PolicyClaimsTab: React.FC<PolicyClaimsTabProps> = ({ policyId }) => {
         {status}
       </Badge>
     );
+  };
+
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
   };
 
   if (isLoading) {
@@ -170,6 +191,24 @@ const PolicyClaimsTab: React.FC<PolicyClaimsTabProps> = ({ policyId }) => {
         </div>
       </CardHeader>
       <CardContent className="pt-4">
+        <div className="flex mb-4">
+          <div className="w-64 ml-auto">
+            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("filterByStatus")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allStatuses")}</SelectItem>
+                <SelectItem value="in processing">{t("inProcessing")}</SelectItem>
+                <SelectItem value="reported">{t("reported")}</SelectItem>
+                <SelectItem value="accepted">{t("accepted")}</SelectItem>
+                <SelectItem value="rejected">{t("rejected")}</SelectItem>
+                <SelectItem value="appealed">{t("appealed")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
         {claims && claims.length > 0 ? (
           <Table>
             <TableHeader>
