@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface UpdateClaimStatusDialogProps {
   open: boolean;
@@ -29,6 +31,18 @@ interface UpdateClaimStatusDialogProps {
   currentStatus: string;
   onSuccess?: () => void;
 }
+
+// Valid status transitions map
+const validStatusTransitions: Record<string, string[]> = {
+  "in processing": ["reported", "rejected"],
+  "reported": ["in processing", "accepted", "rejected", "partially accepted"],
+  "accepted": ["in processing", "paid", "appealed"],
+  "rejected": ["in processing", "appealed"],
+  "appealed": ["in processing", "accepted", "rejected", "partially accepted"],
+  "partially accepted": ["in processing", "paid", "appealed"],
+  "paid": [],
+  "withdrawn": []
+};
 
 const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
   open,
@@ -42,15 +56,62 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
   const queryClient = useQueryClient();
   const [newStatus, setNewStatus] = useState(currentStatus);
   const [statusNote, setStatusNote] = useState("");
+  const [showWarning, setShowWarning] = useState(false);
+
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (open) {
+      setNewStatus(currentStatus);
+      setStatusNote("");
+      setShowWarning(false);
+    }
+  }, [open, currentStatus]);
+
+  // Get valid next statuses
+  const validNextStatuses = validStatusTransitions[currentStatus] || [];
+  const isValidTransition = newStatus === currentStatus || validNextStatuses.includes(newStatus);
+
+  // Check if the transition is potentially problematic
+  useEffect(() => {
+    if (newStatus !== currentStatus) {
+      setShowWarning(!isValidTransition);
+    } else {
+      setShowWarning(false);
+    }
+  }, [newStatus, currentStatus, isValidTransition]);
 
   // Update claim status mutation
   const { mutate: updateStatus, isPending } = useMutation({
     mutationFn: async () => {
+      // Create status history entry
+      const timestamp = new Date().toISOString();
+      const statusChange = {
+        from: currentStatus,
+        to: newStatus,
+        note: statusNote,
+        timestamp
+      };
+      
+      // Get existing history or create new array
+      const { data: existingClaim, error: fetchError } = await supabase
+        .from('claims')
+        .select('status_history')
+        .eq('id', claimId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      const statusHistory = existingClaim.status_history 
+        ? [...existingClaim.status_history, statusChange]
+        : [statusChange];
+      
+      // Update claim with new status and history
       const { data, error } = await supabase
         .from('claims')
         .update({ 
           status: newStatus,
-          notes: statusNote ? `${new Date().toISOString()}: ${statusNote}` : undefined 
+          status_history: statusHistory,
+          notes: statusNote ? `${timestamp}: ${statusNote}\n${existingClaim.notes || ''}` : existingClaim.notes
         })
         .eq('id', claimId)
         .select()
@@ -93,6 +154,9 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{t("updateClaimStatus")}</DialogTitle>
+          <DialogDescription>
+            {t("updateClaimStatusDescription")}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit}>
@@ -115,10 +179,36 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
                   <SelectItem value="reported">{t("reported")}</SelectItem>
                   <SelectItem value="accepted">{t("accepted")}</SelectItem>
                   <SelectItem value="rejected">{t("rejected")}</SelectItem>
+                  <SelectItem value="partially accepted">{t("partiallyAccepted")}</SelectItem>
                   <SelectItem value="appealed">{t("appealed")}</SelectItem>
+                  <SelectItem value="paid">{t("paid")}</SelectItem>
+                  <SelectItem value="withdrawn">{t("withdrawn")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            
+            {validNextStatuses.length > 0 && (
+              <div className="px-3 py-2 bg-blue-50 text-blue-800 rounded-md flex items-start gap-2">
+                <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium">{t("recommendedStatusTransitions")}:</p>
+                  <ul className="list-disc list-inside mt-1">
+                    {validNextStatuses.map(status => (
+                      <li key={status}>{t(status.toLowerCase().replace(/ /g, ""))}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+            
+            {showWarning && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  {t("unusualStatusTransitionWarning")}
+                </AlertDescription>
+              </Alert>
+            )}
             
             <div className="space-y-2">
               <label className="text-sm font-medium">{t("statusNote")}</label>
@@ -135,7 +225,10 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t("cancel")}
             </Button>
-            <Button type="submit" disabled={isPending || newStatus === currentStatus}>
+            <Button 
+              type="submit" 
+              disabled={isPending || newStatus === currentStatus}
+            >
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

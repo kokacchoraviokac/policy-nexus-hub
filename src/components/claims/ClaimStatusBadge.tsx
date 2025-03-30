@@ -20,13 +20,15 @@ const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }
       case 'in processing':
         return "secondary";
       case 'appealed':
-        return "outline";
+        return "warning";
       case 'reported':
         return "default";
       case 'partially accepted':
         return "outline";
       case 'withdrawn':
-        return "outline";
+        return "destructive";
+      case 'paid':
+        return "success";
       default:
         return "default";
     }
@@ -48,6 +50,8 @@ const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }
         return t("partiallyAccepted");
       case 'withdrawn':
         return t("withdrawn");
+      case 'paid':
+        return t("paid");
       default:
         return status;
     }

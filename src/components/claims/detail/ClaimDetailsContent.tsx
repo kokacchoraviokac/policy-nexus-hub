@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DocumentList from "@/components/documents/DocumentList";
+import ClaimStatusHistory from "@/components/claims/detail/ClaimStatusHistory";
 
 interface ClaimDetailsContentProps {
   claim: any;
@@ -101,8 +102,8 @@ const ClaimDetailsContent: React.FC<ClaimDetailsContentProps> = ({
       </TabsContent>
       
       <TabsContent value="history">
-        <div className="text-center py-10">
-          <p>{t("claimHistoryComingSoon")}</p>
+        <div className="space-y-4">
+          <ClaimStatusHistory statusHistory={claim.status_history || []} />
         </div>
       </TabsContent>
     </Tabs>

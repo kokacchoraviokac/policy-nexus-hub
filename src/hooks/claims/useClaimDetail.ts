@@ -27,6 +27,12 @@ export const useClaimDetail = (claimId: string | undefined) => {
         .single();
       
       if (error) throw error;
+      
+      // Initialize status_history if it doesn't exist
+      if (!data.status_history) {
+        data.status_history = [];
+      }
+      
       return data;
     },
     enabled: !!claimId
