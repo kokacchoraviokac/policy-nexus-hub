@@ -1,4 +1,3 @@
-
 {
   "policyhub": "PolicyHub",
   "language": "Language",
@@ -68,6 +67,7 @@
   "clientsReport": "Clients Report",
   "agentsReport": "Agents Report",
   "claimsReport": "Claims Report",
+  "financialReport": "Financial Report",
   "employees": "Employees",
   "privileges": "Privileges",
   "companyData": "Company Data",

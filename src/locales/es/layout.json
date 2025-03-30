@@ -1,4 +1,3 @@
-
 {
   "policyhub": "PolicyHub",
   "language": "Idioma",
@@ -68,6 +67,7 @@
   "clientsReport": "Informe de Clientes",
   "agentsReport": "Informe de Agentes",
   "claimsReport": "Informe de Reclamaciones",
+  "financialReport": "Informe Financiero",
   "employees": "Empleados",
   "privileges": "Privilegios",
   "companyData": "Datos de la Empresa",

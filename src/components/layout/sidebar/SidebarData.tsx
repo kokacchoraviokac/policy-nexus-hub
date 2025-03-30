@@ -1,3 +1,4 @@
+
 import {
   Book,
   DollarSign,
@@ -218,9 +219,15 @@ export const sidebarItems = [
     subItems: [
       {
         label: "productionReport",
-        path: "/reports/production",
+        path: "/reports/policies",
         requiredPrivilege: "reports:view",
         icon: LineChart
+      },
+      {
+        label: "financialReport",
+        path: "/reports/financial",
+        requiredPrivilege: "reports:view",
+        icon: DollarSign
       },
       {
         label: "clientsReport",

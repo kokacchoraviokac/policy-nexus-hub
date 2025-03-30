@@ -1,4 +1,3 @@
-
 {
   "policyhub": "PolicyHub",
   "language": "Jezik",
@@ -68,6 +67,7 @@
   "clientsReport": "Izveštaj o klijentima",
   "agentsReport": "Izveštaj o agentima",
   "claimsReport": "Izveštaj o odštetnim zahtevima",
+  "financialReport": "Finansijski izveštaj",
   "employees": "Zaposleni",
   "privileges": "Privilegije",
   "companyData": "Podaci o kompaniji",
