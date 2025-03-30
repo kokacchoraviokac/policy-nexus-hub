@@ -2,10 +2,10 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePolicyDocuments } from "@/hooks/usePolicyDocuments";
-import { Policy } from "@/types/policies";
-import { FileText, Plus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Policy } from "@/types/policies";
+import { Loader2, FileCheck, AlertTriangle, FileUp } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface PolicyDocumentsCheckProps {
   policy: Policy;
@@ -14,85 +14,59 @@ interface PolicyDocumentsCheckProps {
 
 const PolicyDocumentsCheck: React.FC<PolicyDocumentsCheckProps> = ({ 
   policy,
-  onUploadClick 
+  onUploadClick
 }) => {
   const { t } = useLanguage();
   const { documents, isLoading, documentsCount } = usePolicyDocuments(policy.id);
   
-  const requiredDocumentTypes = [
-    { type: 'policy', label: t('policyDocument') },
-    { type: 'invoice', label: t('invoiceDocument') }
-  ];
-  
-  const hasRequiredDocuments = () => {
-    if (!documents || documents.length === 0) return false;
-    
-    // Check if at least one document of each required type exists
-    return requiredDocumentTypes.every(reqType => 
-      documents.some(doc => doc.document_type === reqType.type)
+  if (isLoading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <p className="text-sm text-muted-foreground">{t("loadingDocuments")}</p>
+      </div>
     );
-  };
+  }
+  
+  const hasDocuments = documentsCount > 0;
   
   return (
     <div className="space-y-4">
-      <h3 className="font-medium text-lg">{t("policyDocuments")}</h3>
+      <h3 className="font-medium text-lg">{t("documentsCheck")}</h3>
       <p className="text-sm text-muted-foreground">{t("requiredDocumentsForPolicy")}</p>
       
-      {isLoading ? (
-        <p className="text-sm text-muted-foreground animate-pulse">{t("loadingDocuments")}...</p>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">
+            {t("documentsAttached", { count: documentsCount })}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            {documentsCount} / 2
+          </span>
+        </div>
+        <Progress value={hasDocuments ? 50 : 0} className={hasDocuments ? "bg-blue-100" : "bg-amber-100"} />
+      </div>
+      
+      {hasDocuments ? (
+        <div className="flex items-center text-sm text-green-600">
+          <FileCheck className="mr-2 h-4 w-4" />
+          {t("documentsUploaded")}
+        </div>
       ) : (
-        <>
-          {documentsCount > 0 ? (
-            <div className="space-y-2">
-              <p className="text-sm">
-                {t("documentsUploaded")}: <span className="font-medium">{documentsCount}</span>
-              </p>
-              
-              {!hasRequiredDocuments() && (
-                <Alert className="bg-amber-50 border-amber-200">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <AlertDescription className="text-amber-800 text-sm ml-2">
-                    {t("missingRequiredDocuments")}
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              <ul className="space-y-1 mt-2">
-                {requiredDocumentTypes.map(docType => {
-                  const hasDoc = documents?.some(doc => doc.document_type === docType.type);
-                  return (
-                    <li key={docType.type} className="flex items-center text-sm">
-                      {hasDoc ? (
-                        <span className="text-green-500">✓</span>
-                      ) : (
-                        <span className="text-amber-500">○</span>
-                      )}
-                      <span className="ml-2">{docType.label}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ) : (
-            <Alert className="bg-amber-50 border-amber-200">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800 text-sm ml-2">
-                {t("noDocumentsUploaded")}
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <Button 
-            onClick={onUploadClick}
-            variant="outline"
-            size="sm"
-            className="w-full"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {t("uploadDocument")}
-          </Button>
-        </>
+        <div className="flex items-center text-sm text-amber-600">
+          <AlertTriangle className="mr-2 h-4 w-4" />
+          {t("missingRequiredDocuments")}
+        </div>
       )}
+      
+      <Button 
+        onClick={onUploadClick}
+        variant={hasDocuments ? "outline" : "default"} 
+        className="w-full"
+      >
+        <FileUp className="mr-2 h-4 w-4" />
+        {t("uploadDocument")}
+      </Button>
     </div>
   );
 };
