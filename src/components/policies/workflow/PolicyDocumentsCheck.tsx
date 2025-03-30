@@ -1,11 +1,12 @@
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { usePolicyDocuments } from "@/hooks/usePolicyDocuments";
-import { Button } from "@/components/ui/button";
 import { Policy } from "@/types/policies";
-import { Loader2, FileCheck, AlertTriangle, FileUp } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { FileText, Plus, Loader2, FileX, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PolicyDocumentsCheckProps {
   policy: Policy;
@@ -13,64 +14,75 @@ interface PolicyDocumentsCheckProps {
 }
 
 const PolicyDocumentsCheck: React.FC<PolicyDocumentsCheckProps> = ({ 
-  policy,
-  onUploadClick
+  policy, 
+  onUploadClick 
 }) => {
   const { t } = useLanguage();
-  const { documents, isLoading, documentsCount } = usePolicyDocuments(policy.id);
   
-  if (isLoading) {
-    return (
-      <div className="flex items-center space-x-2">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        <p className="text-sm text-muted-foreground">{t("loadingDocuments")}</p>
-      </div>
-    );
-  }
+  const { data, isLoading } = useQuery({
+    queryKey: ['policy-documents', policy.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('policy_documents')
+        .select('*')
+        .eq('policy_id', policy.id);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
   
-  // Minimum required documents (policy and invoice)
-  const requiredDocumentsCount = 2;
-  const hasRequiredDocuments = documentsCount >= requiredDocumentsCount;
-  const progressValue = Math.min(100, (documentsCount / requiredDocumentsCount) * 100);
+  const documentsCount = data?.length || 0;
+  const hasRequiredDocuments = documentsCount > 0;
   
   return (
     <div className="space-y-4">
-      <h3 className="font-medium text-lg">{t("documentsCheck")}</h3>
+      <h3 className="font-medium text-lg">{t("policyDocuments")}</h3>
       <p className="text-sm text-muted-foreground">{t("requiredDocumentsForPolicy")}</p>
       
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">
-            {t("documentsAttached", { count: documentsCount })}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {documentsCount} / {requiredDocumentsCount}
-          </span>
+      {isLoading ? (
+        <div className="flex items-center justify-center p-6">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-sm text-muted-foreground">{t("loadingDocuments")}</span>
         </div>
-        <Progress 
-          value={progressValue} 
-          className={hasRequiredDocuments ? "bg-blue-100" : "bg-amber-100"} 
-        />
-      </div>
-      
-      {hasRequiredDocuments ? (
-        <div className="flex items-center text-sm text-green-600">
-          <FileCheck className="mr-2 h-4 w-4" />
-          {t("documentsUploaded")}
-        </div>
+      ) : documentsCount > 0 ? (
+        <>
+          <Alert className="bg-green-50 border-green-200">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800 text-sm ml-2">
+              {t("documentsUploaded")}: {documentsCount}
+            </AlertDescription>
+          </Alert>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {data?.slice(0, 4).map((doc) => (
+              <div key={doc.id} className="border rounded p-3 bg-white flex items-start space-x-3">
+                <FileText className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div className="overflow-hidden">
+                  <p className="font-medium text-sm truncate">{doc.document_name}</p>
+                  <p className="text-xs text-muted-foreground">{t(doc.document_type)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {documentsCount > 4 && (
+            <p className="text-sm text-muted-foreground text-center">
+              +{documentsCount - 4} {t("moreDocuments")}
+            </p>
+          )}
+        </>
       ) : (
-        <div className="flex items-center text-sm text-amber-600">
-          <AlertTriangle className="mr-2 h-4 w-4" />
-          {t("missingRequiredDocuments")}
-        </div>
+        <Alert variant="destructive" className="bg-amber-50 border-amber-200">
+          <FileX className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 text-sm ml-2">
+            {t("noDocumentsUploaded")}
+          </AlertDescription>
+        </Alert>
       )}
       
-      <Button 
-        onClick={onUploadClick}
-        variant={hasRequiredDocuments ? "outline" : "default"} 
-        className="w-full"
-      >
-        <FileUp className="mr-2 h-4 w-4" />
+      <Button className="w-full" onClick={onUploadClick}>
+        <Plus className="mr-2 h-4 w-4" />
         {t("uploadDocument")}
       </Button>
     </div>

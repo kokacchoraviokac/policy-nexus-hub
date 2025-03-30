@@ -1,10 +1,10 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 import { Policy } from "@/types/policies";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
+import { getMissingFields } from "@/utils/policyWorkflowUtils";
+import { AlertTriangle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PolicyReviewChecklistProps {
   policy: Policy;
@@ -12,146 +12,96 @@ interface PolicyReviewChecklistProps {
 
 const PolicyReviewChecklist: React.FC<PolicyReviewChecklistProps> = ({ policy }) => {
   const { t } = useLanguage();
-  
-  // Define required fields for a complete policy
-  const requiredFields = [
-    { 
-      key: 'policy_number', 
-      label: t('policyNumber'),
-      complete: !!policy.policy_number 
-    },
-    { 
-      key: 'insurer_name', 
-      label: t('insurer'),
-      complete: !!policy.insurer_name 
-    },
-    { 
-      key: 'policyholder_name', 
-      label: t('policyholder'),
-      complete: !!policy.policyholder_name 
-    },
-    { 
-      key: 'start_date', 
-      label: t('startDate'),
-      complete: !!policy.start_date 
-    },
-    { 
-      key: 'expiry_date', 
-      label: t('expiryDate'),
-      complete: !!policy.expiry_date 
-    },
-    { 
-      key: 'premium', 
-      label: t('premium'),
-      complete: policy.premium > 0 
-    },
-    { 
-      key: 'currency', 
-      label: t('currency'),
-      complete: !!policy.currency 
-    },
-  ];
-  
-  const optionalFields = [
-    { 
-      key: 'commission_percentage', 
-      label: t('commissionPercentage'),
-      complete: policy.commission_percentage !== null && policy.commission_percentage !== undefined
-    },
-    { 
-      key: 'product_name', 
-      label: t('product'),
-      complete: !!policy.product_name 
-    },
-    { 
-      key: 'insured_name', 
-      label: t('insured'),
-      complete: !!policy.insured_name 
-    },
-    { 
-      key: 'payment_frequency', 
-      label: t('paymentFrequency'),
-      complete: !!policy.payment_frequency 
-    },
-  ];
-  
-  const missingFields = requiredFields.filter(field => !field.complete);
+  const missingFields = getMissingFields(policy);
   const isComplete = missingFields.length === 0;
-  
-  // Calculate completion percentage
-  const completedRequired = requiredFields.filter(field => field.complete).length;
-  const completionPercentage = Math.round((completedRequired / requiredFields.length) * 100);
-  
-  const completedOptional = optionalFields.filter(field => field.complete).length;
-  const optionalCompletionPercentage = optionalFields.length > 0 ? 
-    Math.round((completedOptional / optionalFields.length) * 100) : 0;
   
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-lg">{t("reviewChecklist")}</h3>
       <p className="text-sm text-muted-foreground">{t("ensureAllRequiredInformationIsComplete")}</p>
       
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium">{t("required")}</span>
-          <span className="text-sm text-muted-foreground">{completedRequired}/{requiredFields.length}</span>
-        </div>
-        <Progress value={completionPercentage} className={isComplete ? "bg-green-100" : "bg-amber-100"} />
-      </div>
-      
-      {!isComplete && (
-        <Alert variant="destructive" className="mt-2">
-          <AlertTitle className="flex items-center">
-            <AlertTriangle className="h-4 w-4 mr-2" />
+      {isComplete ? (
+        <Alert className="bg-green-50 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800 text-sm ml-2">
+            {t("allRequiredFieldsComplete")}
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert variant="destructive" className="bg-red-50 border-red-200">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800 text-sm ml-2">
             {t("missingRequiredFields")}
-          </AlertTitle>
-          <AlertDescription>
-            {t("followingFieldsAreRequired")}:
-            <ul className="mt-2 ml-6 list-disc">
-              {missingFields.map(field => (
-                <li key={field.key}>{field.label}</li>
+          </AlertDescription>
+          <div className="mt-2 text-sm text-red-700">
+            <p className="font-medium">{t("followingFieldsAreRequired")}:</p>
+            <ul className="list-disc list-inside mt-1">
+              {missingFields.map((field) => (
+                <li key={field}>{t(field)}</li>
               ))}
             </ul>
-          </AlertDescription>
+          </div>
         </Alert>
       )}
       
-      <div className="border rounded-md divide-y">
-        <div className="p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+        <div className="border rounded-md p-4 bg-white">
           <h4 className="font-medium mb-2">{t("required")}</h4>
           <ul className="space-y-2">
-            {requiredFields.map((field) => (
-              <li key={field.key} className="flex items-center justify-between">
-                <span>{field.label}</span>
-                {field.complete ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-red-500" />
-                )}
-              </li>
-            ))}
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.policy_number ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {t("policyNumber")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.insurer_name ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {t("insurerName")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.policyholder_name ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {t("policyholderName")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.start_date ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {t("startDate")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.expiry_date ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {t("expiryDate")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.premium ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {t("premium")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.currency ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {t("currency")}
+            </li>
           </ul>
         </div>
         
-        <div className="p-4">
+        <div className="border rounded-md p-4 bg-white">
           <h4 className="font-medium mb-2">{t("optional")}</h4>
-          <div className="mb-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{completedOptional}/{optionalFields.length}</span>
-            </div>
-            <Progress value={optionalCompletionPercentage} className="bg-slate-100" />
-          </div>
           <ul className="space-y-2">
-            {optionalFields.map((field) => (
-              <li key={field.key} className="flex items-center justify-between">
-                <span>{field.label} ({t("optional")})</span>
-                {field.complete ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <Clock className="h-5 w-5 text-amber-500" />
-                )}
-              </li>
-            ))}
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.insured_name ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+              {t("insuredName")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.product_name ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+              {t("productName")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.payment_frequency ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+              {t("paymentFrequency")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.commission_percentage ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+              {t("commissionPercentage")}
+            </li>
+            <li className="flex items-center">
+              <span className={`w-4 h-4 rounded-full mr-2 ${policy.notes ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+              {t("notes")}
+            </li>
           </ul>
         </div>
       </div>

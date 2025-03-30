@@ -14,24 +14,23 @@ interface WorkflowFiltersProps {
 const WorkflowFilters: React.FC<WorkflowFiltersProps> = ({
   searchTerm,
   onSearchChange,
-  onRefresh
+  onRefresh,
 }) => {
   const { t } = useLanguage();
-
+  
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(e.target.value);
   };
-
+  
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-      <div className="relative w-full md:w-96">
+    <div className="flex flex-col sm:flex-row gap-4">
+      <div className="relative flex-1">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          type="search"
           placeholder={t("searchPolicies")}
-          className="pl-8"
           value={searchTerm}
           onChange={handleSearchChange}
+          className="pl-8"
         />
       </div>
       

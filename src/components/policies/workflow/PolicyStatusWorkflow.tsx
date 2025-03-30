@@ -10,6 +10,8 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useActivityLogger } from "@/utils/activityLogger";
+import { getNextWorkflowStatus, PolicyWorkflowStatus } from "@/utils/policyWorkflowUtils";
 
 export interface PolicyStatusWorkflowProps {
   policyId: string;
@@ -27,12 +29,16 @@ const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { logActivity } = useActivityLogger();
   
   const updateWorkflowStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
       const { data, error } = await supabase
         .from('policies')
-        .update({ workflow_status: newStatus })
+        .update({ 
+          workflow_status: newStatus,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', policyId)
         .select()
         .single();
@@ -40,12 +46,29 @@ const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, newStatus) => {
       queryClient.invalidateQueries({ queryKey: ['policies'] });
+      queryClient.invalidateQueries({ queryKey: ['policy', policyId] });
+      
+      logActivity({
+        entityType: "policy",
+        entityId: policyId,
+        action: "update",
+        details: {
+          changes: { 
+            workflow_status: { 
+              old: currentWorkflowStatus, 
+              new: newStatus 
+            }
+          }
+        }
+      });
+      
       onStatusUpdated();
+      
       toast({
         title: t("statusUpdated"),
-        description: t("policyWorkflowStatusUpdated"),
+        description: t("policyWorkflowStatusUpdated", { status: t(newStatus.replace('_', '')) }),
       });
     },
     onError: (error) => {
@@ -57,6 +80,11 @@ const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({
       });
     }
   });
+  
+  const handleAdvanceWorkflow = () => {
+    const nextStatus = getNextWorkflowStatus(currentWorkflowStatus as PolicyWorkflowStatus);
+    updateWorkflowStatusMutation.mutate(nextStatus);
+  };
   
   const workflowStages = [
     {

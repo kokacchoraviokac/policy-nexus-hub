@@ -13,9 +13,11 @@ import {
   ClipboardList, 
   FileCheck, 
   ArrowLeft,
-  AlertTriangle 
+  AlertTriangle, 
+  Loader2
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getNextWorkflowStatus, PolicyWorkflowStatus } from "@/utils/policyWorkflowUtils";
 
 interface PolicyReviewActionsProps {
   policy: Policy;
@@ -49,6 +51,7 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
     },
     onSuccess: (data, newStatus) => {
       queryClient.invalidateQueries({ queryKey: ['policy', policy.id] });
+      queryClient.invalidateQueries({ queryKey: ['policies-workflow'] });
       
       logActivity({
         entityType: "policy",
@@ -89,8 +92,22 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
   const handleUpdateStatus = (newStatus: string) => {
     updateWorkflowStatus.mutate(newStatus);
   };
+  
+  const handleAdvanceWorkflow = () => {
+    const nextStatus = getNextWorkflowStatus(policy.workflow_status as PolicyWorkflowStatus);
+    updateWorkflowStatus.mutate(nextStatus);
+  };
 
   const getActionButton = () => {
+    if (updateWorkflowStatus.isPending) {
+      return (
+        <Button disabled className="w-full">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {t("updatingStatus")}
+        </Button>
+      );
+    }
+    
     switch (policy.workflow_status) {
       case 'draft':
         return (
@@ -197,12 +214,6 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
             {t("completeAllRequiredFieldsToProgress")}
           </AlertDescription>
         </Alert>
-      )}
-      
-      {updateWorkflowStatus.isPending && (
-        <p className="text-sm text-muted-foreground animate-pulse">
-          {t("updatingStatus")}...
-        </p>
       )}
     </div>
   );

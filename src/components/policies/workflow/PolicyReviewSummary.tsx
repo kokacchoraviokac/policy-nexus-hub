@@ -2,9 +2,8 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy } from "@/types/policies";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, AlertTriangle, Clock, CircleDollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock, FileText, User, FileCheck, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface PolicyReviewSummaryProps {
@@ -14,139 +13,153 @@ interface PolicyReviewSummaryProps {
 const PolicyReviewSummary: React.FC<PolicyReviewSummaryProps> = ({ policy }) => {
   const { t, formatDate } = useLanguage();
   
-  // Status indicators for review stages
-  const getStatusIcon = (isComplete: boolean, isOptional = false) => {
-    if (isComplete) {
-      return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+  const getWorkflowStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status.toLowerCase()) {
+      case 'complete':
+        return "default";
+      case 'in_review':
+      case 'ready':
+        return "secondary";
+      case 'draft':
+        return "outline";
+      default:
+        return "outline";
     }
-    if (isOptional) {
-      return <Clock className="h-4 w-4 text-amber-500" />;
-    }
-    return <XCircle className="h-4 w-4 text-red-500" />;
   };
   
-  // Check various policy aspects
-  const hasBasicInfo = !!policy.policy_number && !!policy.start_date && !!policy.expiry_date;
-  const hasClientInfo = !!policy.policyholder_name;
-  const hasInsurerInfo = !!policy.insurer_name;
-  const hasFinancialInfo = policy.premium > 0 && !!policy.currency;
-  const hasCommission = policy.commission_percentage !== null && policy.commission_percentage !== undefined;
-  const hasPaymentFrequency = !!policy.payment_frequency;
-  
-  // Calculate overall completion percentage
-  const requiredChecks = [hasBasicInfo, hasClientInfo, hasInsurerInfo, hasFinancialInfo];
-  const completedRequired = requiredChecks.filter(Boolean).length;
-  const completionPercentage = Math.round((completedRequired / requiredChecks.length) * 100);
-  
-  // Determine overall review status
-  const getReviewStatus = () => {
-    if (policy.workflow_status === 'complete') {
-      return {
-        label: t("complete"),
-        color: "bg-green-100 text-green-800 border-green-300",
-        icon: <CheckCircle2 className="h-4 w-4 mr-1" />
-      };
+  const getPolicyStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return "default";
+      case 'pending':
+        return "secondary";
+      case 'expired':
+      case 'cancelled':
+        return "destructive";
+      default:
+        return "outline";
     }
-    
-    if (requiredChecks.every(Boolean)) {
-      return {
-        label: t("readyForReview"),
-        color: "bg-blue-100 text-blue-800 border-blue-300",
-        icon: <CheckCircle2 className="h-4 w-4 mr-1" />
-      };
-    }
-    
-    if (completedRequired > 0) {
-      return {
-        label: t("inProgress"),
-        color: "bg-amber-100 text-amber-800 border-amber-300",
-        icon: <Clock className="h-4 w-4 mr-1" />
-      };
-    }
-    
-    return {
-      label: t("needsAttention"),
-      color: "bg-red-100 text-red-800 border-red-300",
-      icon: <AlertTriangle className="h-4 w-4 mr-1" />
-    };
   };
   
-  const reviewStatus = getReviewStatus();
-  
+  const getWorkflowIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'complete':
+        return <FileCheck className="h-4 w-4" />;
+      case 'in_review':
+        return <FileText className="h-4 w-4" />;
+      case 'ready':
+        return <Clock className="h-4 w-4" />;
+      case 'draft':
+        return <AlertTriangle className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <CardTitle>{t("reviewStatus")}</CardTitle>
-          <Badge 
-            variant="outline" 
-            className={`${reviewStatus.color} flex items-center`}
-          >
-            {reviewStatus.icon}
-            {reviewStatus.label}
+    <div className="bg-white rounded-lg border p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-xl font-semibold">{policy.policy_number}</h2>
+        <div className="flex items-center gap-2">
+          <Badge variant={getPolicyStatusVariant(policy.status)}>
+            {policy.status}
+          </Badge>
+          <Badge variant={getWorkflowStatusVariant(policy.workflow_status)} className="flex items-center gap-1">
+            {getWorkflowIcon(policy.workflow_status)}
+            <span>{t(policy.workflow_status.replace('_', ''))}</span>
           </Badge>
         </div>
-        <CardDescription>
-          {t("lastUpdated")}: {formatDate(policy.updated_at)} 
-          ({formatDistanceToNow(new Date(policy.updated_at), { addSuffix: true })})
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex justify-between items-center border rounded p-3">
-              <span className="font-medium">{t("basicInformation")}</span>
-              {getStatusIcon(hasBasicInfo)}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("basicInformation")}</h3>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{t("policyholder")}: </span>
+              <span className="text-sm font-medium">{policy.policyholder_name}</span>
             </div>
             
-            <div className="flex justify-between items-center border rounded p-3">
-              <span className="font-medium">{t("client")}</span>
-              {getStatusIcon(hasClientInfo)}
+            {policy.insured_name && (
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{t("insured")}: </span>
+                <span className="text-sm font-medium">{policy.insured_name}</span>
+              </div>
+            )}
+            
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{t("policyType")}: </span>
+              <span className="text-sm font-medium">{policy.policy_type}</span>
             </div>
             
-            <div className="flex justify-between items-center border rounded p-3">
-              <span className="font-medium">{t("insurer")}</span>
-              {getStatusIcon(hasInsurerInfo)}
-            </div>
-            
-            <div className="flex justify-between items-center border rounded p-3">
-              <span className="font-medium">{t("financialDetails")}</span>
-              {getStatusIcon(hasFinancialInfo)}
-            </div>
-            
-            <div className="flex justify-between items-center border rounded p-3">
-              <span className="font-medium">{t("commission")} ({t("optional")})</span>
-              {getStatusIcon(hasCommission, true)}
-            </div>
-            
-            <div className="flex justify-between items-center border rounded p-3">
-              <span className="font-medium">{t("paymentFrequency")} ({t("optional")})</span>
-              {getStatusIcon(hasPaymentFrequency, true)}
-            </div>
-            
-            <div className="flex justify-between items-center border rounded p-3">
-              <span className="font-medium">{t("documents")} ({t("optional")})</span>
-              {getStatusIcon(policy.documents_count > 0, true)}
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{t("insurer")}: </span>
+              <span className="text-sm font-medium">{policy.insurer_name}</span>
             </div>
           </div>
+        </div>
+        
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("policyDates")}</h3>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{t("startDate")}: </span>
+              <span className="text-sm font-medium">{formatDate(policy.start_date)}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{t("expiryDate")}: </span>
+              <span className="text-sm font-medium">{formatDate(policy.expiry_date)}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{t("lastUpdated")}: </span>
+              <span className="text-sm font-medium">{formatDate(policy.updated_at)} ({formatDistanceToNow(new Date(policy.updated_at), { addSuffix: true })})</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("financialDetails")}</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="p-3 bg-gray-50 rounded-md">
+            <div className="text-sm text-muted-foreground">{t("premium")}</div>
+            <div className="text-lg font-semibold">{policy.premium} {policy.currency}</div>
+          </div>
           
-          {policy.workflow_status === 'draft' && (
-            <div className="bg-blue-50 border border-blue-200 rounded p-3 text-blue-800 text-sm">
-              {t("importedPolicyReviewNote")}
+          {policy.commission_percentage && (
+            <div className="p-3 bg-gray-50 rounded-md">
+              <div className="text-sm text-muted-foreground">{t("commissionPercentage")}</div>
+              <div className="text-lg font-semibold">{policy.commission_percentage}%</div>
             </div>
           )}
           
-          {hasFinancialInfo && !hasCommission && (
-            <div className="bg-amber-50 border border-amber-200 rounded p-3 text-amber-800 text-sm flex items-start gap-2">
-              <CircleDollarSign className="h-5 w-5 shrink-0 mt-0.5" />
-              <span>
-                {t("commissionReminderNote")}
-              </span>
+          {policy.payment_frequency && (
+            <div className="p-3 bg-gray-50 rounded-md">
+              <div className="text-sm text-muted-foreground">{t("paymentFrequency")}</div>
+              <div className="text-lg font-semibold">{t(policy.payment_frequency)}</div>
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      {policy.notes && (
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">{t("notes")}</h3>
+          <div className="p-3 bg-gray-50 rounded-md">
+            <p className="text-sm">{policy.notes}</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
