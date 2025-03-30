@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArrowLeft, Upload, FileUp, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Upload, FileUp, AlertTriangle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PolicyImportFileUploadProps {
@@ -10,13 +10,15 @@ interface PolicyImportFileUploadProps {
   onFileChange: (file: File | null) => void;
   onBack: () => void;
   onImport: () => void;
+  isLoading?: boolean;
 }
 
 const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
   file,
   onFileChange,
   onBack,
-  onImport
+  onImport,
+  isLoading = false
 }) => {
   const { t } = useLanguage();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -109,6 +111,7 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
           variant="outline"
           className="flex items-center gap-2"
           onClick={onBack}
+          disabled={isLoading}
         >
           <ArrowLeft className="h-4 w-4" />
           {t("back")}
@@ -117,10 +120,10 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
         <Button 
           onClick={onImport}
           className="flex items-center gap-2"
-          disabled={!file}
+          disabled={!file || isLoading}
         >
-          <Upload className="h-4 w-4" />
-          {t("importPolicies")}
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          {t("continue")}
         </Button>
       </div>
     </div>

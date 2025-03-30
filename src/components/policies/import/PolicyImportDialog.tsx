@@ -11,6 +11,7 @@ import { parseCSV } from "@/utils/csv";
 import { importPolicies } from "@/utils/policies/policyImportUtils";
 import PolicyImportInstructions from "./PolicyImportInstructions";
 import PolicyImportFileUpload from "./PolicyImportFileUpload";
+import PolicyImportReview from "./PolicyImportReview";
 
 interface PolicyImportDialogProps {
   isOpen: boolean;
@@ -29,7 +30,8 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
   
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadStep, setUploadStep] = useState<"instructions" | "file_upload" | "processing" | "complete">("instructions");
+  const [uploadStep, setUploadStep] = useState<"instructions" | "file_upload" | "review" | "processing" | "complete">("instructions");
+  const [parsedPolicies, setParsedPolicies] = useState<any[]>([]);
   const [importResults, setImportResults] = useState<{
     total: number;
     successful: number;
@@ -51,12 +53,13 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
   
   const resetForm = () => {
     setFile(null);
+    setParsedPolicies([]);
     setImportResults(null);
     setUploadStep("instructions");
     setIsUploading(false);
   };
   
-  const handleImport = async () => {
+  const handleReviewPolicies = async () => {
     if (!file) {
       toast({
         title: t("noFileSelected"),
@@ -68,17 +71,42 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
     
     try {
       setIsUploading(true);
-      setUploadStep("processing");
       
       // Read the file content
       const fileContent = await file.text();
       
       // Parse CSV to get policy data
-      const parsedPolicies = await parseCSV(fileContent);
+      const policies = await parseCSV(fileContent);
       
-      if (parsedPolicies.length === 0) {
+      if (policies.length === 0) {
         throw new Error(t("noPoliciesFoundInFile"));
       }
+      
+      // Store parsed policies for review
+      setParsedPolicies(policies);
+      
+      // Move to review step
+      setUploadStep("review");
+    } catch (error) {
+      console.error("Policy import parse error:", error);
+      toast({
+        title: t("parseError"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  const handleBackToFileUpload = () => {
+    setUploadStep("file_upload");
+  };
+  
+  const handleImport = async () => {
+    try {
+      setIsUploading(true);
+      setUploadStep("processing");
       
       // Import the policies
       const result = await importPolicies(parsedPolicies);
@@ -91,7 +119,7 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
         details: {
           action: "policy_import",
           count: result.successful,
-          file_name: file.name
+          file_name: file?.name || "unknown"
         }
       });
       
@@ -99,7 +127,7 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
         total: parsedPolicies.length,
         successful: result.successful,
         failed: result.failed.length,
-        errors: result.failed.map(f => `${f.row}: ${f.reason}`)
+        errors: result.failed.map(f => `Row ${f.row}: ${f.reason}`)
       });
       
       setUploadStep("complete");
@@ -123,7 +151,7 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
         description: error instanceof Error ? error.message : t("unknownError"),
         variant: "destructive",
       });
-      setUploadStep("file_upload");
+      setUploadStep("review");
     } finally {
       setIsUploading(false);
     }
@@ -146,7 +174,7 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
         }
       }
     }}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>{t("importPolicies")}</DialogTitle>
           <DialogDescription>{t("importPoliciesDescription")}</DialogDescription>
@@ -161,6 +189,15 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
             file={file} 
             onFileChange={handleFileChange} 
             onBack={handleGoBackToInstructions}
+            onImport={handleReviewPolicies}
+            isLoading={isUploading}
+          />
+        )}
+        
+        {uploadStep === "review" && (
+          <PolicyImportReview
+            policies={parsedPolicies}
+            onBack={handleBackToFileUpload}
             onImport={handleImport}
           />
         )}
@@ -200,12 +237,12 @@ const PolicyImportDialog: React.FC<PolicyImportDialogProps> = ({
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 <AlertDescription>
                   <p className="font-medium mb-1">{t("importErrors")}</p>
-                  <ul className="text-xs list-disc ml-5 space-y-1">
-                    {importResults.errors.slice(0, 5).map((error, index) => (
+                  <ul className="text-xs list-disc ml-5 space-y-1 max-h-40 overflow-y-auto">
+                    {importResults.errors.slice(0, 10).map((error, index) => (
                       <li key={index}>{error}</li>
                     ))}
-                    {importResults.errors.length > 5 && (
-                      <li>{t("andMoreErrors", { count: importResults.errors.length - 5 })}</li>
+                    {importResults.errors.length > 10 && (
+                      <li>{t("andMoreErrors", { count: importResults.errors.length - 10 })}</li>
                     )}
                   </ul>
                 </AlertDescription>
