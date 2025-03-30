@@ -13,7 +13,7 @@ export const useCommissionMutations = () => {
   const { user } = useContext(AuthContext);
   
   // Get the current user's company_id
-  const companyId = user?.user_metadata?.company_id;
+  const companyId = user?.companyId;
 
   const calculateCommissionMutation = useMutation({
     mutationFn: async ({ policyId, baseAmount, rate }: { 
@@ -23,6 +23,10 @@ export const useCommissionMutations = () => {
     }) => {
       // Calculate commission amount
       const calculatedAmount = (baseAmount * rate) / 100;
+      
+      if (!companyId) {
+        throw new Error("No company ID available");
+      }
       
       const { data, error } = await supabase
         .from('commissions')

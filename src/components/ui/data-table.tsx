@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Table,
@@ -34,8 +35,9 @@ interface DataTableProps<T> {
     action?: React.ReactNode;
   };
   pagination?: {
-    pageSize: number;
     currentPage: number;
+    totalPages: number;
+    itemsPerPage: number;
     totalItems: number;
     onPageChange: (page: number) => void;
     onPageSizeChange: (pageSize: number) => void;
@@ -108,7 +110,7 @@ function DataTable<T>({
   };
 
   const totalPages = pagination 
-    ? Math.ceil(pagination.totalItems / pagination.pageSize) 
+    ? Math.ceil(pagination.totalItems / pagination.itemsPerPage) 
     : 1;
 
   return (
@@ -156,8 +158,8 @@ function DataTable<T>({
       {pagination && pagination.totalItems > 0 && (
         <PaginationController
           currentPage={pagination.currentPage}
-          totalPages={totalPages}
-          pageSize={pagination.pageSize}
+          totalPages={pagination.totalPages}
+          itemsPerPage={pagination.itemsPerPage}
           totalItems={pagination.totalItems}
           onPageChange={pagination.onPageChange}
           onPageSizeChange={pagination.onPageSizeChange}

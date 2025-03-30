@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -183,11 +182,11 @@ const UnlinkedPayments = () => {
           {totalCount > 0 && (
             <div className="mt-4 flex justify-end">
               <PaginationController
-                currentPage={pagination.pageIndex + 1}
-                pageSize={pagination.pageSize}
-                totalItems={totalCount}
+                currentPage={pagination.pageIndex}
                 totalPages={Math.ceil(totalCount / pagination.pageSize)}
-                onPageChange={(page) => setPagination({ ...pagination, pageIndex: page - 1 })}
+                itemsPerPage={pagination.pageSize}
+                totalItems={totalCount}
+                onPageChange={(page) => setPagination({ ...pagination, pageIndex: page })}
                 onPageSizeChange={(size) => setPagination({ pageIndex: 0, pageSize: size })}
               />
             </div>

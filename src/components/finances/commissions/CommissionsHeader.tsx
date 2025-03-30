@@ -48,7 +48,10 @@ const CommissionsHeader: React.FC<CommissionsHeaderProps> = ({
         </div>
       </div>
       
-      <CommissionsFilters filters={filters} setFilters={setFilters} />
+      <CommissionsFilters 
+        filters={filters} 
+        onFilterChange={setFilters} 
+      />
       
       {uploadDialogOpen && (
         <CalculationUploadDialog 

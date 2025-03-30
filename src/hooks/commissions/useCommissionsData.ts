@@ -16,7 +16,7 @@ export const useCommissionsData = (
   const { user } = useContext(AuthContext);
   
   // Get the current user's company_id
-  const companyId = user?.user_metadata?.company_id;
+  const companyId = user?.companyId;
   
   const fetchCommissions = async ({ pageIndex, pageSize, filters }: { 
     pageIndex: number, 
@@ -36,7 +36,7 @@ export const useCommissionsData = (
             currency
           ),
           agents(name)
-        `);
+        `, { count: 'exact' });
       
       // Apply company filter if available
       if (companyId) {
@@ -86,7 +86,7 @@ export const useCommissionsData = (
       if (error) throw error;
 
       // Transform data to include policy details
-      const transformedData = data.map((commission: any) => ({
+      const transformedData = data.map((commission) => ({
         ...commission,
         policy_number: commission.policies?.policy_number,
         policyholder_name: commission.policies?.policyholder_name,

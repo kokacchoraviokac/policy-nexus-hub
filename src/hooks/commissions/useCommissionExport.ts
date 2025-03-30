@@ -12,7 +12,7 @@ export const useCommissionExport = (filters: CommissionFilterOptions) => {
   const { user } = useContext(AuthContext);
   
   // Get the current user's company_id
-  const companyId = user?.user_metadata?.company_id;
+  const companyId = user?.companyId;
 
   const exportCommissions = async (): Promise<void> => {
     try {

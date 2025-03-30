@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ import { format } from "date-fns";
 import { Search, CalendarIcon, Filter, X } from "lucide-react";
 import { CommissionFilterOptions } from "@/hooks/useCommissions";
 
-interface CommissionsFiltersProps {
+export interface CommissionsFiltersProps {
   filters: CommissionFilterOptions;
   onFilterChange: (filters: CommissionFilterOptions) => void;
   showFilterButton?: boolean;

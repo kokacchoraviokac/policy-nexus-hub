@@ -120,7 +120,12 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
         isLoading={isLoading}
         emptyState={emptyState}
         pagination={{
-          ...pagination,
+          itemsPerPage: pagination.itemsPerPage,
+          currentPage: pagination.currentPage,
+          totalPages: pagination.totalPages,
+          totalItems: pagination.totalItems,
+          onPageChange: pagination.onPageChange,
+          onPageSizeChange: pagination.onPageSizeChange,
           pageSizeOptions: [10, 25, 50, 100]
         }}
       />
