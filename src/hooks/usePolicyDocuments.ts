@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface PolicyDocument {
+export interface PolicyDocument {
   id: string;
   policy_id: string;
   document_name: string;
@@ -11,6 +11,7 @@ interface PolicyDocument {
   uploaded_by: string;
   created_at: string;
   updated_at: string;
+  uploaded_by_name?: string;
 }
 
 export const usePolicyDocuments = (policyId: string) => {
