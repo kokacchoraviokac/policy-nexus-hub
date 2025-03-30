@@ -1,15 +1,15 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LinkIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { BankTransaction } from "@/types/finances";
+import MatchTransactionDialog from "./MatchTransactionDialog";
 
 interface BankTransactionActionsProps {
-  status: string;
-  transactionId: string;
-  matchedPolicyId?: string;
-  onMatchTransaction: (transactionId: string) => void;
+  transaction: BankTransaction;
+  onMatchTransaction: (transactionId: string, policyId: string) => void;
   onIgnoreTransaction: (transactionId: string) => void;
   onResetStatus?: (transactionId: string) => void;
   isMatching: boolean;
@@ -18,9 +18,7 @@ interface BankTransactionActionsProps {
 }
 
 const BankTransactionActions: React.FC<BankTransactionActionsProps> = ({
-  status,
-  transactionId,
-  matchedPolicyId,
+  transaction,
   onMatchTransaction,
   onIgnoreTransaction,
   onResetStatus,
@@ -30,38 +28,52 @@ const BankTransactionActions: React.FC<BankTransactionActionsProps> = ({
 }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const [showMatchDialog, setShowMatchDialog] = useState(false);
   
-  if (status === "unmatched") {
+  if (transaction.status === "unmatched") {
     return (
-      <div className="flex justify-end space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onMatchTransaction(transactionId)}
-          disabled={isMatching}
-        >
-          <LinkIcon className="mr-2 h-4 w-4" />
-          {t("linkToPolicy")}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onIgnoreTransaction(transactionId)}
-          disabled={isIgnoring}
-        >
-          {t("ignore")}
-        </Button>
-      </div>
+      <>
+        <div className="flex justify-end space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowMatchDialog(true)}
+            disabled={isMatching}
+          >
+            <LinkIcon className="mr-2 h-4 w-4" />
+            {t("linkToPolicy")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onIgnoreTransaction(transaction.id)}
+            disabled={isIgnoring}
+          >
+            {t("ignore")}
+          </Button>
+        </div>
+        
+        <MatchTransactionDialog
+          open={showMatchDialog}
+          onOpenChange={setShowMatchDialog}
+          onConfirm={(transactionId, policyId) => {
+            onMatchTransaction(transactionId, policyId);
+            setShowMatchDialog(false);
+          }}
+          transaction={transaction}
+          isLoading={isMatching}
+        />
+      </>
     );
   }
   
-  if (status === "matched" && matchedPolicyId) {
+  if (transaction.status === "matched" && transaction.matched_policy_id) {
     return (
       <Button
         variant="outline"
         size="sm"
         onClick={() => {
-          navigate(`/policies/${matchedPolicyId}`);
+          navigate(`/policies/${transaction.matched_policy_id}`);
         }}
       >
         {t("viewPolicy")}
@@ -69,12 +81,12 @@ const BankTransactionActions: React.FC<BankTransactionActionsProps> = ({
     );
   }
   
-  if (status === "ignored" && onResetStatus) {
+  if (transaction.status === "ignored" && onResetStatus) {
     return (
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onResetStatus(transactionId)}
+        onClick={() => onResetStatus(transaction.id)}
         disabled={isResetting}
       >
         {t("resetStatus")}

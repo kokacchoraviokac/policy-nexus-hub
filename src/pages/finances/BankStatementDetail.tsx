@@ -79,13 +79,6 @@ const BankStatementDetail = () => {
     setStatusFilter(value);
   };
   
-  const handleMatchTransaction = (transactionId: string) => {
-    // In a real implementation, you'd open a dialog to select a policy
-    // For now, we'll just use a mock policy ID
-    const mockPolicyId = "policy1";
-    matchTransaction({ transactionId, policyId: mockPolicyId });
-  };
-  
   return (
     <div className="space-y-6">
       <BankStatementHeader 
@@ -116,7 +109,7 @@ const BankStatementDetail = () => {
           <BankTransactionsTable 
             transactions={transactions}
             isLoading={isLoading}
-            onMatchTransaction={handleMatchTransaction}
+            onMatchTransaction={matchTransaction}
             onIgnoreTransaction={ignoreTransaction}
             onResetStatus={resetStatus}
             isMatching={isMatching}

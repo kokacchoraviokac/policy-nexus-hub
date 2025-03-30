@@ -17,7 +17,7 @@ import BankTransactionActions from "./BankTransactionActions";
 interface BankTransactionsTableProps {
   transactions: BankTransaction[];
   isLoading: boolean;
-  onMatchTransaction: (transactionId: string) => void;
+  onMatchTransaction: (transactionId: string, policyId: string) => void;
   onIgnoreTransaction: (transactionId: string) => void;
   onResetStatus?: (transactionId: string) => void;
   isMatching: boolean;
@@ -105,9 +105,7 @@ const BankTransactionsTable: React.FC<BankTransactionsTableProps> = ({
               </TableCell>
               <TableCell className="text-right">
                 <BankTransactionActions
-                  status={transaction.status}
-                  transactionId={transaction.id}
-                  matchedPolicyId={transaction.matched_policy_id}
+                  transaction={transaction}
                   onMatchTransaction={onMatchTransaction}
                   onIgnoreTransaction={onIgnoreTransaction}
                   onResetStatus={onResetStatus}
