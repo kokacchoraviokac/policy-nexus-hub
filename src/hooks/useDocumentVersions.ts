@@ -1,13 +1,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Document } from "@/types/documents";
+import { Document, DocumentCategory } from "@/types/documents";
 
 export interface UseDocumentVersionsProps {
   documentId: string;
   originalDocumentId?: string;
   enabled?: boolean;
 }
+
+// Define explicit table names to avoid string type errors
+type DocumentTableName = 'policy_documents' | 'claim_documents' | 'sales_documents';
 
 // Define a simplified type for document database row with only the fields we need
 interface DocumentDbRow {
@@ -20,7 +23,7 @@ interface DocumentDbRow {
   version?: number;
   is_latest_version?: boolean;
   original_document_id?: string | null;
-  category?: string | null;
+  category?: DocumentCategory | null;
   mime_type?: string | null;
   policy_id?: string;
   claim_id?: string;
@@ -44,16 +47,18 @@ export const useDocumentVersions = ({
     queryFn: async () => {
       try {
         // First determine the document table and entity information
-        const tables = ['policy_documents', 'claim_documents', 'sales_documents'];
+        const tables: DocumentTableName[] = ['policy_documents', 'claim_documents', 'sales_documents'];
         let entityType = '';
         let entityId = '';
-        let tableName = '';
+        let tableName: DocumentTableName | null = null;
         let entityField = '';
         
         // Check each table for the document
         for (const table of tables) {
-          const { data, error } = await supabase
-            .from(table)
+          // Type-safe query using known table names
+          const query = supabase.from(table as DocumentTableName);
+          
+          const { data, error } = await query
             .select(table === 'policy_documents' 
               ? 'id, policy_id' 
               : table === 'claim_documents' 
@@ -88,8 +93,8 @@ export const useDocumentVersions = ({
         
         if (!originalId) {
           // Check if this document has an original_document_id
-          const { data: docInfo, error: docError } = await supabase
-            .from(tableName)
+          const query = supabase.from(tableName);
+          const { data: docInfo, error: docError } = await query
             .select('original_document_id')
             .eq('id', documentId)
             .single();
@@ -102,20 +107,24 @@ export const useDocumentVersions = ({
           }
         }
         
-        // Build the filter condition without using string interpolation for better type safety
-        const filterCondition = `original_document_id.eq.${originalId},id.eq.${originalId}`;
+        // Query for all versions using the type-safe table name
+        const query = supabase.from(tableName);
         
-        // Query for all versions
-        const { data: allVersions, error: versionsError } = await supabase
-          .from(tableName)
+        // Use separate filters to avoid the deep instantiation error
+        const { data: allVersions, error: versionsError } = await query
           .select('*')
           .eq(entityField, entityId)
-          .or(filterCondition);
+          .or(`original_document_id.eq.${originalId},id.eq.${originalId}`);
         
         if (versionsError) throw versionsError;
         
-        // Transform to Document type, safely handling potentially missing properties
-        return (allVersions || []).map((doc: DocumentDbRow) => {
+        // Transform to Document type with explicit type safety
+        if (!allVersions) return [];
+        
+        // We need to type cast because the query can't guarantee DocumentDbRow
+        const result = allVersions.map((rawDoc: any) => {
+          const doc = rawDoc as DocumentDbRow;
+          
           return {
             id: doc.id,
             document_name: doc.document_name,
@@ -137,6 +146,8 @@ export const useDocumentVersions = ({
             mime_type: doc.mime_type || null
           } as Document;
         });
+        
+        return result;
       } catch (error) {
         console.error("Error fetching document versions:", error);
         return [];

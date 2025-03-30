@@ -26,22 +26,22 @@ interface DocumentApprovalPanelProps {
   onApprovalComplete?: () => void;
 }
 
-// Define a type for activity log details that doesn't use recursive types
-interface ApprovalDetails {
-  approval_status?: DocumentApprovalStatus;
+// Define a dedicated type for activity log details instead of using Json
+interface ApprovalActivityDetails {
   document_id?: string;
   action_type?: string;
-  notes?: string;
+  approval_status?: DocumentApprovalStatus;
   approved_by?: string;
   approved_at?: string;
+  notes?: string;
 }
 
-// Define a type for activity log row
+// Define type for activity log row to avoid recursive types
 interface ActivityLogRow {
   id: string;
   user_id: string;
   created_at: string;
-  details: ApprovalDetails;
+  details: ApprovalActivityDetails;
 }
 
 const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
@@ -68,42 +68,43 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       if (!document.entity_type || !document.entity_id || !document.id) return;
       
       try {
-        // Use explicit typecasting to avoid deep type instantiation
-        const response = await supabase
+        // Use a query that won't cause deep type instantiation issues
+        const { data, error } = await supabase
           .from('activity_logs')
           .select('*')
           .eq('entity_type', document.entity_type)
           .eq('entity_id', document.entity_id)
-          .eq('details->document_id', document.id)
-          .eq('details->action_type', 'document_approval')
           .order('created_at', { ascending: false })
-          .limit(1);
+          .limit(10);
           
-        const { data, error } = response;
-        
         if (error) {
           console.error("Error fetching approval info:", error);
           return;
         }
         
+        // Filter in JavaScript to avoid complex SQL that causes type issues
+        // This is more reliable than trying to query against JSON fields
         if (data && data.length > 0) {
-          const latestApproval = data[0] as ActivityLogRow;
+          const filteredLogs = data.filter(log => {
+            const details = log.details as ApprovalActivityDetails;
+            return details && 
+                  details.action_type === 'document_approval' && 
+                  details.document_id === document.id;
+          });
           
-          // Safely access details properties with type checks
-          const details = latestApproval.details;
-          if (typeof details === 'object' && details !== null) {
-            const approvalStatus = details.approval_status as DocumentApprovalStatus | undefined;
-            const notes = details.notes as string | undefined;
+          if (filteredLogs.length > 0) {
+            const latestApproval = filteredLogs[0] as ActivityLogRow;
+            const details = latestApproval.details as ApprovalActivityDetails;
             
             setApprovalInfo({
-              status: approvalStatus || "pending",
+              status: details.approval_status || "pending",
               approved_by: latestApproval.user_id,
               approved_at: latestApproval.created_at,
-              notes: notes
+              notes: details.notes
             });
             
-            if (notes) {
-              setNotes(notes);
+            if (details.notes) {
+              setNotes(details.notes);
             }
           }
         }
