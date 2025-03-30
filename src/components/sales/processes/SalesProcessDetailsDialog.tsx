@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import ImportPolicyFromSalesDialog from "./ImportPolicyFromSalesDialog";
+import { FileImport } from "lucide-react";
 
 interface SalesProcessDetailsDialogProps {
   process: SalesProcess;
@@ -27,6 +28,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
   onOpenChange,
 }) => {
   const { t } = useLanguage();
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   // Process stage badge styling
   const getStageBadge = (stage: string) => {
@@ -68,120 +70,143 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
     }
   };
 
+  // Determine if the process is ready for policy import
+  const isReadyForPolicyImport = process.stage === "concluded" && process.status === "completed";
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>{process.title}</span>
-            {getStageBadge(process.stage)}
-          </DialogTitle>
-          {process.company && (
-            <DialogDescription>
-              {process.company}
-            </DialogDescription>
-          )}
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground">{t("clientInformation")}</h4>
-              <div className="mt-1 space-y-2">
-                <p className="text-sm">
-                  <span className="font-medium">{t("clientName")}: </span>
-                  {process.client_name}
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">{t("insuranceType")}: </span>
-                  {getInsuranceTypeBadge(process.insurance_type)}
-                </p>
-                {process.estimated_value && (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{process.title}</span>
+              {getStageBadge(process.stage)}
+            </DialogTitle>
+            {process.company && (
+              <DialogDescription>
+                {process.company}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">{t("clientInformation")}</h4>
+                <div className="mt-1 space-y-2">
                   <p className="text-sm">
-                    <span className="font-medium">{t("estimatedValue")}: </span>
-                    {process.estimated_value}
+                    <span className="font-medium">{t("clientName")}: </span>
+                    {process.client_name}
                   </p>
-                )}
+                  <p className="text-sm">
+                    <span className="font-medium">{t("insuranceType")}: </span>
+                    {getInsuranceTypeBadge(process.insurance_type)}
+                  </p>
+                  {process.estimated_value && (
+                    <p className="text-sm">
+                      <span className="font-medium">{t("estimatedValue")}: </span>
+                      {process.estimated_value}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">{t("processDetails")}</h4>
+                <div className="mt-1 space-y-2">
+                  <p className="text-sm">
+                    <span className="font-medium">{t("createdAt")}: </span>
+                    {format(new Date(process.created_at), "PPP")}
+                  </p>
+                  {process.expected_close_date && (
+                    <p className="text-sm">
+                      <span className="font-medium">{t("expectedCloseDate")}: </span>
+                      {format(new Date(process.expected_close_date), "PPP")}
+                    </p>
+                  )}
+                  <p className="text-sm">
+                    <span className="font-medium">{t("responsiblePerson")}: </span>
+                    {process.responsible_person || t("notAssigned")}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">{t("status")}: </span>
+                    <Badge 
+                      variant={process.status === "active" ? "default" : process.status === "completed" ? "secondary" : "destructive"}
+                      className={process.status === "completed" ? "bg-green-100 text-green-800 hover:bg-green-100 text-xs" : "text-xs"}
+                    >
+                      {t(process.status)}
+                    </Badge>
+                  </p>
+                </div>
               </div>
             </div>
             
+            {process.notes && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("notes")}</h4>
+                  <p className="text-sm whitespace-pre-wrap">{process.notes}</p>
+                </div>
+              </>
+            )}
+            
+            <Separator />
+            
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground">{t("processDetails")}</h4>
-              <div className="mt-1 space-y-2">
-                <p className="text-sm">
-                  <span className="font-medium">{t("createdAt")}: </span>
-                  {format(new Date(process.created_at), "PPP")}
-                </p>
-                {process.expected_close_date && (
-                  <p className="text-sm">
-                    <span className="font-medium">{t("expectedCloseDate")}: </span>
-                    {format(new Date(process.expected_close_date), "PPP")}
-                  </p>
-                )}
-                <p className="text-sm">
-                  <span className="font-medium">{t("responsiblePerson")}: </span>
-                  {process.responsible_person || t("notAssigned")}
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">{t("status")}: </span>
-                  <Badge 
-                    variant={process.status === "active" ? "default" : process.status === "completed" ? "secondary" : "destructive"}
-                    className={process.status === "completed" ? "bg-green-100 text-green-800 hover:bg-green-100 text-xs" : "text-xs"}
-                  >
-                    {t(process.status)}
-                  </Badge>
-                </p>
-              </div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("quoteInformation")}</h4>
+              <p className="text-sm text-muted-foreground italic">
+                {process.stage === "quote" 
+                  ? t("noQuotesYet") 
+                  : t("quotesInProgress")}
+              </p>
             </div>
           </div>
           
-          {process.notes && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("notes")}</h4>
-                <p className="text-sm whitespace-pre-wrap">{process.notes}</p>
-              </div>
-            </>
-          )}
-          
-          <Separator />
-          
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("quoteInformation")}</h4>
-            <p className="text-sm text-muted-foreground italic">
-              {process.stage === "quote" 
-                ? t("noQuotesYet") 
-                : t("quotesInProgress")}
-            </p>
-          </div>
-        </div>
-        
-        <DialogFooter className="flex justify-between items-center">
-          <div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mr-2"
-              onClick={() => onOpenChange(false)}
-            >
-              {t("close")}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-            >
-              {t("moveToNextStage")}
-            </Button>
-          </div>
-          <Button variant="default" size="sm">
-            {t("editProcess")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="flex justify-between items-center">
+            <div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mr-2"
+                onClick={() => onOpenChange(false)}
+              >
+                {t("close")}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+              >
+                {t("moveToNextStage")}
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              {isReadyForPolicyImport && (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => setImportDialogOpen(true)}
+                >
+                  <FileImport className="h-4 w-4" />
+                  {t("importPolicy")}
+                </Button>
+              )}
+              <Button variant="default" size="sm">
+                {t("editProcess")}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ImportPolicyFromSalesDialog 
+        process={process}
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+      />
+    </>
   );
 };
 
 export default SalesProcessDetailsDialog;
-

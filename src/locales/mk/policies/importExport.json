@@ -29,5 +29,27 @@
   "exportComplete": "Извозот е завршен",
   "policyExportedSuccessfully": "Полисата е успешно извезена",
   "exportFailed": "Извозот не успеа",
-  "errorExportingPolicy": "Настана грешка при извозот на полисата"
+  "errorExportingPolicy": "Настана грешка при извозот на полисата",
+  
+  "importPolicyFromSalesProcess": "Увоз на полиса од процес на продажба",
+  "importPolicyFromSalesProcessDescription": "Креирајте нова полиса врз основа на завршениот процес на продажба",
+  "reviewAndImportPolicyFromSalesProcess": "Прегледајте и увезете ги податоците за полисата од вашиот процес на продажба",
+  "importPolicyFromSales": "Увоз на полиса од процес на продажба",
+  "importPolicyFromSalesDescription": "Креирајте нова полиса врз основа на овој процес на продажба",
+  "readyForImport": "Подготвено за увоз",
+  "notReadyForImport": "Не е подготвено за увоз",
+  "salesProcessMustBeConcluded": "Процесот на продажба мора да биде во фаза Заклучено пред увозот",
+  "salesProcessMustBeCompleted": "Процесот на продажба мора да има статус Завршено пред увозот",
+  "salesProcessDetails": "Детали за процесот на продажба",
+  "processTitle": "Наслов на процесот",
+  "salesProcessReadyForPolicyImport": "Овој процес на продажба е успешно заклучен и подготвен е за увоз како полиса",
+  "importing": "Увоз",
+  "preparing": "Подготовка",
+  "importPolicy": "Увоз на полиса",
+  "salesProcessReadyForImport": "Податоците за процесот на продажба се подготвени за увоз",
+  "redirectingToPolicyImport": "Пренасочување кон страницата за увоз на полиси",
+  "errorPreparingImport": "Грешка при подготовка на увозот",
+  "tryAgainLater": "Ве молиме обидете се повторно подоцна",
+  "importingFromSalesProcess": "Увоз од процес на продажба",
+  "policyDataPreparedFromSalesProcess": "Податоците за полисата се подготвени врз основа на информациите од вашиот процес на продажба"
 }

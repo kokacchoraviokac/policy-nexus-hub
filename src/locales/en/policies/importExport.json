@@ -75,5 +75,27 @@
   "cancel": "Cancel",
   "parseError": "Parse Error",
   "noPoliciesFoundInFile": "No policies found in the file",
-  "unknownError": "Unknown error"
+  "unknownError": "Unknown error",
+  
+  "importPolicyFromSalesProcess": "Import Policy from Sales Process",
+  "importPolicyFromSalesProcessDescription": "Create a new policy based on the completed sales process",
+  "reviewAndImportPolicyFromSalesProcess": "Review and import the policy data from your sales process",
+  "importPolicyFromSales": "Import Policy from Sales Process",
+  "importPolicyFromSalesDescription": "Create a new policy based on this sales process",
+  "readyForImport": "Ready for Import",
+  "notReadyForImport": "Not Ready for Import",
+  "salesProcessMustBeConcluded": "The sales process must be in the Concluded stage before importing",
+  "salesProcessMustBeCompleted": "The sales process must have a Completed status before importing",
+  "salesProcessDetails": "Sales Process Details",
+  "processTitle": "Process Title",
+  "salesProcessReadyForPolicyImport": "This sales process has been successfully concluded and is ready to be imported as a policy",
+  "importing": "Importing",
+  "preparing": "Preparing",
+  "importPolicy": "Import Policy",
+  "salesProcessReadyForImport": "Sales process data prepared for import",
+  "redirectingToPolicyImport": "Redirecting to policy import page",
+  "errorPreparingImport": "Error preparing import",
+  "tryAgainLater": "Please try again later",
+  "importingFromSalesProcess": "Importing from Sales Process",
+  "policyDataPreparedFromSalesProcess": "The policy data has been prepared based on your sales process information"
 }

@@ -1,11 +1,11 @@
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileSpreadsheet, Import } from "lucide-react";
 import PolicyImportFileUpload from "@/components/policies/import/PolicyImportFileUpload";
 import PolicyImportReview from "@/components/policies/import/PolicyImportReview";
 import PolicyImportInstructions from "@/components/policies/import/PolicyImportInstructions";
@@ -13,10 +13,12 @@ import ImportStepIndicator from "@/components/policies/import/ImportStepIndicato
 import ImportingStep from "@/components/policies/import/ImportingStep";
 import CompleteStep from "@/components/policies/import/CompleteStep";
 import { usePolicyImport } from "@/hooks/usePolicyImport";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/card";
 
 const PolicyImportPage = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [activeStep, setActiveStep] = useState<"instructions" | "upload" | "review" | "importing" | "complete">("instructions");
   const [importProgress, setImportProgress] = useState(0);
@@ -27,8 +29,16 @@ const PolicyImportPage = () => {
     invalidPolicies, 
     parseCSVFile, 
     savePolicies, 
-    clearImportData 
+    clearImportData,
+    salesProcessData
   } = usePolicyImport();
+  
+  // If we have imported data from a sales process, skip directly to review step
+  useEffect(() => {
+    if (salesProcessData && importedPolicies.length > 0) {
+      setActiveStep("review");
+    }
+  }, [salesProcessData, importedPolicies]);
   
   const handleBackToWorkflow = () => {
     navigate("/policies/workflow");
@@ -77,7 +87,12 @@ const PolicyImportPage = () => {
   
   const handleBack = () => {
     if (activeStep === "review") {
-      setActiveStep("upload");
+      // If we're importing from a sales process, go back to the sales process
+      if (salesProcessData) {
+        navigate(`/sales/processes`);
+      } else {
+        setActiveStep("upload");
+      }
     } else if (activeStep === "upload") {
       setActiveStep("instructions");
     } else if (activeStep === "complete") {
@@ -110,12 +125,27 @@ const PolicyImportPage = () => {
         
       case "review":
         return (
-          <PolicyImportReview 
-            policies={importedPolicies}
-            invalidPolicies={invalidPolicies}
-            onBack={handleBack}
-            onImport={handleImportComplete}
-          />
+          <>
+            {salesProcessData && (
+              <div className="mb-4">
+                <Alert className="bg-blue-50 border border-blue-200 rounded-md">
+                  <FileSpreadsheet className="h-5 w-5 text-blue-500" />
+                  <AlertTitle className="text-blue-700">
+                    {t("importingFromSalesProcess")}
+                  </AlertTitle>
+                  <AlertDescription className="text-blue-600">
+                    {t("policyDataPreparedFromSalesProcess")}
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+            <PolicyImportReview 
+              policies={importedPolicies}
+              invalidPolicies={invalidPolicies}
+              onBack={handleBack}
+              onImport={handleImportComplete}
+            />
+          </>
         );
         
       case "importing":
@@ -149,18 +179,30 @@ const PolicyImportPage = () => {
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("importPolicies")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {salesProcessData 
+              ? t("importPolicyFromSalesProcess") 
+              : t("importPolicies")}
+          </h1>
           <p className="text-muted-foreground">
-            {t("importPoliciesFromInsuranceCompanies")}
+            {salesProcessData
+              ? t("importPolicyFromSalesProcessDescription") 
+              : t("importPoliciesFromInsuranceCompanies")}
           </p>
         </div>
       </div>
       
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle>{t("importPolicies")}</CardTitle>
+          <CardTitle>
+            {salesProcessData 
+              ? t("importPolicyFromSalesProcess") 
+              : t("importPolicies")}
+          </CardTitle>
           <CardDescription>
-            {t("importPoliciesFromInsuranceCompanies")}
+            {salesProcessData
+              ? t("reviewAndImportPolicyFromSalesProcess") 
+              : t("importPoliciesFromInsuranceCompanies")}
           </CardDescription>
           
           <ImportStepIndicator activeStep={activeStep} />

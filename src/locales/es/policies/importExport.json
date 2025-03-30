@@ -29,5 +29,27 @@
   "exportComplete": "Exportación Completa",
   "policyExportedSuccessfully": "Póliza exportada con éxito",
   "exportFailed": "Falló la Exportación",
-  "errorExportingPolicy": "Hubo un error al exportar la póliza"
+  "errorExportingPolicy": "Hubo un error al exportar la póliza",
+  
+  "importPolicyFromSalesProcess": "Importar Póliza desde Proceso de Venta",
+  "importPolicyFromSalesProcessDescription": "Crear una nueva póliza basada en el proceso de venta completado",
+  "reviewAndImportPolicyFromSalesProcess": "Revisar e importar los datos de la póliza desde su proceso de venta",
+  "importPolicyFromSales": "Importar Póliza desde Proceso de Venta",
+  "importPolicyFromSalesDescription": "Crear una nueva póliza basada en este proceso de venta",
+  "readyForImport": "Listo para Importar",
+  "notReadyForImport": "No Listo para Importar",
+  "salesProcessMustBeConcluded": "El proceso de venta debe estar en la etapa Concluido antes de importar",
+  "salesProcessMustBeCompleted": "El proceso de venta debe tener un estado Completado antes de importar",
+  "salesProcessDetails": "Detalles del Proceso de Venta",
+  "processTitle": "Título del Proceso",
+  "salesProcessReadyForPolicyImport": "Este proceso de venta ha sido concluido con éxito y está listo para ser importado como una póliza",
+  "importing": "Importando",
+  "preparing": "Preparando",
+  "importPolicy": "Importar Póliza",
+  "salesProcessReadyForImport": "Datos del proceso de venta preparados para importar",
+  "redirectingToPolicyImport": "Redirigiendo a la página de importación de pólizas",
+  "errorPreparingImport": "Error al preparar la importación",
+  "tryAgainLater": "Por favor intente nuevamente más tarde",
+  "importingFromSalesProcess": "Importando desde Proceso de Venta",
+  "policyDataPreparedFromSalesProcess": "Los datos de la póliza han sido preparados basados en la información de su proceso de venta"
 }
