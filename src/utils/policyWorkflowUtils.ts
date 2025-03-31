@@ -2,48 +2,53 @@
 import { Policy } from "@/types/policies";
 
 /**
- * Policy workflow status types
- */
-export type PolicyWorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
-
-/**
- * Check if a policy has all required fields filled
+ * Check if a policy has all required fields filled in
  */
 export const isPolicyComplete = (policy: Policy): boolean => {
   const requiredFields = [
-    policy.policy_number,
-    policy.insurer_name,
-    policy.policyholder_name,
-    policy.start_date,
-    policy.expiry_date,
-    policy.premium,
-    policy.currency
+    'policy_number',
+    'policyholder_name',
+    'insurer_name',
+    'start_date',
+    'expiry_date',
+    'premium',
+    'currency',
+    'policy_type'
   ];
   
-  return requiredFields.every(field => !!field);
+  return requiredFields.every(field => {
+    // @ts-ignore - we're using string indexing
+    return !!policy[field];
+  });
 };
 
 /**
- * Get missing required fields for a policy
+ * Get a list of missing required fields
  */
 export const getMissingFields = (policy: Policy): string[] => {
-  const missingFields = [];
+  const requiredFields = [
+    { key: 'policy_number', name: 'policyNumber' },
+    { key: 'policyholder_name', name: 'policyholder' },
+    { key: 'insurer_name', name: 'insurer' },
+    { key: 'start_date', name: 'startDate' },
+    { key: 'expiry_date', name: 'expiryDate' },
+    { key: 'premium', name: 'premium' },
+    { key: 'currency', name: 'currency' },
+    { key: 'policy_type', name: 'policyType' }
+  ];
   
-  if (!policy.policy_number) missingFields.push('policyNumber');
-  if (!policy.insurer_name) missingFields.push('insurerName');
-  if (!policy.policyholder_name) missingFields.push('policyholderName');
-  if (!policy.start_date) missingFields.push('startDate');
-  if (!policy.expiry_date) missingFields.push('expiryDate');
-  if (!policy.premium) missingFields.push('premium');
-  if (!policy.currency) missingFields.push('currency');
-  
-  return missingFields;
+  return requiredFields
+    .filter(field => {
+      // @ts-ignore - we're using string indexing
+      return !policy[field.key];
+    })
+    .map(field => field.name);
 };
 
 /**
- * Get the next workflow status
+ * Get the next workflow status based on the current status
  */
-export const getNextWorkflowStatus = (currentStatus: PolicyWorkflowStatus): PolicyWorkflowStatus => {
+export const getNextWorkflowStatus = (currentStatus: string): string => {
   switch (currentStatus) {
     case 'draft':
       return 'in_review';
@@ -51,29 +56,20 @@ export const getNextWorkflowStatus = (currentStatus: PolicyWorkflowStatus): Poli
       return 'ready';
     case 'ready':
       return 'complete';
-    case 'complete':
-      return 'complete'; // Already at final status
     default:
-      return 'draft';
+      return currentStatus;
   }
 };
 
 /**
- * Check if a policy can move to the next workflow status
+ * Check if a user can move the policy to the next workflow status
  */
-export const canAdvanceWorkflow = (policy: Policy, hasRequiredDocuments: boolean): boolean => {
-  // Draft to in_review doesn't require completeness
+export const canMoveToNextStatus = (policy: Policy): boolean => {
+  // Draft can always be moved to in_review
   if (policy.workflow_status === 'draft') {
     return true;
   }
   
-  // For other transitions, all required fields must be complete
-  const isComplete = isPolicyComplete(policy);
-  
-  // For final step, also check documents
-  if (policy.workflow_status === 'ready') {
-    return isComplete && hasRequiredDocuments;
-  }
-  
-  return isComplete;
+  // For other statuses, the policy must be complete
+  return isPolicyComplete(policy);
 };

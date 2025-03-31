@@ -1,74 +1,65 @@
 
-import { FileText, FileImage, File, FileArchive, FileCode, FileMusic, FileVideo } from "lucide-react";
 import React from "react";
+import { 
+  FileText, 
+  FileImage, 
+  FilePdf, 
+  FileSpreadsheet, 
+  FileArchive, 
+  FileCode,
+  File
+} from "lucide-react";
 
-export const getDocumentIcon = (filePath?: string, mimeType?: string | null) => {
-  // If mimetype is provided, use it to determine icon
-  if (mimeType) {
-    if (mimeType.startsWith('image/')) {
+export const getDocumentIcon = (
+  filePath: string,
+  mimeType?: string
+): React.ReactNode => {
+  // Helper to determine icon based on extension and mime type
+  const getIconByType = (ext: string, mime?: string): React.ReactNode => {
+    ext = ext.toLowerCase();
+    
+    // Check mime type first if available
+    if (mime) {
+      if (mime.startsWith('image/')) {
+        return <FileImage className="h-10 w-10 text-blue-500" />;
+      }
+      if (mime === 'application/pdf') {
+        return <FilePdf className="h-10 w-10 text-red-500" />;
+      }
+      if (mime.includes('spreadsheet') || mime.includes('excel')) {
+        return <FileSpreadsheet className="h-10 w-10 text-green-500" />;
+      }
+      if (mime.includes('zip') || mime.includes('compressed')) {
+        return <FileArchive className="h-10 w-10 text-yellow-500" />;
+      }
+      if (mime.includes('html') || mime.includes('javascript') || mime.includes('xml')) {
+        return <FileCode className="h-10 w-10 text-purple-500" />;
+      }
+    }
+    
+    // Fallback to extension check
+    if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) {
       return <FileImage className="h-10 w-10 text-blue-500" />;
     }
-    if (mimeType === 'application/pdf') {
-      return <FileText className="h-10 w-10 text-red-500" />;
+    if (ext === 'pdf') {
+      return <FilePdf className="h-10 w-10 text-red-500" />;
     }
-    if (mimeType.startsWith('audio/')) {
-      return <FileMusic className="h-10 w-10 text-purple-500" />;
+    if (['xls', 'xlsx', 'csv'].includes(ext)) {
+      return <FileSpreadsheet className="h-10 w-10 text-green-500" />;
     }
-    if (mimeType.startsWith('video/')) {
-      return <FileVideo className="h-10 w-10 text-pink-500" />;
+    if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+      return <FileArchive className="h-10 w-10 text-yellow-500" />;
     }
-    if (mimeType.startsWith('text/')) {
-      return <FileText className="h-10 w-10 text-green-500" />;
+    if (['html', 'css', 'js', 'ts', 'jsx', 'tsx', 'json', 'xml'].includes(ext)) {
+      return <FileCode className="h-10 w-10 text-purple-500" />;
     }
-    if (mimeType.includes('zip') || mimeType.includes('compress')) {
-      return <FileArchive className="h-10 w-10 text-amber-500" />;
-    }
-    if (mimeType.includes('code') || mimeType.includes('javascript') || mimeType.includes('json')) {
-      return <FileCode className="h-10 w-10 text-cyan-500" />;
-    }
-  }
-  
-  // Fallback to file extension
-  if (filePath) {
-    const extension = filePath.split('.').pop()?.toLowerCase();
     
-    switch (extension) {
-      case 'pdf':
-        return <FileText className="h-10 w-10 text-red-500" />;
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-      case 'webp':
-        return <FileImage className="h-10 w-10 text-blue-500" />;
-      case 'doc':
-      case 'docx':
-      case 'txt':
-        return <FileText className="h-10 w-10 text-green-500" />;
-      case 'zip':
-      case 'rar':
-      case '7z':
-        return <FileArchive className="h-10 w-10 text-amber-500" />;
-      case 'mp3':
-      case 'wav':
-      case 'ogg':
-        return <FileMusic className="h-10 w-10 text-purple-500" />;
-      case 'mp4':
-      case 'avi':
-      case 'mov':
-      case 'webm':
-        return <FileVideo className="h-10 w-10 text-pink-500" />;
-      case 'js':
-      case 'ts':
-      case 'html':
-      case 'css':
-      case 'json':
-        return <FileCode className="h-10 w-10 text-cyan-500" />;
-      default:
-        return <FileText className="h-10 w-10 text-gray-500" />;
-    }
-  }
+    // Default icon
+    return <FileText className="h-10 w-10 text-gray-500" />;
+  };
   
-  // Default icon
-  return <File className="h-10 w-10 text-gray-500" />;
+  // Extract extension from file path
+  const extension = filePath.split('.').pop() || '';
+  
+  return getIconByType(extension, mimeType);
 };

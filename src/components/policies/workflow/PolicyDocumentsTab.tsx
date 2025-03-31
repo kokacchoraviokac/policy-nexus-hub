@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -38,6 +39,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
 }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLogger();
   
@@ -48,7 +50,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
   
   const uploadDocument = useMutation({
     mutationFn: async () => {
-      if (!file) throw new Error("No file selected");
+      if (!file || !user) throw new Error("No file selected or user not authenticated");
       
       setIsUploading(true);
       
@@ -73,6 +75,9 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
             file_path: filePath,
             mime_type: file.type,
             is_latest_version: true,
+            company_id: user.company_id, // Add required company_id
+            uploaded_by: user.id, // Add required uploaded_by
+            version: 1 // Add default version
           })
           .select()
           .single();

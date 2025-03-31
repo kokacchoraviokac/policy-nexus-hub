@@ -21,7 +21,7 @@ interface SummaryData {
 }
 
 const FinancialReportSummary: React.FC<FinancialReportSummaryProps> = ({ data, isLoading }) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   
   // Calculate summary data from transactions
   const summary: SummaryData = React.useMemo(() => {
@@ -148,7 +148,7 @@ const FinancialReportSummary: React.FC<FinancialReportSummaryProps> = ({ data, i
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(card.value, language, card.currency)}
+                {formatCurrency(card.value, card.currency)}
               </div>
             </CardContent>
           </Card>

@@ -41,7 +41,7 @@ const PolicyReviewOverview: React.FC<PolicyReviewOverviewProps> = ({ policy }) =
           </div>
           <div>
             <p className="text-sm text-muted-foreground">{t("status")}</p>
-            <Badge variant={policy.status === "active" ? "success" : "secondary"}>
+            <Badge variant={policy.status === "active" ? "secondary" : "outline"}>
               {t(policy.status)}
             </Badge>
           </div>

@@ -32,7 +32,7 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
   isLoading,
   visibleColumns = ["date", "description", "type", "category", "reference", "status", "amount"]
 }) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   
   // Update this function to return valid badge variants
   const getStatusBadgeVariant = (status: string) => {
@@ -72,7 +72,7 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
   const columnMap: Record<string, ColumnData> = {
     date: { 
       header: t("date"), 
-      render: (transaction: FinancialTransaction) => formatDate(new Date(transaction.date), language) 
+      render: (transaction: FinancialTransaction) => formatDate(new Date(transaction.date).toISOString()) 
     },
     description: { 
       header: t("description"), 
@@ -107,7 +107,7 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
       render: (transaction: FinancialTransaction) => (
         <span className={transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}>
           {transaction.type === 'income' ? '+' : '-'} 
-          {formatCurrency(transaction.amount, language, transaction.currency)}
+          {formatCurrency(transaction.amount, transaction.currency)}
         </span>
       ),
       className: "text-right font-medium"

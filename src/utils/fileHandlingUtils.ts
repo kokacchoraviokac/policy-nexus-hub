@@ -1,43 +1,19 @@
 
 import { useState } from "react";
 
-export interface FileUploadValidation {
-  isValid: boolean;
-  missingField?: "file" | "documentName" | "documentType" | null;
-}
-
-export const validateUploadFields = (
-  file: File | null,
-  documentName: string,
-  documentType: string
-): FileUploadValidation => {
-  if (!file) {
-    return { isValid: false, missingField: "file" };
-  }
-  
-  if (!documentName.trim()) {
-    return { isValid: false, missingField: "documentName" };
-  }
-  
-  if (!documentType) {
-    return { isValid: false, missingField: "documentType" };
-  }
-  
-  return { isValid: true, missingField: null };
-};
-
 export const useFileInput = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [documentName, setDocumentName] = useState("");
+  const [documentName, setDocumentName] = useState<string>("");
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       
-      // Set document name to file name if not already set
+      // Auto-fill document name with file name if not already set
       if (!documentName) {
-        const fileName = selectedFile.name.split('.')[0];
+        // Remove extension from file name
+        const fileName = selectedFile.name.split('.').slice(0, -1).join('.');
         setDocumentName(fileName);
       }
     }
@@ -52,24 +28,22 @@ export const useFileInput = () => {
   };
 };
 
-// Helper function to download a document
-export const downloadDocument = async (fileUrl: string, fileName: string) => {
-  try {
-    const response = await fetch(fileUrl);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    URL.revokeObjectURL(url);
-    return true;
-  } catch (error) {
-    console.error("Error downloading document:", error);
-    return false;
+export const validateUploadFields = (
+  file: File | null, 
+  documentName: string, 
+  documentType: string
+) => {
+  if (!file) {
+    return { isValid: false, missingField: "file" };
   }
+  
+  if (!documentName.trim()) {
+    return { isValid: false, missingField: "documentName" };
+  }
+  
+  if (!documentType) {
+    return { isValid: false, missingField: "documentType" };
+  }
+  
+  return { isValid: true, missingField: null };
 };
