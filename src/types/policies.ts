@@ -62,3 +62,19 @@ export interface PolicyDocument {
   company_id: string;
   mime_type?: string;
 }
+
+export interface UnlinkedPaymentType {
+  id: string;
+  reference?: string;
+  payer_name?: string;
+  amount: number;
+  payment_date: string;
+  status: 'linked' | 'unlinked';
+  policy_id?: string;
+  created_at: string;
+  company_id: string;
+  currency: string;
+  linked_policy_id?: string;
+  linked_by?: string;
+  linked_at?: string;
+}

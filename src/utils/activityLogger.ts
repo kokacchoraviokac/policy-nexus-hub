@@ -77,3 +77,11 @@ export const fetchActivityLogs = async (entityType: EntityType, entityId: string
     return [];
   }
 };
+
+export interface ActivityLog {
+  id: string;
+  action: string;
+  timestamp: string;
+  user: string;
+  details?: Record<string, any>;
+}

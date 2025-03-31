@@ -1,6 +1,8 @@
 
 import { Policy } from "@/types/policies";
 
+export type PolicyWorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
+
 /**
  * Check if a policy has all required fields filled in
  */
@@ -48,7 +50,7 @@ export const getMissingFields = (policy: Policy): string[] => {
 /**
  * Get the next workflow status based on the current status
  */
-export const getNextWorkflowStatus = (currentStatus: string): string => {
+export const getNextWorkflowStatus = (currentStatus: PolicyWorkflowStatus): PolicyWorkflowStatus => {
   switch (currentStatus) {
     case 'draft':
       return 'in_review';

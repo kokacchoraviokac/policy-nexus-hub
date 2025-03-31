@@ -3,11 +3,10 @@ import React from "react";
 import { 
   FileText, 
   FileImage, 
-  FilePdf, 
+  File,
   FileSpreadsheet, 
   FileArchive, 
-  FileCode,
-  File
+  FileCode
 } from "lucide-react";
 
 export const getDocumentIcon = (
@@ -24,7 +23,7 @@ export const getDocumentIcon = (
         return <FileImage className="h-10 w-10 text-blue-500" />;
       }
       if (mime === 'application/pdf') {
-        return <FilePdf className="h-10 w-10 text-red-500" />;
+        return <File className="h-10 w-10 text-red-500" />;
       }
       if (mime.includes('spreadsheet') || mime.includes('excel')) {
         return <FileSpreadsheet className="h-10 w-10 text-green-500" />;
@@ -42,7 +41,7 @@ export const getDocumentIcon = (
       return <FileImage className="h-10 w-10 text-blue-500" />;
     }
     if (ext === 'pdf') {
-      return <FilePdf className="h-10 w-10 text-red-500" />;
+      return <File className="h-10 w-10 text-red-500" />;
     }
     if (['xls', 'xlsx', 'csv'].includes(ext)) {
       return <FileSpreadsheet className="h-10 w-10 text-green-500" />;

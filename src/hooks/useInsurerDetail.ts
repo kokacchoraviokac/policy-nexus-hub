@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
-import { useActivityLogger, fetchActivityLogs } from "@/utils/activityLogger";
+import { useActivityLogger, fetchActivityLogs, ActivityLog } from "@/utils/activityLogger";
 
 export interface ActivityItem {
   id: string;
@@ -61,7 +61,10 @@ export function useInsurerDetail() {
       
       // Transform data to include stringified details for the UI
       return logs.map(log => ({
-        ...log,
+        id: log.id,
+        action: log.action,
+        timestamp: log.timestamp,
+        user: log.user,
         details: log.details ? JSON.stringify(log.details) : undefined
       })) as ActivityItem[];
     },

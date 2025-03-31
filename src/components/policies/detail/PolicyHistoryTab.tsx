@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ActivityLog } from "@/components/codebook/details/ActivityLog";
-import { fetchActivityLogs } from "@/utils/activityLogger";
+import { fetchActivityLogs, ActivityLog as ActivityLogType } from "@/utils/activityLogger";
 
 interface PolicyHistoryTabProps {
   policyId: string;
@@ -17,7 +17,7 @@ interface ActivityItem {
   action: string;
   timestamp: string;
   user: string;
-  details?: string;
+  details?: Record<string, any>;
 }
 
 const PolicyHistoryTab: React.FC<PolicyHistoryTabProps> = ({ policyId }) => {
@@ -30,7 +30,10 @@ const PolicyHistoryTab: React.FC<PolicyHistoryTabProps> = ({ policyId }) => {
       
       // Transform data for the ActivityLog component
       return logs.map(log => ({
-        ...log,
+        id: log.id,
+        action: log.action,
+        timestamp: log.timestamp,
+        user: log.user,
         details: log.details ? JSON.stringify(log.details) : undefined
       })) as ActivityItem[];
     },
