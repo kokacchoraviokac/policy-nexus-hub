@@ -1,10 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
-import { useAuth } from "@/contexts/auth/AuthContext"; // Changed from userStore
+import { useAuth } from "@/contexts/auth/AuthContext";
 
 // Define EntityType as a type to be used across the application
-export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent" | "policy_addendum";
+export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent" | "policy_addendum" | "product";
 
 interface ActivityLogData {
   entityType: EntityType;
@@ -24,7 +24,7 @@ export const fetchActivityLogs = async (entityType: EntityType, entityId: string
         created_at,
         details,
         user_id,
-        profiles:user_id (
+        profiles(
           name,
           email
         )
@@ -51,7 +51,7 @@ export const fetchActivityLogs = async (entityType: EntityType, entityId: string
 };
 
 export const useActivityLogger = () => {
-  const { user } = useAuth(); // Changed from userStore
+  const { user } = useAuth();
   
   const logActivity = useCallback(async (data: ActivityLogData) => {
     try {
@@ -66,7 +66,7 @@ export const useActivityLogger = () => {
         action: data.action,
         details: data.details || {},
         user_id: user.id,
-        company_id: user.company_id
+        company_id: user.companyId // Fixed property name
       });
       
       if (error) {

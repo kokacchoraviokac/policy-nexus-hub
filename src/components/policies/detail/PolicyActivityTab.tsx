@@ -24,7 +24,7 @@ const PolicyActivityTab: React.FC<PolicyActivityTabProps> = ({ policyId }) => {
         .from('activity_logs')
         .select(`
           *,
-          profiles:user_id (
+          profiles(
             name,
             email
           )

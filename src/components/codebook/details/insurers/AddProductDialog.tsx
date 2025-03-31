@@ -42,12 +42,13 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
       // Log product creation
       if (data) {
         await logActivity({
-          entityType: "product",
-          entityId: data.id,
+          entityType: "insurer", // Changed from "product" to a valid EntityType
+          entityId: insurer.id,
           action: "create",
           details: { 
             fields: values,
-            insurer: { id: insurer.id, name: insurer.name }
+            product_id: data.id,
+            product_name: values.name
           }
         });
       }

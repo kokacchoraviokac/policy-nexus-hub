@@ -8,6 +8,15 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import { useActivityLogger } from "@/utils/activityLogger";
 
+export interface ActivityItem {
+  id: string;
+  action: string;
+  timestamp: string;
+  user: string;
+  userEmail?: string;
+  details?: string;
+}
+
 export function useInsurerDetail() {
   const { insurerId } = useParams<{ insurerId: string }>();
   const navigate = useNavigate();
@@ -57,7 +66,7 @@ export function useInsurerDetail() {
           created_at,
           details,
           user_id,
-          profiles:user_id (
+          profiles(
             name,
             email
           )
@@ -75,8 +84,8 @@ export function useInsurerDetail() {
         timestamp: log.created_at,
         user: log.profiles?.name || 'Unknown user',
         userEmail: log.profiles?.email,
-        details: log.details
-      }));
+        details: log.details ? JSON.stringify(log.details) : undefined
+      })) as ActivityItem[];
     },
     enabled: !!insurerId
   });
