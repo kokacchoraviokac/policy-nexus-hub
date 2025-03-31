@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Eye, Loader2, FileText, Trash2 } from "lucide-react";
 import { PolicyDocument } from "@/hooks/usePolicyDocuments";
 import DeleteDocumentDialog from "@/components/policies/detail/document/DeleteDocumentDialog";
+import { downloadDocument } from "@/utils/fileHandlingUtils";
 
 interface PolicyDocumentsTableProps {
   searchTerm: string;
@@ -48,8 +49,8 @@ const PolicyDocumentsTable: React.FC<PolicyDocumentsTableProps> = ({
     }
   });
   
-  const handleDownload = async (document: PolicyDocument) => {
-    if (!document.file_path) {
+  const handleDownload = async (doc: PolicyDocument) => {
+    if (!doc.file_path) {
       toast({
         title: t("downloadFailed"),
         description: t("documentPathMissing"),
@@ -63,7 +64,7 @@ const PolicyDocumentsTable: React.FC<PolicyDocumentsTableProps> = ({
       
       const { data, error } = await supabase.storage
         .from('documents')
-        .download(document.file_path);
+        .download(doc.file_path);
         
       if (error) throw error;
       
@@ -71,12 +72,12 @@ const PolicyDocumentsTable: React.FC<PolicyDocumentsTableProps> = ({
       const url = URL.createObjectURL(data);
       
       // Create a link and trigger download
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.document_name || 'document';
-      document.body.appendChild(a);
+      a.download = doc.document_name || 'document';
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       
       // Free up the URL
       URL.revokeObjectURL(url);
