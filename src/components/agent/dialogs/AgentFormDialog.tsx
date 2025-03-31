@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,7 +66,17 @@ const AgentFormDialog: React.FC<AgentFormDialogProps> = ({
 
   // Handle form submission
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onSubmit(values);
+    // Ensure all required properties are present and properly typed
+    const agentData: Omit<Agent, 'id'> = {
+      name: values.name,
+      email: values.email || "",
+      phone: values.phone || "",
+      tax_id: values.tax_id || "",
+      bank_account: values.bank_account || "",
+      status: values.status || "active",
+    };
+    
+    onSubmit(agentData);
   };
 
   return (
