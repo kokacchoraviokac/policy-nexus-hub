@@ -1,5 +1,5 @@
+
 {
-  // Common policy terms
   "policies": "Policies",
   "policiesDescription": "View and manage insurance policies",
   "policyDetails": "Policy Details",
@@ -8,7 +8,6 @@
   "policyClaims": "Policy Claims",
   "policyPayments": "Policy Payments",
   
-  // Policy workflow
   "policyWorkflow": "Policy Workflow",
   "policyWorkflowDescription": "Review and approve imported policies",
   "policyReviewWorkflow": "Policy Review Workflow",
@@ -28,11 +27,9 @@
   "finalized": "Finalized",
   "rejected": "Rejected",
   "inReview": "In Review",
-  "review": "Review",
   "approve": "Approve",
   "reject": "Reject",
   
-  // Policy review
   "errorLoadingPolicy": "Error Loading Policy",
   "unknownError": "An unknown error occurred",
   "reviewNotAvailable": "Review Not Available",
@@ -48,14 +45,12 @@
   "policyUpdateError": "Error Updating Policy",
   "enterRejectionReason": "Enter the reason for rejection",
   
-  // Policy details
   "insuranceDetails": "Insurance Details",
   "clientDetails": "Client Details",
   "financialDetails": "Financial Details",
   "commissionDetails": "Commission Details",
   "systemDetails": "System Details",
   
-  // Fields
   "policyType": "Policy Type",
   "insurer": "Insurer",
   "policyholder": "Policyholder",
@@ -78,19 +73,16 @@
   "updatedAt": "Updated At",
   "noPoliciesFound": "No policies found",
   
-  // Payment frequencies
   "annual": "Annual",
   "semiAnnual": "Semi-Annual",
   "quarterly": "Quarterly",
   "monthly": "Monthly",
   "oneTime": "One-Time",
   
-  // Commission types
   "automatic": "Automatic",
   "manual": "Manual",
   "none": "None",
   
-  // Other
   "select": "Select",
   "selectPolicyType": "Select policy type",
   "selectInsurer": "Select insurer",
@@ -104,7 +96,6 @@
   "of": "of",
   "allPolicies": "All Policies",
   
-  // Import/export terms
   "importPolicies": "Import Policies",
   "exportPolicies": "Export Policies",
   "importInstructions": "Import Instructions",
@@ -157,7 +148,6 @@
   "importingFromSalesProcess": "Importing from Sales Process",
   "policyDataPreparedFromSalesProcess": "The policy data has been prepared based on the information from your sales process",
   
-  // Document terms
   "policyDocuments": "Policy Documents",
   "policyDocumentsDescription": "Manage files related to policies",
   "uploadDocument": "Upload Document",
@@ -174,13 +164,10 @@
   "rejected": "Rejected",
   "needsReview": "Needs Review",
   "pending": "Pending Review",
-  "status": "Status",
   "approvedOn": "Approved on",
   "reviewedOn": "Reviewed on",
   "approvalNotes": "Approval Notes",
   "enterApprovalNotes": "Enter notes about this document",
-  "approve": "Approve",
-  "reject": "Reject",
   "documentVersionUploaded": "New document version uploaded",
   "documentVersionUploadedSuccess": "New version of {name} (v{version}) has been uploaded successfully",
   "documentUploaded": "Document uploaded",
@@ -200,8 +187,6 @@
   "documentStatusUpdateSuccess": "Document status has been updated successfully",
   "errorUpdatingDocument": "Error updating document",
   "errorOccurredTryAgain": "An error occurred. Please try again.",
-  "uploadDocument": "Upload Document",
-  "uploadNewVersion": "Upload New Version",
   "versionHistory": "Version History",
   "version": "Version",
   "latest": "Latest",
