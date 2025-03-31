@@ -49,8 +49,8 @@ const SidebarHoverCard: React.FC<SidebarHoverCardProps> = ({ label, subItems, cu
                 key={index}
                 to={subItem.path}
                 className={cn(
-                  "text-foreground hover:bg-muted rounded-md py-1.5 px-2 text-sm flex items-center transition-colors duration-200",
-                  isSubItemActive && "bg-primary/10 font-medium"
+                  "text-foreground hover:bg-[#C76449]/20 hover:text-[#C76449] rounded-md py-1.5 px-2 text-sm flex items-center transition-colors duration-200",
+                  isSubItemActive && "bg-[#C76449] text-white font-medium"
                 )}
               >
                 {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}

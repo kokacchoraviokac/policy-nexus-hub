@@ -32,8 +32,8 @@ const SidebarItemLink: React.FC<SidebarItemLinkProps> = ({
     "flex items-center rounded-md transition-all duration-200 my-1",
     collapsed ? "justify-center p-2 mx-auto" : "px-3 py-2 w-full",
     active 
-      ? "bg-primary/10 text-primary font-medium" 
-      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground hover:translate-x-1"
+      ? "bg-[#C76449] text-white font-medium" 
+      : "text-sidebar-foreground hover:bg-[#C76449]/20 hover:text-white hover:translate-x-1"
   );
 
   // Ensure the text is properly capitalized when displayed
