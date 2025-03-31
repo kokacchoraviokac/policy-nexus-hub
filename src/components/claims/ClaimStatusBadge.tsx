@@ -5,9 +5,10 @@ import { Badge } from "@/components/ui/badge";
 
 interface ClaimStatusBadgeProps {
   status: string;
+  className?: string;
 }
 
-const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status }) => {
+const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }) => {
   const { t } = useLanguage();
   
   const getStatusVariant = () => {
@@ -17,13 +18,13 @@ const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status }) => {
       case 'reported':
         return "secondary";
       case 'accepted':
-        return "success";
+        return "success" as const;
       case 'rejected':
         return "destructive";
       case 'appealed':
-        return "warning";
+        return "warning" as const;
       case 'partially accepted':
-        return "warning";
+        return "warning" as const;
       case 'withdrawn':
         return "outline";
       default:
@@ -38,7 +39,7 @@ const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status }) => {
   })();
   
   return (
-    <Badge variant={getStatusVariant()}>{statusDisplay}</Badge>
+    <Badge variant={getStatusVariant()} className={className}>{statusDisplay}</Badge>
   );
 };
 

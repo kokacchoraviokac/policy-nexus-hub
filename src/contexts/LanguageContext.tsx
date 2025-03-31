@@ -1,143 +1,196 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import en from '@/locales/en/index'; 
-import sr from '@/locales/sr/index';
-import mk from '@/locales/mk/index';
-import es from '@/locales/es/index';
-import { format } from 'date-fns';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { format } from "date-fns";
+import { enUS, es, mk, sr } from "date-fns/locale";
+import en from "@/locales/en";
+import es_translations from "@/locales/es";
+import mk_translations from "@/locales/mk";
+import sr_translations from "@/locales/sr";
 
-// Define supported languages
-export type Language = 'en' | 'sr' | 'mk' | 'es';
+export type SupportedLanguage = "en" | "es" | "mk" | "sr";
 
-// Define the structure of your translations
-interface LanguageContextProps {
-  locale: string;
-  language: Language;
-  t: (key: string, args?: any) => string;
-  setLocale: (locale: string) => void;
-  setLanguage: (language: Language) => void;
-  formatCurrency: (amount: number, currency?: string) => string;
-  formatDate: (date: string | Date) => string;
-  getMissingTranslationsCount: () => number;
+// Base translations structure
+interface Translations {
+  [key: string]: string | Translations;
 }
 
-// Create the context with a default value
-const LanguageContext = createContext<LanguageContextProps>({
-  locale: 'en',
-  language: 'en',
-  t: (key: string) => key,
-  setLocale: () => {},
+// Extended translations per language
+interface LanguageTranslations {
+  en: Translations;
+  es: Translations;
+  mk: Translations;
+  sr: Translations;
+}
+
+export interface LanguageContextProps {
+  currentLanguage: SupportedLanguage;
+  setLanguage: (lang: SupportedLanguage) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  formatDate: (date: string | Date, formatPattern?: string) => string;
+  formatCurrency: (amount: number, currencyCode?: string) => string;
+  formatNumber: (num: number, options?: Intl.NumberFormatOptions) => string;
+  formatDateTime: (date: string | Date, formatPattern?: string) => string;
+}
+
+const defaultLanguageContext: LanguageContextProps = {
+  currentLanguage: "en",
   setLanguage: () => {},
-  formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
-  formatDate: (date: string | Date) => date.toString(),
-  getMissingTranslationsCount: () => 0,
-});
-
-// Hook for using the language context
-export const useLanguage = () => useContext(LanguageContext);
-
-// Merge all translations
-const translations = {
-  en,
-  sr,
-  mk,
-  es,
+  t: () => "",
+  formatDate: () => "",
+  formatCurrency: () => "",
+  formatNumber: () => "",
+  formatDateTime: () => "",
 };
 
-// Language provider component
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [locale, setLocale] = useState<string>('en');
-  const [language, setLanguage] = useState<Language>('en');
-  const [missingTranslations, setMissingTranslations] = useState<string[]>([]);
+export const LanguageContext = createContext<LanguageContextProps>(defaultLanguageContext);
+
+export const useLanguage = () => useContext(LanguageContext);
+
+interface LanguageProviderProps {
+  children: ReactNode;
+  initialLanguage?: SupportedLanguage;
+}
+
+const translations: LanguageTranslations = {
+  en,
+  es: es_translations,
+  mk: mk_translations,
+  sr: sr_translations,
+};
+
+const locales = {
+  en: enUS,
+  es,
+  mk,
+  sr,
+};
+
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ 
+  children, 
+  initialLanguage = "en" 
+}) => {
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>(initialLanguage);
 
   useEffect(() => {
-    // Load locale from localStorage
-    const storedLocale = localStorage.getItem('locale');
-    if (storedLocale && translations[storedLocale as keyof typeof translations]) {
-      setLocale(storedLocale);
-      setLanguage(storedLocale as Language);
+    // Load saved language preference from localStorage
+    const savedLanguage = localStorage.getItem("language") as SupportedLanguage;
+    if (savedLanguage && ["en", "es", "mk", "sr"].includes(savedLanguage)) {
+      setCurrentLanguage(savedLanguage);
     }
   }, []);
 
-  // Function to track missing translations
-  const trackMissingTranslation = (key: string) => {
-    if (process.env.NODE_ENV !== 'production') {
-      setMissingTranslations(prev => {
-        if (!prev.includes(key)) {
-          return [...prev, key];
-        }
-        return prev;
-      });
-    }
+  const setLanguage = (lang: SupportedLanguage) => {
+    setCurrentLanguage(lang);
+    localStorage.setItem("language", lang);
   };
 
-  // Function to get missing translations count
-  const getMissingTranslationsCount = (): number => {
-    return missingTranslations.length;
-  };
-
-  // Function to translate a key
-  const t = (key: string, args?: any): string => {
-    let translation = translations[locale as keyof typeof translations]?.[key];
-    
-    if (!translation) {
-      // Track missing translation
-      trackMissingTranslation(key);
-      return key; // Return the key itself as fallback
-    }
-
-    if (args) {
-      Object.keys(args).forEach(argKey => {
-        const regex = new RegExp(`\\{${argKey}\\}`, 'g');
-        translation = translation.replace(regex, args[argKey]);
-      });
-    }
-
-    return translation;
-  };
-
-  // Function to format currency
-  const formatCurrency = (amount: number, currency: string = 'USD'): string => {
-    return new Intl.NumberFormat(locale, {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
-
-  // Function to format date
-  const formatDate = (date: string | Date): string => {
+  // Function to get a value from nested translations using a dot notation key
+  const t = (key: string, params?: Record<string, string | number>): string => {
     try {
-      const parsedDate = typeof date === 'string' ? new Date(date) : date;
-      return format(parsedDate, 'PPP'); // Customize the format as needed
+      const keys = key.split(".");
+      let value: any = translations[currentLanguage];
+      
+      // Navigate through the nested objects
+      for (const k of keys) {
+        if (value[k] === undefined) {
+          // Fallback to English if key not found in current language
+          if (currentLanguage !== "en") {
+            let fallbackValue: any = translations["en"];
+            for (const fk of keys) {
+              if (fallbackValue[fk] === undefined) {
+                return key; // Key not found even in the fallback
+              }
+              fallbackValue = fallbackValue[fk];
+            }
+            // If found in the fallback
+            value = fallbackValue;
+            break;
+          } else {
+            return key; // Key not found in English (the fallback)
+          }
+        }
+        value = value[k];
+      }
+      
+      // If the value is not a string (e.g., it's an object), return the key
+      if (typeof value !== "string") {
+        return key;
+      }
+      
+      // Replace parameters in the string if provided
+      if (params) {
+        // Match {{param}} pattern in the string
+        const paramPattern = /\{\{([^}]+)\}\}/g;
+        return value.replace(paramPattern, (_, paramName) => {
+          return params[paramName] !== undefined 
+            ? String(params[paramName]) 
+            : `{{${paramName}}}`;
+        });
+      }
+      
+      return value;
     } catch (error) {
-      console.error("Error formatting date:", error);
-      return 'Invalid Date';
+      console.error(`Translation error for key "${key}":`, error);
+      return key;
     }
   };
 
-  // Update locale and store it in localStorage
-  const updateLocale = (newLocale: string) => {
-    if (translations[newLocale as keyof typeof translations]) {
-      setLocale(newLocale);
-      setLanguage(newLocale as Language);
-      localStorage.setItem('locale', newLocale);
-    } else {
-      console.error(`Locale ${newLocale} not supported`);
+  const formatDate = (date: string | Date, formatPattern: string = "PP"): string => {
+    try {
+      const dateObj = typeof date === "string" ? new Date(date) : date;
+      return format(dateObj, formatPattern, { locale: locales[currentLanguage] });
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return String(date);
+    }
+  };
+
+  const formatDateTime = (date: string | Date, formatPattern: string = "PPp"): string => {
+    try {
+      const dateObj = typeof date === "string" ? new Date(date) : date;
+      return format(dateObj, formatPattern, { locale: locales[currentLanguage] });
+    } catch (error) {
+      console.error("DateTime formatting error:", error);
+      return String(date);
+    }
+  };
+
+  const formatCurrency = (amount: number, currencyCode: string = "RSD"): string => {
+    try {
+      return new Intl.NumberFormat(currentLanguage, {
+        style: "currency",
+        currency: currencyCode,
+      }).format(amount);
+    } catch (error) {
+      console.error("Currency formatting error:", error);
+      return `${amount} ${currencyCode}`;
+    }
+  };
+
+  const formatNumber = (num: number, options?: Intl.NumberFormatOptions): string => {
+    try {
+      return new Intl.NumberFormat(currentLanguage, options).format(num);
+    } catch (error) {
+      console.error("Number formatting error:", error);
+      return String(num);
     }
   };
 
   return (
-    <LanguageContext.Provider value={{ 
-      locale, 
-      language,
-      t, 
-      setLocale: updateLocale, 
-      setLanguage: updateLocale,
-      formatCurrency, 
-      formatDate,
-      getMissingTranslationsCount
-    }}>
+    <LanguageContext.Provider 
+      value={{ 
+        currentLanguage, 
+        setLanguage, 
+        t, 
+        formatDate,
+        formatCurrency,
+        formatNumber,
+        formatDateTime
+      }}
+    >
       {children}
     </LanguageContext.Provider>
   );
 };
+
+export default LanguageProvider;

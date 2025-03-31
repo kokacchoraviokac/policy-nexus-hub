@@ -4,7 +4,7 @@ import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import ReportsPage from "@/pages/Reports";
-import ProductionReport from "@/pages/reports/ProductionReport";
+import PolicyProductionReport from "@/pages/reports/PolicyProductionReport";
 import ClientsReport from "@/pages/reports/ClientsReport";
 import AgentsReport from "@/pages/reports/AgentsReport";
 import ClaimsReport from "@/pages/reports/ClaimsReport";
@@ -28,7 +28,7 @@ export const ReportsRoutes = [
     element={
       <ProtectedRoute>
         <AppLayout>
-          <ProductionReport />
+          <PolicyProductionReport />
         </AppLayout>
       </ProtectedRoute>
     }
