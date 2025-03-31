@@ -6,8 +6,9 @@ import PolicyOverviewTab from "./PolicyOverviewTab";
 import PolicyClaimsTab from "./PolicyClaimsTab";
 import PolicyFinancialsTab from "./PolicyFinancialsTab";
 import PolicyDocumentsTab from "./PolicyDocumentsTab";
-import PolicyAddendaTab from "./PolicyAddendaTab";
+import PolicyAddendumTab from "./PolicyAddendumTab";
 import PolicyActivityTab from "./PolicyActivityTab";
+import PolicyPaymentsTab from "./PolicyPaymentsTab";
 
 interface PolicyDetailTabsProps {
   policy: any;
@@ -24,10 +25,11 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
       onValueChange={setActiveTab}
       className="space-y-4"
     >
-      <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+      <TabsList className="grid grid-cols-7 w-full">
         <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
         <TabsTrigger value="claims">{t("claims")}</TabsTrigger>
         <TabsTrigger value="financials">{t("financials")}</TabsTrigger>
+        <TabsTrigger value="payments">{t("payments")}</TabsTrigger>
         <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
         <TabsTrigger value="addenda">{t("addenda")}</TabsTrigger>
         <TabsTrigger value="activity">{t("activity")}</TabsTrigger>
@@ -45,12 +47,16 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
         <PolicyFinancialsTab policyId={policy.id} />
       </TabsContent>
       
+      <TabsContent value="payments" className="space-y-4">
+        <PolicyPaymentsTab policyId={policy.id} />
+      </TabsContent>
+      
       <TabsContent value="documents" className="space-y-4">
         <PolicyDocumentsTab policyId={policy.id} />
       </TabsContent>
       
       <TabsContent value="addenda" className="space-y-4">
-        <PolicyAddendaTab policyId={policy.id} />
+        <PolicyAddendumTab policyId={policy.id} />
       </TabsContent>
       
       <TabsContent value="activity" className="space-y-4">

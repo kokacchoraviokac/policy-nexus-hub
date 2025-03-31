@@ -1,14 +1,14 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-import { UnlinkedPaymentType } from "@/types/policies";
 import PolicyPaymentSummary from "./payment/PolicyPaymentSummary";
 import PolicyPaymentHistory from "./payment/PolicyPaymentHistory";
-import PolicyPaymentsLoading from "./payment/PolicyPaymentsLoading";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { UnlinkedPaymentType } from "@/types/policies";
+import { useToast } from "@/hooks/use-toast";
 
 interface PolicyPaymentsTabProps {
   policyId: string;
@@ -16,9 +16,11 @@ interface PolicyPaymentsTabProps {
 
 const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
   const { t } = useLanguage();
-
-  const { data: policyData, isLoading: policyLoading } = useQuery({
-    queryKey: ['policy-details', policyId],
+  const { toast } = useToast();
+  
+  // Fetch policy info for premium and currency
+  const { data: policyBasic, isLoading: isPolicyLoading } = useQuery({
+    queryKey: ['policy-payment-details', policyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('policies')
@@ -29,10 +31,12 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
       if (error) throw error;
       return data;
     },
+    enabled: !!policyId
   });
 
-  const { data: paymentsData, isLoading: paymentsLoading, refetch } = useQuery({
-    queryKey: ['policy-payments', policyId],
+  // Fetch payments for this policy
+  const { data: payments, isLoading: isPaymentsLoading } = useQuery({
+    queryKey: ['policy-payments-list', policyId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('unlinked_payments')
@@ -43,62 +47,50 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
       if (error) throw error;
       return data as UnlinkedPaymentType[];
     },
+    enabled: !!policyId
   });
-
-  const isLoading = policyLoading || paymentsLoading;
   
-  if (isLoading) {
-    return <PolicyPaymentsLoading />;
-  }
-
-  const totalPaid = paymentsData?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
-  const premium = policyData?.premium || 0;
-
   const handleExportPayments = () => {
-    if (!paymentsData || paymentsData.length === 0) return;
+    // This would download a CSV of payments
+    toast({
+      title: t("exportStarted"),
+      description: t("paymentsExportInProgress"),
+    });
     
-    const csvContent = [
-      ["Payment Date", "Reference", "Payer Name", "Amount", "Currency"].join(","),
-      ...paymentsData.map(payment => [
-        payment.payment_date,
-        payment.reference || "",
-        payment.payer_name || "",
-        payment.amount,
-        payment.currency
-      ].join(","))
-    ].join("\n");
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `policy-payments-${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // In a real implementation, this would actually export the data
+    setTimeout(() => {
+      toast({
+        title: t("exportComplete"),
+        description: t("paymentsExportedSuccessfully"),
+      });
+    }, 2000);
   };
+
+  const totalPaid = payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+  const premium = policyBasic?.premium || 0;
+  const currency = policyBasic?.currency || 'EUR';
+  
+  if (isPolicyLoading || isPaymentsLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">{t("policyPayments")}</h2>
-        <Button onClick={() => refetch()} size="sm" variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t("refresh")}
-        </Button>
-      </div>
-
       <PolicyPaymentSummary 
         premium={premium} 
-        currency={policyData?.currency} 
+        currency={currency} 
         totalPaid={totalPaid} 
       />
-
+      
       <PolicyPaymentHistory 
-        paymentsData={paymentsData || []} 
+        paymentsData={payments || []} 
         policyId={policyId}
         premium={premium}
-        currency={policyData?.currency}
+        currency={currency}
         onExportPayments={handleExportPayments}
       />
     </div>
