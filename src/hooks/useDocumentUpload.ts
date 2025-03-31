@@ -1,12 +1,12 @@
+
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useActivityLogger } from "@/utils/activityLogger";
+import { useActivityLogger, type EntityType } from "@/utils/activityLogger";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFileInput, validateUploadFields } from "@/utils/fileHandlingUtils";
 import { getDocumentTable, uploadFileToStorage, insertDocumentRecord, createDocumentData } from "@/utils/documentUploadUtils";
-import type { EntityType } from "@/utils/activityLogger";
 import type { DocumentCategory, DocumentApprovalStatus } from "@/types/documents";
 
 export interface UseDocumentUploadProps {

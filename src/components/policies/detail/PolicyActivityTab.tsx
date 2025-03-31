@@ -34,7 +34,7 @@ const PolicyActivityTab: React.FC<PolicyActivityTabProps> = ({ policyId }) => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!policyId
   });
@@ -55,6 +55,7 @@ const PolicyActivityTab: React.FC<PolicyActivityTabProps> = ({ policyId }) => {
   };
   
   const getActivityTitle = (activity: any) => {
+    // Safely access the profiles property, which might be null or undefined
     const userName = activity.profiles?.name || 'Unknown user';
     
     switch (activity.action) {

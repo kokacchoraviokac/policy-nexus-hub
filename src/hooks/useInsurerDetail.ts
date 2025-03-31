@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
-import { fetchActivityLogs, useActivityLogger } from "@/utils/activityLogger";
+import { useActivityLogger } from "@/utils/activityLogger";
 
 export function useInsurerDetail() {
   const { insurerId } = useParams<{ insurerId: string }>();
@@ -42,12 +42,41 @@ export function useInsurerDetail() {
     }
   });
 
-  // Fetch real activity logs instead of using mock data
+  // Fetch activity logs
   const { data: activityData = [], isLoading: isLoadingActivity } = useQuery({
     queryKey: ['insurer-activity', insurerId],
     queryFn: async () => {
       if (!insurerId) return [];
-      return fetchActivityLogs("insurer", insurerId);
+      
+      // Fetch activity logs directly here instead of using a separate function
+      const { data, error } = await supabase
+        .from('activity_logs')
+        .select(`
+          id,
+          action,
+          created_at,
+          details,
+          user_id,
+          profiles:user_id (
+            name,
+            email
+          )
+        `)
+        .eq('entity_id', insurerId)
+        .eq('entity_type', 'insurer')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Transform data to include user names
+      return data.map(log => ({
+        id: log.id,
+        action: log.action,
+        timestamp: log.created_at,
+        user: log.profiles?.name || 'Unknown user',
+        userEmail: log.profiles?.email,
+        details: log.details
+      }));
     },
     enabled: !!insurerId
   });

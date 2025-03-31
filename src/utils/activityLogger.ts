@@ -1,17 +1,57 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useCallback } from "react";
-import { useUserStore } from "@/stores/userStore";
+import { useAuth } from "@/contexts/auth/AuthContext"; // Changed from userStore
+
+// Define EntityType as a type to be used across the application
+export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent" | "policy_addendum";
 
 interface ActivityLogData {
-  entityType: string;
+  entityType: EntityType;
   entityId: string;
   action: string;
   details?: Record<string, any>;
 }
 
+// Function to fetch activity logs for a given entity
+export const fetchActivityLogs = async (entityType: EntityType, entityId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select(`
+        id,
+        action,
+        created_at,
+        details,
+        user_id,
+        profiles:user_id (
+          name,
+          email
+        )
+      `)
+      .eq('entity_id', entityId)
+      .eq('entity_type', entityType)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    // Transform data to include user names
+    return data.map(log => ({
+      id: log.id,
+      action: log.action,
+      timestamp: log.created_at,
+      user: log.profiles?.name || 'Unknown user',
+      userEmail: log.profiles?.email,
+      details: log.details
+    }));
+  } catch (err) {
+    console.error("Error fetching activity logs:", err);
+    return [];
+  }
+};
+
 export const useActivityLogger = () => {
-  const { user } = useUserStore();
+  const { user } = useAuth(); // Changed from userStore
   
   const logActivity = useCallback(async (data: ActivityLogData) => {
     try {
