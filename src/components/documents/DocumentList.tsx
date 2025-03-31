@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useDocuments } from "@/hooks/useDocuments";
 import { Loader2, FileX } from "lucide-react";
@@ -7,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DocumentListItem from "./DocumentListItem";
 import DocumentUploadDialog from "./DocumentUploadDialog";
-import { Document } from "@/types/documents";
+import { Document, EntityType } from "@/types/documents";
 
 interface DocumentListProps {
-  entityType: "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
+  entityType: EntityType;
   entityId: string;
   onUploadClick?: () => void;
   showUploadButton?: boolean;
@@ -34,10 +33,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
     error, 
     deleteDocument, 
     isDeletingDocument 
-  } = useDocuments({
-    entityType,
-    entityId
-  });
+  } = useDocuments(entityType, entityId);
 
   const handleUploadClick = () => {
     if (onUploadClick) {

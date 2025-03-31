@@ -19,7 +19,6 @@ const Login: React.FC = () => {
           <Button
             asChild
             size="sm"
-            variant="ghost"
             className="text-muted-foreground hover:text-foreground"
           >
             <Link to="/">

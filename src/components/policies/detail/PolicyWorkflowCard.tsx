@@ -77,8 +77,9 @@ const PolicyWorkflowCard: React.FC<PolicyWorkflowCardProps> = ({ policy }) => {
             ({formatDistanceToNow(new Date(policy.updated_at), { addSuffix: true })})
           </div>
           
+          {/* Fix: Update the props to match what PolicyStatusWorkflow expects */}
           <PolicyStatusWorkflow 
-            policyId={policy.id}
+            policy={policy.id}
             currentStatus={policy.status}
             currentWorkflowStatus={policy.workflow_status}
             onStatusUpdated={() => {}}

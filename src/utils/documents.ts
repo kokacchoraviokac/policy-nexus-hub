@@ -2,21 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 import { EntityType } from "@/types/documents";
-
-// Helper to get the table name for a given entity type
-export const getTableNameForEntityType = (entityType: EntityType): string => {
-  switch (entityType) {
-    case "policy": return "policy_documents";
-    case "claim": return "claim_documents";
-    case "sales_process": return "sales_documents";
-    case "client": return "client_documents";
-    case "invoice": return "invoice_documents";
-    case "addendum": return "policy_addendums";
-    case "agent": return "agent_documents";
-    case "insurer": return "insurer_documents";
-    default: return "policy_documents";
-  }
-};
+import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 interface DocumentUploadOptions {
   file: File;
@@ -63,17 +49,17 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
     }
 
     // Determine table name based on entity type
-    const tableName = getTableNameForEntityType(entityType);
+    const tableName = getDocumentTableName(entityType);
 
     // Calculate new version if it's a version update
     const version = currentVersion > 0 ? currentVersion + 1 : 1;
 
-    // Create document record in database
-    const documentData = {
+    // Create document record in database with appropriate field names
+    // based on the entity type
+    let documentData: any = {
       document_name: documentName,
       document_type: documentType,
       file_path: filePath,
-      [entityType === "policy" ? "policy_id" : "entity_id"]: entityId,
       uploaded_by: user.id,
       company_id: user?.user_metadata?.company_id,
       category: category || "other",
@@ -83,7 +69,16 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
       original_document_id: originalDocumentId || null
     };
 
-    // Insert the document record
+    // Set the appropriate entity ID field based on the table
+    if (tableName === "policy_documents") {
+      documentData.policy_id = entityId;
+    } else if (tableName === "claim_documents") {
+      documentData.claim_id = entityId;
+    } else if (tableName === "sales_documents") {
+      documentData.sales_process_id = entityId;
+    }
+
+    // Insert the document record using the resolved table name
     const { data, error: dbError } = await supabase
       .from(tableName)
       .insert(documentData)

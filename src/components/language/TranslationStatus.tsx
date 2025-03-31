@@ -4,23 +4,18 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-// Add a function to count missing translations if it doesn't exist
+// Add a function to count missing translations
 const countMissingTranslations = (language: string): number => {
   // This is a placeholder implementation
   // In a real app, this would count actual missing translations
-  return language === "en" ? 0 : 10;  // Just a placeholder value
+  return language === "en" ? 0 : 5;
 }
 
 const TranslationStatus: React.FC = () => {
   const { t, currentLanguage } = useLanguage();
   
-  // Use the countMissingTranslations function with the current language
-  const missingCount = countMissingTranslations(currentLanguage);
-  
-  // Calculate completion percentage (placeholder implementation)
-  const totalCount = 100; // Placeholder for total translation entries
-  const completedCount = totalCount - missingCount;
-  const completionPercentage = (completedCount / totalCount) * 100;
+  // Pass the current language to the countMissingTranslations function
+  const missingCount = countMissingTranslations(currentLanguage || "en");
   
   return (
     <Card>
@@ -30,21 +25,17 @@ const TranslationStatus: React.FC = () => {
         <div className="space-y-4">
           <div>
             <div className="flex justify-between mb-1">
-              <span className="text-sm font-medium">{t("completionStatus")}</span>
-              <span className="text-sm text-muted-foreground">{completionPercentage.toFixed(0)}%</span>
+              <span className="text-sm font-medium">{t("translationComplete")}</span>
+              <span className="text-sm text-muted-foreground">
+                {missingCount > 0 ? t("incomplete") : t("complete")}
+              </span>
             </div>
-            <Progress value={completionPercentage} className="h-2" />
+            <Progress value={missingCount > 0 ? 80 : 100} className="h-2" />
           </div>
           
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="p-3 bg-muted/50 rounded-md">
-              <p className="text-sm font-medium">{t("missingTranslations")}</p>
-              <p className="text-2xl font-bold mt-1">{missingCount}</p>
-            </div>
-            <div className="p-3 bg-muted/50 rounded-md">
-              <p className="text-sm font-medium">{t("totalTranslations")}</p>
-              <p className="text-2xl font-bold mt-1">{totalCount}</p>
-            </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">{t("missingTranslations")}</span>
+            <span className="text-sm font-semibold">{missingCount}</span>
           </div>
         </div>
       </CardContent>

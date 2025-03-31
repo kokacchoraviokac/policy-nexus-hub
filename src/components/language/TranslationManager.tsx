@@ -4,6 +4,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import TranslationDashboard from "./translation/TranslationDashboard";
 import TranslationStatus from "./TranslationStatus";
 
+// Define Language type
+type Language = "en" | "sr" | "mk" | "es";
+
 // We need to fix the props type for the WorkflowPanel component
 interface WorkflowPanelProps {
   autoRun?: boolean;
@@ -23,13 +26,14 @@ const WorkflowPanel: React.FC<WorkflowPanelProps> = ({ autoRun = false }) => {
 
 // Add props for TranslationDashboard
 interface TranslationDashboardProps {
-  exportLanguage: string;
-  setExportLanguage: (lang: string) => void;
+  exportLanguage: Language | "all";
+  setExportLanguage: (lang: Language | "all") => void;
 }
 
 const TranslationManager: React.FC = () => {
   const { t } = useLanguage();
-  const [exportLanguage, setExportLanguage] = useState("en");
+  // Fix: Use the correct Language type for exportLanguage
+  const [exportLanguage, setExportLanguage] = useState<Language | "all">("en");
 
   return (
     <div className="space-y-6">
@@ -44,7 +48,7 @@ const TranslationManager: React.FC = () => {
         setExportLanguage={setExportLanguage} 
       />
       
-      {/* WorkflowPanel */}
+      {/* WorkflowPanel - Fix adding autoRun prop */}
       <WorkflowPanel autoRun={false} />
     </div>
   );

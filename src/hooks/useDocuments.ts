@@ -7,6 +7,7 @@ import { Document, EntityType } from "@/types/documents";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { getDocumentTableName, DocumentTableName } from "@/utils/documentUploadUtils";
 
+// Update the function signature to accept two parameters
 export const useDocuments = (entityType: EntityType, entityId: string) => {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -17,39 +18,68 @@ export const useDocuments = (entityType: EntityType, entityId: string) => {
   
   // Fetch all documents for the given entity
   const fetchDocuments = async (): Promise<Document[]> => {
-    const { data, error } = await supabase
-      .from(tableName)
-      .select("*")
-      .eq(entityType === "policy" ? "policy_id" : "entity_id", entityId)
-      .order("created_at", { ascending: false });
+    // Handle each document table type with its specific entity ID field
+    let query;
+    if (tableName === "policy_documents") {
+      query = supabase
+        .from(tableName)
+        .select("*")
+        .eq("policy_id", entityId);
+    } else if (tableName === "claim_documents") {
+      query = supabase
+        .from(tableName)
+        .select("*")
+        .eq("claim_id", entityId);
+    } else if (tableName === "sales_documents") {
+      query = supabase
+        .from(tableName)
+        .select("*")
+        .eq("sales_process_id", entityId);
+    } else {
+      // This should not happen with our current implementation
+      throw new Error(`Unsupported document table: ${tableName}`);
+    }
+    
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    // Map the data to our Document type
-    return (data || []).map(item => ({
-      id: item.id,
-      document_name: item.document_name,
-      document_type: item.document_type,
-      created_at: item.created_at,
-      file_path: item.file_path,
-      entity_type: entityType,
-      entity_id: item[entityType === "policy" ? "policy_id" : "entity_id"],
-      uploaded_by: item.uploaded_by,
-      uploaded_by_id: item.uploaded_by,
-      uploaded_by_name: "", // We'll populate this if needed
-      description: item.description || "",
-      version: item.version || 1,
-      status: item.status || "active",
-      tags: item.tags || [],
-      category: item.category || "other",
-      mime_type: item.mime_type || "",
-      is_latest_version: item.is_latest_version || true,
-      original_document_id: item.original_document_id || null,
-      approval_status: item.approval_status || "pending"
-    }));
+    // Map the data to our Document type based on the table type
+    return (data || []).map((item: any) => {
+      let mappedEntityId = "";
+      
+      if (tableName === "policy_documents") {
+        mappedEntityId = item.policy_id;
+      } else if (tableName === "claim_documents") {
+        mappedEntityId = item.claim_id;
+      } else if (tableName === "sales_documents") {
+        mappedEntityId = item.sales_process_id;
+      }
+      
+      return {
+        id: item.id,
+        document_name: item.document_name,
+        document_type: item.document_type,
+        created_at: item.created_at,
+        file_path: item.file_path,
+        entity_type: entityType,
+        entity_id: mappedEntityId,
+        uploaded_by_id: item.uploaded_by,
+        uploaded_by_name: "", // We'll populate this if needed
+        description: item.description || "",
+        version: item.version || 1,
+        status: item.status || "active",
+        tags: item.tags || [],
+        category: item.category || "other",
+        mime_type: item.mime_type || "",
+        is_latest_version: item.is_latest_version || true,
+        original_document_id: item.original_document_id || null,
+        approval_status: item.approval_status || "pending"
+      } as Document;
+    });
   };
 
-  // Delete document mutation
+  // Delete document mutation - use the correct table based on entity type
   const deleteDocument = async (documentId: string) => {
     const { error } = await supabase
       .from(tableName)
