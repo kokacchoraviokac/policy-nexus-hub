@@ -3,10 +3,10 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { Search, X } from "lucide-react";
-import StatusSelector from "@/components/common/StatusSelector";
+import { Search, X, Filter } from "lucide-react";
 import { WorkflowPolicyFilters } from "@/hooks/useWorkflowPolicies";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 interface PolicyWorkflowFiltersProps {
   filters: WorkflowPolicyFilters;
@@ -23,15 +23,15 @@ const PolicyWorkflowFilters: React.FC<PolicyWorkflowFiltersProps> = ({
     onFiltersChange({ ...filters, search: e.target.value });
   };
 
-  const handleStatusChange = (value: string) => {
-    onFiltersChange({ ...filters, status: value });
+  const handleStatusChange = (status: string) => {
+    onFiltersChange({ ...filters, status });
   };
 
-  const handleDateRangeChange = (range: { from?: Date; to?: Date }) => {
+  const handleDateRangeChange = (range: DateRange | undefined) => {
     onFiltersChange({
       ...filters,
-      dateFrom: range.from,
-      dateTo: range.to,
+      dateFrom: range?.from,
+      dateTo: range?.to,
     });
   };
 
@@ -47,42 +47,71 @@ const PolicyWorkflowFilters: React.FC<PolicyWorkflowFiltersProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex flex-col md:flex-row gap-3">
-        <div className="flex-1 flex relative">
+        <div className="flex-1 relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={t("searchPoliciesByNumber")}
+            placeholder={t("searchPolicies")}
             className="pl-8"
             value={filters.search}
             onChange={handleSearchChange}
           />
         </div>
-
-        <StatusSelector
-          value={filters.status}
-          onValueChange={handleStatusChange}
-          showAllOption
-          allOptionText={t("allWorkflowStatuses")}
-          statusOptions={["draft", "review", "approved", "finalized"]}
-          className="w-full md:w-[250px]"
-        />
-
-        <DatePickerWithRange
-          dateRange={{
-            from: filters.dateFrom,
-            to: filters.dateTo,
-          }}
-          onDateRangeChange={handleDateRangeChange}
-          className="w-full md:w-[300px]"
-        />
-
+        
+        <div className="w-full md:w-auto">
+          <DatePickerWithRange
+            dateRange={{ from: filters.dateFrom, to: filters.dateTo }}
+            onDateRangeChange={handleDateRangeChange}
+          />
+        </div>
+        
+        {(filters.search || filters.status !== "all" || filters.dateFrom || filters.dateTo) && (
+          <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+            <X className="h-4 w-4 mr-1" />
+            {t("clearFilters")}
+          </Button>
+        )}
+      </div>
+      
+      <div className="flex flex-wrap gap-2">
         <Button
-          variant="ghost"
+          variant={filters.status === "all" ? "default" : "outline"}
           size="sm"
-          onClick={handleClearFilters}
-          className="flex items-center"
+          onClick={() => handleStatusChange("all")}
+          className="text-xs px-3"
         >
-          <X className="h-4 w-4 mr-1" />
-          {t("clearFilters")}
+          {t("allStatuses")}
+        </Button>
+        <Button
+          variant={filters.status === "draft" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleStatusChange("draft")}
+          className="text-xs px-3"
+        >
+          {t("draft")}
+        </Button>
+        <Button
+          variant={filters.status === "in_review" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleStatusChange("in_review")}
+          className="text-xs px-3"
+        >
+          {t("inReview")}
+        </Button>
+        <Button
+          variant={filters.status === "ready" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleStatusChange("ready")}
+          className="text-xs px-3"
+        >
+          {t("ready")}
+        </Button>
+        <Button
+          variant={filters.status === "complete" ? "default" : "outline"}
+          size="sm"
+          onClick={() => handleStatusChange("complete")}
+          className="text-xs px-3"
+        >
+          {t("complete")}
         </Button>
       </div>
     </div>

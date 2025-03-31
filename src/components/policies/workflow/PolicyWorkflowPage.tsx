@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PolicyWorkflowFilters from "./PolicyWorkflowFilters";
 import PolicyWorkflowList from "./PolicyWorkflowList";
-import { useWorkflowPolicies } from "@/hooks/useWorkflowPolicies";
+import { useWorkflowPolicies, WorkflowPolicyFilters } from "@/hooks/useWorkflowPolicies";
 import { Button } from "@/components/ui/button";
 import { DownloadIcon, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { exportWorkflowTemplate } from "@/utils/policies/exportUtils";
 
 const PolicyWorkflowPage: React.FC = () => {
   const { t } = useLanguage();
-  const [currentTab, setCurrentTab] = useState<string>("pending");
+  const [currentTab, setCurrentTab] = useState<"pending" | "reviewed" | "all">("pending");
   const [isExporting, setIsExporting] = useState(false);
   
   const {
@@ -27,7 +27,7 @@ const PolicyWorkflowPage: React.FC = () => {
     filters,
     setFilters,
     refreshPolicies
-  } = useWorkflowPolicies(currentTab as "pending" | "reviewed" | "all");
+  } = useWorkflowPolicies(currentTab);
   
   const handleExportTemplate = async () => {
     try {
@@ -94,7 +94,7 @@ const PolicyWorkflowPage: React.FC = () => {
             defaultValue="pending"
             value={currentTab}
             onValueChange={(value) => {
-              setCurrentTab(value);
+              setCurrentTab(value as "pending" | "reviewed" | "all");
               setPage(1);
             }}
             className="w-full"

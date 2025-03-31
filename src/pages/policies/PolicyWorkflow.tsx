@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +11,7 @@ import { FileCheck, FileEdit, FileSpreadsheet, Clock, CheckCircle2, Import } fro
 import WorkflowPoliciesList from "@/components/policies/workflow/WorkflowPoliciesList";
 import WorkflowFilters from "@/components/policies/workflow/WorkflowFilters";
 import { Policy } from "@/types/policies";
+import { policiesToWorkflowPolicies } from "@/utils/policies/policyMappers";
 
 const PolicyWorkflow = () => {
   const { t } = useLanguage();
@@ -162,7 +164,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={data?.policies.filter(p => p.workflow_status === 'draft') || []}
+                  policies={policiesToWorkflowPolicies(data?.policies.filter(p => p.workflow_status === 'draft') || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />
@@ -178,7 +180,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={data?.policies.filter(p => p.workflow_status === 'in_review') || []}
+                  policies={policiesToWorkflowPolicies(data?.policies.filter(p => p.workflow_status === 'in_review') || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />
@@ -194,7 +196,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={data?.policies.filter(p => p.workflow_status === 'ready') || []}
+                  policies={policiesToWorkflowPolicies(data?.policies.filter(p => p.workflow_status === 'ready') || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />
@@ -210,7 +212,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={data?.policies.filter(p => p.workflow_status === 'complete') || []}
+                  policies={policiesToWorkflowPolicies(data?.policies.filter(p => p.workflow_status === 'complete') || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />
@@ -226,7 +228,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={data?.policies || []}
+                  policies={policiesToWorkflowPolicies(data?.policies || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />

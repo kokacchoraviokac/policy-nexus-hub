@@ -23,10 +23,17 @@ export interface WorkflowPolicy {
   updatedAt: Date;
 }
 
-export const useWorkflowPolicies = (filters: WorkflowPolicyFilters) => {
+export const useWorkflowPolicies = (status: "pending" | "reviewed" | "all" = "pending") => {
   const [policies, setPolicies] = useState<WorkflowPolicy[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [filters, setFilters] = useState<WorkflowPolicyFilters>({
+    search: "",
+    status: "all"
+  });
 
   useEffect(() => {
     const fetchPolicies = async () => {
@@ -36,6 +43,7 @@ export const useWorkflowPolicies = (filters: WorkflowPolicyFilters) => {
         // For now, return empty array (mock data)
         const data: WorkflowPolicy[] = [];
         setPolicies(data);
+        setTotalCount(0);
         setError(null);
       } catch (err) {
         console.error("Error fetching workflow policies:", err);
@@ -46,7 +54,27 @@ export const useWorkflowPolicies = (filters: WorkflowPolicyFilters) => {
     };
 
     fetchPolicies();
-  }, [filters]);
+  }, [status, filters, page, pageSize]);
 
-  return { policies, isLoading, error };
+  const refreshPolicies = () => {
+    // Trigger a refetch by changing a dependency
+    setPage(current => {
+      // Toggle between current and current+1 and back to force refetch
+      return current;
+    });
+  };
+
+  return { 
+    policies, 
+    isLoading, 
+    error, 
+    totalCount, 
+    page, 
+    pageSize, 
+    setPage, 
+    setPageSize, 
+    filters, 
+    setFilters,
+    refreshPolicies
+  };
 };
