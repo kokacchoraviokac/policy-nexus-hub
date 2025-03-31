@@ -1,3 +1,4 @@
+
 {
   "policyhub": "PolicyHub",
   "language": "Idioma",
@@ -11,7 +12,7 @@
   "system": "Sistema",
   "notifications": "Notificaciones",
   "profile": "Perfil",
-  "logout": "Cerrar sesión",
+  "logout": "Cerrar Sesión",
   "settings": "Configuración",
   "search": "Buscar",
   "help": "Ayuda",
@@ -47,7 +48,7 @@
   "reports": "Informes",
   "reportsManagement": "Generar informes personalizados para producción, clientes, agentes y reclamaciones",
   "settingsManagement": "Configurar ajustes del sistema, acceso de usuarios e información de la empresa",
-  "returnToDashboard": "Volver al panel de control",
+  "returnToDashboard": "Volver al Panel de Control",
   "clients": "Clientes",
   "insuranceCompanies": "Compañías de Seguros",
   "insuranceProducts": "Productos de Seguros",

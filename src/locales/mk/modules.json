@@ -1,6 +1,6 @@
 
 {
-  "dashboard": "Командна табла",
+  "dashboard": "Командна Табла",
   "dashboardDescription": "Преглед на клучни метрики и активности",
   "policies": "Полиси",
   "policyManagement": "Управување со полиси",
@@ -8,7 +8,7 @@
   "salesDescription": "Управување со потенцијални клиенти, понуди и продажни процеси",
   "salesLeadModule": "Управување со продажба и потенцијални клиенти",
   "salesModuleDescription": "Следење на потенцијални клиенти и управување со продажниот канал",
-  "claims": "Оштетни барања",
+  "claims": "Оштетни Барања",
   "claimsDescription": "Обработка и следење на оштетни барања",
   "claimsManagementModule": "Управување со оштетни барања",
   "claimsModuleDescription": "Регистрација и обработка на оштетни барања",
@@ -29,13 +29,13 @@
   "settings": "Подесувања",
   "settingsDescription": "Конфигурирање на системски подесувања и управување со корисници",
   
-  "pipelineOverview": "Преглед на продажниот канал",
+  "pipelineOverview": "Преглед на Продажниот Канал",
   "pipelineDescription": "Визуелизација на продажниот канал и следење на напредокот",
   "viewPipeline": "Преглед на каналот",
   "pipelineEmpty": "Продажниот канал е празен",
   "pipelineEmptyDescription": "Започнете со креирање на нов продажен процес или потенцијален клиент",
   
-  "leads": "Потенцијални клиенти",
+  "leads": "Потенцијални Клиенти",
   "leadsDescription": "Управување со потенцијални клиенти и следење на нивниот интерес",
   "manageLeads": "Управување со потенцијални клиенти",
   "newLead": "Нов потенцијален клиент",
@@ -48,7 +48,7 @@
   "noLeadsFound": "Нема пронајдени потенцијални клиенти",
   "createYourFirstLead": "Креирајте прв потенцијален клиент за почеток",
   
-  "salesProcesses": "Продажни процеси",
+  "salesProcesses": "Продажни Процеси",
   "salesProcessesDescription": "Следење на продажба од понуда до издавање полиса",
   "manageSalesProcesses": "Управување со процеси",
   "newSalesProcess": "Нов процес",
@@ -64,7 +64,7 @@
   "createYourFirstSalesProcess": "Креирајте прв продажен процес за почеток",
   "createSalesProcess": "Креирај продажен процес",
   
-  "responsiblePersons": "Одговорни лица",
+  "responsiblePersons": "Одговорни Лица",
   "responsiblePersonsDescription": "Доделување и управување со продажни одговорности",
   "manageAssignments": "Управување со задолженија",
   "assignResponsibility": "Додели одговорност",
