@@ -23,6 +23,8 @@ export const rolePrivileges = {
     'codebook:view', 'codebook:create', 'codebook:edit', 'codebook:delete',
     'codebook.clients:view', 'codebook.clients:create', 'codebook.clients:edit', 'codebook.clients:delete',
     'codebook.companies:view', 'codebook.companies:create', 'codebook.companies:edit', 'codebook.companies:delete',
+    'codebook.insurers:view', 'codebook.insurers:create', 'codebook.insurers:edit', 'codebook.insurers:delete',
+    'codebook.insurers.import', 'codebook.insurers.export',
     'codebook.codes:view', 'codebook.codes:create', 'codebook.codes:edit', 'codebook.codes:delete',
     
     // Agent

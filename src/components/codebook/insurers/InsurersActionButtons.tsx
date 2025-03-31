@@ -21,10 +21,15 @@ const InsurersActionButtons: React.FC<InsurersActionButtonsProps> = ({
 }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const { hasPrivilege } = useAuth();
+  const { hasPrivilege, user } = useAuth();
   
+  // Log the role and privilege check results for debugging
+  console.log("Current user role:", user?.role);
   const canAddInsurer = hasPrivilege('codebook.insurers.create');
   const canImportExport = hasPrivilege('codebook.insurers.import') || hasPrivilege('codebook.insurers.export');
+  
+  console.log("Can add insurer:", canAddInsurer);
+  console.log("Can import/export:", canImportExport);
 
   const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
     try {

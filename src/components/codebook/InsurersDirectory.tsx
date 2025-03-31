@@ -21,6 +21,10 @@ const InsurersDirectory: React.FC = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   
+  // Debug log user and privileges
+  console.log("Current user in InsurersDirectory:", user);
+  console.log("User can add insurer:", hasPrivilege('codebook.insurers.create'));
+  
   const {
     insurers,
     isLoading,

@@ -10,9 +10,26 @@ export const checkPrivilege = (
   role: UserRole | undefined,
   privilege: string
 ): boolean => {
-  if (!role) return false;
+  if (!role) {
+    console.log("No role provided in checkPrivilege");
+    return false;
+  }
+  
+  // For superadmin, grant all permissions
+  if (role === 'superAdmin') {
+    console.log(`Superadmin automatically granted privilege: ${privilege}`);
+    return true;
+  }
+  
   const userPrivileges = rolePrivileges[role];
-  return userPrivileges.includes(privilege);
+  if (!userPrivileges) {
+    console.log(`No privileges found for role: ${role}`);
+    return false;
+  }
+  
+  const hasPrivilege = userPrivileges.includes(privilege);
+  console.log(`Checking if role '${role}' has privilege '${privilege}': ${hasPrivilege}`);
+  return hasPrivilege;
 };
 
 // Enhanced check with context
@@ -21,6 +38,11 @@ export const checkPrivilegeWithContext = (
   privilege: string,
   context?: ResourceContext
 ): boolean => {
+  // For superadmin, grant all permissions
+  if (role === 'superAdmin') {
+    return true;
+  }
+  
   return checkGranularPrivilege(role, privilege, context);
 };
 

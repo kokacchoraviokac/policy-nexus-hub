@@ -45,6 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isAuthenticated: true,
             isLoading: false
           });
+          
+          // Log the user's role for debugging
+          console.log("User authenticated with role:", user.user_metadata?.role);
         }
       }
     });
@@ -53,6 +56,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         const user = session.user;
+        console.log("Found existing session with user:", user);
+        console.log("User role:", user.user_metadata?.role);
+        
         setAuthState({
           user: {
             id: user.id,
