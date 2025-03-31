@@ -88,16 +88,18 @@ export const fetchActivityLogs = async (entityType: EntityType, entityId: string
     }
     
     // Transform the data to match the ActivityLog interface
+    // Parse or ensure details is a proper object and not a string
     return (data || []).map(item => ({
       id: item.id,
       action: item.action,
       timestamp: item.created_at,
       user: item.user_id,
-      details: item.details
+      details: typeof item.details === 'string' 
+        ? JSON.parse(item.details)
+        : item.details || {}
     }));
   } catch (error) {
     console.error("Error fetching activity logs:", error);
     return [];
   }
 };
-
