@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 const ClientsReport = () => {
   const { t } = useLanguage();
@@ -32,12 +33,12 @@ const ClientsReport = () => {
         </p>
       </div>
       
-      <div className="bg-muted/50 p-8 rounded-lg border text-center">
-        <h2 className="text-xl font-semibold mb-4">{t("comingSoon")}</h2>
-        <p className="text-muted-foreground max-w-lg mx-auto">
-          {t("additionalReportsBeingDeveloped")}
+      <Card className="p-8 flex flex-col items-center justify-center text-center">
+        <h2 className="text-xl font-semibold mb-2">{t("comingSoon")}</h2>
+        <p className="text-muted-foreground max-w-md">
+          {t("featureUnderDevelopment")}
         </p>
-      </div>
+      </Card>
     </div>
   );
 };

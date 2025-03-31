@@ -1,113 +1,55 @@
 
-export interface FinancialTransaction {
-  id: string;
-  date: string;
-  type: 'income' | 'expense';
-  category: string;
-  description: string;
-  amount: number;
-  currency: string;
-  status: string;
-  reference?: string;
-}
+import { Transaction } from "@/hooks/reports/useFinancialReport";
 
-export interface FinancialReportFilters {
-  startDate?: Date;
-  endDate?: Date;
-  searchTerm?: string;
-  transactionType?: 'all' | 'income' | 'expense';
-  category?: string;
-}
-
-export const calculateTotals = (transactions: FinancialTransaction[]) => {
-  return transactions.reduce(
-    (totals, transaction) => {
-      if (transaction.type === "income") {
-        totals.income += transaction.amount;
-      } else {
-        totals.expenses += transaction.amount;
-      }
-      totals.net = totals.income - totals.expenses;
-      return totals;
-    },
-    { income: 0, expenses: 0, net: 0 }
-  );
-};
-
-export const filterTransactions = (
-  transactions: FinancialTransaction[],
-  filters: FinancialReportFilters
-): FinancialTransaction[] => {
-  let filtered = [...transactions];
+/**
+ * Exports financial transactions to CSV format and triggers a download
+ */
+export const exportFinancialReportToCsv = (data: Transaction[], filename = "financial-report.csv") => {
+  // Define CSV headers
+  const headers = [
+    "Date",
+    "Description",
+    "Type",
+    "Category",
+    "Amount",
+    "Status",
+    "Reference"
+  ];
   
-  if (filters.startDate) {
-    filtered = filtered.filter(t => new Date(t.date) >= filters.startDate!);
-  }
+  // Map transaction data to CSV rows
+  const rows = data.map(transaction => [
+    transaction.date,
+    transaction.description,
+    transaction.type,
+    transaction.category,
+    transaction.amount.toString(),
+    transaction.status,
+    transaction.reference || ""
+  ]);
   
-  if (filters.endDate) {
-    // Add 1 day to include the end date
-    const endDate = new Date(filters.endDate);
-    endDate.setDate(endDate.getDate() + 1);
-    filtered = filtered.filter(t => new Date(t.date) < endDate);
-  }
+  // Combine headers and rows
+  const csvContent = [
+    headers.join(","),
+    ...rows.map(row => row.map(cell => 
+      // Escape special characters and wrap in quotes if needed
+      cell.includes(",") || cell.includes("\"") || cell.includes("\n") 
+        ? `"${cell.replace(/"/g, '""')}"` 
+        : cell
+    ).join(","))
+  ].join("\n");
   
-  if (filters.transactionType && filters.transactionType !== 'all') {
-    filtered = filtered.filter(t => t.type === filters.transactionType);
-  }
+  // Create a blob and download link
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
   
-  if (filters.category && filters.category !== 'all') {
-    filtered = filtered.filter(t => t.category === filters.category);
-  }
+  // Create a link element and trigger download
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
   
-  if (filters.searchTerm) {
-    const searchLower = filters.searchTerm.toLowerCase();
-    filtered = filtered.filter(
-      t => t.description.toLowerCase().includes(searchLower) || 
-           t.reference?.toLowerCase().includes(searchLower)
-    );
-  }
-  
-  return filtered;
-};
-
-export const exportFinancialReportToCsv = async (
-  data: FinancialTransaction[],
-  filename: string
-): Promise<void> => {
-  try {
-    // Transform data to CSV format
-    let csvContent = "ID,Date,Type,Category,Description,Amount,Currency,Status,Reference\n";
-    
-    data.forEach(item => {
-      const row = [
-        item.id,
-        item.date,
-        item.type,
-        item.category,
-        `"${item.description.replace(/"/g, '""')}"`, // Handle quotes in description
-        item.amount,
-        item.currency,
-        item.status,
-        item.reference || ''
-      ].join(',');
-      
-      csvContent += row + '\n';
-    });
-    
-    // Create a Blob and download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${filename}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    return Promise.resolve();
-  } catch (error) {
-    console.error('Error exporting report to CSV:', error);
-    return Promise.reject(error);
-  }
+  // Clean up the URL object
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 };

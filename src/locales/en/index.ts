@@ -1,4 +1,3 @@
-
 import auth from "./auth.json";
 import claims from "./claims.json";
 import codebook from "./codebook.json";
@@ -12,6 +11,7 @@ import modules from "./modules.json";
 import settings from "./settings.json";
 import agent from "./agent.json";
 import policies from "./policies";
+import reports from "./reports.json";
 
 const en = {
   ...auth,
@@ -26,7 +26,8 @@ const en = {
   ...modules,
   ...policies,
   ...settings,
-  ...agent
+  ...agent,
+  ...reports
 };
 
 export default en;

@@ -1,5 +1,4 @@
 
-import { Policy } from "@/types/policies";
 import { formatCurrency, formatDate } from "@/utils/format";
 
 export interface PolicyReportFilters {
