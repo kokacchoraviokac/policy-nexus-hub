@@ -26,7 +26,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* Sidebar - independently scrollable */}
-      <Sidebar />
+      <div className={cn(
+        "h-screen overflow-y-auto transition-all duration-300",
+        sidebarCollapsed ? "w-0 opacity-0" : "w-64 opacity-100"
+      )}>
+        <Sidebar />
+      </div>
       
       {/* Main content + fixed footer */}
       <div className="flex flex-col flex-1 overflow-hidden">
@@ -35,18 +40,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           setSidebarCollapsed={setSidebarCollapsed} 
         />
         
-        <div className={cn(
-          "transition-all duration-300",
-          sidebarCollapsed ? "lg:pl-16" : "lg:pl-0"
-        )}>
+        <div className="px-6 py-2">
           <BreadcrumbNav />
         </div>
         
         {/* Scrollable main content */}
-        <main className={cn(
-          "flex-1 overflow-auto transition-all duration-300 animate-enter",
-          sidebarCollapsed ? "lg:pl-24" : "lg:pl-6"
-        )}>
+        <main className="flex-1 overflow-auto animate-enter">
           <div className="p-6 flex-1">
             {children || <Outlet />}
           </div>
