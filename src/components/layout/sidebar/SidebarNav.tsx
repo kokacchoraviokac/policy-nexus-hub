@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import SidebarItem from "./SidebarItem";
@@ -15,6 +15,31 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  
+  // Auto-expand items based on current location
+  useEffect(() => {
+    const currentPath = location.pathname;
+    
+    // Find which parent menu items need to be expanded based on current path
+    const itemsToExpand = sidebarItems
+      .filter(item => 
+        item.subItems?.some(subItem => 
+          currentPath === subItem.path || currentPath.startsWith(`${subItem.path}/`)
+        )
+      )
+      .map(item => item.label);
+    
+    if (itemsToExpand.length > 0) {
+      setExpandedItems(prev => {
+        // Only add items that aren't already expanded
+        const newItems = itemsToExpand.filter(item => !prev.includes(item));
+        if (newItems.length > 0) {
+          return [...prev, ...newItems];
+        }
+        return prev;
+      });
+    }
+  }, [location.pathname]);
   
   const toggleExpand = (label: string) => {
     setExpandedItems(prev => 

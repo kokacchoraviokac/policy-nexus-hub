@@ -57,6 +57,15 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   // If no authorized sub-items exist for this item, render it as a simple link
   const hasSubItems = authorizedSubItems && authorizedSubItems.length > 0;
   
+  // Check if any sub-item is currently active
+  const hasActiveSubItem = hasSubItems && 
+    authorizedSubItems.some(item => 
+      currentPath === item.path || currentPath.startsWith(`${item.path}/`)
+    );
+  
+  // Parent should only be active if it's exactly matched and has no active children
+  const isParentActive = active && !hasActiveSubItem;
+  
   // Handle item click - for items with sub-items, toggle expand/collapse
   const handleItemClick = (e: React.MouseEvent) => {
     if (hasSubItems && onToggleExpand) {
@@ -71,7 +80,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       icon={icon}
       label={label}
       path={path}
-      active={active}
+      active={isParentActive}
       collapsed={collapsed}
       hasSubItems={hasSubItems}
       isExpanded={isExpanded}
