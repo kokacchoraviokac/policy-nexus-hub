@@ -99,7 +99,7 @@ const Policies = () => {
       </div>
       
       {/* Policy Modules Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {policyModules.map((module, index) => (
           <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-0">

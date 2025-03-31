@@ -26,7 +26,6 @@ export const UnlinkedPaymentsFilters: React.FC<UnlinkedPaymentsFiltersProps> = (
   };
   
   const handleStatusChange = (value: string) => {
-    // Make sure we use "all" rather than empty string
     onFilterChange({ ...filters, status: value });
   };
   

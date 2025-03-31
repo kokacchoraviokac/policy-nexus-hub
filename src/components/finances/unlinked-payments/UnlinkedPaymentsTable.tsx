@@ -84,9 +84,9 @@ export const UnlinkedPaymentsTable: React.FC<UnlinkedPaymentsTableProps> = ({
                   disabled={isLinking && linkingPaymentId === payment.id}
                 >
                   {isLinking && linkingPaymentId === payment.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   ) : (
-                    <Link className="h-4 w-4 mr-1" />
+                    <Link className="h-4 w-4 mr-2" />
                   )}
                   {t("link")}
                 </Button>

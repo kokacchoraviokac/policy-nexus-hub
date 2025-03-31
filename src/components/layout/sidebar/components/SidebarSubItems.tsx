@@ -39,8 +39,8 @@ const SidebarSubItems: React.FC<SidebarSubItemsProps> = ({
               className={cn(
                 "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors duration-200",
                 isActive 
-                  ? "bg-[#C76449] text-white font-medium" 
-                  : "text-sidebar-foreground hover:bg-[#C76449]/20 hover:text-white"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium" 
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
             >
               {Icon && <Icon className="h-4 w-4" />}
