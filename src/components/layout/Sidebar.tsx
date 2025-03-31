@@ -1,32 +1,129 @@
 
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import SidebarHeader from "./sidebar/SidebarHeader";
-import SidebarNav from "./sidebar/SidebarNav";
-import SidebarFooter from "./sidebar/SidebarFooter";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  Home,
+  FileText,
+  Workflow,
+  FileUp,
+  ClipboardList,
+  FileSearch,
+  SquareStack,
+  Wallet,
+  Users,
+  BarChart3,
+  Settings,
+  CreditCard
+} from "lucide-react";
 
-interface SidebarProps {
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
-}
+interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
+const Sidebar = ({ className }: SidebarProps) => {
+  const { t } = useLanguage();
+  const location = useLocation();
+  
+  const routes = [
+    {
+      label: t("dashboard"),
+      icon: <Home className="h-5 w-5" />,
+      href: "/",
+      active: location.pathname === "/",
+    },
+    {
+      label: t("policies"),
+      icon: <FileText className="h-5 w-5" />,
+      href: "/policies",
+      active: location.pathname.startsWith("/policies") && 
+              !location.pathname.includes("/workflow") &&
+              !location.pathname.includes("/import") &&
+              !location.pathname.includes("/documents"),
+    },
+    {
+      label: t("policyWorkflow"),
+      icon: <Workflow className="h-5 w-5" />,
+      href: "/policies/workflow",
+      active: location.pathname.startsWith("/policies/workflow"),
+    },
+    {
+      label: t("importPolicies"),
+      icon: <FileUp className="h-5 w-5" />,
+      href: "/policies/import",
+      active: location.pathname.startsWith("/policies/import"),
+    },
+    {
+      label: t("policyDocuments"),
+      icon: <FileSearch className="h-5 w-5" />,
+      href: "/policies/documents",
+      active: location.pathname.startsWith("/policies/documents"),
+    },
+    {
+      label: t("claims"),
+      icon: <ClipboardList className="h-5 w-5" />,
+      href: "/claims",
+      active: location.pathname.startsWith("/claims"),
+    },
+    {
+      label: t("sales"),
+      icon: <SquareStack className="h-5 w-5" />,
+      href: "/sales",
+      active: location.pathname.startsWith("/sales"),
+    },
+    {
+      label: t("finances"),
+      icon: <Wallet className="h-5 w-5" />,
+      href: "/finances",
+      active: location.pathname.startsWith("/finances"),
+    },
+    {
+      label: t("agents"),
+      icon: <Users className="h-5 w-5" />,
+      href: "/agents",
+      active: location.pathname.startsWith("/agents"),
+    },
+    {
+      label: t("reports"),
+      icon: <BarChart3 className="h-5 w-5" />,
+      href: "/reports",
+      active: location.pathname.startsWith("/reports"),
+    },
+    {
+      label: t("payments"),
+      icon: <CreditCard className="h-5 w-5" />,
+      href: "/payments",
+      active: location.pathname.startsWith("/payments"),
+    },
+    {
+      label: t("settings"),
+      icon: <Settings className="h-5 w-5" />,
+      href: "/settings",
+      active: location.pathname.startsWith("/settings"),
+    },
+  ];
+  
   return (
-    <aside 
-      className={cn(
-        "bg-sidebar h-screen flex flex-col border-r border-sidebar-border transition-all duration-300 z-30",
-        collapsed ? "w-16" : "w-64"
-      )}
-    >
-      <SidebarHeader collapsed={collapsed} setCollapsed={setCollapsed} />
-      <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full">
-          <SidebarNav collapsed={collapsed} />
-        </ScrollArea>
+    <div className={cn("pb-12", className)}>
+      <div className="space-y-4 py-4">
+        <div className="px-3 py-2">
+          <div className="space-y-1">
+            {routes.map((route) => (
+              <Link
+                key={route.href}
+                to={route.href}
+                className={cn(
+                  "flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                  route.active ? "bg-accent text-accent-foreground" : "transparent"
+                )}
+              >
+                {route.icon}
+                <span className="ml-3">{route.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
-      <SidebarFooter collapsed={collapsed} />
-    </aside>
+    </div>
   );
 };
 
