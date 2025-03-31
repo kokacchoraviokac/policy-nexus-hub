@@ -163,8 +163,8 @@ const ClientCommissionDialog = ({
                 <FormItem className="flex flex-col">
                   <FormLabel>{t("effectiveFrom")}</FormLabel>
                   <DatePicker
-                    value={field.value}
-                    onChange={field.onChange}
+                    date={field.value}
+                    onSelect={field.onChange}
                     disabled={isSubmitting}
                   />
                   <FormMessage />
@@ -179,8 +179,8 @@ const ClientCommissionDialog = ({
                 <FormItem className="flex flex-col">
                   <FormLabel>{t("effectiveTo")} ({t("optional")})</FormLabel>
                   <DatePicker
-                    value={field.value}
-                    onChange={field.onChange}
+                    date={field.value}
+                    onSelect={field.onChange}
                     disabled={isSubmitting}
                   />
                   <FormMessage />

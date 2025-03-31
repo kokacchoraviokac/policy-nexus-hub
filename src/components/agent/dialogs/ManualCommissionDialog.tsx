@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,10 +63,12 @@ const ManualCommissionDialog = ({
     onSubmit(data);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Search policies when dialog opens
-    searchPolicies("");
-  }, [searchPolicies]);
+    if (open) {
+      searchPolicies("");
+    }
+  }, [open, searchPolicies]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

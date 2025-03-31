@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
 import { useCalculatePayouts } from "@/hooks/agent/useCalculatePayouts";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import PayoutPreviewTable from "./payout/PayoutPreviewTable";
@@ -72,9 +72,10 @@ const CalculatePayouts = () => {
             
             <div className="space-y-2">
               <Label>{t("payoutPeriod")}</Label>
-              <DateRangePicker
-                value={dateRange}
-                onChange={(range) => {
+              <DatePickerWithRange
+                className=""
+                dateRange={dateRange}
+                onDateRangeChange={(range) => {
                   if (range?.from && range?.to) {
                     setDateRange(range);
                   }
