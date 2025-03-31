@@ -18,12 +18,13 @@ import { useActivityLogger } from "@/utils/activityLogger";
 
 interface PolicyStatusWorkflowProps {
   policy: Policy;
+  onStatusUpdated?: () => void;
 }
 
 // Define valid workflow status values
 type WorkflowStatus = 'imported' | 'in_progress' | 'pending_review' | 'approved' | 'rejected';
 
-const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy }) => {
+const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy, onStatusUpdated }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -58,6 +59,10 @@ const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy }) =
         title: t("statusUpdated"),
         description: t("policyStatusHasBeenUpdated"),
       });
+      
+      if (onStatusUpdated) {
+        onStatusUpdated();
+      }
     },
     onError: (error: any) => {
       toast({

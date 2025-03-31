@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ClipboardList } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import PolicyStatusWorkflow from "@/components/policies/workflow/PolicyStatusWorkflow";
+import { Policy } from "@/types/policies";
 
 interface PolicyWorkflowCardProps {
   policy: {
@@ -47,6 +48,24 @@ const PolicyWorkflowCard: React.FC<PolicyWorkflowCardProps> = ({ policy }) => {
     }
   };
 
+  // Create a Policy object from the limited data we have
+  const policyData: Policy = {
+    id: policy.id,
+    policy_number: "", // We don't have this data, but it's required by the Policy type
+    policy_type: "",
+    policyholder_name: "",
+    insurer_name: "",
+    start_date: "",
+    expiry_date: "",
+    premium: 0,
+    currency: "",
+    status: policy.status,
+    workflow_status: policy.workflow_status,
+    created_at: "",
+    updated_at: policy.updated_at,
+    company_id: ""
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -77,11 +96,9 @@ const PolicyWorkflowCard: React.FC<PolicyWorkflowCardProps> = ({ policy }) => {
             ({formatDistanceToNow(new Date(policy.updated_at), { addSuffix: true })})
           </div>
           
-          {/* Fix: Update the props to match what PolicyStatusWorkflow expects */}
+          {/* Pass the full Policy object instead of just the ID */}
           <PolicyStatusWorkflow 
-            policy={policy.id}
-            currentStatus={policy.status}
-            currentWorkflowStatus={policy.workflow_status}
+            policy={policyData}
             onStatusUpdated={() => {}}
           />
         </div>
