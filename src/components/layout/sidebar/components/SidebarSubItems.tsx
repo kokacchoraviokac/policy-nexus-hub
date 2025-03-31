@@ -5,45 +5,50 @@ import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface SubItem {
+interface SubItemProps {
   label: string;
   path: string;
-  requiredPrivilege: string;
   icon?: LucideIcon;
 }
 
 interface SidebarSubItemsProps {
-  subItems: SubItem[];
+  subItems: SubItemProps[];
   currentPath: string;
 }
 
-const SidebarSubItems: React.FC<SidebarSubItemsProps> = ({ subItems, currentPath }) => {
+const SidebarSubItems: React.FC<SidebarSubItemsProps> = ({ 
+  subItems, 
+  currentPath,
+}) => {
   const { t } = useLanguage();
-
+  
   return (
-    <div className="pl-9 mt-1 space-y-1">
-      {subItems.map((subItem, index) => {
-        // More precise path matching for subitems - exact match or direct child routes only
-        const isSubItemActive = 
-          currentPath === subItem.path || 
-          (currentPath.startsWith(`${subItem.path}/`) && 
-           !currentPath.substring(subItem.path.length + 1).includes('/'));
+    <ul className="pl-7 mt-2 space-y-1">
+      {subItems.map((item, index) => {
+        const Icon = item.icon;
+        const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
+        
+        // Ensure the text is properly capitalized when displayed
+        const displayLabel = t(item.label);
         
         return (
-          <Link
-            key={index}
-            to={subItem.path}
-            className={cn(
-              "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent rounded-md py-1.5 px-2 text-sm flex items-center",
-              isSubItemActive && "bg-sidebar-accent text-sidebar-accent-foreground"
-            )}
-          >
-            {subItem.icon && <subItem.icon className="h-4 w-4 mr-2" />}
-            <span>{t(subItem.label)}</span>
-          </Link>
+          <li key={index}>
+            <Link
+              to={item.path}
+              className={cn(
+                "flex items-center gap-3 px-2 py-1.5 text-sm rounded-md transition-colors duration-200",
+                isActive 
+                  ? "bg-primary/10 text-primary font-medium" 
+                  : "text-sidebar-foreground hover:bg-primary/5 hover:text-primary"
+              )}
+            >
+              {Icon && <Icon className="h-4 w-4" />}
+              <span>{displayLabel}</span>
+            </Link>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 };
 

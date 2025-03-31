@@ -36,6 +36,9 @@ const SidebarItemLink: React.FC<SidebarItemLinkProps> = ({
       : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground hover:translate-x-1"
   );
 
+  // Ensure the text is properly capitalized when displayed
+  const displayLabel = t(label);
+
   return (
     <Link
       to={path}
@@ -46,7 +49,7 @@ const SidebarItemLink: React.FC<SidebarItemLinkProps> = ({
       
       {!collapsed && (
         <>
-          <span className="ml-3 flex-1 text-sm capitalize">{t(label)}</span>
+          <span className="ml-3 flex-1 text-sm">{displayLabel}</span>
           {hasSubItems && (
             isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
           )}
