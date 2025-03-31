@@ -1,15 +1,15 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { useInsurers } from "@/hooks/useInsurers";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSimpleSavedFilters } from "@/hooks/useSimpleSavedFilters";
-import { Button } from "@/components/ui/button";
 import DataTable from "@/components/ui/data-table";
 import getInsurerColumns from "@/components/codebook/insurers/InsurersColumns";
 import InsurersFilters from "@/components/codebook/insurers/InsurersFilters";
-import ImportExportButtons from "@/components/codebook/ImportExportButtons";
+import InsurersActionButtons from "@/components/codebook/insurers/InsurersActionButtons";
 import InsurerFormDialog from "@/components/codebook/dialogs/InsurerFormDialog";
 import AdvancedFilterDialog from "@/components/codebook/filters/AdvancedFilterDialog";
 
@@ -48,28 +48,8 @@ const InsurersDirectory: React.FC = () => {
     navigate(`/codebook/companies/${id}`);
   };
 
-  const handleAddInsurer = async (formData: any) => {
-    try {
-      const result = await addInsurer({
-        name: formData.name,
-        contact_person: formData.contactPerson || null,
-        email: formData.email || null,
-        phone: formData.phone || null,
-        address: formData.address || null,
-        city: formData.city || null,
-        postal_code: formData.postalCode || null,
-        country: formData.country || null,
-        registration_number: formData.registrationNumber || null,
-        is_active: formData.isActive,
-        company_id: formData.companyId
-      });
-      
-      if (result?.id) {
-        setFormOpen(false);
-      }
-    } catch (error) {
-      console.error("Error adding insurer:", error);
-    }
+  const handleAddInsurer = () => {
+    setFormOpen(true);
   };
 
   const canAddInsurer = hasPrivilege('codebook.insurers.create');
@@ -104,21 +84,12 @@ const InsurersDirectory: React.FC = () => {
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          {canImportExport && (
-            <ImportExportButtons
-              getData={getExportData}
-              entityName={t('insuranceCompanies')}
-            />
-          )}
-          
-          {canAddInsurer && (
-            <Button onClick={() => setFormOpen(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              {t("addInsurer")}
-            </Button>
-          )}
-        </div>
+        {/* Action Buttons */}
+        <InsurersActionButtons
+          onImport={(data) => Promise.resolve({ created: 0, updated: 0 })}
+          getExportData={getExportData}
+          onAddInsurer={handleAddInsurer}
+        />
       </div>
 
       <InsurersFilters
@@ -146,10 +117,12 @@ const InsurersDirectory: React.FC = () => {
           title: t("noInsurersFound"),
           description: t("noInsurersFoundDescription"),
           action: canAddInsurer ? (
-            <Button onClick={() => setFormOpen(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
+            <button
+              onClick={handleAddInsurer}
+              className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
               {t("addInsurer")}
-            </Button>
+            </button>
           ) : undefined
         }}
         pagination={{

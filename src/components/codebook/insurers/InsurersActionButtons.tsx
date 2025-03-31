@@ -6,6 +6,7 @@ import ImportExportButtons from "@/components/codebook/ImportExportButtons";
 import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface InsurersActionButtonsProps {
   onImport: (importedInsurers: Partial<Insurer>[]) => Promise<{ created: number, updated: number }>;
@@ -20,6 +21,10 @@ const InsurersActionButtons: React.FC<InsurersActionButtonsProps> = ({
 }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const { hasPrivilege } = useAuth();
+  
+  const canAddInsurer = hasPrivilege('codebook.insurers.create');
+  const canImportExport = hasPrivilege('codebook.insurers.import') || hasPrivilege('codebook.insurers.export');
 
   const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
     try {
@@ -41,14 +46,19 @@ const InsurersActionButtons: React.FC<InsurersActionButtonsProps> = ({
 
   return (
     <div className="flex flex-col sm:flex-row gap-2">
-      <ImportExportButtons
-        onImport={handleImport}
-        getData={getExportData}
-        entityName={t("insuranceCompanies")}
-      />
-      <Button className="flex items-center gap-1" onClick={onAddInsurer}>
-        <Plus className="h-4 w-4" /> {t("addInsurer")}
-      </Button>
+      {canImportExport && (
+        <ImportExportButtons
+          onImport={handleImport}
+          getData={getExportData}
+          entityName={t("insuranceCompanies")}
+        />
+      )}
+      
+      {canAddInsurer && (
+        <Button className="flex items-center gap-1" onClick={onAddInsurer}>
+          <Plus className="h-4 w-4" /> {t("addInsurer")}
+        </Button>
+      )}
     </div>
   );
 };
