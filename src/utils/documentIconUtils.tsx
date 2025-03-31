@@ -1,5 +1,6 @@
 
-import { FileText, FileImage, FilePdf, FileArchive, FileCode, FileMusic, FileVideo, File } from "lucide-react";
+import { FileText, FileImage, File, FileArchive, FileCode, FileMusic, FileVideo } from "lucide-react";
+import React from "react";
 
 export const getDocumentIcon = (filePath?: string, mimeType?: string | null) => {
   // If mimetype is provided, use it to determine icon
@@ -8,7 +9,7 @@ export const getDocumentIcon = (filePath?: string, mimeType?: string | null) => 
       return <FileImage className="h-10 w-10 text-blue-500" />;
     }
     if (mimeType === 'application/pdf') {
-      return <FilePdf className="h-10 w-10 text-red-500" />;
+      return <FileText className="h-10 w-10 text-red-500" />;
     }
     if (mimeType.startsWith('audio/')) {
       return <FileMusic className="h-10 w-10 text-purple-500" />;
@@ -33,7 +34,7 @@ export const getDocumentIcon = (filePath?: string, mimeType?: string | null) => 
     
     switch (extension) {
       case 'pdf':
-        return <FilePdf className="h-10 w-10 text-red-500" />;
+        return <FileText className="h-10 w-10 text-red-500" />;
       case 'jpg':
       case 'jpeg':
       case 'png':
