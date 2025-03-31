@@ -1,65 +1,29 @@
 
-// Status transition utilities and constants for claim management
+// Define allowed status transitions for claims
+// This controls what statuses are available when updating a claim
 
-// Valid status transitions map defining allowed transitions between statuses
-export const validStatusTransitions: Record<string, string[]> = {
-  "in processing": ["reported", "rejected"],
-  "reported": ["in processing", "accepted", "rejected", "partially accepted"],
-  "accepted": ["in processing", "paid", "appealed"],
-  "rejected": ["in processing", "appealed"],
-  "appealed": ["in processing", "accepted", "rejected", "partially accepted"],
-  "partially accepted": ["in processing", "paid", "appealed"],
-  "paid": [],
-  "withdrawn": []
+type StatusTransitionsMap = Record<string, string[]>;
+
+export const statusTransitions: StatusTransitionsMap = {
+  "in processing": ["reported", "accepted", "rejected"],
+  "reported": ["in processing", "accepted", "rejected", "appealed"],
+  "accepted": ["partially accepted", "paid", "appealed", "rejected"],
+  "rejected": ["in processing", "appealed", "accepted"],
+  "appealed": ["accepted", "rejected", "in processing"],
+  "partially accepted": ["accepted", "paid", "appealed"],
+  "paid": ["closed"],
+  "withdrawn": ["closed"],
+  "closed": []
 };
 
-// Get status info for display
-export const getStatusInfo = (status: string) => {
-  switch (status.toLowerCase()) {
-    case 'in processing': 
-      return { 
-        description: 'claimStatusInProcessingDescription' 
-      };
-    case 'reported': 
-      return { 
-        description: 'claimStatusReportedDescription' 
-      };
-    case 'accepted': 
-      return { 
-        description: 'claimStatusAcceptedDescription' 
-      };
-    case 'rejected': 
-      return { 
-        description: 'claimStatusRejectedDescription' 
-      };
-    case 'appealed': 
-      return { 
-        description: 'claimStatusAppealedDescription' 
-      };
-    case 'partially accepted': 
-      return { 
-        description: 'claimStatusPartiallyAcceptedDescription' 
-      };
-    case 'paid': 
-      return { 
-        description: 'claimStatusPaidDescription' 
-      };
-    case 'withdrawn': 
-      return { 
-        description: 'claimStatusWithdrawnDescription' 
-      };
-    default: 
-      return { 
-        description: 'claimStatusDefaultDescription' 
-      };
+export const getAllowedStatusTransitions = (currentStatus: string): string[] => {
+  // Always include the current status as an option
+  const availableStatuses = [currentStatus];
+  
+  // Add allowed transitions if they exist
+  if (statusTransitions[currentStatus]) {
+    availableStatuses.push(...statusTransitions[currentStatus]);
   }
-};
-
-// Check if the transition is valid
-export const isValidStatusTransition = (
-  currentStatus: string, 
-  newStatus: string
-): boolean => {
-  if (newStatus === currentStatus) return true;
-  return (validStatusTransitions[currentStatus] || []).includes(newStatus);
+  
+  return availableStatuses;
 };

@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import AppRoutes from '@/routes/AppRoutes';
+import { ClaimsRoutes } from "./routes/ClaimsRoutes";
 
 function App() {
   return (
@@ -13,6 +13,7 @@ function App() {
         <AuthProvider>
           <Toaster position="top-right" />
           <AppRoutes />
+          {ClaimsRoutes}
         </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>

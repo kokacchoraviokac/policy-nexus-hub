@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
-import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
+import ClaimStatusBadge from "../ClaimStatusBadge";
 
 interface StatusHistoryEntry {
   from: string;

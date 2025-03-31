@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DocumentList from "@/components/documents/DocumentList";
-import ClaimStatusHistory from "@/components/claims/detail/ClaimStatusHistory";
+import ClaimStatusHistory from "./ClaimStatusHistory";
 
 interface ClaimDetailsContentProps {
   claim: any;

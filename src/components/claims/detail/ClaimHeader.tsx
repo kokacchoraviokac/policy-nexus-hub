@@ -1,18 +1,22 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { ArrowLeft, Pencil, ArrowDownToLine } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useToast } from "@/hooks/use-toast";
-import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Download, Calendar, Edit, MoreHorizontal } from "lucide-react";
+import ClaimStatusBadge from "../ClaimStatusBadge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ClaimHeaderProps {
   claimNumber: string;
   status: string;
   createdAt: string;
-  isEditMode?: boolean;
+  isEditMode: boolean;
   claimId: string;
 }
 
@@ -20,66 +24,72 @@ const ClaimHeader: React.FC<ClaimHeaderProps> = ({
   claimNumber,
   status,
   createdAt,
-  isEditMode = false,
-  claimId,
+  isEditMode,
+  claimId
 }) => {
-  const navigate = useNavigate();
   const { t, formatDate } = useLanguage();
-  const { toast } = useToast();
-
+  const navigate = useNavigate();
+  
   const handleBack = () => {
     navigate("/claims");
   };
-
+  
   const handleEdit = () => {
     navigate(`/claims/${claimId}/edit`);
   };
-
+  
   const handleExport = () => {
-    // In a real application, this would trigger an API call to generate a PDF
-    toast({
-      title: t("exportStarted"),
-      description: t("claimExportInProgress"),
-    });
+    // This will be implemented in a future iteration
+    console.log("Export claim data for:", claimId);
   };
-
+  
   return (
-    <div className="flex flex-col space-y-4">
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-fit"
-        onClick={handleBack}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {t("backToClaims")}
-      </Button>
-      
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight mb-1">
-              {claimNumber}
-            </h1>
-            <ClaimStatusBadge status={status} />
-          </div>
-          <p className="text-muted-foreground text-sm">
-            {t("createdOn")} {formatDate(createdAt)}
-          </p>
+    <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center">
+      <div className="space-y-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="pl-0 mb-1 text-muted-foreground"
+          onClick={handleBack}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("backToClaims")}
+        </Button>
+        
+        <div className="flex items-center space-x-3">
+          <h1 className="text-2xl font-bold">{claimNumber}</h1>
+          <ClaimStatusBadge status={status} />
         </div>
         
-        <div className="flex items-center mt-4 md:mt-0 gap-2">
-          {!isEditMode && (
-            <Button variant="outline" onClick={handleEdit}>
-              <Pencil className="mr-2 h-4 w-4" />
-              {t("editClaim")}
-            </Button>
-          )}
-          <Button variant="outline" onClick={handleExport}>
-            <ArrowDownToLine className="mr-2 h-4 w-4" />
-            {t("exportClaim")}
-          </Button>
+        <div className="flex items-center text-sm text-muted-foreground">
+          <Calendar className="mr-1 h-4 w-4" />
+          <span>
+            {t("createdOn")}: {formatDate(createdAt)}
+          </span>
         </div>
+      </div>
+      
+      <div className="flex space-x-2">
+        {!isEditMode && (
+          <Button variant="outline" onClick={handleEdit}>
+            <Edit className="mr-2 h-4 w-4" />
+            {t("editClaim")}
+          </Button>
+        )}
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              {t("exportClaim")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
