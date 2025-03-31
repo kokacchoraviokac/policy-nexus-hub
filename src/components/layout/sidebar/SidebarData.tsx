@@ -1,4 +1,3 @@
-
 import {
   Book,
   DollarSign,
@@ -180,6 +179,12 @@ export const sidebarItems = [
     requiredPrivilege: "agent:view",
     subItems: [
       {
+        label: "agents",
+        path: "/agent/agents",
+        requiredPrivilege: "agent:view",
+        icon: Users
+      },
+      {
         label: "fixedCommissions",
         path: "/agent/fixed-commissions",
         requiredPrivilege: "agent:view",
@@ -189,7 +194,7 @@ export const sidebarItems = [
         label: "clientCommissions",
         path: "/agent/client-commissions",
         requiredPrivilege: "agent:view",
-        icon: Users
+        icon: UserCircle
       },
       {
         label: "manualCommissions",

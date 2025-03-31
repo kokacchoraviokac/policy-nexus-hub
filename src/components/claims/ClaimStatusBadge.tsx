@@ -33,7 +33,6 @@ const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }
     }
   };
   
-  // Fixed: We'll use only one consistent approach - the custom color classes
   const statusDisplay = (() => {
     // Normalize status by removing spaces
     const normalizedStatus = status.toLowerCase().replace(/ /g, "");

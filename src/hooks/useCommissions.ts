@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useCommissionsData } from "./commissions/useCommissionsData";
 import { useCommissionFilters, CommissionFilterOptions } from "./commissions/useCommissionFilters";
@@ -16,7 +17,7 @@ export const useCommissions = () => {
   
   const { 
     updateCommissionStatus,
-    isUpdatingStatus: isUpdating, // Add this line to fix the error
+    isUpdatingStatus,
     calculateCommission,
     isCalculating
   } = useCommissionMutations();
@@ -35,7 +36,7 @@ export const useCommissions = () => {
     filters,
     setFilters,
     updateCommissionStatus,
-    isUpdating, // Make sure this is passed through
+    isUpdating: isUpdatingStatus,
     calculateCommission,
     isCalculating,
     exportCommissions,

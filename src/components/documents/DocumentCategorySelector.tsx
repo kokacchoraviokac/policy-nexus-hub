@@ -21,7 +21,7 @@ const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  // Fixed: Ensure value is always a valid string for the Select component
+  // Ensure value is always a valid string for the Select component
   const safeValue = value || "none";
   
   return (
@@ -29,7 +29,10 @@ const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
       <label htmlFor="documentCategory" className="text-sm font-medium">
         {t("documentCategory")}
       </label>
-      <Select value={safeValue} onValueChange={onValueChange}>
+      <Select 
+        value={safeValue.toString()} 
+        onValueChange={onValueChange}
+      >
         <SelectTrigger id="documentCategory" className="w-full">
           <SelectValue placeholder={t("selectCategory")} />
         </SelectTrigger>
