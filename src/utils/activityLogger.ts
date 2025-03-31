@@ -16,32 +16,47 @@ interface ActivityLogData {
 // Function to fetch activity logs for a given entity
 export const fetchActivityLogs = async (entityType: EntityType, entityId: string) => {
   try {
-    const { data, error } = await supabase
+    // First fetch the activity logs
+    const { data: logData, error: logError } = await supabase
       .from('activity_logs')
       .select(`
         id,
         action,
         created_at,
         details,
-        user_id,
-        profiles(
-          name,
-          email
-        )
+        user_id
       `)
       .eq('entity_id', entityId)
       .eq('entity_type', entityType)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (logError) throw logError;
+    
+    // Get user profiles separately since the join doesn't work
+    const userIds = logData.map(log => log.user_id).filter(Boolean);
+    let userProfiles = {};
+    
+    if (userIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', userIds);
+      
+      if (!profilesError && profiles) {
+        userProfiles = profiles.reduce((acc, profile) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {});
+      }
+    }
     
     // Transform data to include user names
-    return data.map(log => ({
+    return logData.map(log => ({
       id: log.id,
       action: log.action,
       timestamp: log.created_at,
-      user: log.profiles?.name || 'Unknown user',
-      userEmail: log.profiles?.email,
+      user: userProfiles[log.user_id]?.name || 'Unknown user',
+      userEmail: userProfiles[log.user_id]?.email,
       details: log.details
     }));
   } catch (err) {
@@ -66,7 +81,7 @@ export const useActivityLogger = () => {
         action: data.action,
         details: data.details || {},
         user_id: user.id,
-        company_id: user.companyId // Fixed property name
+        company_id: user.companyId
       });
       
       if (error) {

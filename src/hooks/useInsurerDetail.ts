@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
-import { useActivityLogger } from "@/utils/activityLogger";
+import { useActivityLogger, fetchActivityLogs } from "@/utils/activityLogger";
 
 export interface ActivityItem {
   id: string;
@@ -57,33 +57,11 @@ export function useInsurerDetail() {
     queryFn: async () => {
       if (!insurerId) return [];
       
-      // Fetch activity logs directly here instead of using a separate function
-      const { data, error } = await supabase
-        .from('activity_logs')
-        .select(`
-          id,
-          action,
-          created_at,
-          details,
-          user_id,
-          profiles(
-            name,
-            email
-          )
-        `)
-        .eq('entity_id', insurerId)
-        .eq('entity_type', 'insurer')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
+      const logs = await fetchActivityLogs("insurer", insurerId);
       
-      // Transform data to include user names
-      return data.map(log => ({
-        id: log.id,
-        action: log.action,
-        timestamp: log.created_at,
-        user: log.profiles?.name || 'Unknown user',
-        userEmail: log.profiles?.email,
+      // Transform data to include stringified details for the UI
+      return logs.map(log => ({
+        ...log,
         details: log.details ? JSON.stringify(log.details) : undefined
       })) as ActivityItem[];
     },

@@ -20,21 +20,39 @@ const PolicyActivityTab: React.FC<PolicyActivityTabProps> = ({ policyId }) => {
   const { data: activities, isLoading } = useQuery({
     queryKey: ['policy-activities', policyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, fetch the activity logs
+      const { data: logs, error } = await supabase
         .from('activity_logs')
-        .select(`
-          *,
-          profiles(
-            name,
-            email
-          )
-        `)
+        .select('*')
         .eq('entity_id', policyId)
         .eq('entity_type', 'policy')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Get user profiles separately
+      const userIds = logs.map(log => log.user_id).filter(Boolean);
+      let userProfiles = {};
+      
+      if (userIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, email')
+          .in('id', userIds);
+        
+        if (!profilesError && profiles) {
+          userProfiles = profiles.reduce((acc, profile) => {
+            acc[profile.id] = profile;
+            return acc;
+          }, {});
+        }
+      }
+      
+      // Combine the data
+      return logs.map(log => ({
+        ...log,
+        profiles: userProfiles[log.user_id] || { name: 'Unknown user' }
+      }));
     },
     enabled: !!policyId
   });
