@@ -3,18 +3,18 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { ClaimFormValues } from '@/components/claims/forms/ClaimDetailsForm';
 
 interface UseClaimFormSubmitProps {
   currentUser: any;
   userProfile: any;
+  onSuccess?: () => void; // Added onSuccess callback as an optional prop
 }
 
-export const useClaimFormSubmit = ({ currentUser, userProfile }: UseClaimFormSubmitProps) => {
+export const useClaimFormSubmit = ({ currentUser, userProfile, onSuccess }: UseClaimFormSubmitProps) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const { mutate: createClaim, isPending: isSubmitting } = useMutation({
@@ -47,22 +47,24 @@ export const useClaimFormSubmit = ({ currentUser, userProfile }: UseClaimFormSub
       return data;
     },
     onSuccess: (data) => {
-      toast({
-        title: t("claimCreated"),
-        description: t("claimCreatedSuccessfully"),
+      toast.success(t("claimCreated"), {
+        description: t("claimCreatedSuccessfully")
       });
       
       queryClient.invalidateQueries({ queryKey: ['policy-claims'] });
       
-      // Navigate to the claim detail page
-      navigate(`/claims/${data.id}`);
+      // Call the provided onSuccess callback if it exists
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        // Navigate to the claim detail page only if no custom onSuccess was provided
+        navigate(`/claims/${data.id}`);
+      }
     },
     onError: (error) => {
       console.error("Error creating claim:", error);
-      toast({
-        title: t("errorCreatingClaim"),
-        description: t("errorCreatingClaimDescription"),
-        variant: "destructive",
+      toast.error(t("errorCreatingClaim"), {
+        description: t("errorCreatingClaimDescription")
       });
     }
   });
