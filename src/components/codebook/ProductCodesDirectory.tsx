@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -286,7 +287,7 @@ const ProductCodesDirectory = () => {
           
           <FilterButton
             activeFilterCount={getActiveFilterCount()}
-            onClick={() => setFilterDialogOpen(true)}
+            onClick={() => setIsFilterDialogOpen(true)}
           />
         </div>
       </div>
