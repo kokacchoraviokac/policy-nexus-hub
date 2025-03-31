@@ -32,7 +32,13 @@ const PipelineOverview = () => {
       
       <PipelineSummary />
       
-      <PipelineKanbanBoard />
+      <div className="bg-card rounded-lg border shadow-sm p-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-medium">{t("pipelineKanban")}</h2>
+          <p className="text-sm text-muted-foreground">{t("pipelineKanbanDescription")}</p>
+        </div>
+        <PipelineKanbanBoard />
+      </div>
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { Grid } from "@/components/ui/grid";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Calendar, CreditCard, Users, Clipboard, ChevronRight } from "lucide-react";
+import { Building, Calendar, Users, Clipboard, ChevronRight } from "lucide-react";
 
 // Types for the pipeline stages and items
 interface PipelineItem {
@@ -117,17 +117,17 @@ const PipelineKanbanBoard: React.FC = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="overflow-x-auto">
-      <Grid className="grid-cols-1 md:grid-cols-4 gap-6 min-w-[1000px]">
+    <div className="overflow-x-auto pb-4">
+      <Grid className="grid-cols-1 md:grid-cols-4 gap-4 min-w-[1000px]">
         {pipelineStagesMock.map((stage) => (
           <div key={stage.id} className="flex flex-col">
             <div className="bg-muted rounded-t-md px-4 py-2 flex items-center justify-between">
               <h3 className="font-medium">{t(stage.name)}</h3>
               <Badge variant="outline">{stage.items.length}</Badge>
             </div>
-            <div className="bg-muted/50 rounded-b-md p-3 flex-1 space-y-3">
+            <div className="bg-card rounded-b-md border-x border-b p-3 flex-1 space-y-3">
               {stage.items.map((item) => (
-                <Card key={item.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                <Card key={item.id} className="cursor-pointer hover:shadow-md transition-shadow border">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between">
                       <Badge 
@@ -142,24 +142,24 @@ const PipelineKanbanBoard: React.FC = () => {
                     </div>
                     <CardTitle className="text-base mt-2">{item.title}</CardTitle>
                     <CardDescription className="flex items-center mt-1">
-                      <Building className="h-3 w-3 mr-1" /> {item.company}
+                      <Building className="h-4 w-4 mr-1.5" /> {item.company}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pb-2">
-                    <div className="text-xs text-muted-foreground space-y-1">
+                    <div className="text-sm text-muted-foreground space-y-1.5">
                       <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" /> {item.date}
+                        <Calendar className="h-4 w-4 mr-1.5" /> {item.date}
                       </div>
                       <div className="flex items-center">
-                        <Users className="h-3 w-3 mr-1" /> {item.assignedTo}
+                        <Users className="h-4 w-4 mr-1.5" /> {item.assignedTo}
                       </div>
                     </div>
                   </CardContent>
                   <CardFooter className="pt-0">
                     <Button variant="ghost" size="sm" className="ml-auto">
-                      <Clipboard className="h-3 w-3 mr-1" />
+                      <Clipboard className="h-4 w-4 mr-1.5" />
                       {t("details")}
-                      <ChevronRight className="h-3 w-3 ml-1" />
+                      <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </CardFooter>
                 </Card>

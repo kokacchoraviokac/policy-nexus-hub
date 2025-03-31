@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import SalesProcessesTable from "@/components/sales/processes/SalesProcessesTable";
 import CreateSalesProcessDialog from "@/components/sales/processes/CreateSalesProcessDialog";
 import { useSalesProcessData } from "@/hooks/sales/useSalesProcessData";
@@ -55,12 +56,12 @@ const SalesProcesses = () => {
       {/* Filter and search controls */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t("searchSalesProcesses")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
+            className="pl-10"
           />
         </div>
         <Select value={stageFilter} onValueChange={setStageFilter}>
@@ -81,46 +82,67 @@ const SalesProcesses = () => {
       
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-card rounded-lg p-4 border shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">{t("totalProcesses")}</div>
-          <div className="text-2xl font-bold mt-1">{salesProcesses.length}</div>
-        </div>
-        <div className="bg-card rounded-lg p-4 border shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">{t("quoteStage")}</div>
-          <div className="text-2xl font-bold mt-1">{processesByStage.quote || 0}</div>
-        </div>
-        <div className="bg-card rounded-lg p-4 border shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">{t("authorizationStage")}</div>
-          <div className="text-2xl font-bold mt-1">{processesByStage.authorization || 0}</div>
-        </div>
-        <div className="bg-card rounded-lg p-4 border shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">{t("proposalStage")}</div>
-          <div className="text-2xl font-bold mt-1">{processesByStage.proposal || 0}</div>
-        </div>
-        <div className="bg-card rounded-lg p-4 border shadow-sm">
-          <div className="text-sm font-medium text-muted-foreground">{t("signedStage")}</div>
-          <div className="text-2xl font-bold mt-1">{processesByStage.signed || 0}</div>
-        </div>
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">{t("totalProcesses")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{salesProcesses.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">{t("quoteStage")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{processesByStage.quote || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">{t("authorizationStage")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{processesByStage.authorization || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">{t("proposalStage")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{processesByStage.proposal || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-muted-foreground">{t("signedStage")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{processesByStage.signed || 0}</p>
+          </CardContent>
+        </Card>
       </div>
       
       {/* Sales processes table */}
-      <div className="bg-card rounded-lg border shadow-sm p-6">
-        <div className="mb-4">
-          <h2 className="text-lg font-medium">{t("allSalesProcesses")}</h2>
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle>{t("allSalesProcesses")}</CardTitle>
           <p className="text-sm text-muted-foreground">{t("salesProcessesTableDescription")}</p>
-        </div>
-        
-        {isLoading ? (
-          <div className="flex justify-center items-center h-48">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <SalesProcessesTable 
-            salesProcesses={salesProcesses} 
-            onRefresh={refreshSalesProcesses} 
-          />
-        )}
-      </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-48">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <SalesProcessesTable 
+              salesProcesses={salesProcesses} 
+              onRefresh={refreshSalesProcesses} 
+            />
+          )}
+        </CardContent>
+      </Card>
       
       {/* Create sales process dialog */}
       <CreateSalesProcessDialog 

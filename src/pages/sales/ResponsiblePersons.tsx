@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Users, Filter } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
 import SearchInput from "@/components/ui/search-input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import ResponsiblePersonDialog from "@/components/sales/responsible/ResponsiblePersonDialog";
 import ResponsiblePersonsTable from "@/components/sales/responsible/ResponsiblePersonsTable";
@@ -60,7 +61,10 @@ const ResponsiblePersons = () => {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">{t("responsiblePersons")}</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("responsiblePersons")}</h1>
+          <p className="text-muted-foreground mt-1">{t("responsiblePersonsDescription")}</p>
+        </div>
         <Button onClick={() => setShowAssignDialog(true)}>
           <PlusCircle className="mr-2 h-4 w-4" />
           {t("assignResponsibility")}
@@ -75,20 +79,23 @@ const ResponsiblePersons = () => {
           className="w-full sm:w-72"
         />
         
-        <Button variant="outline" size="icon" className="h-10 w-10 sm:w-10">
+        <Button variant="outline" size="icon" className="h-10 w-10">
           <Filter className="h-4 w-4" />
         </Button>
       </div>
       
-      <div className="bg-card rounded-lg border shadow-sm">
-        {hasAssignments ? (
-          <ResponsiblePersonsTable 
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onView={handleView}
-          />
-        ) : (
-          <div className="p-6">
+      <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle>{t("assignmentsList")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {hasAssignments ? (
+            <ResponsiblePersonsTable 
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onView={handleView}
+            />
+          ) : (
             <EmptyState
               title={t("noAssignmentsFound")}
               description={t("createYourFirstAssignment")}
@@ -100,9 +107,9 @@ const ResponsiblePersons = () => {
                 </Button>
               }
             />
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
       
       {/* Dialogs */}
       <ResponsiblePersonDialog 
