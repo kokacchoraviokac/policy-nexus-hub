@@ -28,12 +28,17 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">{t("dashboard")}</h1>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("dashboard")}</h1>
+          <p className="text-muted-foreground mt-1">
+            {t("todayOverview")}
+          </p>
+        </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
           title={t("totalPolicies")} 
           value="248" 
@@ -90,39 +95,47 @@ const Dashboard = () => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="animate-enter">
+        <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle>{t("salesPipelineOverview")}</CardTitle>
             <CardDescription>{t("currentLeadsByStage")}</CardDescription>
           </CardHeader>
           <CardContent className="h-[200px] flex items-center justify-center">
-            <div className="text-muted-foreground">Sales pipeline visualization</div>
+            <div className="relative w-full h-full bg-secondary/30 rounded-md overflow-hidden">
+              <div className="absolute bottom-0 left-0 w-1/4 h-[70%] bg-primary/20 rounded-t-md"></div>
+              <div className="absolute bottom-0 left-1/4 w-1/4 h-[50%] bg-primary/30 rounded-t-md"></div>
+              <div className="absolute bottom-0 left-2/4 w-1/4 h-[35%] bg-primary/40 rounded-t-md"></div>
+              <div className="absolute bottom-0 left-3/4 w-1/4 h-[20%] bg-primary/50 rounded-t-md"></div>
+              <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+                {t("currentLeadsByStage")}
+              </div>
+            </div>
           </CardContent>
         </Card>
         
-        <Card className="animate-enter">
+        <Card className="border shadow-sm">
           <CardHeader>
             <CardTitle>{t("readyToInputPolicies")}</CardTitle>
             <CardDescription>{t("policiesWithCompleteData")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-secondary rounded-md">
+              <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-md">
                 <div>
                   <p className="font-medium">Health Insurance - Mark Davis</p>
                   <p className="text-xs text-muted-foreground">Policy #H567890</p>
                 </div>
-                <button className="text-xs bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md transition-colors">
+                <button className="text-xs bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-md transition-colors">
                   {t("finalize")}
                 </button>
               </div>
               
-              <div className="flex items-center justify-between p-3 bg-secondary rounded-md">
+              <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-md">
                 <div>
                   <p className="font-medium">Pet Insurance - Emily Parker</p>
                   <p className="text-xs text-muted-foreground">Policy #P123456</p>
                 </div>
-                <button className="text-xs bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md transition-colors">
+                <button className="text-xs bg-primary hover:bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-md transition-colors">
                   {t("finalize")}
                 </button>
               </div>

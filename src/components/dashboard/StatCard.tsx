@@ -1,6 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -24,7 +25,7 @@ const StatCard: React.FC<StatCardProps> = ({
 }) => {
   return (
     <div className={cn(
-      "glass-card rounded-lg p-5 animate-enter",
+      "bg-card rounded-lg border shadow-sm p-5",
       className
     )}>
       <div className="flex items-start justify-between">
@@ -36,11 +37,16 @@ const StatCard: React.FC<StatCardProps> = ({
           
           {trend && (
             <div className="flex items-center mt-2">
+              {trend.positive ? (
+                <ArrowUpRight className="h-3.5 w-3.5 text-emerald-500" />
+              ) : (
+                <ArrowDownRight className="h-3.5 w-3.5 text-rose-500" />
+              )}
               <span className={cn(
-                "text-xs font-medium",
+                "text-xs font-medium ml-1",
                 trend.positive ? "text-emerald-500" : "text-rose-500"
               )}>
-                {trend.positive ? "+" : "-"}{Math.abs(trend.value)}%
+                {Math.abs(trend.value)}%
               </span>
               <span className="text-xs text-muted-foreground ml-1.5">vs last month</span>
             </div>

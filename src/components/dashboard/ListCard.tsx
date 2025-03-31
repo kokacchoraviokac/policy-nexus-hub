@@ -33,10 +33,10 @@ const ListCard: React.FC<ListCardProps> = ({
 }) => {
   return (
     <div className={cn(
-      "glass-card rounded-lg overflow-hidden animate-enter",
+      "bg-card rounded-lg border shadow-sm overflow-hidden",
       className
     )}>
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+      <div className="px-5 py-4 border-b flex items-center justify-between">
         <div className="flex items-center space-x-2">
           {icon && <div className="text-primary">{icon}</div>}
           <h3 className="font-medium">{title}</h3>
