@@ -28,6 +28,7 @@ const InsurersActionButtons: React.FC<InsurersActionButtonsProps> = ({
 
   const handleImport = async (importedInsurers: Partial<Insurer>[]) => {
     try {
+      console.log("Importing insurers:", importedInsurers);
       const { created, updated } = await onImport(importedInsurers);
       
       toast({

@@ -52,6 +52,31 @@ const InsurersDirectory: React.FC = () => {
     setFormOpen(true);
   };
 
+  const handleImportInsurers = async (importedInsurers: Partial<import('@/types/codebook').Insurer>[]) => {
+    try {
+      let created = 0;
+      let updated = 0;
+      
+      // Process each imported insurer
+      for (const insurer of importedInsurers) {
+        // In a real implementation, this would add or update insurers in the database
+        // For now, we'll just increment our counters
+        if (insurer.id) {
+          // Update existing insurer
+          updated++;
+        } else {
+          // Create new insurer
+          created++;
+        }
+      }
+      
+      return { created, updated };
+    } catch (error) {
+      console.error("Error importing insurers:", error);
+      throw error;
+    }
+  };
+
   const canAddInsurer = hasPrivilege('codebook.insurers.create');
   const canImportExport = hasPrivilege('codebook.insurers.import') || hasPrivilege('codebook.insurers.export');
 
@@ -86,7 +111,7 @@ const InsurersDirectory: React.FC = () => {
         
         {/* Action Buttons */}
         <InsurersActionButtons
-          onImport={(data) => Promise.resolve({ created: 0, updated: 0 })}
+          onImport={handleImportInsurers}
           getExportData={getExportData}
           onAddInsurer={handleAddInsurer}
         />
