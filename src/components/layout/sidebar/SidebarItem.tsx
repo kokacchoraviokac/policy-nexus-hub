@@ -26,6 +26,7 @@ interface SidebarItemProps {
   subItems?: SubItem[];
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  currentPath: string;
 }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({
@@ -37,12 +38,11 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   requiredPrivilege,
   subItems,
   isExpanded = false,
-  onToggleExpand
+  onToggleExpand,
+  currentPath
 }) => {
   const { hasPrivilege } = useAuth();
   const { t } = useLanguage();
-  const location = useLocation();
-  const currentPath = location.pathname;
   
   // Filter sub-items based on user privileges
   const authorizedSubItems = subItems?.filter(item => 
@@ -63,9 +63,6 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       currentPath === item.path || currentPath.startsWith(`${item.path}/`)
     );
   
-  // Parent should only be active if it's exactly matched and has no active children
-  const isParentActive = active && !hasActiveSubItem;
-  
   // Handle item click - for items with sub-items, toggle expand/collapse
   const handleItemClick = (e: React.MouseEvent) => {
     if (hasSubItems && onToggleExpand) {
@@ -80,7 +77,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       icon={icon}
       label={label}
       path={path}
-      active={isParentActive}
+      active={active}
       collapsed={collapsed}
       hasSubItems={hasSubItems}
       isExpanded={isExpanded}

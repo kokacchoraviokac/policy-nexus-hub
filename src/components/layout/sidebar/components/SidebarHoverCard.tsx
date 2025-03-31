@@ -40,9 +40,7 @@ const SidebarHoverCard: React.FC<SidebarHoverCardProps> = ({ label, subItems, cu
           {subItems.map((subItem, index) => {
             const isSubItemActive = 
               currentPath === subItem.path || 
-              currentPath.startsWith(`${subItem.path}/`) ||
-              (subItem.path !== "/" && 
-               currentPath.includes(subItem.path.split("/").filter(Boolean)[0]));
+              currentPath.startsWith(`${subItem.path}/`);
             
             return (
               <Link
