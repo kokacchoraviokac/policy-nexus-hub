@@ -4,6 +4,7 @@ import { Book, Building2 } from "lucide-react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
 import InsurersDirectory from "@/components/codebook/InsurersDirectory";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -31,7 +32,17 @@ const InsurersPage = () => {
           </div>
         </div>
         
-        <InsurersDirectory />
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("insuranceCompaniesDirectory")}</CardTitle>
+            <CardDescription>
+              {t("insuranceCompaniesDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <InsurersDirectory />
+          </CardContent>
+        </Card>
       </div>
     </QueryClientProvider>
   );

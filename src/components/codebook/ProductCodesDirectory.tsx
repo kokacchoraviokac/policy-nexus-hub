@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Plus, Trash } from "lucide-react";
@@ -121,7 +119,6 @@ const ProductCodesDirectory = () => {
     });
   };
 
-  // Count active filters
   const getActiveFilterCount = () => {
     let count = 0;
     if (filters.status && filters.status !== 'all') count++;
@@ -250,14 +247,8 @@ const ProductCodesDirectory = () => {
   ];
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>{t("insuranceProductsDirectory")}</CardTitle>
-          <CardDescription>
-            {t("insuranceProductsDirectoryDescription")}
-          </CardDescription>
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div className="flex flex-col sm:flex-row gap-2">
           <ImportExportButtons
             onImport={handleImport}
@@ -268,58 +259,57 @@ const ProductCodesDirectory = () => {
             <Plus className="h-4 w-4" /> {t("addProduct")}
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t("searchProducts")}
-            className="w-full sm:max-w-xs"
-          />
+      </div>
+      
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder={t("searchProducts")}
+          className="w-full sm:max-w-xs"
+        />
+        
+        <div className="flex gap-2 items-center">
+          <Select
+            value={filters.status || 'all'}
+            onValueChange={(value) => handleFilterChange({ ...filters, status: value as 'all' | 'active' | 'inactive' })}
+          >
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder={t("status")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("allStatus")}</SelectItem>
+              <SelectItem value="active">{t("active")}</SelectItem>
+              <SelectItem value="inactive">{t("inactive")}</SelectItem>
+            </SelectContent>
+          </Select>
           
-          <div className="flex gap-2 items-center">
-            <Select
-              value={filters.status || 'all'}
-              onValueChange={(value) => handleFilterChange({ ...filters, status: value as 'all' | 'active' | 'inactive' })}
-            >
-              <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder={t("status")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("allStatus")}</SelectItem>
-                <SelectItem value="active">{t("active")}</SelectItem>
-                <SelectItem value="inactive">{t("inactive")}</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <FilterButton
-              activeFilterCount={getActiveFilterCount()}
-              onClick={() => setIsFilterDialogOpen(true)}
-            />
-          </div>
+          <FilterButton
+            activeFilterCount={getActiveFilterCount()}
+            onClick={() => setFilterDialogOpen(true)}
+          />
         </div>
-        
-        <ActiveFilters 
-          filters={filters} 
-          onClearFilter={handleClearFilter}
-          filterLabels={{
-            category: t("category"),
-            insurer: t("insurer")
-          }}
-        />
-        
-        <DataTable
-          data={filteredProducts || []}
-          columns={columns}
-          isLoading={isLoading}
-          emptyState={{
-            title: t("noProductsFound"),
-            description: t("noProductsFound"),
-            action: null
-          }}
-        />
-      </CardContent>
+      </div>
+      
+      <ActiveFilters 
+        filters={filters} 
+        onClearFilter={handleClearFilter}
+        filterLabels={{
+          category: t("category"),
+          insurer: t("insurer")
+        }}
+      />
+      
+      <DataTable
+        data={filteredProducts || []}
+        columns={columns}
+        isLoading={isLoading}
+        emptyState={{
+          title: t("noProductsFound"),
+          description: t("noProductsFound"),
+          action: null
+        }}
+      />
 
       <ProductFormDialog 
         open={isProductFormOpen}
@@ -341,7 +331,7 @@ const ProductCodesDirectory = () => {
           showCreatedDates: true
         }}
       />
-    </Card>
+    </div>
   );
 };
 

@@ -13,11 +13,13 @@ import EditProductDialog from "@/components/codebook/dialogs/EditProductDialog";
 import EntityNotFound from "@/components/codebook/details/EntityNotFound";
 import EntityLoadError from "@/components/codebook/details/EntityLoadError";
 import ProductDetailTabs from "@/components/codebook/products/ProductDetailTabs";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ProductDetailPage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
@@ -117,7 +119,7 @@ export default function ProductDetailPage() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center p-8">Loading product details...</div>;
+    return <div className="flex justify-center p-8">{t("loadingProductDetails")}...</div>;
   }
 
   if (error) {
@@ -125,7 +127,7 @@ export default function ProductDetailPage() {
   }
 
   if (!product) {
-    return <EntityNotFound entityType="Product" backPath="/codebook/products" backLabel="Products Directory" />;
+    return <EntityNotFound entityType="Product" backPath="/codebook/products" backLabel={t("productsDirectory")} />;
   }
 
   const tabs = ProductDetailTabs({ product, activityData });
@@ -134,19 +136,19 @@ export default function ProductDetailPage() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center space-x-2 mb-6">
         <Book className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold tracking-tight">Codebook</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("codebook")}</h1>
         <span className="text-muted-foreground">/</span>
         <div className="flex items-center space-x-1">
           <Tag className="h-5 w-5" />
-          <span className="font-medium">Insurance Product Details</span>
+          <span className="font-medium">{t("insuranceProductDetails")}</span>
         </div>
       </div>
       
       <EntityDetailsCard
         title={product.name}
-        subtitle={`Code: ${product.code}`}
+        subtitle={`${t("code")}: ${product.code}`}
         backLink="/codebook/products"
-        backLinkLabel="Products Directory"
+        backLinkLabel={t("productsDirectory")}
         onEdit={() => setIsEditDialogOpen(true)}
         onDelete={() => setIsDeleteDialogOpen(true)}
         onExport={handleExport}
@@ -165,7 +167,7 @@ export default function ProductDetailPage() {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onDelete={handleDelete}
-        entityName="Insurance Product"
+        entityName={t("insuranceProduct")}
         entityTitle={product.name}
       />
     </div>

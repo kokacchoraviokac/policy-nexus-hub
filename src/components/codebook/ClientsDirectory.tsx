@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useClients, Client } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth/AuthContext";
@@ -114,7 +112,6 @@ const ClientsDirectory = () => {
     });
   };
 
-  // Count active filters
   const getActiveFilterCount = () => {
     let count = 0;
     if (filters.status && filters.status !== 'all') count++;
@@ -174,38 +171,31 @@ const ClientsDirectory = () => {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>{t("clientDirectory")}</CardTitle>
-          <CardDescription>
-            {t("clientDirectoryDescription")}
-          </CardDescription>
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <ClientsActionButtons
           onImport={handleImport}
           getExportData={getExportData}
           onAddClient={handleAddClient}
         />
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <ClientsFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onClearFilter={handleClearFilter}
-          onOpenFilterDialog={() => setIsFilterDialogOpen(true)}
-          activeFilterCount={getActiveFilterCount()}
-        />
-        
-        <ClientsTable
-          clients={filteredClients}
-          isLoading={isLoading}
-          onEdit={handleEditClient}
-          onDelete={setClientToDelete}
-        />
-      </CardContent>
+      </div>
+      
+      <ClientsFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onClearFilter={handleClearFilter}
+        onOpenFilterDialog={() => setIsFilterDialogOpen(true)}
+        activeFilterCount={getActiveFilterCount()}
+      />
+      
+      <ClientsTable
+        clients={filteredClients}
+        isLoading={isLoading}
+        onEdit={handleEditClient}
+        onDelete={setClientToDelete}
+      />
 
       <ClientFormDialog 
         open={isClientFormOpen}
@@ -227,7 +217,7 @@ const ClientsDirectory = () => {
           showCreatedDates: true
         }}
       />
-    </Card>
+    </div>
   );
 };
 

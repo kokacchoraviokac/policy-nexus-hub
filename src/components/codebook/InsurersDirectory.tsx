@@ -105,15 +105,8 @@ const InsurersDirectory: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("insuranceCompanies")}</h2>
-          <p className="text-muted-foreground">
-            {t("insuranceCompaniesDescription")}
-          </p>
-        </div>
-        
-        {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        {/* Action Buttons moved here */}
         <InsurersActionButtons
           onImport={handleImportInsurers}
           getExportData={getExportData}

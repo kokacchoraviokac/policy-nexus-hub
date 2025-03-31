@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash, ArrowLeft, FileDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TabItem } from "@/types/ui";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface EntityDetailsCardProps {
   title: string;
@@ -31,10 +32,11 @@ export function EntityDetailsCard({
   tabs
 }: EntityDetailsCardProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
-    <Card className="border-none shadow-none">
-      <CardHeader className="px-0 pt-0">
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-3">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <Button
             variant="ghost"
@@ -43,26 +45,26 @@ export function EntityDetailsCard({
             onClick={() => navigate(backLink)}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to {backLinkLabel}
+            {t("backTo")} {backLinkLabel}
           </Button>
           
           <div className="flex items-center space-x-2">
             {onExport && (
               <Button variant="outline" size="sm" onClick={onExport}>
                 <FileDown className="mr-1 h-4 w-4" />
-                Export
+                {t("export")}
               </Button>
             )}
             {onEdit && (
               <Button variant="outline" size="sm" onClick={onEdit}>
                 <Edit className="mr-1 h-4 w-4" />
-                Edit
+                {t("edit")}
               </Button>
             )}
             {onDelete && (
               <Button variant="outline" size="sm" onClick={onDelete} className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
                 <Trash className="mr-1 h-4 w-4" />
-                Delete
+                {t("delete")}
               </Button>
             )}
           </div>
@@ -73,9 +75,9 @@ export function EntityDetailsCard({
           {subtitle && <CardDescription className="mt-1">{subtitle}</CardDescription>}
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent>
         {tabs ? (
-          <Tabs defaultValue={tabs[0].id}>
+          <Tabs defaultValue={tabs[0].id} className="mt-2">
             <TabsList className="mb-4">
               {tabs.map((tab) => (
                 <TabsTrigger key={tab.id} value={tab.id}>
@@ -84,7 +86,7 @@ export function EntityDetailsCard({
               ))}
             </TabsList>
             {tabs.map((tab) => (
-              <TabsContent key={tab.id} value={tab.id}>
+              <TabsContent key={tab.id} value={tab.id} className="p-1">
                 {tab.content}
               </TabsContent>
             ))}

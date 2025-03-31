@@ -32,7 +32,17 @@ const ClientsPage = () => {
           </div>
         </div>
         
-        <ClientsDirectory />
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("clientDirectory")}</CardTitle>
+            <CardDescription>
+              {t("clientDirectoryDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ClientsDirectory />
+          </CardContent>
+        </Card>
       </div>
     </QueryClientProvider>
   );

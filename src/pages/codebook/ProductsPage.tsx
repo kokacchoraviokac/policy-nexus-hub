@@ -32,7 +32,17 @@ const ProductsPage = () => {
           </div>
         </div>
         
-        <ProductCodesDirectory />
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("insuranceProductsDirectory")}</CardTitle>
+            <CardDescription>
+              {t("insuranceProductsDirectoryDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProductCodesDirectory />
+          </CardContent>
+        </Card>
       </div>
     </QueryClientProvider>
   );
