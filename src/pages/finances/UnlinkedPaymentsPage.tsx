@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArrowLeft, FileDown } from "lucide-react";
+import { ArrowLeft, FileDown, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useUnlinkedPaymentsPagination } from "@/hooks/unlinked-payments/useUnli
 import { useUnlinkedPaymentsExport } from "@/hooks/unlinked-payments/useUnlinkedPaymentsExport";
 import UnlinkedPaymentsPagination from "@/components/finances/unlinked-payments/UnlinkedPaymentsPagination";
 import { UnlinkedPaymentType } from "@/types/finances";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const UnlinkedPaymentsPage = () => {
   const { t } = useLanguage();
@@ -107,37 +108,65 @@ const UnlinkedPaymentsPage = () => {
           </h1>
         </div>
         
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-          onClick={handleExport}
-          disabled={isExporting}
-        >
-          <FileDown className="h-4 w-4" />
-          {isExporting ? t("exporting") : t("exportPayments")}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            <RefreshCw className="h-4 w-4" />
+            {t("refresh")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            <FileDown className="h-4 w-4" />
+            {isExporting ? t("exporting") : t("exportPayments")}
+          </Button>
+        </div>
       </div>
       
-      <UnlinkedPaymentsFilters 
-        filters={filters} 
-        onFilterChange={handleFilterChange}
-        onClearFilters={handleClearFilters}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("filters")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UnlinkedPaymentsFilters 
+            filters={filters} 
+            onFilterChange={handleFilterChange}
+            onClearFilters={handleClearFilters}
+          />
+        </CardContent>
+      </Card>
       
-      <UnlinkedPaymentsTable 
-        payments={unlinkedPayments}
-        isLoading={isLoading}
-        onRefresh={refetch}
-      />
-      
-      <UnlinkedPaymentsPagination
-        currentPage={pagination.page}
-        pageSize={pagination.pageSize}
-        totalItems={totalItems}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("unlinkedPayments")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <UnlinkedPaymentsTable 
+            payments={unlinkedPayments}
+            isLoading={isLoading}
+            onRefresh={refetch}
+          />
+          
+          <div className="mt-4">
+            <UnlinkedPaymentsPagination
+              currentPage={pagination.page}
+              pageSize={pagination.pageSize}
+              totalItems={totalItems}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

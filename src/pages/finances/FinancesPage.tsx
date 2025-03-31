@@ -43,10 +43,10 @@ const FinancesPage = () => {
   ];
   
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="container mx-auto py-6 space-y-6">
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold tracking-tight">{t("finances")}</h1>
-        <p className="text-muted-foreground max-w-3xl mx-auto">
+        <p className="text-muted-foreground max-w-3xl mx-auto mt-2">
           {t("financesDescription")}
         </p>
       </div>
@@ -57,7 +57,7 @@ const FinancesPage = () => {
             <CardHeader className="bg-muted/50 pb-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <CardTitle>{module.title}</CardTitle>
+                  <CardTitle className="text-lg">{module.title}</CardTitle>
                   <CardDescription className="mt-1">
                     {module.description}
                   </CardDescription>

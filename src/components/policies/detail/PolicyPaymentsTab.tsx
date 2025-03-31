@@ -6,9 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import PolicyPaymentSummary from "./payment/PolicyPaymentSummary";
 import PolicyPaymentHistory from "./payment/PolicyPaymentHistory";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { FileDown, Loader2 } from "lucide-react";
 import { UnlinkedPaymentType } from "@/types/policies";
 import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PolicyPaymentsTabProps {
   policyId: string;
@@ -17,6 +18,7 @@ interface PolicyPaymentsTabProps {
 const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
   
   // Fetch policy info for premium and currency
   const { data: policyBasic, isLoading: isPolicyLoading } = useQuery({
@@ -52,6 +54,8 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
   
   const handleExportPayments = () => {
     // This would download a CSV of payments
+    setIsExporting(true);
+    
     toast({
       title: t("exportStarted"),
       description: t("paymentsExportInProgress"),
@@ -59,6 +63,7 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
     
     // In a real implementation, this would actually export the data
     setTimeout(() => {
+      setIsExporting(false);
       toast({
         title: t("exportComplete"),
         description: t("paymentsExportedSuccessfully"),
@@ -80,19 +85,40 @@ const PolicyPaymentsTab: React.FC<PolicyPaymentsTabProps> = ({ policyId }) => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">{t("paymentInformation")}</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={handleExportPayments}
+          disabled={isExporting || !payments?.length}
+        >
+          <FileDown className="h-4 w-4" />
+          {isExporting ? t("exporting") : t("exportPayments")}
+        </Button>
+      </div>
+      
       <PolicyPaymentSummary 
         premium={premium} 
         currency={currency} 
         totalPaid={totalPaid} 
       />
       
-      <PolicyPaymentHistory 
-        paymentsData={payments || []} 
-        policyId={policyId}
-        premium={premium}
-        currency={currency}
-        onExportPayments={handleExportPayments}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("paymentHistory")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PolicyPaymentHistory 
+            paymentsData={payments || []} 
+            policyId={policyId}
+            premium={premium}
+            currency={currency}
+            onExportPayments={handleExportPayments}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };

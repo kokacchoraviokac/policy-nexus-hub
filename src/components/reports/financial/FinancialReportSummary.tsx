@@ -4,6 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FinancialTransaction } from "@/utils/reports/financialReportUtils";
 import { ArrowDownIcon, ArrowUpIcon, CircleDollarSign, Receipt, CreditCard, ArrowRightLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/utils/formatters";
 
 interface FinancialReportSummaryProps {
@@ -116,14 +117,7 @@ const FinancialReportSummary: React.FC<FinancialReportSummaryProps> = ({ data, i
         <h2 className="text-xl font-semibold">{t("financialSummary")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((_, index) => (
-            <Card key={index} className="animate-pulse">
-              <CardHeader className="pb-2">
-                <div className="h-6 bg-gray-200 rounded w-24"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 bg-gray-200 rounded w-32"></div>
-              </CardContent>
-            </Card>
+            <Skeleton key={index} className="h-32 w-full" />
           ))}
         </div>
       </div>
@@ -135,7 +129,7 @@ const FinancialReportSummary: React.FC<FinancialReportSummaryProps> = ({ data, i
       <h2 className="text-xl font-semibold">{t("financialSummary")}</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {cards.map((card, index) => (
-          <Card key={index}>
+          <Card key={index} className="overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium">

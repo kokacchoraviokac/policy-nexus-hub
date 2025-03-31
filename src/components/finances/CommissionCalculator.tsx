@@ -5,13 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator } from "lucide-react";
 
@@ -21,28 +14,36 @@ const CommissionCalculator = () => {
   const [baseAmount, setBaseAmount] = React.useState<number>(0);
   const [rate, setRate] = React.useState<number>(10);
   const [result, setResult] = React.useState<number | null>(null);
+  const [isCalculating, setIsCalculating] = React.useState(false);
 
   const handleCalculate = () => {
-    const calculatedAmount = (baseAmount * rate) / 100;
-    setResult(calculatedAmount);
+    setIsCalculating(true);
     
-    toast({
-      title: t("commissionCalculated"),
-      description: t("commissionCalculationResult", {
-        amount: formatCurrency(calculatedAmount, "EUR")
-      }),
-    });
+    // Simulate calculation delay
+    setTimeout(() => {
+      const calculatedAmount = (baseAmount * rate) / 100;
+      setResult(calculatedAmount);
+      
+      toast({
+        title: t("commissionCalculated"),
+        description: t("commissionCalculationResult", {
+          amount: formatCurrency(calculatedAmount, "EUR")
+        }),
+      });
+      
+      setIsCalculating(false);
+    }, 500);
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-muted/50">
         <CardTitle className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />
           {t("commissionCalculator")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="pt-6 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="baseAmount">{t("baseAmount")}</Label>
           <Input
@@ -52,6 +53,7 @@ const CommissionCalculator = () => {
             step="0.01"
             value={baseAmount || ""}
             onChange={(e) => setBaseAmount(parseFloat(e.target.value) || 0)}
+            className="w-full"
           />
         </div>
 
@@ -72,12 +74,16 @@ const CommissionCalculator = () => {
           </div>
         </div>
 
-        <Button onClick={handleCalculate} className="w-full mt-4">
-          {t("calculateCommission")}
+        <Button 
+          onClick={handleCalculate} 
+          className="w-full mt-4"
+          disabled={isCalculating}
+        >
+          {isCalculating ? t("calculating") : t("calculateCommission")}
         </Button>
 
         {result !== null && (
-          <div className="p-4 border rounded-md mt-4">
+          <div className="p-4 border rounded-md mt-4 bg-muted/10">
             <div className="text-sm text-muted-foreground">
               {t("calculatedCommission")}
             </div>

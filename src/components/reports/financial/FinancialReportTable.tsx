@@ -34,15 +34,18 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  // Update this function to return valid badge variants
+  // Map badge variants to status values
   const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'completed':
-        return 'secondary';  // Instead of 'success'
       case 'paid':
-        return 'secondary';  // Instead of 'success'
+        return 'secondary';
       case 'pending':
-        return 'outline';    // Instead of 'warning'
+        return 'outline';
+      case 'overdue':
+        return 'destructive';
+      case 'processing':
+        return 'default';
       default:
         return 'outline';
     }
@@ -51,18 +54,18 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
       </div>
     );
   }
   
   if (data.length === 0) {
     return (
-      <div className="text-center py-10 border rounded-md">
+      <div className="text-center py-10 border rounded-md bg-muted/10">
         <h3 className="text-lg font-medium">{t("noDataFound")}</h3>
         <p className="text-muted-foreground mt-2">{t("tryAdjustingYourFilters")}</p>
       </div>
@@ -117,7 +120,7 @@ const FinancialReportTable: React.FC<FinancialReportTableProps> = ({
   const visibleColumnData = visibleColumns.map(col => columnMap[col as keyof typeof columnMap]);
   
   return (
-    <div className="border rounded-md">
+    <div className="border rounded-md overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>

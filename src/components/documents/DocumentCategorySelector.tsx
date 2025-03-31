@@ -27,7 +27,7 @@ const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
         {t("documentCategory")}
       </label>
       <Select value={value} onValueChange={onValueChange as any}>
-        <SelectTrigger id="documentCategory">
+        <SelectTrigger id="documentCategory" className="w-full">
           <SelectValue placeholder={t("selectCategory")} />
         </SelectTrigger>
         <SelectContent>
@@ -45,6 +45,18 @@ const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
           </SelectItem>
           <SelectItem value="financial">
             {t("financial")}
+          </SelectItem>
+          <SelectItem value="policy">
+            {t("policy")}
+          </SelectItem>
+          <SelectItem value="invoice">
+            {t("invoice")}
+          </SelectItem>
+          <SelectItem value="lien">
+            {t("lien")}
+          </SelectItem>
+          <SelectItem value="notification">
+            {t("notification")}
           </SelectItem>
           <SelectItem value="correspondence">
             {t("correspondence")}
