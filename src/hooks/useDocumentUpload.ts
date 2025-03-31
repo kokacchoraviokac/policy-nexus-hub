@@ -2,20 +2,17 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useActivityLogger } from "@/utils/activityLogger";
-import type { EntityType } from "@/utils/activityLogger";
+import { useAuthContext } from "@/contexts/auth/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useFileInput, validateUploadFields } from "@/utils/fileHandlingUtils";
-import { getDocumentTable, uploadFileToStorage, insertDocumentRecord, createDocumentData } from "@/utils/documentUploadUtils";
-import type { DocumentCategory, DocumentApprovalStatus } from "@/types/documents";
+import { useToast } from "@/hooks/use-toast";
+import { DocumentCategory } from "@/types/documents";
 
-export interface UseDocumentUploadProps {
-  entityType: EntityType;
+interface UseDocumentUploadProps {
+  entityType: "policy" | "claim" | "sales_process" | "client" | "insurer" | "agent";
   entityId: string;
   onSuccess?: () => void;
-  originalDocumentId?: string; // For version control
-  currentVersion?: number; // For version control
+  originalDocumentId?: string;
+  currentVersion?: number;
 }
 
 export const useDocumentUpload = ({
@@ -25,116 +22,134 @@ export const useDocumentUpload = ({
   originalDocumentId,
   currentVersion = 0
 }: UseDocumentUploadProps) => {
-  const [documentType, setDocumentType] = useState("");
-  const [documentCategory, setDocumentCategory] = useState<DocumentCategory | "">("");
-  const [uploading, setUploading] = useState(false);
-  
+  const { user } = useAuthContext();
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { logActivity } = useActivityLogger();
-  const { 
-    file, 
-    setFile, 
-    documentName, 
-    setDocumentName, 
-    handleFileChange 
-  } = useFileInput();
   
-  // Get appropriate document table name
-  const documentTable = getDocumentTable(entityType);
+  const [documentName, setDocumentName] = useState("");
+  const [documentType, setDocumentType] = useState("");
+  const [documentCategory, setDocumentCategory] = useState<DocumentCategory | "">("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  
+  // Map entity type to the table name
+  const getTableName = () => {
+    switch (entityType) {
+      case 'policy':
+        return 'policy_documents';
+      case 'claim':
+        return 'claim_documents';
+      case 'sales_process':
+        return 'sales_documents';
+      default:
+        throw new Error(`Unsupported entity type: ${entityType}`);
+    }
+  };
+  
+  // Map entity type to the entity ID column name
+  const getEntityIdColumn = () => {
+    switch (entityType) {
+      case 'policy':
+        return 'policy_id';
+      case 'claim':
+        return 'claim_id';
+      case 'sales_process':
+        return 'sales_process_id';
+      default:
+        throw new Error(`Unsupported entity type: ${entityType}`);
+    }
+  };
+  
+  const tableName = getTableName();
+  const entityIdColumn = getEntityIdColumn();
+  
+  const handleFileChange = (newFile: File | null) => {
+    setFile(newFile);
+    
+    if (newFile && !documentName) {
+      // Auto-populate document name from file name if not set
+      const fileName = newFile.name.split('.').slice(0, -1).join('.');
+      setDocumentName(fileName);
+    }
+  };
   
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      // Validate required fields
-      const validation = validateUploadFields(file, documentName, documentType);
-      if (!validation.isValid) {
-        throw new Error(`Missing required field: ${validation.missingField}`);
+      if (!file || !documentName || !documentType) {
+        throw new Error("Missing required fields");
       }
       
       setUploading(true);
-      try {
-        const user = await supabase.auth.getUser();
-        const userId = user.data.user?.id;
-        if (!userId) {
-          throw new Error("User not authenticated");
-        }
-        
-        const userName = user.data.user?.email || user.data.user?.user_metadata?.name || userId;
-        
-        // Upload file to storage
-        const { documentId, filePath } = await uploadFileToStorage(file!, entityType, entityId);
-        
-        // Define version information
-        const isNewVersion = !!originalDocumentId;
-        const version = isNewVersion ? currentVersion + 1 : 1;
-        
-        // Define base document data
-        const documentData = {
-          id: documentId,
-          document_name: documentName,
-          document_type: documentType,
-          file_path: filePath,
-          uploaded_by: userId,
-          company_id: user.data.user?.user_metadata?.company_id || "",
-          version: version,
-          is_latest_version: true,
-          original_document_id: originalDocumentId || null,
-          category: documentCategory || null,
-          mime_type: file.type || null
-        };
-        
-        // Create entity-specific document data
-        const insertData = createDocumentData(documentData, entityType, entityId);
-        
-        // Insert document record
-        await insertDocumentRecord(documentTable, insertData);
-        
-        // If this is a new version, update the previous version to not be the latest
-        if (isNewVersion && originalDocumentId) {
-          const { error } = await supabase
-            .from(documentTable)
-            .update({ is_latest_version: false })
-            .eq('id', originalDocumentId);
-            
-          if (error) {
-            console.error("Error updating previous version:", error);
-          }
-        }
-        
-        // Log activity
-        await logActivity({
-          entityType,
-          entityId,
-          action: "update",
-          details: {
-            action_type: isNewVersion ? "document_version_uploaded" : "document_uploaded",
-            document_id: documentId,
-            document_name: documentName,
-            document_type: documentType,
-            version: version,
-            original_document_id: originalDocumentId
-          }
-        });
-        
-        return { documentId, documentName, version };
-      } finally {
-        setUploading(false);
-      }
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["documents", entityType, entityId] });
-      queryClient.invalidateQueries({ queryKey: ["policy-documents", entityId] });
       
-      if (originalDocumentId) {
-        queryClient.invalidateQueries({ queryKey: ["document-versions", originalDocumentId] });
+      if (!user?.id) {
+        throw new Error("User not authenticated");
       }
+      
+      const companyId = user.companyId;
+      if (!companyId) {
+        throw new Error("Company ID not found");
+      }
+
+      // Generate a unique file path
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${entityType}/${entityId}/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      // 1. Upload file to Storage
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
+      
+      if (uploadError) throw uploadError;
+      
+      // 2. Prepare document record
+      const newVersion = currentVersion + 1;
+      const isNewVersion = !!originalDocumentId;
+      
+      // If this is a new version, we need to update existing versions first
+      if (isNewVersion) {
+        // Mark all existing versions as not latest
+        const { error: updateError } = await supabase
+          .from(tableName)
+          .update({ is_latest_version: false })
+          .eq('original_document_id', originalDocumentId);
+        
+        if (updateError) throw updateError;
+      }
+      
+      // 3. Insert document record
+      const documentData = {
+        [entityIdColumn]: entityId,
+        document_name: documentName,
+        document_type: documentType,
+        document_category: documentCategory || null,
+        file_path: filePath,
+        uploaded_by: user.id,
+        company_id: companyId,
+        version: newVersion,
+        is_latest_version: true,
+        original_document_id: isNewVersion ? originalDocumentId : null,
+        mime_type: file.type
+      };
+      
+      const { data, error: insertError } = await supabase
+        .from(tableName)
+        .insert([documentData])
+        .select()
+        .single();
+      
+      if (insertError) throw insertError;
+      
+      return { data, isNewVersion, version: newVersion };
+    },
+    onSuccess: (result) => {
+      const successMessage = result.isNewVersion
+        ? t("documentVersionUploadedSuccess", { name: documentName, version: result.version })
+        : t("documentUploadedSuccess", { name: documentName });
       
       toast({
-        title: originalDocumentId ? t("documentVersionUploaded") : t("documentUploaded"),
-        description: originalDocumentId 
-          ? t("documentVersionUploadedSuccess", { name: data.documentName, version: data.version }) 
-          : t("documentUploadedSuccess", { name: data.documentName }),
+        title: result.isNewVersion ? t("documentVersionUploaded") : t("documentUploaded"),
+        description: successMessage
       });
       
       // Reset form
@@ -143,48 +158,52 @@ export const useDocumentUpload = ({
       setDocumentCategory("");
       setFile(null);
       
-      // Call success callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({
+        queryKey: [`${entityType}-documents`, entityId]
+      });
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) onSuccess();
     },
     onError: (error) => {
-      console.error("Error in upload mutation:", error);
+      console.error("Document upload error:", error);
       toast({
         title: t("documentUploadError"),
         description: t("documentUploadErrorMessage"),
-        variant: "destructive",
+        variant: "destructive"
       });
+    },
+    onSettled: () => {
+      setUploading(false);
     }
   });
   
   const handleUpload = () => {
-    // Validate client-side before mutation
-    const validation = validateUploadFields(file, documentName, documentType);
-    
-    if (!validation.isValid) {
-      let errorTitle = "";
-      let errorDescription = "";
-      
-      switch (validation.missingField) {
-        case "file":
-          errorTitle = t("noFileSelected");
-          errorDescription = t("pleaseSelectFile");
-          break;
-        case "documentName":
-          errorTitle = t("noDocumentName");
-          errorDescription = t("pleaseEnterDocumentName");
-          break;
-        case "documentType":
-          errorTitle = t("noDocumentType");
-          errorDescription = t("pleaseSelectDocumentType");
-          break;
-      }
-      
+    // Validate input
+    if (!documentName) {
       toast({
-        title: errorTitle,
-        description: errorDescription,
-        variant: "destructive",
+        title: t("noDocumentName"),
+        description: t("pleaseEnterDocumentName"),
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!documentType) {
+      toast({
+        title: t("noDocumentType"),
+        description: t("pleaseSelectDocumentType"),
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!file) {
+      toast({
+        title: t("noFileSelected"),
+        description: t("pleaseSelectFile"),
+        variant: "destructive"
       });
       return;
     }
@@ -202,8 +221,6 @@ export const useDocumentUpload = ({
     file,
     handleFileChange,
     uploading,
-    handleUpload,
-    isNewVersion: !!originalDocumentId,
-    currentVersion
+    handleUpload
   };
 };

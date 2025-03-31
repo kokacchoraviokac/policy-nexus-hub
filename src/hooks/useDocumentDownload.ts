@@ -1,64 +1,65 @@
 
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 import { Document } from "@/types/documents";
 
 export const useDocumentDownload = () => {
-  const { toast } = useToast();
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
-
+  
   const downloadDocument = async (document: Document) => {
     if (!document.file_path) {
       toast({
         title: t("downloadFailed"),
         description: t("documentPathMissing"),
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
+    
+    setIsDownloading(true);
+    
     try {
-      setIsDownloading(true);
+      // Determine the bucket based on the document's entity type
+      const bucket = 'documents';
       
       const { data, error } = await supabase.storage
-        .from('documents')
+        .from(bucket)
         .download(document.file_path);
-        
+      
       if (error) throw error;
       
-      // Create a URL for the blob
+      // Create a download link
       const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = document.document_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
-      // Create a link and trigger download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = document.document_name || 'document';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      // Free up the URL
-      URL.revokeObjectURL(url);
+      // Clean up the URL object
+      setTimeout(() => URL.revokeObjectURL(url), 100);
       
       toast({
         title: t("downloadStarted"),
-        description: t("documentDownloadStarted"),
+        description: t("documentDownloadStarted")
       });
     } catch (error) {
-      console.error("Error downloading document:", error);
+      console.error("Download error:", error);
       toast({
         title: t("downloadFailed"),
         description: t("errorOccurred"),
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsDownloading(false);
     }
   };
-
+  
   return {
     isDownloading,
     downloadDocument

@@ -1,8 +1,8 @@
 
 import React from "react";
-import { FileUp, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { Loader2, FileUp, History } from "lucide-react";
 
 interface DocumentUploadActionsProps {
   uploading: boolean;
@@ -32,10 +32,15 @@ const DocumentUploadActions: React.FC<DocumentUploadActionsProps> = ({
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             {t("uploading")}
           </>
+        ) : isNewVersion ? (
+          <>
+            <History className="mr-2 h-4 w-4" />
+            {t("uploadNewVersion")}
+          </>
         ) : (
           <>
             <FileUp className="mr-2 h-4 w-4" />
-            {isNewVersion ? t("uploadNewVersion") : t("upload")}
+            {t("upload")}
           </>
         )}
       </Button>

@@ -1,49 +1,45 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FileText } from "lucide-react";
+import { Policy } from "@/types/policies";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface SelectedPolicyDisplayProps {
-  policy: any; // The policy object
+  policy: Policy;
 }
 
 const SelectedPolicyDisplay: React.FC<SelectedPolicyDisplayProps> = ({ policy }) => {
-  const { t, formatDate } = useLanguage();
-
-  if (!policy) return null;
-
+  const { t, formatDate, formatCurrency } = useLanguage();
+  
   return (
-    <div className="border rounded-md p-4 bg-card">
-      <div className="flex items-start gap-3">
-        <div className="bg-secondary/30 p-2 rounded-md">
-          <FileText className="h-5 w-5 text-secondary-foreground" />
+    <Card>
+      <CardContent className="p-4 grid grid-cols-2 gap-4">
+        <div>
+          <h4 className="font-medium text-sm">{t("policyNumber")}</h4>
+          <p>{policy.policy_number}</p>
         </div>
-        
-        <div className="flex-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-            <div>
-              <span className="text-sm text-muted-foreground">{t("policyNumber")}</span>
-              <p className="font-medium">{policy.policy_number}</p>
-            </div>
-            
-            <div>
-              <span className="text-sm text-muted-foreground">{t("policyholder")}</span>
-              <p>{policy.policyholder_name}</p>
-            </div>
-            
-            <div>
-              <span className="text-sm text-muted-foreground">{t("insurer")}</span>
-              <p>{policy.insurer_name}</p>
-            </div>
-            
-            <div>
-              <span className="text-sm text-muted-foreground">{t("expiry")}</span>
-              <p>{formatDate(policy.expiry_date)}</p>
-            </div>
-          </div>
+        <div>
+          <h4 className="font-medium text-sm">{t("policyholder")}</h4>
+          <p>{policy.policyholder_name}</p>
         </div>
-      </div>
-    </div>
+        <div>
+          <h4 className="font-medium text-sm">{t("insurer")}</h4>
+          <p>{policy.insurer_name}</p>
+        </div>
+        <div>
+          <h4 className="font-medium text-sm">{t("product")}</h4>
+          <p>{policy.product_name || "-"}</p>
+        </div>
+        <div>
+          <h4 className="font-medium text-sm">{t("period")}</h4>
+          <p>{formatDate(policy.start_date)} - {formatDate(policy.expiry_date)}</p>
+        </div>
+        <div>
+          <h4 className="font-medium text-sm">{t("premium")}</h4>
+          <p>{formatCurrency(policy.premium)}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

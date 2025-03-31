@@ -3,8 +3,8 @@ import React from "react";
 import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
-import Reports from "@/pages/Reports";
-import PolicyProductionReport from "@/pages/reports/PolicyProductionReport";
+import ReportsPage from "@/pages/Reports";
+import ProductionReport from "@/pages/reports/ProductionReport";
 import ClientsReport from "@/pages/reports/ClientsReport";
 import AgentsReport from "@/pages/reports/AgentsReport";
 import ClaimsReport from "@/pages/reports/ClaimsReport";
@@ -17,24 +17,24 @@ export const ReportsRoutes = [
     element={
       <ProtectedRoute>
         <AppLayout>
-          <Reports />
+          <ReportsPage />
         </AppLayout>
       </ProtectedRoute>
     }
   />,
   <Route
-    key="reports-policies"
-    path="/reports/policies"
+    key="production-report"
+    path="/reports/production"
     element={
       <ProtectedRoute>
         <AppLayout>
-          <PolicyProductionReport />
+          <ProductionReport />
         </AppLayout>
       </ProtectedRoute>
     }
   />,
   <Route
-    key="reports-clients"
+    key="clients-report"
     path="/reports/clients"
     element={
       <ProtectedRoute>
@@ -45,7 +45,7 @@ export const ReportsRoutes = [
     }
   />,
   <Route
-    key="reports-agents"
+    key="agents-report"
     path="/reports/agents"
     element={
       <ProtectedRoute>
@@ -56,7 +56,7 @@ export const ReportsRoutes = [
     }
   />,
   <Route
-    key="reports-claims"
+    key="claims-report"
     path="/reports/claims"
     element={
       <ProtectedRoute>
@@ -67,7 +67,7 @@ export const ReportsRoutes = [
     }
   />,
   <Route
-    key="reports-financial"
+    key="financial-report"
     path="/reports/financial"
     element={
       <ProtectedRoute>

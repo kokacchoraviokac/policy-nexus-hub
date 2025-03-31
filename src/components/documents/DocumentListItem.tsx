@@ -1,25 +1,11 @@
 
-import React, { useState } from "react";
-import { Document } from "@/types/documents";
-import { Card, CardContent } from "@/components/ui/card";
-import { getDocumentIcon } from "@/utils/documentIconUtils";
-import DocumentMetadata from "./DocumentMetadata";
-import DocumentActions from "./DocumentActions";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  ShieldCheck, 
-  ShieldX, 
-  Clock, 
-  History, 
-  Shield, 
-  ChevronDown, 
-  ChevronUp, 
-  Tag
-} from "lucide-react";
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import DocumentVersionHistory from "./DocumentVersionHistory";
-import DocumentApprovalPanel from "./DocumentApprovalPanel";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { FileText, FileBox, Clock } from "lucide-react";
+import { Document } from "@/types/documents";
+import DocumentActions from "./DocumentActions";
 
 interface DocumentListItemProps {
   document: Document;
@@ -36,128 +22,81 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
   showApproval = true,
   onUploadVersion
 }) => {
-  const { t } = useLanguage();
-  const [expanded, setExpanded] = useState(false);
+  const { t, formatDateTime } = useLanguage();
   
-  const getApprovalBadge = () => {
-    if (!document.approval_status) return null;
-    
-    switch (document.approval_status) {
-      case "approved":
-        return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-100 flex items-center gap-1">
-            <ShieldCheck className="h-3 w-3" />
-            {t("approved")}
-          </Badge>
-        );
-      case "rejected":
-        return (
-          <Badge variant="destructive" className="flex items-center gap-1">
-            <ShieldX className="h-3 w-3" />
-            {t("rejected")}
-          </Badge>
-        );
-      case "needs_review":
-        return (
-          <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-100 flex items-center gap-1">
-            <Shield className="h-3 w-3" />
-            {t("needsReview")}
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {t("pending")}
-          </Badge>
-        );
+  // Helper to get icon based on mime type or document type
+  const getDocumentIcon = () => {
+    if (document.mime_type?.includes('pdf')) {
+      return <FileText className="h-8 w-8 text-destructive" />;
+    } else if (document.mime_type?.includes('image')) {
+      return <FileBox className="h-8 w-8 text-blue-500" />;
+    } else {
+      return <FileText className="h-8 w-8 text-primary" />;
     }
   };
   
-  const getCategoryBadge = () => {
-    if (!document.category) return null;
+  // Helper to get approval status badge
+  const getApprovalStatusBadge = () => {
+    if (!showApproval || !document.approval_status) return null;
+    
+    const variantMap: Record<string, any> = {
+      approved: "success",
+      rejected: "destructive",
+      pending: "outline",
+      needs_review: "warning"
+    };
     
     return (
-      <Badge variant="outline" className="bg-gray-100 flex items-center gap-1">
-        <Tag className="h-3 w-3" />
-        {t(document.category)}
+      <Badge variant={variantMap[document.approval_status] || "default"}>
+        {t(document.approval_status)}
       </Badge>
     );
   };
   
   return (
-    <Card className="overflow-hidden hover:border-primary/50 transition-colors">
-      <CardContent className="p-0">
-        <div className="p-4">
-          <div className="flex items-center gap-4">
-            {getDocumentIcon(document.file_path, document.mime_type)}
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-4">
+            {getDocumentIcon()}
             
-            <DocumentMetadata document={document} />
-            
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              {document.category && getCategoryBadge()}
+            <div>
+              <div className="flex items-center space-x-2">
+                <h4 className="font-medium">
+                  {document.document_name}
+                </h4>
+                {document.is_latest_version && document.version && document.version > 1 && (
+                  <Badge variant="outline" className="text-xs">
+                    v{document.version}
+                  </Badge>
+                )}
+                {getApprovalStatusBadge()}
+              </div>
               
-              {document.approval_status && getApprovalBadge()}
+              <div className="text-sm text-muted-foreground">
+                {t(document.document_type)} {document.category && `• ${t(document.category)}`}
+              </div>
               
-              {document.version && document.version > 1 && (
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <History className="h-3 w-3" />
-                  {t("version")} {document.version}
-                </Badge>
-              )}
-              
-              <DocumentActions 
-                document={document}
-                onDelete={onDelete}
-                isDeleting={isDeleting}
-                onUploadVersion={onUploadVersion}
-              />
+              <div className="flex items-center mt-1 text-xs text-muted-foreground">
+                <Clock className="mr-1 h-3 w-3" />
+                {formatDateTime(document.created_at)}
+                {document.uploaded_by_name && (
+                  <span className="ml-2">
+                    {t("uploadedBy")}: {document.uploaded_by_name}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           
-          {(showApproval || document.version && document.version > 1 || document.original_document_id) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full mt-2 h-8 text-xs"
-              onClick={() => setExpanded(!expanded)}
-            >
-              {expanded ? (
-                <>
-                  <ChevronUp className="h-4 w-4 mr-1" />
-                  {t("hideDetails")}
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                  {t("showDetails")}
-                </>
-              )}
-            </Button>
-          )}
+          <DocumentActions
+            document={document}
+            onDelete={onDelete}
+            isDeleting={isDeleting}
+            onUploadVersion={onUploadVersion ? 
+              () => onUploadVersion(document) : undefined}
+          />
         </div>
-        
-        {expanded && (
-          <div className="border-t p-4 bg-muted/20">
-            <div className="grid gap-4 md:grid-cols-2">
-              {(document.original_document_id || document.version && document.version > 1) && (
-                <DocumentVersionHistory 
-                  documentId={document.id}
-                  originalDocumentId={document.original_document_id}
-                />
-              )}
-              
-              {showApproval && (
-                <DocumentApprovalPanel 
-                  document={document} 
-                  onApprovalComplete={() => {
-                    // Refresh data when approval is complete
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

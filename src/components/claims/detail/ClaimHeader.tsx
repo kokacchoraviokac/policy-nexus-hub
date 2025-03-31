@@ -2,21 +2,15 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ArrowLeft, FileEdit } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Calendar, Edit, MoreHorizontal } from "lucide-react";
-import ClaimStatusBadge from "../ClaimStatusBadge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
 
 interface ClaimHeaderProps {
   claimNumber: string;
   status: string;
   createdAt: string;
-  isEditMode: boolean;
+  isEditMode?: boolean;
   claimId: string;
 }
 
@@ -24,7 +18,7 @@ const ClaimHeader: React.FC<ClaimHeaderProps> = ({
   claimNumber,
   status,
   createdAt,
-  isEditMode,
+  isEditMode = false,
   claimId
 }) => {
   const { t, formatDate } = useLanguage();
@@ -38,59 +32,34 @@ const ClaimHeader: React.FC<ClaimHeaderProps> = ({
     navigate(`/claims/${claimId}/edit`);
   };
   
-  const handleExport = () => {
-    // This will be implemented in a future iteration
-    console.log("Export claim data for:", claimId);
-  };
-  
   return (
-    <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
       <div className="space-y-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="pl-0 mb-1 text-muted-foreground"
-          onClick={handleBack}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t("backToClaims")}
-        </Button>
-        
-        <div className="flex items-center space-x-3">
-          <h1 className="text-2xl font-bold">{claimNumber}</h1>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t("backToClaims")}
+          </Button>
           <ClaimStatusBadge status={status} />
         </div>
-        
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Calendar className="mr-1 h-4 w-4" />
-          <span>
-            {t("createdOn")}: {formatDate(createdAt)}
-          </span>
-        </div>
+        <h1 className="text-2xl font-bold">
+          {t("claim")}: {claimNumber}
+        </h1>
+        <p className="text-muted-foreground">
+          {t("createdOn")} {formatDate(createdAt)}
+        </p>
       </div>
       
-      <div className="flex space-x-2">
-        {!isEditMode && (
-          <Button variant="outline" onClick={handleEdit}>
-            <Edit className="mr-2 h-4 w-4" />
-            {t("editClaim")}
-          </Button>
-        )}
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" />
-              {t("exportClaim")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {!isEditMode && (
+        <Button onClick={handleEdit}>
+          <FileEdit className="mr-2 h-4 w-4" />
+          {t("editClaim")}
+        </Button>
+      )}
     </div>
   );
 };

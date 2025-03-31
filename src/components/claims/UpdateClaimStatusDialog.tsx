@@ -1,19 +1,19 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useClaimStatusUpdate } from "@/hooks/claims/useClaimStatusUpdate";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
-import StatusSelector from "./status/StatusSelector";
-import { useClaimStatusUpdate } from "@/hooks/claims/useClaimStatusUpdate";
+import StatusSelector from "@/components/common/StatusSelector";
 
 interface UpdateClaimStatusDialogProps {
   open: boolean;
@@ -33,23 +33,13 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
   const { t } = useLanguage();
   const [newStatus, setNewStatus] = useState(currentStatus);
   const [statusNote, setStatusNote] = useState("");
-
-  // Reset state when dialog opens
-  useEffect(() => {
-    if (open) {
-      setNewStatus(currentStatus);
-      setStatusNote("");
-    }
-  }, [open, currentStatus]);
-
-  // Use the custom hook for status updates
-  const { mutate: updateStatus, isPending } = useClaimStatusUpdate(() => {
+  
+  const { mutate: updateStatus, isPending: isUpdating } = useClaimStatusUpdate(() => {
     onOpenChange(false);
     if (onSuccess) onSuccess();
   });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  
+  const handleSubmit = () => {
     updateStatus({
       claimId,
       currentStatus,
@@ -57,55 +47,77 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
       statusNote
     });
   };
-
+  
+  const claimStatusOptions = [
+    "in processing",
+    "reported",
+    "accepted",
+    "rejected",
+    "appealed",
+    "partially accepted",
+    "withdrawn"
+  ];
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{t("updateClaimStatus")}</DialogTitle>
-          <DialogDescription>
-            {t("updateClaimStatusDescription")}
-          </DialogDescription>
+          <DialogTitle>{t("updateStatus")}</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            <StatusSelector
-              currentStatus={currentStatus}
-              newStatus={newStatus}
-              onStatusChange={setNewStatus}
-            />
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t("statusNote")}</label>
-              <Textarea 
-                value={statusNote}
-                onChange={(e) => setStatusNote(e.target.value)}
-                placeholder={t("enterStatusNoteOptional")}
-                rows={4}
-              />
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentStatus">{t("currentStatus")}</Label>
+            <div id="currentStatus" className="px-3 py-2 border rounded-md bg-muted/50">
+              {t(currentStatus.replace(/ /g, ""))}
             </div>
           </div>
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              {t("cancel")}
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isPending || newStatus === currentStatus}
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("updating")}
-                </>
-              ) : (
-                t("updateStatus")
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+          <div className="space-y-2">
+            <Label htmlFor="newStatus">{t("newStatus")}</Label>
+            <StatusSelector
+              value={newStatus}
+              onValueChange={setNewStatus}
+              statusOptions={claimStatusOptions}
+              placeholder={t("selectStatus")}
+              className="w-full"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="statusNote">{t("notes")}</Label>
+            <Textarea
+              id="statusNote"
+              value={statusNote}
+              onChange={(e) => setStatusNote(e.target.value)}
+              placeholder={t("additionalNotesDescription")}
+              className="min-h-[100px]"
+            />
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isUpdating}
+          >
+            {t("cancel")}
+          </Button>
+          <Button 
+            onClick={handleSubmit}
+            disabled={isUpdating || newStatus === currentStatus}
+          >
+            {isUpdating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("updating")}
+              </>
+            ) : (
+              t("updateStatus")
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,87 +1,129 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchDocuments, deleteDocument } from "@/utils/documentUtils";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { EntityType } from "@/utils/activityLogger";
-
-export interface Document {
-  id: string;
-  document_name: string;
-  document_type: string;
-  created_at: string;
-  file_path: string;
-  entity_type?: EntityType;
-  entity_id?: string;
-  uploaded_by_id?: string;
-  uploaded_by_name?: string;
-  version?: number;
-  is_latest_version?: boolean;
-  original_document_id?: string;
-  mime_type?: string;
-  file_size?: number;
-  tags?: string[];
-}
-
-export interface UseDocumentsProps {
-  entityType: EntityType;
-  entityId: string;
-  enabled?: boolean;
-}
+import { useToast } from "@/hooks/use-toast";
+import { Document, UseDocumentsProps } from "@/types/documents";
 
 export const useDocuments = ({ entityType, entityId, enabled = true }: UseDocumentsProps) => {
-  const { toast } = useToast();
   const { t } = useLanguage();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDeletingDocument, setIsDeletingDocument] = useState(false);
   
-  // Query to fetch documents
-  const {
-    data: documents = [],
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['documents', entityType, entityId],
-    queryFn: () => fetchDocuments(entityType, entityId),
-    enabled
+  // Map entity type to the table name
+  const getTableName = () => {
+    switch (entityType) {
+      case 'policy':
+        return 'policy_documents';
+      case 'claim':
+        return 'claim_documents';
+      case 'sales_process':
+        return 'sales_documents';
+      default:
+        throw new Error(`Unsupported entity type: ${entityType}`);
+    }
+  };
+  
+  // Map entity type to the entity ID column name
+  const getEntityIdColumn = () => {
+    switch (entityType) {
+      case 'policy':
+        return 'policy_id';
+      case 'claim':
+        return 'claim_id';
+      case 'sales_process':
+        return 'sales_process_id';
+      default:
+        throw new Error(`Unsupported entity type: ${entityType}`);
+    }
+  };
+  
+  const tableName = getTableName();
+  const entityIdColumn = getEntityIdColumn();
+  
+  // Fetch documents for the specified entity
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: [`${entityType}-documents`, entityId],
+    queryFn: async () => {
+      if (!entityId) return [];
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*, profiles:uploaded_by(name)')
+        .eq(entityIdColumn, entityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Transform database rows to Document interface
+      return data.map((doc) => ({
+        id: doc.id,
+        document_name: doc.document_name,
+        document_type: doc.document_type,
+        created_at: doc.created_at,
+        file_path: doc.file_path,
+        entity_type: entityType,
+        entity_id: entityId,
+        uploaded_by_id: doc.uploaded_by,
+        uploaded_by_name: doc.profiles?.name,
+        version: doc.version || 1,
+        is_latest_version: doc.is_latest_version === undefined ? true : doc.is_latest_version,
+        original_document_id: doc.original_document_id,
+        mime_type: doc.mime_type,
+        category: doc.category
+      }));
+    },
+    enabled: enabled && !!entityId
   });
   
-  // Mutation to delete document
-  const deleteMutation = useMutation({
+  // Delete document mutation
+  const deleteDocumentMutation = useMutation({
     mutationFn: async (documentId: string) => {
       setIsDeletingDocument(true);
-      try {
-        return await deleteDocument(documentId);
-      } finally {
-        setIsDeletingDocument(false);
-      }
+      
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', documentId);
+      
+      if (error) throw error;
+      return documentId;
     },
     onSuccess: () => {
       toast({
         title: t("documentDeleted"),
-        description: t("documentDeletedSuccess"),
+        description: t("documentDeletedSuccessfully")
       });
-      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
+      
+      // Invalidate queries to refresh the documents list
+      queryClient.invalidateQueries({
+        queryKey: [`${entityType}-documents`, entityId]
+      });
     },
     onError: (error) => {
       console.error("Error deleting document:", error);
       toast({
-        title: t("documentDeleteError"),
-        description: t("documentDeleteErrorMessage"),
-        variant: "destructive",
+        title: t("errorDeletingDocument"),
+        description: t("errorOccurredTryAgain"),
+        variant: "destructive"
       });
+    },
+    onSettled: () => {
+      setIsDeletingDocument(false);
     }
   });
   
-  const deleteDocument = async (documentId: string) => {
-    return deleteMutation.mutate(documentId);
+  const deleteDocument = (documentId: string) => {
+    deleteDocumentMutation.mutate(documentId);
   };
   
   return {
-    documents,
+    documents: data || [],
     isLoading,
     error,
+    refetch,
     deleteDocument,
     isDeletingDocument
   };

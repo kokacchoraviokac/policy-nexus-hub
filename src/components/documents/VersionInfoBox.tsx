@@ -2,7 +2,7 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Document } from "@/types/documents";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { History } from "lucide-react";
 
 interface VersionInfoBoxProps {
@@ -16,19 +16,17 @@ const VersionInfoBox: React.FC<VersionInfoBoxProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  if (!isNewVersion || !selectedDocument) {
-    return null;
-  }
+  if (!isNewVersion || !selectedDocument) return null;
+  
+  const newVersion = (selectedDocument.version || 1) + 1;
   
   return (
-    <Alert className="mb-2">
+    <Alert className="mt-2 mb-4">
       <History className="h-4 w-4" />
-      <AlertTitle>{t("uploadNewVersion")}</AlertTitle>
-      <AlertDescription className="text-sm">
-        {t("uploadNewVersionDescription", {
-          name: selectedDocument.document_name,
-          version: selectedDocument.version || 1,
-          nextVersion: (selectedDocument.version || 1) + 1
+      <AlertDescription>
+        {t("documentVersionInfo", { 
+          current: selectedDocument.version || 1, 
+          new: newVersion 
         })}
       </AlertDescription>
     </Alert>

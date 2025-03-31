@@ -1,91 +1,88 @@
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { 
+  FileBarChart, 
+  Users, 
+  UserRound, 
+  PieChart, 
+  BanknoteIcon,
+  ArrowRight
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { FileBarChart, Users, UserCog, FileText, DollarSign } from "lucide-react";
 
 const Reports = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-
-  const reportModules = [
+  
+  const reports = [
     {
-      title: "policyProductionReport",
-      description: "policyProductionReportDescription",
-      path: "/reports/policies",
-      icon: FileBarChart,
-      enabled: true
+      title: t("productionReport"),
+      description: t("productionReportDescription"),
+      icon: <FileBarChart className="h-5 w-5" />,
+      path: "/reports/production"
     },
     {
-      title: "clientsReport",
-      description: "clientsReportDescription",
-      path: "/reports/clients",
-      icon: Users,
-      enabled: false
+      title: t("clientsReport"),
+      description: t("clientsReportDescription"),
+      icon: <Users className="h-5 w-5" />,
+      path: "/reports/clients"
     },
     {
-      title: "agentsReport",
-      description: "agentsReportDescription",
-      path: "/reports/agents",
-      icon: UserCog,
-      enabled: false
+      title: t("agentsReport"),
+      description: t("agentsReportDescription"),
+      icon: <UserRound className="h-5 w-5" />,
+      path: "/reports/agents"
     },
     {
-      title: "claimsReport",
-      description: "claimsReportDescription",
-      path: "/reports/claims",
-      icon: FileText,
-      enabled: false
+      title: t("claimsReport"),
+      description: t("claimsReportDescription"),
+      icon: <PieChart className="h-5 w-5" />,
+      path: "/reports/claims"
     },
     {
-      title: "financialReport",
-      description: "financialReportDescription",
-      path: "/reports/financial",
-      icon: DollarSign,
-      enabled: true
+      title: t("financialReport"),
+      description: t("financialReportDescription"),
+      icon: <BanknoteIcon className="h-5 w-5" />,
+      path: "/reports/financial"
     }
   ];
-
+  
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex flex-col space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">{t("reports")}</h1>
         <p className="text-muted-foreground">
-          {t("reportsAndAnalytics")}
+          {t("reportsPageDescription")}
         </p>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {reportModules.map((module, index) => (
-          <Card key={index} className={`overflow-hidden transition-all duration-200 ${!module.enabled ? 'opacity-70' : 'hover:shadow-md'}`}>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {reports.map((report, index) => (
+          <Card key={index} className="overflow-hidden">
             <CardHeader className="pb-2">
-              <div className="flex items-center space-x-2">
-                <module.icon className="h-5 w-5 text-primary" />
-                <CardTitle className="text-lg">{t(module.title)}</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-primary/10 rounded-md">
+                  {report.icon}
+                </div>
+                <CardTitle className="text-xl">{report.title}</CardTitle>
               </div>
+              <CardDescription>{report.description}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <CardDescription className="pb-4">{t(module.description)}</CardDescription>
+            <CardContent className="pt-2">
               <Button 
                 variant="outline" 
-                className="w-full"
-                onClick={() => navigate(module.path)}
-                disabled={!module.enabled}
+                className="w-full justify-between"
+                onClick={() => navigate(report.path)}
               >
                 {t("viewReport")}
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
         ))}
-      </div>
-      
-      <div className="mt-8 bg-muted/50 p-4 rounded-lg border">
-        <h2 className="font-semibold mb-2">{t("comingSoon")}</h2>
-        <p className="text-muted-foreground">
-          {t("additionalReportsBeingDeveloped")}
-        </p>
       </div>
     </div>
   );

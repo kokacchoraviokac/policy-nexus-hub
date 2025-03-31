@@ -1,47 +1,44 @@
 
 import React from "react";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Badge } from "@/components/ui/badge";
 
 interface ClaimStatusBadgeProps {
   status: string;
-  className?: string;
 }
 
-const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }) => {
+const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status }) => {
   const { t } = useLanguage();
   
-  const getVariant = () => {
+  const getStatusVariant = () => {
     switch (status.toLowerCase()) {
       case 'in processing':
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200";
+        return "default";
       case 'reported':
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200";
+        return "secondary";
       case 'accepted':
-        return "bg-green-100 text-green-800 hover:bg-green-100 border-green-200";
+        return "success";
       case 'rejected':
-        return "bg-red-100 text-red-800 hover:bg-red-100 border-red-200";
+        return "destructive";
       case 'appealed':
-        return "bg-purple-100 text-purple-800 hover:bg-purple-100 border-purple-200";
+        return "warning";
       case 'partially accepted':
-        return "bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200";
-      case 'paid':
-        return "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-200";
+        return "warning";
       case 'withdrawn':
-        return "bg-slate-100 text-slate-800 hover:bg-slate-100 border-slate-200";
+        return "outline";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
+        return "default";
     }
   };
   
+  const statusDisplay = (() => {
+    // Normalize status by removing spaces
+    const normalizedStatus = status.toLowerCase().replace(/ /g, "");
+    return t(normalizedStatus);
+  })();
+  
   return (
-    <Badge 
-      variant="outline" 
-      className={cn(getVariant(), "font-medium", className)}
-    >
-      {t(status.toLowerCase().replace(/ /g, ""))}
-    </Badge>
+    <Badge variant={getStatusVariant()}>{statusDisplay}</Badge>
   );
 };
 

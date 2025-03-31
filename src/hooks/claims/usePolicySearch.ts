@@ -10,31 +10,24 @@ export const usePolicySearch = () => {
   const { data: policies, isLoading: isPoliciesLoading } = useQuery({
     queryKey: ['policy-search', searchTerm],
     queryFn: async () => {
-      let query = supabase
+      if (!searchTerm || searchTerm.length < 2) return [];
+      
+      const { data, error } = await supabase
         .from('policies')
         .select('id, policy_number, policyholder_name, insurer_name, expiry_date')
-        .order('policy_number', { ascending: true });
-      
-      if (searchTerm) {
-        query = query.or(`policy_number.ilike.%${searchTerm}%,policyholder_name.ilike.%${searchTerm}%`);
-      }
-      
-      const { data, error } = await query;
+        .or(`policy_number.ilike.%${searchTerm}%,policyholder_name.ilike.%${searchTerm}%`)
+        .order('created_at', { ascending: false })
+        .limit(10);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: isDialogOpen, // Only run the query when the dialog is open
+    enabled: searchTerm.length >= 2,
   });
   
-  const openDialog = () => {
-    setIsDialogOpen(true);
-  };
+  const openDialog = () => setIsDialogOpen(true);
+  const closeDialog = () => setIsDialogOpen(false);
   
-  const closeDialog = () => {
-    setIsDialogOpen(false);
-  };
-
   return {
     searchTerm,
     setSearchTerm,
