@@ -26,14 +26,14 @@ const SidebarHoverCard: React.FC<SidebarHoverCardProps> = ({ label, subItems, cu
   return (
     <HoverCard openDelay={300} closeDelay={200}>
       <HoverCardTrigger asChild>
-        <div className="relative">
+        <div className="relative cursor-pointer">
           {children}
         </div>
       </HoverCardTrigger>
       <HoverCardContent 
         side="right" 
         align="start" 
-        className="w-52 p-2 sidebar-hover-card border-sidebar-border z-50"
+        className="w-52 p-2 z-50 bg-popover border border-sidebar-border"
       >
         <div className="font-medium text-sm mb-2 border-b border-gray-200 pb-1">{t(label)}</div>
         <div className="space-y-1">

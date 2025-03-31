@@ -1,12 +1,12 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
+import { ChevronDown, ChevronRight, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SidebarItemLinkProps {
-  icon: React.ElementType;
+  icon: LucideIcon;
   label: string;
   path: string;
   active: boolean;
@@ -28,34 +28,30 @@ const SidebarItemLink: React.FC<SidebarItemLinkProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  const linkContent = (
-    <>
-      <Icon className={cn("h-5 w-5 mr-2 flex-shrink-0", collapsed && "mx-auto")} />
-      {!collapsed && <span className="flex-1">{t(label)}</span>}
-      {!collapsed && hasSubItems && (
-        <span className="ml-auto flex-shrink-0">
-          {isExpanded ? (
-            <ChevronDown className="h-4 w-4" />
-          ) : (
-            <ChevronRight className="h-4 w-4" />
-          )}
-        </span>
-      )}
-    </>
+  const baseClasses = cn(
+    "flex items-center rounded-md transition-colors duration-200 my-1",
+    collapsed ? "justify-center p-2 mx-auto" : "px-3 py-2 w-full",
+    active 
+      ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
   );
 
   return (
     <Link
-      to={hasSubItems ? "#" : path} // Use # for items with subitems to allow toggle without navigation
+      to={path}
       onClick={onClick}
-      className={cn(
-        "flex items-center p-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
-        active && !hasSubItems && "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
-        hasSubItems && isExpanded && "bg-sidebar-accent text-sidebar-accent-foreground",
-        collapsed && "justify-center"
-      )}
+      className={baseClasses}
     >
-      {linkContent}
+      <Icon className={cn("h-5 w-5", collapsed && !hasSubItems && "mx-auto")} />
+      
+      {!collapsed && (
+        <>
+          <span className="ml-3 flex-1">{t(label)}</span>
+          {hasSubItems && (
+            isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
+          )}
+        </>
+      )}
     </Link>
   );
 };

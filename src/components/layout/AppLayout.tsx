@@ -4,7 +4,7 @@ import { useNavigate, Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import TopBar from "./TopBar";
-import Sidebar from "./Sidebar";
+import ModernSidebar from "./sidebar/ModernSidebar";
 import BreadcrumbNav from "./BreadcrumbNav";
 import Footer from "./Footer";
 
@@ -25,13 +25,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
-      {/* Sidebar - independently scrollable */}
-      <div className={cn(
-        "h-screen overflow-y-auto transition-all duration-300",
-        sidebarCollapsed ? "w-0 opacity-0" : "w-64 opacity-100"
-      )}>
-        <Sidebar />
-      </div>
+      {/* Modern Sidebar with collapsible functionality */}
+      <ModernSidebar 
+        collapsed={sidebarCollapsed} 
+        setCollapsed={setSidebarCollapsed} 
+      />
       
       {/* Main content + fixed footer */}
       <div className="flex flex-col flex-1 overflow-hidden">

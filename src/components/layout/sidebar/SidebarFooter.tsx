@@ -19,12 +19,12 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ collapsed }) => {
         collapsed ? "justify-center" : "px-2"
       )}>
         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-medium">
-          {user.name.charAt(0)}
+          {user.name ? user.name.charAt(0) : 'U'}
         </div>
         {!collapsed && (
           <div>
-            <div className="text-xs font-medium text-sidebar-foreground">{user.name}</div>
-            <div className="text-xs text-sidebar-foreground/70">{user.email}</div>
+            <div className="text-xs font-medium text-sidebar-foreground">{user.name || 'User'}</div>
+            <div className="text-xs text-sidebar-foreground/70">{user.email || ''}</div>
           </div>
         )}
       </div>
