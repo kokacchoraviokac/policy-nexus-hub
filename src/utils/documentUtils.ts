@@ -1,20 +1,20 @@
 
 import { Document, DocumentCategory, EntityType } from "@/types/documents";
-import { FileTextIcon, ClipboardIcon, FileIcon, ReceiptIcon, InfoIcon } from "lucide-react";
+import { FileText, Clipboard, File, Receipt, Info } from "lucide-react";
 import React from "react";
 
 export const getDocumentIcon = (document: Document | { category: DocumentCategory }) => {
   switch (document.category) {
     case 'policy':
-      return <FileTextIcon className="h-4 w-4" />;
+      return <FileText className="h-4 w-4" />;
     case 'claim':
-      return <ClipboardIcon className="h-4 w-4" />;
+      return <Clipboard className="h-4 w-4" />;
     case 'invoice':
-      return <ReceiptIcon className="h-4 w-4" />;
+      return <Receipt className="h-4 w-4" />;
     case 'client':
-      return <FileIcon className="h-4 w-4" />;
+      return <File className="h-4 w-4" />;
     default:
-      return <InfoIcon className="h-4 w-4" />;
+      return <Info className="h-4 w-4" />;
   }
 };
 
