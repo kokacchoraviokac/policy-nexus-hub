@@ -1,200 +1,156 @@
 
-import React, { useRef, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { generatePolicyCSVTemplate } from "@/utils/policies/importUtils";
-import { Download, Upload, FileSpreadsheet, Loader2, ArrowLeft, X } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FileUp, Loader2 } from "lucide-react";
+import { useDropzone } from "react-dropzone";
 
 interface PolicyImportFileUploadProps {
   onFileUpload: (file: File) => void;
   isUploading: boolean;
-  file?: File | null;
-  onFileChange?: (file: File | null) => void;
   onBack?: () => void;
-  onImport?: () => Promise<void>;
-  isLoading?: boolean;
 }
 
 const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
   onFileUpload,
   isUploading,
-  file,
-  onFileChange,
-  onBack,
-  onImport,
-  isLoading,
+  onBack
 }) => {
   const { t } = useLanguage();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(file || null);
-  const [dragActive, setDragActive] = useState(false);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFile = e.target.files[0];
-      setSelectedFile(newFile);
-      if (onFileChange) onFileChange(newFile);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      setSelectedFile(acceptedFiles[0]);
     }
-  };
-
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === "text/csv" || file.name.endsWith(".csv")) {
-        setSelectedFile(file);
-        if (onFileChange) onFileChange(file);
-      }
-    }
-  };
-
-  const handleUploadClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleSubmit = () => {
+  }, []);
+  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'text/csv': ['.csv'],
+      'application/vnd.ms-excel': ['.csv'],
+      'text/plain': ['.csv', '.txt']
+    },
+    multiple: false,
+    disabled: isUploading
+  });
+  
+  const handleUpload = () => {
     if (selectedFile) {
       onFileUpload(selectedFile);
     }
   };
-
-  const handleClearFile = () => {
+  
+  const handleChangeFile = () => {
     setSelectedFile(null);
-    if (onFileChange) onFileChange(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
-
-  const handleDownloadTemplate = () => {
-    const template = generatePolicyCSVTemplate();
-    const blob = new Blob([template], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "policy_import_template.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
+  
   return (
     <div className="space-y-6">
-      {onBack && (
-        <Button variant="outline" size="sm" onClick={onBack} className="mb-2">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {t("back")}
-        </Button>
-      )}
+      <h3 className="text-lg font-medium mb-2">{t("selectPolicyImportFile")}</h3>
+      <p className="text-sm text-muted-foreground mb-6">
+        {t("selectCSVFileWithPolicyData")}
+      </p>
       
-      <Alert className="bg-blue-50 border-blue-200">
-        <AlertDescription>
-          {t("selectCSVFileWithPolicyData")}
-        </AlertDescription>
-      </Alert>
-      
-      <div 
-        className={`bg-gray-50 border-2 ${dragActive ? 'border-primary' : 'border-dashed border-gray-300'} 
-        rounded-lg p-8 text-center transition-colors ${isUploading ? 'opacity-70' : 'hover:border-primary hover:bg-primary/5'}`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        <Input
-          type="file"
-          ref={fileInputRef}
-          accept=".csv"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        <FileSpreadsheet className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-        <div className="text-gray-600 mb-4">{t("dragAndDropOrClick")}</div>
-        <p className="text-sm text-gray-500 mb-4">{t("supportedFormatCSV")}</p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleUploadClick}
-          disabled={isUploading || isLoading}
-          className="mx-auto"
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          {t("browseFiles")}
-        </Button>
-      </div>
-
-      {selectedFile && (
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <FileSpreadsheet className="h-5 w-5 text-blue-500 mr-2" />
-              <div>
-                <div className="text-sm font-medium">{selectedFile.name}</div>
-                <div className="text-xs text-gray-500">
-                  {(selectedFile.size / 1024).toFixed(1)} KB
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClearFile}
-                disabled={isUploading || isLoading}
+      {!selectedFile ? (
+        <Card className="border-dashed">
+          <CardContent className="pt-6">
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors
+                ${isDragActive ? 'border-primary bg-primary/5' : 'border-border'}
+                ${isUploading ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50 hover:bg-accent'}
+              `}
+            >
+              <input {...getInputProps()} />
+              <FileUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h4 className="text-lg font-medium mb-2">{t("dragAndDropOrClick")}</h4>
+              <p className="text-sm text-muted-foreground mb-2">{t("supportedFormatCSV")}</p>
+              
+              <Button 
+                type="button"
+                variant="secondary"
+                disabled={isUploading}
+                className="mt-4"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  document.getElementById('file-input')?.click();
+                }}
               >
-                <X className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={onImport ? onImport : handleSubmit}
-                disabled={isUploading || isLoading}
-                size="sm"
-              >
-                {(isUploading || isLoading) ? (
+                {isUploading ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {t("processing")}
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t("uploading")}
                   </>
                 ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    {t("upload")}
-                  </>
+                  t("browseFiles")
                 )}
               </Button>
+              <input
+                id="file-input"
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setSelectedFile(e.target.files[0]);
+                  }
+                }}
+              />
             </div>
-          </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center p-6 text-center">
+              <FileUp className="h-12 w-12 text-primary mb-4" />
+              <h4 className="text-lg font-medium mb-2">{selectedFile.name}</h4>
+              <p className="text-sm text-muted-foreground mb-6">
+                {(selectedFile.size / 1024).toFixed(2)} KB
+              </p>
+              
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline"
+                  onClick={handleChangeFile}
+                  disabled={isUploading}
+                >
+                  {t("changeFile")}
+                </Button>
+                
+                <Button 
+                  onClick={handleUpload}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t("uploading")}
+                    </>
+                  ) : (
+                    t("upload")
+                  )}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       )}
-
-      <div className="text-center">
-        <Button
-          type="button"
-          variant="link"
-          onClick={handleDownloadTemplate}
-          className="text-primary"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          {t("downloadTemplate")}
-        </Button>
-      </div>
+      
+      {onBack && (
+        <div className="flex justify-start mt-4">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            disabled={isUploading}
+          >
+            {t("back")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

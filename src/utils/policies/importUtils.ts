@@ -1,203 +1,111 @@
 
-import { Policy } from "@/types/policies";
-import Papa from "papaparse";
+import Papa from 'papaparse';
+import { Policy } from '@/types/policies';
+
+interface ValidationError {
+  field: string;
+  message: string;
+}
 
 /**
- * Parse CSV data and convert it to Policy objects
+ * Parse a CSV file with policy data
  */
-export const parsePolicyCSV = (csvData: string): Partial<Policy>[] => {
-  const result = Papa.parse(csvData, {
+export const parsePolicyCSV = (csvText: string): any[] => {
+  const results = Papa.parse(csvText, {
     header: true,
     skipEmptyLines: true,
-    transformHeader: (header) => header.trim().toLowerCase().replace(/\s+/g, '_'),
-    transform: (value) => value.trim(),
+    transform: (value, field) => {
+      // Clean up values
+      if (value === '') return undefined;
+      return value;
+    }
   });
-
-  if (result.errors.length > 0) {
-    console.error("CSV parsing errors:", result.errors);
-    throw new Error(`Error parsing CSV: ${result.errors[0].message}`);
-  }
-
-  return result.data.map((row: any) => {
-    // Map fields with common variations to standard names
-    return {
-      policy_number: row.policy_number || row.policy_no || row.policynumber || row.policy || "",
-      policy_type: row.policy_type || row.policytype || "Standard",
-      insurer_name: row.insurer_name || row.insurer || row.insurance_company || row.insurername || "",
-      insurer_id: row.insurer_id,
-      policyholder_name: row.policyholder_name || row.policyholder || row.client_name || row.client || "",
-      policyholder_id: row.policyholder_id || row.client_id,
-      insured_name: row.insured_name || row.insured || row.insured_party || row.policyholder_name || row.policyholder || "",
-      insured_id: row.insured_id,
-      // Handle date formats with validation
-      start_date: row.start_date || row.policy_start || row.start || "",
-      expiry_date: row.expiry_date || row.end_date || row.policy_end || row.expiry || "",
-      premium: row.premium ? parseFloat(row.premium) : undefined,
-      currency: row.currency || "EUR",
-      product_name: row.product_name || row.product || row.insurance_product || "",
-      product_code: row.product_code || row.code || "",
-      product_id: row.product_id,
-      notes: row.notes || row.additional_info || row.comments || "",
-      payment_frequency: row.payment_frequency || row.frequency || "annual",
-      commission_type: row.commission_type || "automatic",
-      commission_percentage: row.commission_percentage ? parseFloat(row.commission_percentage) : undefined,
-      commission_amount: row.commission_amount ? parseFloat(row.commission_amount) : undefined,
-      workflow_status: "draft",
-      status: "active"
-    };
-  });
+  
+  return results.data;
 };
 
 /**
- * Validate imported policies for required fields and data format
+ * Validate imported policies and separate valid from invalid
  */
-export const validateImportedPolicies = (policies: Partial<Policy>[]): { 
+export const validateImportedPolicies = (policies: any[]): {
   valid: Partial<Policy>[];
   invalid: { policy: Partial<Policy>; errors: string[] }[];
 } => {
   const valid: Partial<Policy>[] = [];
   const invalid: { policy: Partial<Policy>; errors: string[] }[] = [];
-
-  policies.forEach(policy => {
+  
+  policies.forEach((policy) => {
     const errors: string[] = [];
-
-    // Check required fields
-    if (!policy.policy_number) errors.push("Policy number is required");
-    if (!policy.insurer_name) errors.push("Insurer name is required");
-    if (!policy.policyholder_name) errors.push("Policyholder name is required");
-    if (!policy.start_date) errors.push("Start date is required");
-    if (!policy.expiry_date) errors.push("Expiry date is required");
-    if (policy.premium === undefined) errors.push("Premium is required");
-    if (!policy.currency) errors.push("Currency is required");
+    
+    // Validate required fields
+    if (!policy.policy_number) errors.push('Policy number is required');
+    if (!policy.insurer_name) errors.push('Insurer name is required');
+    if (!policy.policyholder_name) errors.push('Policyholder name is required');
+    if (!policy.start_date) errors.push('Start date is required');
+    if (!policy.expiry_date) errors.push('Expiry date is required');
+    if (!policy.premium) errors.push('Premium amount is required');
+    if (!policy.currency) errors.push('Currency is required');
     
     // Validate date formats
     if (policy.start_date && !/^\d{4}-\d{2}-\d{2}$/.test(policy.start_date)) {
-      errors.push("Start date must be in YYYY-MM-DD format");
+      errors.push('Invalid start date format (YYYY-MM-DD)');
     }
     
     if (policy.expiry_date && !/^\d{4}-\d{2}-\d{2}$/.test(policy.expiry_date)) {
-      errors.push("Expiry date must be in YYYY-MM-DD format");
+      errors.push('Invalid expiry date format (YYYY-MM-DD)');
     }
     
-    // Validate dates are valid
-    if (policy.start_date && /^\d{4}-\d{2}-\d{2}$/.test(policy.start_date)) {
-      const startDate = new Date(policy.start_date);
-      if (isNaN(startDate.getTime())) {
-        errors.push("Start date is invalid");
-      }
+    // Validate numeric values
+    if (policy.premium && isNaN(Number(policy.premium))) {
+      errors.push('Premium must be a number');
     }
     
-    if (policy.expiry_date && /^\d{4}-\d{2}-\d{2}$/.test(policy.expiry_date)) {
-      const expiryDate = new Date(policy.expiry_date);
-      if (isNaN(expiryDate.getTime())) {
-        errors.push("Expiry date is invalid");
-      }
+    if (policy.commission_percentage && isNaN(Number(policy.commission_percentage))) {
+      errors.push('Commission percentage must be a number');
     }
     
-    // Check expiry date is after start date
-    if (
-      policy.start_date && 
-      policy.expiry_date && 
-      /^\d{4}-\d{2}-\d{2}$/.test(policy.start_date) && 
-      /^\d{4}-\d{2}-\d{2}$/.test(policy.expiry_date)
-    ) {
-      const startDate = new Date(policy.start_date);
-      const expiryDate = new Date(policy.expiry_date);
-      
-      if (!isNaN(startDate.getTime()) && !isNaN(expiryDate.getTime()) && expiryDate <= startDate) {
-        errors.push("Expiry date must be after start date");
-      }
-    }
-    
-    // Validate premium is a number
-    if (policy.premium !== undefined && isNaN(policy.premium)) {
-      errors.push("Premium must be a number");
-    }
-    
-    // Validate commission percentage if present
-    if (policy.commission_percentage !== undefined) {
-      if (isNaN(policy.commission_percentage)) {
-        errors.push("Commission percentage must be a number");
-      } else if (policy.commission_percentage < 0 || policy.commission_percentage > 100) {
-        errors.push("Commission percentage must be between 0 and 100");
-      }
-    }
-    
-    // Validate currency codes
-    if (policy.currency) {
-      const validCurrencies = ['EUR', 'USD', 'GBP', 'RSD', 'MKD'];
-      if (!validCurrencies.includes(policy.currency.toUpperCase())) {
-        errors.push(`Invalid currency code: ${policy.currency}. Valid options: ${validCurrencies.join(', ')}`);
-      }
-    }
+    // Convert to Policy type for valid entries
+    const policyData: Partial<Policy> = {
+      ...policy,
+      premium: policy.premium ? Number(policy.premium) : 0,
+      commission_percentage: policy.commission_percentage ? Number(policy.commission_percentage) : undefined,
+      workflow_status: 'draft',
+      status: 'active'
+    };
     
     if (errors.length === 0) {
-      valid.push(policy);
+      valid.push(policyData);
     } else {
-      invalid.push({ policy, errors });
+      invalid.push({ policy: policyData, errors });
     }
   });
-
+  
   return { valid, invalid };
 };
 
 /**
- * Create a sample CSV template for policy import
+ * Generate a downloadable template CSV for policy import
  */
-export const generatePolicyCSVTemplate = (): string => {
-  const headers = [
-    "policy_number",
-    "insurer_name",
-    "policyholder_name",
-    "insured_name",
-    "start_date",
-    "expiry_date",
-    "premium",
-    "currency",
-    "product_name",
-    "product_code",
-    "payment_frequency",
-    "commission_percentage",
-    "notes"
-  ];
-
-  const sampleRow1 = [
-    "POL-12345",
-    "Example Insurance Co",
-    "Client Company Ltd",
-    "Client Company Ltd",
-    "2023-01-01",
-    "2024-01-01",
-    "1000",
-    "EUR",
-    "Business Insurance",
-    "BI-001",
-    "annual",
-    "10",
-    "Sample policy from insurer"
+export const generatePolicyImportTemplate = (): string => {
+  const templateData = [
+    {
+      policy_number: 'POL-001',
+      policy_type: 'Standard',
+      insurer_name: 'Example Insurance',
+      product_name: 'Auto Insurance',
+      product_code: 'AUTO-001',
+      policyholder_name: 'John Doe',
+      insured_name: 'John Doe',
+      start_date: '2023-01-01',
+      expiry_date: '2024-01-01',
+      premium: '1000',
+      currency: 'EUR',
+      payment_frequency: 'annual',
+      commission_percentage: '10',
+      commission_type: 'automatic',
+      notes: 'Example policy'
+    }
   ];
   
-  const sampleRow2 = [
-    "POL-67890",
-    "Another Insurance Inc",
-    "John Smith",
-    "John Smith",
-    "2023-06-15",
-    "2024-06-14",
-    "750.50",
-    "USD",
-    "Auto Insurance",
-    "AI-002",
-    "monthly",
-    "12.5",
-    "Imported from insurer system"
-  ];
-
-  const csv = [
-    headers.join(","),
-    sampleRow1.join(","),
-    sampleRow2.join(",")
-  ].join("\n");
-
-  return csv;
+  return Papa.unparse(templateData);
 };
