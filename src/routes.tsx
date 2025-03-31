@@ -1,21 +1,21 @@
 
 import { createBrowserRouter } from "react-router-dom";
-import Layout from "./components/layout/Layout";
+import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
-import PoliciesPage from "./pages/policies/PoliciesPage";
-import PolicyDetailPage from "./pages/policies/PolicyDetailPage";
+import Policies from "./pages/Policies";
+import PolicyDetailPage from "./pages/policies/PolicyDetail";
 import PolicyDocuments from "./pages/policies/PolicyDocuments";
-import PolicyWorkflowPage from "./pages/policies/PolicyWorkflowPage";
-import PolicyReviewPage from "./pages/policies/PolicyReviewPage";
+import PolicyWorkflow from "./pages/policies/workflow/PolicyWorkflow";
+import PolicyReview from "./pages/policies/workflow/PolicyReview";
 import PolicyImportPage from "./pages/policies/PolicyImportPage";
-import ClaimsPage from "./pages/claims/ClaimsPage";
+import ClaimsPage from "./pages/claims/Claims";
 import ClaimDetailPage from "./pages/claims/ClaimDetailPage";
-import NotFoundPage from "./pages/NotFoundPage";
+import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    element: <AppLayout />,
     children: [
       {
         index: true,
@@ -26,7 +26,7 @@ const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <PoliciesPage />,
+            element: <Policies />,
           },
           {
             path: ":policyId",
@@ -37,7 +37,7 @@ const router = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <PolicyWorkflowPage />,
+                element: <PolicyWorkflow />,
               },
               {
                 path: ":policyId",
@@ -45,7 +45,7 @@ const router = createBrowserRouter([
               },
               {
                 path: ":policyId/review",
-                element: <PolicyReviewPage />,
+                element: <PolicyReview />,
               },
             ],
           },
@@ -74,7 +74,7 @@ const router = createBrowserRouter([
       },
       {
         path: "*",
-        element: <NotFoundPage />,
+        element: <NotFound />,
       },
     ],
   },

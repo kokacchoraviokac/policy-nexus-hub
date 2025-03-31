@@ -26,11 +26,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
       {/* Sidebar - independently scrollable */}
-      <Sidebar collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed} />
+      <Sidebar />
       
       {/* Main content + fixed footer */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        <TopBar sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
+        <TopBar />
         
         <div className={cn(
           "transition-all duration-300",

@@ -1,22 +1,14 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Policy } from "@/types/policies";
-import { Loader2, FileEdit, Eye, Clock, CheckCircle2, FileSpreadsheet, FileText, FileX } from "lucide-react";
-import EmptyState from "@/components/ui/empty-state";
+import { TableHead, TableRow, TableHeader, TableCell, TableBody, Table } from "@/components/ui/table";
+import { WorkflowPolicy } from "@/hooks/useWorkflowPolicies";
+import WorkflowStatusBadge from "./WorkflowStatusBadge";
 
 interface WorkflowPoliciesListProps {
-  policies: Policy[];
+  policies: WorkflowPolicy[];
   isLoading: boolean;
   onReviewPolicy: (policyId: string) => void;
 }
@@ -26,127 +18,66 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
   isLoading,
   onReviewPolicy,
 }) => {
-  const { t, formatDate } = useLanguage();
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
-  if (!policies.length) {
+  if (policies.length === 0) {
     return (
-      <EmptyState
-        title={t("noPoliciesFound")}
-        description={t("noPoliciesInWorkflowDescription")}
-        icon="file-search"
-      />
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <p className="text-muted-foreground mb-2">{t("noPoliciesFound")}</p>
+        <p className="text-sm text-muted-foreground">{t("tryDifferentFilters")}</p>
+      </div>
     );
   }
 
-  const getWorkflowStatusIcon = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return <FileSpreadsheet className="h-4 w-4 text-blue-500" />;
-      case 'in_review':
-        return <FileEdit className="h-4 w-4 text-orange-500" />;
-      case 'ready':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'complete':
-        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getWorkflowStatusBadge = (status: string) => {
-    let variant: "default" | "secondary" | "destructive" | "outline" = "default";
-    
-    switch (status) {
-      case 'draft':
-        variant = "outline";
-        break;
-      case 'in_review':
-        variant = "secondary";
-        break;
-      case 'ready':
-        variant = "default";
-        break;
-      case 'complete':
-        variant = "default";
-        break;
-      default:
-        variant = "outline";
-    }
-    
-    return (
-      <Badge variant={variant} className="flex items-center gap-1">
-        {getWorkflowStatusIcon(status)}
-        <span>{t(status.replace('_', ''))}</span>
-      </Badge>
-    );
-  };
-  
-  const getDocumentStatusIcon = (documentsCount: number) => {
-    if (documentsCount === 0) {
-      return <FileX className="h-4 w-4 text-destructive" />;
-    } else if (documentsCount === 1) {
-      return <FileText className="h-4 w-4 text-amber-500" />;
-    } else {
-      return <FileText className="h-4 w-4 text-green-500" />;
-    }
-  };
-
   return (
-    <div className="overflow-auto">
+    <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>{t("policyNumber")}</TableHead>
-            <TableHead>{t("policyholder")}</TableHead>
             <TableHead>{t("insurer")}</TableHead>
-            <TableHead>{t("workflowStatus")}</TableHead>
-            <TableHead>{t("documents")}</TableHead>
-            <TableHead>{t("lastUpdated")}</TableHead>
+            <TableHead>{t("client")}</TableHead>
+            <TableHead>{t("product")}</TableHead>
+            <TableHead>{t("startDate")}</TableHead>
+            <TableHead>{t("endDate")}</TableHead>
+            <TableHead>{t("status")}</TableHead>
+            <TableHead>{t("premium")}</TableHead>
             <TableHead className="text-right">{t("actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {policies.map((policy) => (
             <TableRow key={policy.id}>
-              <TableCell className="font-medium">{policy.policy_number}</TableCell>
-              <TableCell>{policy.policyholder_name}</TableCell>
-              <TableCell>{policy.insurer_name}</TableCell>
-              <TableCell>{getWorkflowStatusBadge(policy.workflow_status)}</TableCell>
+              <TableCell className="font-medium">{policy.policyNumber}</TableCell>
+              <TableCell>{policy.insurer}</TableCell>
+              <TableCell>{policy.client}</TableCell>
+              <TableCell>{policy.product}</TableCell>
+              <TableCell>{format(policy.startDate, "PP")}</TableCell>
+              <TableCell>{format(policy.endDate, "PP")}</TableCell>
               <TableCell>
-                <div className="flex items-center gap-1">
-                  {getDocumentStatusIcon(policy.documents_count || 0)}
-                  <span>{policy.documents_count || 0}</span>
-                </div>
+                <WorkflowStatusBadge status={policy.status} />
               </TableCell>
-              <TableCell>{formatDate(policy.updated_at)}</TableCell>
+              <TableCell>
+                {policy.premium.toLocaleString()} {policy.currency}
+              </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    size="sm"
-                    variant={policy.workflow_status === 'complete' ? 'outline' : 'default'}
-                    onClick={() => onReviewPolicy(policy.id)}
-                  >
-                    {policy.workflow_status === 'complete' ? (
-                      <>
-                        <Eye className="mr-1 h-4 w-4" />
-                        {t("view")}
-                      </>
-                    ) : (
-                      <>
-                        <FileEdit className="mr-1 h-4 w-4" />
-                        {t("review")}
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onReviewPolicy(policy.id)}
+                >
+                  {policy.status === "draft" || policy.status === "review"
+                    ? t("review")
+                    : t("view")}
+                </Button>
               </TableCell>
             </TableRow>
           ))}

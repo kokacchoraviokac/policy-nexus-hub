@@ -3,7 +3,7 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, RefreshCw } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 
 interface WorkflowFiltersProps {
   searchTerm: string;
@@ -17,29 +17,24 @@ const WorkflowFilters: React.FC<WorkflowFiltersProps> = ({
   onRefresh,
 }) => {
   const { t } = useLanguage();
-  
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(e.target.value);
   };
-  
+
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
-      <div className="relative flex-1">
+    <div className="flex flex-col md:flex-row gap-3">
+      <div className="flex-1 flex relative">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder={t("searchPolicies")}
+          className="pl-8"
           value={searchTerm}
           onChange={handleSearchChange}
-          className="pl-8"
         />
       </div>
-      
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onRefresh}
-        title={t("refresh")}
-      >
+
+      <Button variant="outline" size="icon" onClick={onRefresh} title={t("refresh")}>
         <RefreshCw className="h-4 w-4" />
       </Button>
     </div>
