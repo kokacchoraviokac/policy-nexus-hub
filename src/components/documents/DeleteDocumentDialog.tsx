@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Document } from "@/hooks/useDocuments";
+import { Document } from "@/types/documents";
 
 interface DeleteDocumentDialogProps {
   document: Document | null;

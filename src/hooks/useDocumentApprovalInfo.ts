@@ -7,7 +7,7 @@ import { DocumentApprovalStatus, Document } from "@/types/documents";
 interface ApprovalActivityDetails {
   document_id?: string;
   action_type?: string;
-  approval_status?: DocumentApprovalStatus;
+  approval_status?: string;
   approved_by?: string;
   approved_at?: string;
   notes?: string;
@@ -30,7 +30,7 @@ export interface ApprovalInfo {
 
 export const useDocumentApprovalInfo = (document: Document) => {
   const [approvalInfo, setApprovalInfo] = useState<ApprovalInfo>({
-    status: document.approval_status || "pending",
+    status: (document.approval_status as DocumentApprovalStatus) || "pending",
     approved_by: document.approved_by,
     approved_at: document.approved_at,
     notes: document.approval_notes
@@ -78,7 +78,7 @@ export const useDocumentApprovalInfo = (document: Document) => {
             const details = latestApproval.details as ApprovalActivityDetails;
             
             setApprovalInfo({
-              status: details.approval_status || "pending",
+              status: (details.approval_status as DocumentApprovalStatus) || "pending",
               approved_by: latestApproval.user_id,
               approved_at: latestApproval.created_at,
               notes: details.notes

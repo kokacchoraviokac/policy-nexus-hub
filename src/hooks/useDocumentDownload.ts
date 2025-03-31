@@ -32,14 +32,14 @@ export const useDocumentDownload = () => {
       
       if (error) throw error;
       
-      // Create a download link
+      // Create a download link using the browser's document object
       const url = URL.createObjectURL(data);
-      const link = document.createElement('a');
+      const link = window.document.createElement('a');
       link.href = url;
       link.download = document.document_name;
-      document.body.appendChild(link);
+      window.document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      window.document.body.removeChild(link);
       
       // Clean up the URL object
       setTimeout(() => URL.revokeObjectURL(url), 100);

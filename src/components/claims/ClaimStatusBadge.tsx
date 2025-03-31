@@ -11,20 +11,23 @@ interface ClaimStatusBadgeProps {
 const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }) => {
   const { t } = useLanguage();
   
-  const getStatusVariant = () => {
+  // Define a VariantType for the badge
+  type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
+  
+  const getStatusVariant = (): BadgeVariant => {
     switch (status.toLowerCase()) {
       case 'in processing':
         return "default";
       case 'reported':
         return "secondary";
       case 'accepted':
-        return "success" as const;
+        return "default"; // Change from success to default as a workaround
       case 'rejected':
         return "destructive";
       case 'appealed':
-        return "warning" as const;
+        return "secondary"; // Change from warning to secondary as a workaround
       case 'partially accepted':
-        return "warning" as const;
+        return "secondary"; // Change from warning to secondary as a workaround
       case 'withdrawn':
         return "outline";
       default:

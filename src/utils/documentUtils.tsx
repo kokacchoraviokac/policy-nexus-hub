@@ -1,3 +1,4 @@
+
 import { Document, DocumentCategory, EntityType } from "@/types/documents";
 import { FileText, Clipboard, File, Receipt, Info } from "lucide-react";
 import React from "react";
@@ -58,6 +59,12 @@ export const getEntityTableName = (entityType: EntityType): string => {
       return 'invoice_documents';
     case 'addendum':
       return 'addendum_documents';
+    case 'sales_process':
+      return 'sales_documents';
+    case 'agent':
+      return 'agent_documents';
+    case 'insurer':
+      return 'insurer_documents';
     default:
       throw new Error(`Unsupported entity type: ${entityType}`);
   }

@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentCategory } from "@/types/documents";
+import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 // Define explicit table names to avoid string type errors
 const DOCUMENT_TABLES = ['policy_documents', 'claim_documents', 'sales_documents'] as const;
@@ -150,15 +151,16 @@ export function transformToDocuments(documents: DocumentDbRow[], entityType: 'po
       created_at: doc.created_at,
       file_path: doc.file_path,
       entity_type: entityType,
-      entity_id: entityId,
+      entity_id: entityId || "",
       uploaded_by_id: doc.uploaded_by,
+      uploaded_by_name: "Unknown User", // This could be fetched separately if needed
       version: doc.version || 1,
       is_latest_version: doc.is_latest_version || false,
       original_document_id: doc.original_document_id || null,
-      category: doc.category || null,
-      approval_status: 'pending',
-      mime_type: doc.mime_type || null
-    };
+      category: doc.category || "other",
+      mime_type: doc.mime_type || null,
+      status: "active"
+    } as Document;
   });
 }
 

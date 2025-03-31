@@ -4,13 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useActivityLogger } from "@/utils/activityLogger";
-import { DocumentApprovalStatus } from "@/types/documents";
+import { DocumentApprovalStatus, EntityType } from "@/types/documents";
 
 interface ApproveDocumentParams {
   documentId: string;
   status: DocumentApprovalStatus;
   notes?: string;
-  entityType: "policy" | "claim" | "sales_process";
+  entityType: EntityType;
   entityId: string;
 }
 
@@ -73,18 +73,14 @@ export const useDocumentApproval = () => {
       
       // Success message based on the approval status
       let message = "";
-      switch (status) {
-        case "approved":
-          message = t("documentApproved");
-          break;
-        case "rejected":
-          message = t("documentRejected");
-          break;
-        case "needs_review":
-          message = t("documentMarkedForReview");
-          break;
-        default:
-          message = t("documentStatusUpdated");
+      if (status === "approved") {
+        message = t("documentApproved");
+      } else if (status === "rejected") {
+        message = t("documentRejected");
+      } else if (status === "needs_review") {
+        message = t("documentMarkedForReview");
+      } else {
+        message = t("documentStatusUpdated");
       }
       
       toast({
