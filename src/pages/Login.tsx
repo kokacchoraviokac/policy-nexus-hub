@@ -5,7 +5,6 @@ import LoginForm from "@/components/auth/LoginForm";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DemoAccounts from "@/components/auth/DemoAccounts";
 import TranslationStatus from "@/components/language/TranslationStatus";
-import Logo from "@/components/ui/logo";
 
 const Login: React.FC = () => {
   const { t } = useLanguage();
@@ -14,11 +13,6 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <Logo className="h-12 w-auto" />
-        </div>
-        
         {/* Login Card */}
         <AuthCard
           title={t("loginToYourAccount")}
