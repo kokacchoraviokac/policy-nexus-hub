@@ -1,112 +1,98 @@
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useDocumentVersions } from "@/hooks/useDocumentVersions";
+import { getDocumentVersions } from "@/services/DocumentVersionsService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { History, Loader2, AlertCircle, Download } from "lucide-react";
-import { Document } from "@/types/documents";
-import { formatDate } from "@/utils/format";
-import DocumentActions from "./DocumentActions";
-import { Badge } from "@/components/ui/badge";
+import { History, FileDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDistanceToNow } from "date-fns";
 import { useDocumentDownload } from "@/hooks/useDocumentDownload";
 
 interface DocumentVersionHistoryProps {
   documentId: string;
-  originalDocumentId?: string;
+  originalDocumentId?: string | null;
 }
 
 const DocumentVersionHistory: React.FC<DocumentVersionHistoryProps> = ({
   documentId,
   originalDocumentId
 }) => {
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
   const { isDownloading, downloadDocument } = useDocumentDownload();
-  const { 
-    versions, 
-    isLoading, 
-    error, 
-    hasMultipleVersions 
-  } = useDocumentVersions({
-    documentId,
-    originalDocumentId
+  
+  const { data: versions, isLoading, error } = useQuery({
+    queryKey: ['document-versions', originalDocumentId || documentId],
+    queryFn: () => getDocumentVersions(documentId, originalDocumentId || undefined),
+    enabled: !!documentId
   });
   
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex justify-center items-center p-6">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <CardContent className="p-4 flex justify-center items-center">
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          <span className="text-sm text-muted-foreground">{t("loading")}</span>
         </CardContent>
       </Card>
     );
   }
   
-  if (error) {
+  if (error || !versions || versions.length === 0) {
     return (
       <Card>
-        <CardContent className="flex flex-col items-center justify-center p-6">
-          <AlertCircle className="h-6 w-6 text-destructive mb-2" />
-          <p className="text-sm text-muted-foreground">{t("errorLoadingVersions")}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (!hasMultipleVersions) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground text-center">
-            {t("noVersionsAvailable")}
+        <CardContent className="p-4">
+          <p className="text-sm text-muted-foreground">
+            {error 
+              ? t("errorLoadingVersions")
+              : t("noVersionsAvailable")}
           </p>
         </CardContent>
       </Card>
     );
   }
   
+  // Sort versions by version number (descending)
+  const sortedVersions = [...versions].sort((a, b) => 
+    (b.version || 1) - (a.version || 1)
+  );
+  
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <History className="h-5 w-5" />
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium flex items-center">
+          <History className="h-4 w-4 mr-2" />
           {t("versionHistory")}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {versions.map((version: Document) => (
-            <div 
-              key={version.id} 
-              className={`p-3 border rounded-md ${version.id === documentId ? 'border-primary bg-primary/5' : ''}`}
+      <CardContent className="p-3">
+        <div className="space-y-2 max-h-[200px] overflow-y-auto">
+          {sortedVersions.map((version) => (
+            <div
+              key={version.id}
+              className="flex items-center justify-between border-b border-border pb-2 last:border-0 last:pb-0"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{t("version")} {version.version || 1}</span>
-                    {version.is_latest_version && (
-                      <Badge variant="outline" className="bg-primary/10">
-                        {t("latest")}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(version.created_at)}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 px-2" 
-                    onClick={() => downloadDocument(version)}
-                    disabled={isDownloading}
-                  >
-                    <Download className="h-4 w-4 mr-1" />
-                    {t("download")}
-                  </Button>
-                </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-medium flex items-center">
+                  {t("version")} {version.version || 1}
+                  {version.is_latest_version && (
+                    <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-1.5 py-0.5 rounded-full">
+                      {t("latest")}
+                    </span>
+                  )}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(version.created_at), { addSuffix: true })}
+                </span>
               </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => downloadDocument(version)}
+                disabled={isDownloading}
+              >
+                <FileDown className="h-3.5 w-3.5" />
+              </Button>
             </div>
           ))}
         </div>

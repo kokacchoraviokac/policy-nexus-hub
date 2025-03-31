@@ -1,8 +1,8 @@
 
 import React from "react";
+import { FileUp, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { FileUp, Loader2 } from "lucide-react";
 
 interface DocumentUploadActionsProps {
   uploading: boolean;
@@ -22,7 +22,7 @@ const DocumentUploadActions: React.FC<DocumentUploadActionsProps> = ({
   const { t } = useLanguage();
   
   return (
-    <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+    <>
       <Button variant="outline" onClick={onCancel} disabled={uploading}>
         {t("cancel")}
       </Button>
@@ -35,11 +35,11 @@ const DocumentUploadActions: React.FC<DocumentUploadActionsProps> = ({
         ) : (
           <>
             <FileUp className="mr-2 h-4 w-4" />
-            {isNewVersion ? t("uploadVersion") : t("upload")}
+            {isNewVersion ? t("uploadNewVersion") : t("upload")}
           </>
         )}
       </Button>
-    </div>
+    </>
   );
 };
 
