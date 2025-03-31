@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Table,
@@ -20,9 +19,10 @@ interface SortConfig {
 
 export interface Column<T> {
   header: string;
-  accessorKey: keyof T | ((row: T) => React.ReactNode);
+  accessorKey?: keyof T | ((row: T) => React.ReactNode);
   cell?: (row: T) => React.ReactNode;
   sortable?: boolean;
+  id?: string;
 }
 
 interface DataTableProps<T> {
@@ -125,10 +125,10 @@ function DataTable<T>({
                     <Button
                       variant="ghost"
                       className="p-0 h-auto font-medium flex items-center"
-                      onClick={() => handleSort(column.accessorKey as string)}
+                      onClick={() => handleSort(column.id || column.accessorKey as string)}
                     >
                       {column.header}
-                      {getSortIcon(column.accessorKey as string)}
+                      {getSortIcon(column.id || column.accessorKey as string)}
                     </Button>
                   ) : (
                     column.header
@@ -146,7 +146,9 @@ function DataTable<T>({
                       ? column.cell(row)
                       : typeof column.accessorKey === "function"
                       ? column.accessorKey(row)
-                      : row[column.accessorKey] as unknown as React.ReactNode}
+                      : column.accessorKey 
+                        ? row[column.accessorKey] as unknown as React.ReactNode
+                        : null}
                   </TableCell>
                 ))}
               </TableRow>

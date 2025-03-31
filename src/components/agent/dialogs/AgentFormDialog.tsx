@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,7 +26,7 @@ import { Agent } from "@/hooks/agents/useAgents";
 interface AgentFormDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Agent, 'id' | 'status'>) => void;
+  onSubmit: (data: Omit<Agent, 'id'>) => void;
   isSubmitting: boolean;
   initialData?: Agent | null;
 }
@@ -48,6 +47,7 @@ const AgentFormDialog: React.FC<AgentFormDialogProps> = ({
     phone: z.string().optional().or(z.literal("")),
     tax_id: z.string().optional().or(z.literal("")),
     bank_account: z.string().optional().or(z.literal("")),
+    status: z.string().default("active"),
   });
 
   // Initialize form
@@ -59,6 +59,7 @@ const AgentFormDialog: React.FC<AgentFormDialogProps> = ({
       phone: initialData?.phone || "",
       tax_id: initialData?.tax_id || "",
       bank_account: initialData?.bank_account || "",
+      status: initialData?.status || "active",
     },
   });
 
@@ -152,6 +153,8 @@ const AgentFormDialog: React.FC<AgentFormDialogProps> = ({
                 </FormItem>
               )}
             />
+
+            <input type="hidden" {...form.register("status")} />
 
             <DialogFooter>
               <Button variant="outline" onClick={onClose} type="button">

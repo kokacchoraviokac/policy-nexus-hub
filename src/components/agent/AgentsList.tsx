@@ -67,6 +67,7 @@ const AgentsList = () => {
     {
       header: t("actions"),
       id: "actions",
+      accessorKey: "id",
       cell: (row: any) => (
         <div className="flex space-x-2">
           <Button 

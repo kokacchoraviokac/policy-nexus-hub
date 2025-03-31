@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useClients } from "@/hooks/useClients";
+import { useClients, Client } from "@/hooks/useClients";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import ClientFormDialog from "./dialogs/ClientFormDialog";
-import { Client, CodebookFilterState } from "@/types/codebook";
+import { CodebookFilterState } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AdvancedFilterDialog from "./filters/AdvancedFilterDialog";
 import ClientsTable from "./clients/ClientsTable";
@@ -134,7 +134,7 @@ const ClientsDirectory = () => {
         const existingClient = clients?.find(c => c.name === clientData.name);
         
         if (existingClient) {
-          await updateClient(existingClient.id, clientData as Partial<Client>);
+          await updateClient({ id: existingClient.id, ...clientData });
           updated++;
         } else {
           await addClient(clientData as Omit<Client, 'id' | 'created_at' | 'updated_at'>);

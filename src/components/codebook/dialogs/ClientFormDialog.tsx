@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ClientForm from "../forms/ClientForm";
-import { useClients } from "@/hooks/useClients";
+import { useClients, Client } from "@/hooks/useClients";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,7 +31,8 @@ const ClientFormDialog: React.FC<ClientFormDialogProps> = ({
     
     try {
       if (clientId && currentClient) {
-        await updateClient(clientId, {
+        await updateClient({
+          id: clientId,
           ...values,
           company_id: user?.companyId,
         });
