@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
-import AppLayout from '@/components/layout/AppLayout';
-import NotFound from '@/pages/NotFound';
+import { Routes } from 'react-router-dom';
 import { DashboardRoutes } from './DashboardRoutes';
 import { PolicyRoutes } from './PolicyRoutes'; 
 import { SalesRoutes } from './SalesRoutes';
@@ -12,6 +10,8 @@ import { CodebookRoutes } from './CodebookRoutes';
 import { ReportsRoutes } from './ReportsRoutes';
 import { SettingsRoutes } from './SettingsRoutes';
 import { AuthRoutes } from './AuthRoutes';
+import AppLayout from '@/components/layout/AppLayout';
+import NotFound from '@/pages/NotFound';
 
 const Router = () => {
   return (
@@ -32,7 +32,7 @@ const Router = () => {
       {ClaimsRoutes}
       
       {/* Finances Routes */}
-      {FinancesRoutes}
+      {Array.isArray(FinancesRoutes) ? FinancesRoutes : [FinancesRoutes]}
       
       {/* Codebook Routes */}
       {CodebookRoutes}

@@ -9,57 +9,60 @@ import InvoicingPage from "@/pages/finances/InvoicingPage";
 import StatementProcessingPage from "@/pages/finances/StatementProcessingPage";
 import UnlinkedPaymentsPage from "@/pages/finances/UnlinkedPaymentsPage";
 
-export const FinancesRoutes = (
-  <>
-    <Route
-      path="/finances"
-      element={
-        <ProtectedRoute>
-          <AppLayout>
-            <FinancesPage />
-          </AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/finances/commissions"
-      element={
-        <ProtectedRoute>
-          <AppLayout>
-            <CommissionsPage />
-          </AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/finances/invoicing"
-      element={
-        <ProtectedRoute>
-          <AppLayout>
-            <InvoicingPage />
-          </AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/finances/statement-processing"
-      element={
-        <ProtectedRoute>
-          <AppLayout>
-            <StatementProcessingPage />
-          </AppLayout>
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/finances/unlinked-payments"
-      element={
-        <ProtectedRoute>
-          <AppLayout>
-            <UnlinkedPaymentsPage />
-          </AppLayout>
-        </ProtectedRoute>
-      }
-    />
-  </>
-);
+export const FinancesRoutes = [
+  <Route
+    key="finances"
+    path="/finances"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <FinancesPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="finances-commissions"
+    path="/finances/commissions"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <CommissionsPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="finances-invoicing"
+    path="/finances/invoicing"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <InvoicingPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="finances-statement-processing"
+    path="/finances/statement-processing"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <StatementProcessingPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="finances-unlinked-payments"
+    path="/finances/unlinked-payments"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <UnlinkedPaymentsPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />
+];
