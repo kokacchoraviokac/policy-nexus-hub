@@ -30,7 +30,7 @@ const SidebarItemLink: React.FC<SidebarItemLinkProps> = ({
   
   const baseClasses = cn(
     "flex items-center rounded-md transition-all duration-200 my-1",
-    collapsed ? "justify-center p-2 mx-auto" : "px-3 py-2 w-full",
+    collapsed ? "justify-center p-2 mx-auto" : "px-3 py-2.5 w-full",
     active 
       ? "bg-[#C76449] text-white font-medium" 
       : "text-sidebar-foreground hover:bg-[#C76449]/20 hover:text-white hover:translate-x-1"

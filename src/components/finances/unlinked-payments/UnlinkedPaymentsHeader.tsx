@@ -12,15 +12,15 @@ const UnlinkedPaymentsHeader: React.FC<UnlinkedPaymentsHeaderProps> = ({ onExpor
   const { t } = useLanguage();
   
   return (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <div>
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="space-y-1.5">
         <h1 className="text-2xl font-bold tracking-tight">{t("unlinkedPayments")}</h1>
         <p className="text-muted-foreground">
           {t("unlinkedPaymentsDescription")}
         </p>
       </div>
       
-      <Button variant="outline" onClick={onExport}>
+      <Button variant="outline" onClick={onExport} className="self-start md:self-auto">
         <Download className="mr-2 h-4 w-4" />
         {t("exportPayments")}
       </Button>

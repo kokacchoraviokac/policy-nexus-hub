@@ -24,7 +24,7 @@ const SidebarSubItems: React.FC<SidebarSubItemsProps> = ({
   const { t } = useLanguage();
   
   return (
-    <ul className="pl-7 mt-2 space-y-1">
+    <ul className="pl-7 mt-2 space-y-1.5">
       {subItems.map((item, index) => {
         const Icon = item.icon;
         const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
@@ -37,7 +37,7 @@ const SidebarSubItems: React.FC<SidebarSubItemsProps> = ({
             <Link
               to={item.path}
               className={cn(
-                "flex items-center gap-3 px-2 py-1.5 text-sm rounded-md transition-colors duration-200",
+                "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors duration-200",
                 isActive 
                   ? "bg-[#C76449] text-white font-medium" 
                   : "text-sidebar-foreground hover:bg-[#C76449]/20 hover:text-white"

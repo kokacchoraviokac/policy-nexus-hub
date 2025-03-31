@@ -33,13 +33,14 @@ const ClaimHeader: React.FC<ClaimHeaderProps> = ({
   };
   
   return (
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-      <div className="space-y-1">
-        <div className="flex items-center space-x-2">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0 mb-6">
+      <div className="space-y-2">
+        <div className="flex items-center space-x-3">
           <Button
             variant="outline"
             size="sm"
             onClick={handleBack}
+            className="flex items-center"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t("backToClaims")}
@@ -55,7 +56,7 @@ const ClaimHeader: React.FC<ClaimHeaderProps> = ({
       </div>
       
       {!isEditMode && (
-        <Button onClick={handleEdit}>
+        <Button onClick={handleEdit} className="self-start sm:self-auto">
           <FileEdit className="mr-2 h-4 w-4" />
           {t("editClaim")}
         </Button>
