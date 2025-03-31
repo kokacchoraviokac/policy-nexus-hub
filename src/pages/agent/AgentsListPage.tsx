@@ -1,12 +1,12 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import AgentsList from "@/components/agent/AgentsList";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import CalculatePayouts from "@/components/agent/CalculatePayouts";
 
-const CalculatePayoutsPage = () => {
+const AgentsListPage = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   
@@ -22,14 +22,14 @@ const CalculatePayoutsPage = () => {
           {t("backToAgent")}
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">{t("calculatePayouts")}</h1>
-          <p className="text-muted-foreground">{t("calculatePayoutsDescription")}</p>
+          <h1 className="text-2xl font-bold">{t("agents")}</h1>
+          <p className="text-muted-foreground">{t("agentsDescription")}</p>
         </div>
       </div>
       
-      <CalculatePayouts />
+      <AgentsList />
     </div>
   );
 };
 
-export default CalculatePayoutsPage;
+export default AgentsListPage;

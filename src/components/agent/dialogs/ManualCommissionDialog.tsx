@@ -1,18 +1,37 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAgents } from "@/hooks/agents/useAgents";
-import { usePoliciesSearch } from "@/hooks/usePoliciesSearch";
-import { Loader2 } from "lucide-react";
+import { usePolicies } from "@/hooks/usePolicies";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ManualCommissionDialogProps {
   open: boolean;
@@ -22,75 +41,71 @@ interface ManualCommissionDialogProps {
   initialData?: any;
 }
 
-const ManualCommissionDialog = ({
+const ManualCommissionDialog: React.FC<ManualCommissionDialogProps> = ({
   open,
   onClose,
   onSubmit,
   isSubmitting,
-  initialData
-}: ManualCommissionDialogProps) => {
+  initialData,
+}) => {
   const { t } = useLanguage();
-  const { agents, isLoading: agentsLoading } = useAgents();
-  const { policies, searchPolicies, isSearching } = usePoliciesSearch();
-  
-  // Define form schema
+  const { agents } = useAgents();
+  const { policies } = usePolicies();
+
   const formSchema = z.object({
     agent_id: z.string().min(1, t("agentRequired")),
     policy_id: z.string().min(1, t("policyRequired")),
-    rate: z.coerce.number()
+    rate: z
+      .number()
       .min(0, t("rateMustBeNonNegative"))
       .max(100, t("rateCannotExceed100")),
-    justification: z.string().min(1, t("justificationRequired"))
+    justification: z.string().min(1, t("justificationRequired")),
   });
 
-  // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData ? {
-      agent_id: initialData.agent_id,
-      policy_id: initialData.policy_id,
-      rate: initialData.rate,
-      justification: initialData.justification
-    } : {
-      agent_id: "",
-      policy_id: "",
-      rate: 0,
-      justification: ""
-    }
+    defaultValues: {
+      agent_id: initialData?.agent_id || "",
+      policy_id: initialData?.policy_id || "",
+      rate: initialData?.rate || 0,
+      justification: initialData?.justification || "",
+    },
   });
 
-  const handleSubmit = (data: z.infer<typeof formSchema>) => {
-    onSubmit(data);
+  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+    onSubmit(values);
   };
-
-  useEffect(() => {
-    // Search policies when dialog opens
-    if (open) {
-      searchPolicies("");
-    }
-  }, [open, searchPolicies]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {initialData ? t("editManualCommission") : t("addManualCommission")}
+            {initialData
+              ? t("editManualCommission")
+              : t("addManualCommission")}
           </DialogTitle>
+          <DialogDescription>
+            {initialData
+              ? t("editManualCommissionDescription")
+              : t("addManualCommissionDescription")}
+          </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="agent_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("agent")}</FormLabel>
-                  <Select 
-                    value={field.value} 
+                  <Select
                     onValueChange={field.onChange}
-                    disabled={agentsLoading || isSubmitting}
+                    defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -98,7 +113,7 @@ const ManualCommissionDialog = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {agents?.map(agent => (
+                      {agents.map((agent) => (
                         <SelectItem key={agent.id} value={agent.id}>
                           {agent.name}
                         </SelectItem>
@@ -109,17 +124,16 @@ const ManualCommissionDialog = ({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="policy_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("policy")}</FormLabel>
-                  <Select 
-                    value={field.value} 
+                  <Select
                     onValueChange={field.onChange}
-                    disabled={isSearching || isSubmitting}
+                    defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -127,7 +141,7 @@ const ManualCommissionDialog = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {policies?.map(policy => (
+                      {policies.map((policy) => (
                         <SelectItem key={policy.id} value={policy.id}>
                           {policy.policy_number} - {policy.policyholder_name}
                         </SelectItem>
@@ -138,7 +152,7 @@ const ManualCommissionDialog = ({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="rate"
@@ -146,20 +160,22 @@ const ManualCommissionDialog = ({
                 <FormItem>
                   <FormLabel>{t("commissionRate")} (%)</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       step="0.01"
                       min="0"
                       max="100"
-                      {...field} 
-                      disabled={isSubmitting}
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(parseFloat(e.target.value))
+                      }
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="justification"
@@ -170,33 +186,24 @@ const ManualCommissionDialog = ({
                     <Textarea
                       {...field}
                       placeholder={t("explainWhyManualCommission")}
-                      disabled={isSubmitting}
+                      rows={3}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-                disabled={isSubmitting}
-              >
+              <Button variant="outline" onClick={onClose} type="button">
                 {t("cancel")}
               </Button>
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("saving")}
-                  </>
-                ) : initialData ? t("update") : t("save")}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting
+                  ? t("saving")
+                  : initialData
+                  ? t("update")
+                  : t("save")}
               </Button>
             </DialogFooter>
           </form>

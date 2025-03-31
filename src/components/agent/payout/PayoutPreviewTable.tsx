@@ -1,8 +1,15 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Loader2 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatCurrency } from "@/utils/formatters";
 
 interface PayoutItem {
   policy_id: string;
@@ -16,27 +23,30 @@ interface PayoutPreviewTableProps {
   isLoading: boolean;
 }
 
-const PayoutPreviewTable = ({ items, isLoading }: PayoutPreviewTableProps) => {
+const PayoutPreviewTable: React.FC<PayoutPreviewTableProps> = ({
+  items,
+  isLoading,
+}) => {
   const { t } = useLanguage();
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center py-8">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  if (!items.length) {
+  if (items.length === 0) {
     return (
-      <div className="text-center py-8 border rounded-md bg-muted/30">
+      <div className="text-center py-8">
         <p className="text-muted-foreground">{t("noPayoutItemsFound")}</p>
       </div>
     );
   }
 
   return (
-    <div className="border rounded-md overflow-hidden">
+    <div className="rounded-md border overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
@@ -46,11 +56,13 @@ const PayoutPreviewTable = ({ items, isLoading }: PayoutPreviewTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {items.map((item, index) => (
-            <TableRow key={index}>
+          {items.map((item) => (
+            <TableRow key={item.policy_id}>
               <TableCell>{item.policy_number}</TableCell>
               <TableCell>{item.policyholder_name}</TableCell>
-              <TableCell className="text-right">{item.amount.toFixed(2)}</TableCell>
+              <TableCell className="text-right font-medium">
+                {formatCurrency(item.amount)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

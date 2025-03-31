@@ -1,12 +1,27 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { usePayoutDetails } from "@/hooks/agent/usePayoutDetails";
-import { Loader2, Download } from "lucide-react";
-import { format } from "date-fns";
+import { formatCurrency, formatDate } from "@/utils/formatters";
+import { Download } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface PayoutDetailsDialogProps {
   open: boolean;
@@ -14,107 +29,122 @@ interface PayoutDetailsDialogProps {
   payoutId: string;
 }
 
-const PayoutDetailsDialog = ({
+const PayoutDetailsDialog: React.FC<PayoutDetailsDialogProps> = ({
   open,
   onClose,
-  payoutId
-}: PayoutDetailsDialogProps) => {
+  payoutId,
+}) => {
   const { t } = useLanguage();
   const { payoutDetails, isLoading, exportPayoutDetails } = usePayoutDetails(payoutId);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {t("payoutDetails")}
-          </DialogTitle>
+          <DialogTitle>{t("payoutDetails")}</DialogTitle>
+          <DialogDescription>
+            {t("payoutDetailsDescription")}
+          </DialogDescription>
         </DialogHeader>
-        
+
         {isLoading ? (
-          <div className="flex justify-center items-center h-[300px]">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : payoutDetails ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">{t("agent")}</p>
-                <p className="font-medium">{payoutDetails.agent_name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("status")}</p>
-                <p className="font-medium">{t(payoutDetails.status)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("period")}</p>
-                <p className="font-medium">
-                  {format(new Date(payoutDetails.period_start), 'P')} - {format(new Date(payoutDetails.period_end), 'P')}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t("totalAmount")}</p>
-                <p className="font-medium">{payoutDetails.total_amount.toFixed(2)}</p>
-              </div>
-              {payoutDetails.payment_date && (
-                <div>
-                  <p className="text-sm text-muted-foreground">{t("paymentDate")}</p>
-                  <p className="font-medium">{format(new Date(payoutDetails.payment_date), 'P')}</p>
-                </div>
-              )}
-              {payoutDetails.payment_reference && (
-                <div>
-                  <p className="text-sm text-muted-foreground">{t("paymentReference")}</p>
-                  <p className="font-medium">{payoutDetails.payment_reference}</p>
-                </div>
-              )}
-            </div>
-            
-            <Separator />
-            
-            <div>
-              <h3 className="font-medium mb-2">{t("payoutItems")}</h3>
-              <div className="border rounded-md">
-                <table className="w-full">
-                  <thead className="bg-muted text-muted-foreground">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs">{t("policy")}</th>
-                      <th className="px-4 py-2 text-left text-xs">{t("policyholder")}</th>
-                      <th className="px-4 py-2 text-right text-xs">{t("amount")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payoutDetails.items.map((item, index) => (
-                      <tr key={index} className="border-t">
-                        <td className="px-4 py-2 text-sm">{item.policy_number}</td>
-                        <td className="px-4 py-2 text-sm">{item.policyholder_name}</td>
-                        <td className="px-4 py-2 text-sm text-right">{item.amount.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        ) : !payoutDetails ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">{t("payoutNotFound")}</p>
           </div>
         ) : (
-          <div className="text-center py-8">
-            <p>{t("payoutNotFound")}</p>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("summary")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("agent")}</p>
+                    <p className="font-medium">{payoutDetails.agent_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("totalAmount")}</p>
+                    <p className="font-medium">{formatCurrency(payoutDetails.total_amount)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("period")}</p>
+                    <p className="font-medium">
+                      {formatDate(payoutDetails.period_start)} - {formatDate(payoutDetails.period_end)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("status")}</p>
+                    <p className="font-medium">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        payoutDetails.status === 'paid' ? 'bg-green-100 text-green-800' : 
+                        payoutDetails.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {t(payoutDetails.status)}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("paymentDate")}</p>
+                    <p className="font-medium">
+                      {payoutDetails.payment_date ? formatDate(payoutDetails.payment_date) : '-'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">{t("paymentReference")}</p>
+                    <p className="font-medium">
+                      {payoutDetails.payment_reference || '-'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("payoutItems")}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("policyNumber")}</TableHead>
+                      <TableHead>{t("policyholder")}</TableHead>
+                      <TableHead className="text-right">{t("amount")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payoutDetails.items.map((item) => (
+                      <TableRow key={item.policy_id}>
+                        <TableCell>{item.policy_number}</TableCell>
+                        <TableCell>{item.policyholder_name}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(item.amount)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         )}
-        
+
         <DialogFooter>
-          {payoutDetails && (
-            <Button 
-              variant="outline" 
-              onClick={() => exportPayoutDetails(payoutId)}
-              className="mr-auto"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              {t("exportDetails")}
-            </Button>
-          )}
-          <Button onClick={onClose}>
+          <Button variant="outline" onClick={() => onClose()}>
             {t("close")}
+          </Button>
+          <Button 
+            onClick={() => exportPayoutDetails(payoutId)}
+            disabled={isLoading || !payoutDetails}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {t("exportDetails")}
           </Button>
         </DialogFooter>
       </DialogContent>

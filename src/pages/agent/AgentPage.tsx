@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, FileText, Calculator, PieChart } from "lucide-react";
+import { DollarSign, Users, FileText, Calculator, PieChart, User } from "lucide-react";
 
 const AgentPage = () => {
   const { t } = useLanguage();
@@ -12,6 +12,13 @@ const AgentPage = () => {
   
   // Agent module options
   const modules = [
+    {
+      id: "agents",
+      title: t("agents"),
+      description: t("agentsDescription"),
+      icon: <User className="h-6 w-6" />,
+      path: "/agent/agents"
+    },
     {
       id: "fixed-commissions",
       title: t("fixedCommissions"),
@@ -52,9 +59,9 @@ const AgentPage = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">{t("agent")}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("agentPortal")}</h1>
         <p className="text-muted-foreground max-w-3xl mx-auto">
-          {t("agentDescription")}
+          {t("agentPortalDescription")}
         </p>
       </div>
       

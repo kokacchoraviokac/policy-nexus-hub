@@ -1,31 +1,38 @@
 
-/**
- * Format a date string to a localized format
- */
-export const formatDate = (dateString: string): string => {
-  if (!dateString) return '';
-  
+import { format, parseISO } from "date-fns";
+
+export const formatDate = (dateString: string) => {
   try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    if (!dateString) return "";
+    // Try to parse the date string
+    const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
+    return format(date, "PPP");
   } catch (error) {
     console.error("Error formatting date:", error);
     return dateString;
   }
 };
 
-/**
- * Format a number as currency
- */
-export const formatCurrency = (amount: number, currency: string = "EUR"): string => {
-  if (amount === null || amount === undefined) return '';
+export const formatDateTime = (dateString: string) => {
+  try {
+    if (!dateString) return "";
+    // Try to parse the date string
+    const date = typeof dateString === 'string' ? parseISO(dateString) : new Date(dateString);
+    return format(date, "PPP p");
+  } catch (error) {
+    console.error("Error formatting date time:", error);
+    return dateString;
+  }
+};
+
+export const formatCurrency = (amount?: number, currency: string = "EUR") => {
+  if (amount === undefined || amount === null) return "";
   
   try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
     }).format(amount);
   } catch (error) {
     console.error("Error formatting currency:", error);
@@ -33,37 +40,16 @@ export const formatCurrency = (amount: number, currency: string = "EUR"): string
   }
 };
 
-/**
- * Format a percentage value
- */
-export const formatPercentage = (value: number): string => {
-  if (value === null || value === undefined) return '';
+export const formatPercent = (value?: number) => {
+  if (value === undefined || value === null) return "";
   
   try {
-    return `${value.toFixed(2)}%`;
+    return new Intl.NumberFormat("en-US", {
+      style: "percent",
+      minimumFractionDigits: 2,
+    }).format(value / 100);
   } catch (error) {
-    console.error("Error formatting percentage:", error);
+    console.error("Error formatting percent:", error);
     return `${value}%`;
   }
-};
-
-/**
- * Format a phone number
- */
-export const formatPhoneNumber = (phone: string): string => {
-  if (!phone) return '';
-  
-  // This is a simple example, could be expanded for different formats
-  return phone;
-};
-
-/**
- * Truncate text to a specific length
- */
-export const truncateText = (text: string, maxLength: number = 100): string => {
-  if (!text) return '';
-  
-  if (text.length <= maxLength) return text;
-  
-  return `${text.substring(0, maxLength)}...`;
 };

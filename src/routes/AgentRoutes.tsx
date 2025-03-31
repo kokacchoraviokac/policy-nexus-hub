@@ -9,6 +9,7 @@ import ClientCommissionsPage from "@/pages/agent/ClientCommissionsPage";
 import ManualCommissionsPage from "@/pages/agent/ManualCommissionsPage";
 import CalculatePayoutsPage from "@/pages/agent/CalculatePayoutsPage";
 import PayoutReportsPage from "@/pages/agent/PayoutReportsPage";
+import AgentsListPage from "@/pages/agent/AgentsListPage";
 
 export const AgentRoutes = [
   <Route
@@ -18,6 +19,17 @@ export const AgentRoutes = [
       <ProtectedRoute>
         <AppLayout>
           <AgentPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="agent-list"
+    path="/agent/agents"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <AgentsListPage />
         </AppLayout>
       </ProtectedRoute>
     }
