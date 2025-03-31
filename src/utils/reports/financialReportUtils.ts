@@ -1,6 +1,28 @@
 
 import { Transaction } from "@/hooks/reports/useFinancialReport";
 
+// Define the FinancialTransaction type for use in the report components
+export interface FinancialTransaction {
+  id: string;
+  date: string;
+  description: string;
+  type: string;
+  category: string;
+  amount: number;
+  status: string;
+  reference?: string;
+  currency: string;
+}
+
+// Define the FinancialReportFilters interface
+export interface FinancialReportFilters {
+  startDate?: Date;
+  endDate?: Date;
+  transactionType?: string;
+  category?: string;
+  searchTerm?: string;
+}
+
 /**
  * Exports financial transactions to CSV format and triggers a download
  */
@@ -52,4 +74,19 @@ export const exportFinancialReportToCsv = (data: Transaction[], filename = "fina
   
   // Clean up the URL object
   setTimeout(() => URL.revokeObjectURL(url), 100);
+};
+
+// Convert Transaction from useFinancialReport to FinancialTransaction
+export const mapToFinancialTransaction = (transaction: Transaction): FinancialTransaction => {
+  return {
+    id: transaction.id,
+    date: transaction.date,
+    description: transaction.description,
+    type: transaction.type,
+    category: transaction.category,
+    amount: transaction.amount,
+    status: transaction.status,
+    reference: transaction.reference,
+    currency: "EUR" // Default currency, can be adjusted as needed
+  };
 };

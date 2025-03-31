@@ -2,14 +2,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-export interface FinancialReportFilters {
-  startDate?: Date;
-  endDate?: Date;
-  transactionType?: string;
-  category?: string;
-  searchTerm?: string;
-}
+import { FinancialReportFilters } from "@/utils/reports/financialReportUtils";
 
 export interface Transaction {
   id: string;

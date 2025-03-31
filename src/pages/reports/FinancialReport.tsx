@@ -8,14 +8,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useFinancialReport } from "@/hooks/reports/useFinancialReport";
+import { exportFinancialReportToCsv, mapToFinancialTransaction, FinancialReportFilters } from "@/utils/reports/financialReportUtils";
+import FinancialReportFilters from "@/components/reports/financial/FinancialReportFilters";
+import FinancialReportSummary from "@/components/reports/financial/FinancialReportSummary";
+import FinancialTransactions from "@/components/reports/financial/FinancialTransactions";
 
 const FinancialReport = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isExporting, setIsExporting] = useState(false);
+  const [filters, setFilters] = useState<FinancialReportFilters>({
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    endDate: new Date()
+  });
   
-  const { data, isLoading, refetch } = useFinancialReport({});
+  const { data, isLoading, refetch, isExporting, setIsExporting } = useFinancialReport(filters);
   
   const handleBackToReports = () => {
     navigate("/reports");
@@ -24,13 +31,16 @@ const FinancialReport = () => {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      // Placeholder for actual export functionality
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: t("exportSuccessful"),
-        description: t("reportHasBeenDownloaded")
-      });
+      if (data?.transactions) {
+        exportFinancialReportToCsv(data.transactions, "financial-report.csv");
+        
+        toast({
+          title: t("exportSuccessful"),
+          description: t("reportHasBeenDownloaded")
+        });
+      } else {
+        throw new Error("No data to export");
+      }
     } catch (error) {
       console.error("Export error:", error);
       toast({
@@ -42,6 +52,14 @@ const FinancialReport = () => {
       setIsExporting(false);
     }
   };
+
+  const handleFiltersChange = (newFilters: FinancialReportFilters) => {
+    setFilters(newFilters);
+  };
+  
+  // Map data.transactions to FinancialTransaction type for components
+  const financialTransactions = data?.transactions ? 
+    data.transactions.map(mapToFinancialTransaction) : [];
   
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -62,60 +80,32 @@ const FinancialReport = () => {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>{t("totalIncome")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">€24,500.00</p>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>{t("totalExpenses")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">€8,320.00</p>
-            <p className="text-xs text-muted-foreground">-3% from last month</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>{t("netIncome")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">€16,180.00</p>
-            <p className="text-xs text-muted-foreground">+20% from last month</p>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>{t("transactions")}</CardTitle>
-            <CardDescription>{t("recentTransactions")}</CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-            disabled={isExporting}
-          >
-            <FileDown className="h-4 w-4 mr-1" />
-            {isExporting ? t("exporting") : t("exportToExcel")}
-          </Button>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-muted/30">
+          <CardTitle>{t("filters")}</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            {t("featureUnderDevelopment")}
-          </div>
+        <CardContent className="pt-6">
+          <FinancialReportFilters 
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onExport={handleExport}
+            onRefresh={() => refetch()}
+            isExporting={isExporting}
+          />
         </CardContent>
       </Card>
+      
+      <FinancialReportSummary 
+        data={financialTransactions} 
+        isLoading={isLoading} 
+      />
+      
+      <FinancialTransactions 
+        data={financialTransactions}
+        isLoading={isLoading}
+        onExport={handleExport}
+        isExporting={isExporting}
+      />
     </div>
   );
 };
