@@ -47,8 +47,8 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
       
       // Log update activity
       await logActivity({
-        entityType: "insurer",
-        entityId: insurer.id,
+        entity_type: "insurer",
+        entity_id: insurer.id,
         action: "update",
         details: { changes }
       });

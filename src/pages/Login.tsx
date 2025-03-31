@@ -27,7 +27,8 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col relative bg-gray-50">
       <div className="absolute top-4 left-1/2 -translate-x-1/2 md:left-auto md:right-4 md:translate-x-0">
-        <LanguageSelector variant="default" />
+        {/* Remove the variant prop */}
+        <LanguageSelector />
       </div>
       
       <div className="flex items-center justify-center flex-grow px-4">

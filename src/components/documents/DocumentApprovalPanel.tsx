@@ -50,8 +50,8 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       
       // Log the activity
       await logActivity({
-        entityType: document.entity_type || "policy",
-        entityId: document.entity_id || "",
+        entity_type: document.entity_type,
+        entity_id: document.entity_id || "",
         action: "update",
         details: {
           action_type: `document_${newStatus}`,
@@ -66,18 +66,14 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
     },
     onSuccess: (newStatus) => {
       let title = "";
-      switch (newStatus) {
-        case "approved":
-          title = t("documentApproved");
-          break;
-        case "rejected":
-          title = t("documentRejected");
-          break;
-        case "needs_review":
-          title = t("documentMarkedForReview");
-          break;
-        default:
-          title = t("documentStatusUpdated");
+      if (newStatus === "approved") {
+        title = t("documentApproved");
+      } else if (newStatus === "rejected") {
+        title = t("documentRejected");
+      } else if (newStatus === "needs_review") {
+        title = t("documentMarkedForReview");
+      } else {
+        title = t("documentStatusUpdated");
       }
       
       toast({

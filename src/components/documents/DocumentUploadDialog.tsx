@@ -61,7 +61,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
       setDocumentName(selectedDocument.document_name);
       setDocumentType(selectedDocument.document_type);
       if (selectedDocument.category) {
-        setDocumentCategory(selectedDocument.category);
+        // Force type as DocumentCategory to avoid type error
+        setDocumentCategory(selectedDocument.category as DocumentCategory);
       }
     }
   }, [isNewVersion, selectedDocument, setDocumentName, setDocumentType, setDocumentCategory]);
@@ -89,7 +90,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           documentType={documentType}
           setDocumentType={setDocumentType}
           documentCategory={documentCategory}
-          setDocumentCategory={setDocumentCategory}
+          // Cast the setter to match the expected type
+          setDocumentCategory={(category) => setDocumentCategory(category as DocumentCategory)}
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={isNewVersion}

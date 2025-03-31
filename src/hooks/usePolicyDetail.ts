@@ -53,8 +53,8 @@ export const usePolicyDetail = (policyId: string | undefined) => {
           // Log the view activity
           if (policyId) {
             logActivity({
-              entityType: "policy",
-              entityId: policyId,
+              entity_type: "policy",
+              entity_id: policyId,
               action: "view",
               details: { timestamp: new Date().toISOString() }
             });

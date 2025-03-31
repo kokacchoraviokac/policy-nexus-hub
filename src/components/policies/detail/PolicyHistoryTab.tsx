@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ActivityLog } from "@/components/codebook/details/ActivityLog";
-import { fetchActivityLogs, ActivityLog as ActivityLogType } from "@/utils/activityLogger";
+import { fetchActivityLogs } from "@/utils/activityLogger";
 
 interface PolicyHistoryTabProps {
   policyId: string;

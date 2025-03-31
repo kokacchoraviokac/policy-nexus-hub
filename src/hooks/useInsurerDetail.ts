@@ -41,8 +41,8 @@ export function useInsurerDetail() {
       // Log view activity
       if (data) {
         logActivity({
-          entityType: "insurer",
-          entityId: data.id,
+          entity_type: "insurer",
+          entity_id: data.id,
           action: "view"
         });
       }
@@ -83,8 +83,8 @@ export function useInsurerDetail() {
       
       // Log delete activity
       await logActivity({
-        entityType: "insurer",
-        entityId: insurer.id,
+        entity_type: "insurer",
+        entity_id: insurer.id,
         action: "delete",
         details: { name: insurer.name }
       });
@@ -116,12 +116,12 @@ export function useInsurerDetail() {
       const { exportToCSV } = require('@/utils/csv');
       exportToCSV([insurer], `insurer_${insurer.id}_${new Date().toISOString().split('T')[0]}.csv`);
       
-      // Log export activity
+      // Log export activity using 'update' action since 'export' is not in the allowed types
       logActivity({
-        entityType: "insurer",
-        entityId: insurer.id,
-        action: "export",
-        details: { format: "CSV" }
+        entity_type: "insurer",
+        entity_id: insurer.id,
+        action: "update", // Using update instead of export to match allowed types
+        details: { action_type: "export", format: "CSV" }
       });
       
       toast({

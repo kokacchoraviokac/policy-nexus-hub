@@ -21,8 +21,8 @@ export function useInsurersCrud(refetch: () => void) {
       // Log insurer creation
       if (data) {
         await logActivity({
-          entityType: "insurer",
-          entityId: data.id,
+          entity_type: "insurer",
+          entity_id: data.id,
           action: "create",
           details: { fields: insurer }
         });
@@ -78,8 +78,8 @@ export function useInsurersCrud(refetch: () => void) {
       
       // Log insurer update
       await logActivity({
-        entityType: "insurer",
-        entityId: id,
+        entity_type: "insurer",
+        entity_id: id,
         action: "update",
         details: { changes }
       });
@@ -121,8 +121,8 @@ export function useInsurersCrud(refetch: () => void) {
       
       // Log insurer deletion
       await logActivity({
-        entityType: "insurer",
-        entityId: id,
+        entity_type: "insurer",
+        entity_id: id,
         action: "delete",
         details: { name: insurer.name }
       });

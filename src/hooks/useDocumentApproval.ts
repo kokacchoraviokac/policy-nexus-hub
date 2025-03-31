@@ -57,8 +57,8 @@ export const useDocumentApproval = () => {
       
       // Log the approval activity with all details
       await logActivity({
-        entityType: logEntityType,
-        entityId,
+        entity_type: logEntityType,
+        entity_id: entityId,
         action: "update",
         details: {
           action_type: "document_approval",

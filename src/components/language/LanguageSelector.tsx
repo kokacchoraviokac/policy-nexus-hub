@@ -1,7 +1,6 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Language } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,8 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Check, Globe } from "lucide-react";
 
+// Define supported languages
+type SupportedLanguage = "en" | "sr" | "mk" | "es";
+
 interface LanguageOption {
-  code: Language;
+  code: SupportedLanguage;
   label: string;
   flag?: string;
 }
