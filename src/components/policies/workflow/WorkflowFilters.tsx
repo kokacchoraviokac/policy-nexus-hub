@@ -7,36 +7,44 @@ import { RefreshCw, Search } from "lucide-react";
 
 interface WorkflowFiltersProps {
   searchTerm: string;
-  onSearchChange: (value: string) => void;
+  onSearchChange: (term: string) => void;
   onRefresh: () => void;
 }
 
 const WorkflowFilters: React.FC<WorkflowFiltersProps> = ({
   searchTerm,
   onSearchChange,
-  onRefresh,
+  onRefresh
 }) => {
   const { t } = useLanguage();
-
+  
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(e.target.value);
   };
-
+  
   return (
-    <div className="flex flex-col md:flex-row gap-3">
-      <div className="flex-1 flex relative">
+    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+      <div className="relative w-full sm:w-auto">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
+          type="search"
           placeholder={t("searchPolicies")}
-          className="pl-8"
+          className="w-full sm:w-[260px] pl-8"
           value={searchTerm}
           onChange={handleSearchChange}
         />
       </div>
-
-      <Button variant="outline" size="icon" onClick={onRefresh} title={t("refresh")}>
-        <RefreshCw className="h-4 w-4" />
-      </Button>
+      
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRefresh}
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          {t("refresh")}
+        </Button>
+      </div>
     </div>
   );
 };

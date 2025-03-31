@@ -1,364 +1,301 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Policy } from "@/types/policies";
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Policy } from "@/types/policies";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Save } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PolicyReviewFormProps {
   policy: Policy;
-  onSave: (data: Partial<Policy>) => void;
+  onSave: (updatedPolicy: Partial<Policy>) => void;
   isProcessing: boolean;
 }
 
-const policyReviewFormSchema = z.object({
-  policyholder_name: z.string().min(1, { message: "Policyholder name is required" }),
-  insured_name: z.string().min(1, { message: "Insured name is required" }),
-  policy_type: z.string().min(1, { message: "Policy type is required" }),
-  insurer_name: z.string().min(1, { message: "Insurer name is required" }),
-  product_name: z.string().optional(),
-  premium: z.coerce.number().positive({ message: "Premium must be a positive number" }),
-  currency: z.string().min(1, { message: "Currency is required" }),
-  payment_frequency: z.string().optional(),
-  commission_type: z.string().optional(),
-  commission_percentage: z.coerce.number().min(0).max(100).optional(),
-  notes: z.string().optional(),
-});
-
-type PolicyReviewFormValues = z.infer<typeof policyReviewFormSchema>;
-
-const PolicyReviewForm: React.FC<PolicyReviewFormProps> = ({
-  policy,
+const PolicyReviewForm: React.FC<PolicyReviewFormProps> = ({ 
+  policy, 
   onSave,
-  isProcessing,
+  isProcessing
 }) => {
   const { t } = useLanguage();
-  
-  // Fetch insurers for dropdown
-  const { data: insurers = [] } = useQuery({
-    queryKey: ["insurers"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("insurers")
-        .select("id, name")
-        .eq("is_active", true)
-        .order("name");
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-  
-  // Initialize form
-  const form = useForm<PolicyReviewFormValues>({
-    resolver: zodResolver(policyReviewFormSchema),
+  const { register, handleSubmit, setValue, watch, formState } = useForm<Partial<Policy>>({
     defaultValues: {
-      policyholder_name: policy.policyholder_name || "",
-      insured_name: policy.insured_name || policy.policyholder_name || "",
-      policy_type: policy.policy_type || "Standard",
-      insurer_name: policy.insurer_name || "",
-      product_name: policy.product_name || "",
-      premium: policy.premium || 0,
-      currency: policy.currency || "EUR",
-      payment_frequency: policy.payment_frequency || "annual",
-      commission_type: policy.commission_type || "automatic",
-      commission_percentage: policy.commission_percentage || 0,
-      notes: policy.notes || "",
-    },
+      policy_number: policy.policy_number,
+      policyholder_name: policy.policyholder_name,
+      insured_name: policy.insured_name,
+      insurer_name: policy.insurer_name,
+      product_name: policy.product_name,
+      product_code: policy.product_code,
+      start_date: policy.start_date,
+      expiry_date: policy.expiry_date,
+      premium: policy.premium,
+      currency: policy.currency,
+      payment_frequency: policy.payment_frequency,
+      commission_type: policy.commission_type,
+      commission_percentage: policy.commission_percentage,
+      notes: policy.notes
+    }
   });
   
-  const onSubmit = (data: PolicyReviewFormValues) => {
-    // Calculate commission amount if percentage is provided
-    let commission_amount = undefined;
-    if (data.commission_percentage) {
-      commission_amount = (data.premium * data.commission_percentage) / 100;
-    }
-    
-    onSave({
-      ...data,
-      commission_amount,
-    });
+  const paymentFrequencies = [
+    { value: 'monthly', label: t('monthly') },
+    { value: 'quarterly', label: t('quarterly') },
+    { value: 'biannually', label: t('biannually') },
+    { value: 'annually', label: t('annually') },
+    { value: 'singlePayment', label: t('singlePayment') }
+  ];
+  
+  const currencies = [
+    { value: 'EUR', label: 'EUR' },
+    { value: 'USD', label: 'USD' },
+    { value: 'RSD', label: 'RSD' },
+    { value: 'GBP', label: 'GBP' },
+    { value: 'CHF', label: 'CHF' }
+  ];
+  
+  const commissionTypes = [
+    { value: 'automatic', label: t('automatic') },
+    { value: 'manual', label: t('manual') },
+    { value: 'none', label: t('none') }
+  ];
+  
+  const handleSelectChange = (fieldName: keyof Policy, value: string) => {
+    setValue(fieldName, value);
+  };
+  
+  const onSubmit = (data: Partial<Policy>) => {
+    onSave(data);
   };
   
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="policy_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("policyType")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isProcessing}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("selectPolicyType")} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Standard">Standard</SelectItem>
-                      <SelectItem value="Professional">Professional</SelectItem>
-                      <SelectItem value="Commercial">Commercial</SelectItem>
-                      <SelectItem value="Personal">Personal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("editPolicyDetails")}</CardTitle>
+            <CardDescription>{t("reviewAndEditImportedPolicy")}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertDescription className="text-blue-700 text-sm">
+                {t("importedPolicyReviewNote")}
+              </AlertDescription>
+            </Alert>
             
-            <FormField
-              control={form.control}
-              name="insurer_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("insurer")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isProcessing}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="policy_number">{t("policyNumber")}</Label>
+                  <Input 
+                    id="policy_number" 
+                    {...register("policy_number", { required: true })}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="start_date">{t("startDate")}</Label>
+                  <Input 
+                    id="start_date" 
+                    type="date" 
+                    {...register("start_date", { required: true })}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="expiry_date">{t("expiryDate")}</Label>
+                  <Input 
+                    id="expiry_date" 
+                    type="date" 
+                    {...register("expiry_date", { required: true })}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="premium">{t("premium")}</Label>
+                  <Input 
+                    id="premium" 
+                    type="number" 
+                    step="0.01" 
+                    {...register("premium", { 
+                      required: true,
+                      valueAsNumber: true
+                    })}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="currency">{t("currency")}</Label>
+                  <Select 
+                    defaultValue={policy.currency} 
+                    onValueChange={(value) => handleSelectChange("currency", value)}
                   >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("selectInsurer")} />
-                      </SelectTrigger>
-                    </FormControl>
+                    <SelectTrigger id="currency">
+                      <SelectValue placeholder={t("selectCurrency")} />
+                    </SelectTrigger>
                     <SelectContent>
-                      {insurers.map((insurer) => (
-                        <SelectItem key={insurer.id} value={insurer.name}>
-                          {insurer.name}
+                      {currencies.map((currency) => (
+                        <SelectItem key={currency.value} value={currency.value}>
+                          {currency.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="policyholder_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("policyholder")}</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={isProcessing} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="insured_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("insured")}</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={isProcessing} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="product_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("product")}</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={isProcessing} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="premium"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("premium")}</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      {...field} 
-                      disabled={isProcessing} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="currency"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("currency")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isProcessing}
+                </div>
+                
+                <div>
+                  <Label htmlFor="payment_frequency">{t("paymentFrequency")}</Label>
+                  <Select 
+                    defaultValue={policy.payment_frequency} 
+                    onValueChange={(value) => handleSelectChange("payment_frequency", value)}
                   >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("selectCurrency")} />
-                      </SelectTrigger>
-                    </FormControl>
+                    <SelectTrigger id="payment_frequency">
+                      <SelectValue placeholder={t("selectFrequency")} />
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="GBP">GBP</SelectItem>
-                      <SelectItem value="RSD">RSD</SelectItem>
-                      <SelectItem value="MKD">MKD</SelectItem>
+                      {paymentFrequencies.map((frequency) => (
+                        <SelectItem key={frequency.value} value={frequency.value}>
+                          {frequency.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                </div>
+              </div>
+            </div>
             
-            <FormField
-              control={form.control}
-              name="payment_frequency"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("paymentFrequency")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isProcessing}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("selectPaymentFrequency")} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="annual">{t("annual")}</SelectItem>
-                      <SelectItem value="semi-annual">{t("semiAnnual")}</SelectItem>
-                      <SelectItem value="quarterly">{t("quarterly")}</SelectItem>
-                      <SelectItem value="monthly">{t("monthly")}</SelectItem>
-                      <SelectItem value="one-time">{t("oneTime")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="commission_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("commissionType")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isProcessing}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("selectCommissionType")} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="automatic">{t("automatic")}</SelectItem>
-                      <SelectItem value="manual">{t("manual")}</SelectItem>
-                      <SelectItem value="none">{t("none")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="commission_percentage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("commissionPercentage")}</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      min="0"
-                      max="100"
-                      {...field} 
-                      disabled={isProcessing || form.watch("commission_type") === "none"} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    {t("commissionPercentageDescription")}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("notes")}</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  disabled={isProcessing}
-                  rows={4}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="policyholder_name">{t("policyholder")}</Label>
+                <Input 
+                  id="policyholder_name" 
+                  {...register("policyholder_name", { required: true })}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isProcessing}>
-            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {t("saveChanges")}
-          </Button>
-        </div>
-      </form>
-    </Form>
+              </div>
+              
+              <div>
+                <Label htmlFor="insured_name">{t("insured")}</Label>
+                <Input 
+                  id="insured_name" 
+                  {...register("insured_name")}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="insurer_name">{t("insurer")}</Label>
+                <Input 
+                  id="insurer_name" 
+                  {...register("insurer_name", { required: true })}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="product_name">{t("product")}</Label>
+                <Input 
+                  id="product_name" 
+                  {...register("product_name")}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="product_code">{t("productCode")}</Label>
+                <Input 
+                  id="product_code" 
+                  {...register("product_code")}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="commission_type">{t("commissionType")}</Label>
+                <Select 
+                  defaultValue={policy.commission_type} 
+                  onValueChange={(value) => handleSelectChange("commission_type", value)}
+                >
+                  <SelectTrigger id="commission_type">
+                    <SelectValue placeholder={t("selectCommissionType")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {commissionTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="commission_percentage">
+                  {t("commissionPercentage")}
+                </Label>
+                <Input 
+                  id="commission_percentage" 
+                  type="number" 
+                  step="0.01" 
+                  {...register("commission_percentage", { 
+                    valueAsNumber: true 
+                  })}
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t("commissionPercentageDescription")}
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="notes">{t("notes")}</Label>
+                <Textarea 
+                  id="notes" 
+                  rows={4} 
+                  {...register("notes")}
+                  placeholder={t("enterNotes")}
+                />
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              type="submit" 
+              disabled={isProcessing || !formState.isDirty}
+              className="w-full sm:w-auto"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("saving")}
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  {t("saveChanges")}
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    </form>
   );
 };
 

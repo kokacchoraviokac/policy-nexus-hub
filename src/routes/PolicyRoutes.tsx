@@ -13,6 +13,8 @@ import PolicyDocuments from "@/pages/policies/PolicyDocuments";
 import PolicyReview from "@/pages/policies/workflow/PolicyReview";
 import PolicyImportPage from "@/pages/policies/PolicyImportPage";
 import UnlinkedPayments from "@/pages/policies/UnlinkedPayments";
+import PolicyWorkflowPage from "@/pages/policies/PolicyWorkflowPage";
+import PolicyReviewPage from "@/pages/policies/PolicyReviewPage";
 
 export const PolicyRoutes = [
   <Route
@@ -51,7 +53,7 @@ export const PolicyRoutes = [
   />,
   <Route
     key="policies-detail"
-    path="/policies/detail/:id"
+    path="/policies/:id"
     element={
       <ProtectedRoute>
         <AppLayout>
@@ -66,18 +68,29 @@ export const PolicyRoutes = [
     element={
       <ProtectedRoute>
         <AppLayout>
-          <PolicyWorkflow />
+          <PolicyWorkflowPage />
         </AppLayout>
       </ProtectedRoute>
     }
   />,
   <Route
     key="policies-workflow-review"
-    path="/policies/workflow/review/:id"
+    path="/policies/:id/review"
     element={
       <ProtectedRoute>
         <AppLayout>
           <PolicyReview />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-workflow-review-id"
+    path="/policies/workflow/review/:id"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <PolicyReviewPage />
         </AppLayout>
       </ProtectedRoute>
     }

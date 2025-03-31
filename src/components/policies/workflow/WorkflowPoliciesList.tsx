@@ -1,11 +1,11 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { TableHead, TableRow, TableHeader, TableCell, TableBody, Table } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FileEdit, AlertTriangle, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { WorkflowPolicy } from "@/hooks/useWorkflowPolicies";
-import WorkflowStatusBadge from "./WorkflowStatusBadge";
 
 interface WorkflowPoliciesListProps {
   policies: WorkflowPolicy[];
@@ -13,77 +13,68 @@ interface WorkflowPoliciesListProps {
   onReviewPolicy: (policyId: string) => void;
 }
 
-const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
-  policies,
-  isLoading,
-  onReviewPolicy,
+const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({ 
+  policies, 
+  isLoading, 
+  onReviewPolicy 
 }) => {
-  const { t } = useLanguage();
-
+  const { t, formatDate, formatCurrency } = useLanguage();
+  
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-6 w-6 text-primary animate-spin mr-2" />
+        <span>{t("loading")}</span>
       </div>
     );
   }
-
+  
   if (policies.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <p className="text-muted-foreground mb-2">{t("noPoliciesFound")}</p>
-        <p className="text-sm text-muted-foreground">{t("tryDifferentFilters")}</p>
+      <div className="text-center p-8 border border-dashed rounded-md bg-muted/50 my-4">
+        <AlertTriangle className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+        <h3 className="font-medium text-lg">{t("noPoliciesFound")}</h3>
+        <p className="text-muted-foreground">{t("noPoliciesInWorkflowDescription")}</p>
       </div>
     );
   }
-
+  
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("policyNumber")}</TableHead>
-            <TableHead>{t("insurer")}</TableHead>
-            <TableHead>{t("client")}</TableHead>
-            <TableHead>{t("product")}</TableHead>
-            <TableHead>{t("startDate")}</TableHead>
-            <TableHead>{t("endDate")}</TableHead>
-            <TableHead>{t("status")}</TableHead>
-            <TableHead>{t("premium")}</TableHead>
-            <TableHead className="text-right">{t("actions")}</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>{t("policyNumber")}</TableHead>
+          <TableHead>{t("insurer")}</TableHead>
+          <TableHead>{t("client")}</TableHead>
+          <TableHead>{t("startDate")}</TableHead>
+          <TableHead>{t("expiryDate")}</TableHead>
+          <TableHead>{t("premium")}</TableHead>
+          <TableHead className="text-right">{t("actions")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {policies.map((policy) => (
+          <TableRow key={policy.id}>
+            <TableCell className="font-medium">{policy.policyNumber}</TableCell>
+            <TableCell>{policy.insurer}</TableCell>
+            <TableCell>{policy.client}</TableCell>
+            <TableCell>{formatDate(policy.startDate)}</TableCell>
+            <TableCell>{formatDate(policy.endDate)}</TableCell>
+            <TableCell>{formatCurrency(policy.premium, policy.currency)}</TableCell>
+            <TableCell className="text-right">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onReviewPolicy(policy.id)}
+              >
+                <FileEdit className="h-4 w-4 mr-2" />
+                {t("review")}
+              </Button>
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {policies.map((policy) => (
-            <TableRow key={policy.id}>
-              <TableCell className="font-medium">{policy.policyNumber}</TableCell>
-              <TableCell>{policy.insurer}</TableCell>
-              <TableCell>{policy.client}</TableCell>
-              <TableCell>{policy.product}</TableCell>
-              <TableCell>{format(policy.startDate, "PP")}</TableCell>
-              <TableCell>{format(policy.endDate, "PP")}</TableCell>
-              <TableCell>
-                <WorkflowStatusBadge status={policy.status} />
-              </TableCell>
-              <TableCell>
-                {policy.premium.toLocaleString()} {policy.currency}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onReviewPolicy(policy.id)}
-                >
-                  {policy.status === "draft" || policy.status === "review"
-                    ? t("review")
-                    : t("view")}
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 };
 
