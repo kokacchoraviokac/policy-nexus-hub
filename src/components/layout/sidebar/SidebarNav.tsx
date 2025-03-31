@@ -3,8 +3,9 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import SidebarItem from "./SidebarItem";
-import { SidebarData } from "./SidebarData";
+import { sidebarItems } from "./SidebarData";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useState } from "react";
 
 interface SidebarNavProps {
   collapsed: boolean;
@@ -14,11 +15,20 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
   const location = useLocation();
   const { t } = useLanguage();
   const { user } = useAuth();
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  
+  const toggleExpand = (label: string) => {
+    setExpandedItems(prev => 
+      prev.includes(label) 
+        ? prev.filter(item => item !== label) 
+        : [...prev, label]
+    );
+  };
   
   if (!user) return null;
   
-  // Filter SidebarData based on user role if needed
-  const filteredItems = SidebarData;
+  // Filter sidebarItems based on user role if needed
+  const filteredItems = sidebarItems;
   
   return (
     <nav className="px-2 py-4">
@@ -26,8 +36,10 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
         {filteredItems.map((item, index) => (
           <SidebarItem
             key={index}
-            item={item}
-            isActive={
+            icon={item.icon}
+            label={item.label}
+            path={item.path}
+            active={
               item.path
                 ? location.pathname === item.path ||
                   location.pathname.startsWith(`${item.path}/`)
@@ -39,6 +51,10 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
                   ) || false
             }
             collapsed={collapsed}
+            requiredPrivilege={item.requiredPrivilege}
+            subItems={item.subItems}
+            isExpanded={expandedItems.includes(item.label)}
+            onToggleExpand={() => toggleExpand(item.label)}
           />
         ))}
       </ul>
