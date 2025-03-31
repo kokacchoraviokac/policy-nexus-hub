@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useFinancialReport } from "@/hooks/reports/useFinancialReport";
-import { exportFinancialReportToCsv, mapToFinancialTransaction, FinancialReportFilters } from "@/utils/reports/financialReportUtils";
+import { exportFinancialReportToCsv, mapToFinancialTransaction, FinancialReportFilters as FiltersType } from "@/utils/reports/financialReportUtils";
 import FinancialReportFilters from "@/components/reports/financial/FinancialReportFilters";
 import FinancialReportSummary from "@/components/reports/financial/FinancialReportSummary";
 import FinancialTransactions from "@/components/reports/financial/FinancialTransactions";
@@ -17,7 +17,7 @@ const FinancialReport = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [filters, setFilters] = useState<FinancialReportFilters>({
+  const [filters, setFilters] = useState<FiltersType>({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date()
   });
@@ -53,7 +53,7 @@ const FinancialReport = () => {
     }
   };
 
-  const handleFiltersChange = (newFilters: FinancialReportFilters) => {
+  const handleFiltersChange = (newFilters: FiltersType) => {
     setFilters(newFilters);
   };
   
