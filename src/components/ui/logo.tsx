@@ -2,6 +2,9 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
+// Add font import
+import "@/styles/fonts.css";
+
 interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
   collapsed?: boolean;
 }
@@ -19,7 +22,7 @@ const Logo: React.FC<LogoProps> = ({ collapsed = false, className, ...props }) =
       {...props}
     >
       {collapsed ? (
-        <div className="text-sidebar-foreground font-medium text-xl">
+        <div className="text-sidebar-foreground font-norwester text-xl">
           P<span className="text-[#c76449]">H</span>
         </div>
       ) : (

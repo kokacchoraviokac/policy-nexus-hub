@@ -1,0 +1,15 @@
+
+/* Import Norwester font */
+@font-face {
+  font-family: 'Norwester';
+  src: url('/fonts/norwester.woff2') format('woff2'),
+       url('/fonts/norwester.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Add the font class for Tailwind */
+.font-norwester {
+  font-family: 'Norwester', sans-serif;
+}
