@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SubItem {
   label: string;
@@ -33,30 +34,32 @@ const SidebarHoverCard: React.FC<SidebarHoverCardProps> = ({ label, subItems, cu
       <HoverCardContent 
         side="right" 
         align="start" 
-        className="w-56 p-3 z-50 bg-popover border border-sidebar-border"
+        className="w-56 p-3 z-50 bg-popover border border-sidebar-border shadow-glass-sm"
       >
         <div className="font-medium text-sm mb-3 border-b border-gray-200 pb-2">{t(label)}</div>
-        <div className="space-y-1.5">
-          {subItems.map((subItem, index) => {
-            const isSubItemActive = 
-              currentPath === subItem.path || 
-              currentPath.startsWith(`${subItem.path}/`);
-            
-            return (
-              <Link
-                key={index}
-                to={subItem.path}
-                className={cn(
-                  "text-foreground hover:bg-[#C76449]/20 hover:text-[#C76449] rounded-md py-2 px-3 text-sm flex items-center transition-colors duration-200",
-                  isSubItemActive && "bg-[#C76449] text-white font-medium"
-                )}
-              >
-                {subItem.icon && <subItem.icon className="h-4 w-4 mr-3 flex-shrink-0" />}
-                <span>{t(subItem.label)}</span>
-              </Link>
-            );
-          })}
-        </div>
+        <ScrollArea className="max-h-[300px]">
+          <div className="space-y-1.5">
+            {subItems.map((subItem, index) => {
+              const isSubItemActive = 
+                currentPath === subItem.path || 
+                currentPath.startsWith(`${subItem.path}/`);
+              
+              return (
+                <Link
+                  key={index}
+                  to={subItem.path}
+                  className={cn(
+                    "text-foreground hover:bg-[#C76449]/20 hover:text-[#C76449] rounded-md py-2 px-3 text-sm flex items-center transition-colors duration-200",
+                    isSubItemActive && "bg-[#C76449] text-white font-medium"
+                  )}
+                >
+                  {subItem.icon && <subItem.icon className="h-4 w-4 mr-3 flex-shrink-0" />}
+                  <span>{t(subItem.label)}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </ScrollArea>
       </HoverCardContent>
     </HoverCard>
   );

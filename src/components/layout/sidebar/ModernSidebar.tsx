@@ -20,7 +20,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ collapsed, setCollapsed }
     >
       <div className="flex flex-col h-full">
         <SidebarHeader collapsed={collapsed} setCollapsed={setCollapsed} />
-        <div className="flex-1 overflow-y-auto scrollbar-thin">
+        <div className="flex-1 overflow-y-auto sidebar-scrollbar scrollbar-thin">
           <SidebarNav collapsed={collapsed} />
         </div>
         <SidebarFooter collapsed={collapsed} />

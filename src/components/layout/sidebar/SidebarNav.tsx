@@ -58,7 +58,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
   const currentPath = location.pathname;
   
   return (
-    <nav className="px-2 py-4">
+    <nav className="px-2 py-4 h-full overflow-y-auto sidebar-scrollbar">
       <ul className="space-y-1">
         {filteredItems.map((item, index) => {
           // Check if this item has an active sub-item
