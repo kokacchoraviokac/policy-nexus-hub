@@ -44,7 +44,7 @@ const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }
   }, [user]);
 
   return (
-    <header className="h-16 border-b border-border flex items-center px-4 bg-white/80 backdrop-blur-sm">
+    <header className="h-16 border-b border-border flex items-center px-6 bg-white/80 backdrop-blur-sm">
       <div className="flex-1">
         {companyName && (
           <h2 className="text-lg font-semibold text-primary">
@@ -53,9 +53,12 @@ const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }
         )}
       </div>
       
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-5">
         <LanguageSelector />
-        <button className="p-2 rounded-full hover:bg-secondary transition-colors relative">
+        <button 
+          className="p-2 rounded-full hover:bg-secondary transition-colors relative" 
+          aria-label="Notifications"
+        >
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary"></span>
         </button>

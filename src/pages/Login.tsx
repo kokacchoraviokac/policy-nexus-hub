@@ -33,15 +33,15 @@ const Login: React.FC = () => {
             onValueChange={(value) => setActiveTab(value as "login" | "signup")}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-2 mb-4">
+            <TabsList className="grid grid-cols-2 mb-6">
               <TabsTrigger value="login">{t("login")}</TabsTrigger>
               <TabsTrigger value="signup">{t("signUp")}</TabsTrigger>
             </TabsList>
-            <TabsContent value="login">
+            <TabsContent value="login" className="space-y-6">
               <LoginForm />
               
               {/* Demo Account Section */}
-              <div className="mt-6 pt-6 border-t">
+              <div className="mt-8 pt-6 border-t border-border/30">
                 <DemoAccounts />
               </div>
             </TabsContent>

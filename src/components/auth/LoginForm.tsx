@@ -79,15 +79,15 @@ const LoginForm: React.FC = () => {
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("email")}</FormLabel>
+                <FormLabel className="text-base">{t("email")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="name@example.com" {...field} />
+                  <Input placeholder="name@example.com" {...field} className="h-11" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -100,7 +100,7 @@ const LoginForm: React.FC = () => {
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between">
-                  <FormLabel>{t("password")}</FormLabel>
+                  <FormLabel className="text-base">{t("password")}</FormLabel>
                   <Button 
                     variant="link" 
                     size="sm" 
@@ -112,7 +112,7 @@ const LoginForm: React.FC = () => {
                   </Button>
                 </div>
                 <FormControl>
-                  <Input type="password" {...field} />
+                  <Input type="password" className="h-11" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,7 +121,7 @@ const LoginForm: React.FC = () => {
           
           <Button 
             type="submit" 
-            className="w-full" 
+            className="w-full h-11 mt-6" 
             disabled={isSubmitting}
           >
             {isSubmitting ? t("signingIn") : t("signIn")}
@@ -130,25 +130,26 @@ const LoginForm: React.FC = () => {
       </Form>
 
       <Dialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl">Reset Password</DialogTitle>
+            <DialogDescription className="pt-2">
               Enter your email address and we'll send you a link to reset your password.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-base">Email</FormLabel>
               <Input 
                 type="email" 
                 placeholder="name@example.com" 
                 value={resetEmail} 
-                onChange={(e) => setResetEmail(e.target.value)} 
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="h-11" 
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="sm:justify-end gap-2">
             <Button variant="outline" onClick={() => setResetPasswordDialogOpen(false)}>
               Cancel
             </Button>
