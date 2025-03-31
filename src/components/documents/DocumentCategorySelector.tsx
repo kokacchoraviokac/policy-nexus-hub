@@ -11,8 +11,8 @@ import {
 import { DocumentCategory } from "@/types/documents";
 
 interface DocumentCategorySelectorProps {
-  value: DocumentCategory | "";
-  onValueChange: (value: DocumentCategory | "") => void;
+  value: DocumentCategory | string;
+  onValueChange: (value: DocumentCategory | string) => void;
 }
 
 const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
@@ -31,7 +31,7 @@ const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
           <SelectValue placeholder={t("selectCategory")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">
+          <SelectItem value="none">
             {t("none")}
           </SelectItem>
           <SelectItem value="claim_evidence">
