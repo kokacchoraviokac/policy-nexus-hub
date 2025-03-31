@@ -7,7 +7,7 @@ import es_translations from "@/locales/es";
 import mk_translations from "@/locales/mk";
 import sr_translations from "@/locales/sr";
 
-export type SupportedLanguage = "en" | "es" | "mk" | "sr";
+export type Language = "en" | "es" | "mk" | "sr";
 
 // Base translations structure
 interface Translations {
@@ -23,17 +23,20 @@ interface LanguageTranslations {
 }
 
 export interface LanguageContextProps {
-  currentLanguage: SupportedLanguage;
-  setLanguage: (lang: SupportedLanguage) => void;
+  currentLanguage: Language;
+  language: Language; // Add alias for backward compatibility
+  setLanguage: (lang: Language) => void;
   t: (key: string, params?: Record<string, string | number>) => string;
   formatDate: (date: string | Date, formatPattern?: string) => string;
   formatCurrency: (amount: number, currencyCode?: string) => string;
   formatNumber: (num: number, options?: Intl.NumberFormatOptions) => string;
   formatDateTime: (date: string | Date, formatPattern?: string) => string;
+  getMissingTranslationsCount?: (lang: Language) => number; // Add this for translation components
 }
 
 const defaultLanguageContext: LanguageContextProps = {
   currentLanguage: "en",
+  language: "en", // Add alias
   setLanguage: () => {},
   t: () => "",
   formatDate: () => "",
@@ -48,7 +51,7 @@ export const useLanguage = () => useContext(LanguageContext);
 
 interface LanguageProviderProps {
   children: ReactNode;
-  initialLanguage?: SupportedLanguage;
+  initialLanguage?: Language;
 }
 
 const translations: LanguageTranslations = {
@@ -69,19 +72,24 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children, 
   initialLanguage = "en" 
 }) => {
-  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>(initialLanguage);
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(initialLanguage);
 
   useEffect(() => {
     // Load saved language preference from localStorage
-    const savedLanguage = localStorage.getItem("language") as SupportedLanguage;
+    const savedLanguage = localStorage.getItem("language") as Language;
     if (savedLanguage && ["en", "es", "mk", "sr"].includes(savedLanguage)) {
       setCurrentLanguage(savedLanguage);
     }
   }, []);
 
-  const setLanguage = (lang: SupportedLanguage) => {
+  const setLanguage = (lang: Language) => {
     setCurrentLanguage(lang);
     localStorage.setItem("language", lang);
+  };
+
+  // Mock function for translation components - replace with actual implementation if needed
+  const getMissingTranslationsCount = (lang: Language) => {
+    return 0; // Placeholder implementation
   };
 
   // Function to get a value from nested translations using a dot notation key
@@ -180,12 +188,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     <LanguageContext.Provider 
       value={{ 
         currentLanguage, 
+        language: currentLanguage, // Add alias for backward compatibility
         setLanguage, 
         t, 
         formatDate,
         formatCurrency,
         formatNumber,
-        formatDateTime
+        formatDateTime,
+        getMissingTranslationsCount
       }}
     >
       {children}

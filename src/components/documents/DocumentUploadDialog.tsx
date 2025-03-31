@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useDocumentUpload } from "@/hooks/useDocumentUpload";
-import { Document } from "@/types/documents";
+import { Document, DocumentCategory, EntityType } from "@/types/documents";
 import DocumentUploadTabs from "./DocumentUploadTabs";
 import DocumentUploadForm from "./DocumentUploadForm";
 import DocumentUploadActions from "./DocumentUploadActions";
@@ -12,7 +12,7 @@ import VersionInfoBox from "./VersionInfoBox";
 interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entityType: "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
+  entityType: EntityType;
   entityId: string;
   selectedDocument?: Document; // For version control
   onUploadComplete?: () => void; // Optional callback for when upload completes

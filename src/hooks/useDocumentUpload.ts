@@ -1,8 +1,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentUploadRequest, EntityType } from "@/types/documents";
-import { getDocumentTableName } from "@/utils/documentUploadUtils"; 
+import { DocumentUploadRequest, DocumentCategory, EntityType } from "@/types/documents";
+import { getDocumentTableName, DocumentTableName } from "@/utils/documentUploadUtils"; 
 import { v4 as uuidv4 } from "uuid";
 import { useState } from "react";
 
@@ -24,7 +24,7 @@ export const useDocumentUpload = ({
   const queryClient = useQueryClient();
   const [documentName, setDocumentName] = useState<string>("");
   const [documentType, setDocumentType] = useState<string>("");
-  const [documentCategory, setDocumentCategory] = useState<string>("");
+  const [documentCategory, setDocumentCategory] = useState<DocumentCategory>("other");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   
@@ -63,7 +63,7 @@ export const useDocumentUpload = ({
         // 4. Calculate new version if it's a version update
         const version = currentVersion > 0 ? currentVersion + 1 : 1;
         
-        // 5. Create document record in database
+        // 5. Create document record in database - use type assertion to fix the overload issue
         const documentData = {
           document_name: documentName,
           document_type: documentType,
@@ -72,16 +72,16 @@ export const useDocumentUpload = ({
           uploaded_by: user.id,
           company_id: user?.user_metadata?.company_id,
           description: "",
-          category: documentCategory || "other",
+          category: documentCategory,
           version: version,
           is_latest_version: true,
           mime_type: file.type,
           original_document_id: originalDocumentId || null
         };
         
-        // Insert the document
+        // Insert the document using type assertion to fix the overload issue
         const { data, error: dbError } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .insert(documentData)
           .select()
           .single();
@@ -100,7 +100,7 @@ export const useDocumentUpload = ({
         // 6. If this is a new version, update previous version
         if (originalDocumentId) {
           await supabase
-            .from(tableName)
+            .from(tableName as any)
             .update({ is_latest_version: false })
             .eq('id', originalDocumentId);
         }
@@ -122,7 +122,7 @@ export const useDocumentUpload = ({
       // Reset form
       setDocumentName("");
       setDocumentType("");
-      setDocumentCategory("");
+      setDocumentCategory("other");
       setFile(null);
     }
   });

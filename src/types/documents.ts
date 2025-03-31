@@ -19,7 +19,7 @@ export interface Document {
   tags?: string[];
   category: DocumentCategory;
   
-  // Add missing properties from errors
+  // Add missing properties
   mime_type?: string;
   is_latest_version?: boolean;
   original_document_id?: string | null;

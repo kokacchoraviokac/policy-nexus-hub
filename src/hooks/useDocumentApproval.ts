@@ -30,11 +30,8 @@ export const useDocumentApproval = () => {
         throw new Error("User not authenticated");
       }
 
-      const tableName = entityType === "policy" 
-        ? "policy_documents" 
-        : entityType === "claim" 
-          ? "claim_documents" 
-          : "sales_documents";
+      // Map entityType to a valid activityLogger EntityType
+      const logEntityType = `${entityType}_document` as any;
           
       // Update the document with approval information
       const updateData = {
@@ -42,6 +39,13 @@ export const useDocumentApproval = () => {
         // We store approval info in activity logs since the document tables don't have these columns
       };
       
+      // Use type assertion to fix the Supabase query type error
+      const tableName = entityType === "policy" 
+        ? "policy_documents" 
+        : entityType === "claim" 
+          ? "claim_documents" 
+          : "sales_documents";
+          
       const { data, error } = await supabase
         .from(tableName)
         .update(updateData)
@@ -53,7 +57,7 @@ export const useDocumentApproval = () => {
       
       // Log the approval activity with all details
       await logActivity({
-        entityType,
+        entityType: logEntityType,
         entityId,
         action: "update",
         details: {

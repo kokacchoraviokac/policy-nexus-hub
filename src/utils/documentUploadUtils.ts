@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentCategory, EntityType } from "@/types/documents";
 
-// Document table mapping
+// Document table mapping - make this a literal string union type
 export type DocumentTableName = 
   | 'policy_documents'
   | 'claim_documents'

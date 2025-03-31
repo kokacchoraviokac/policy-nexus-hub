@@ -1,105 +1,62 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Redefine EntityType to be compatible with documents.EntityType
 export type EntityType = 
-  | "policy" 
-  | "claim" 
-  | "client" 
-  | "insurer" 
-  | "sales_process" 
-  | "agent" 
-  | "policy_document"
-  | "lead";
-
-interface ActivityLogParams {
-  entityType: EntityType;
-  entityId: string;
-  action: 'create' | 'update' | 'delete' | 'view' | string;
-  details?: Record<string, any>;
-}
+  | 'policy' 
+  | 'claim' 
+  | 'client' 
+  | 'invoice' 
+  | 'addendum' 
+  | 'sales_process' 
+  | 'agent' 
+  | 'insurer'
+  | 'policy_document'
+  | 'claim_document'
+  | 'client_document'
+  | 'invoice_document'
+  | 'addendum_document'
+  | 'sales_document'
+  | 'agent_document'
+  | 'insurer_document';
 
 export interface ActivityLog {
-  id: string;
-  action: string;
-  timestamp: string;
-  user: string;
-  details?: Record<string, any>;
+  entity_type: EntityType;
+  entity_id: string;
+  action: 'create' | 'update' | 'delete' | 'view';
+  details?: any;
 }
 
 export const useActivityLogger = () => {
-  // We need to create a proper hook for authentication
-  const user = useAuth();
-  
-  const logActivity = async (params: ActivityLogParams) => {
-    if (!user) {
-      console.warn("Cannot log activity: No authenticated user");
-      return;
-    }
-    
+  const logActivity = async (activity: ActivityLog) => {
     try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error("Cannot log activity: No authenticated user");
+        return;
+      }
+      
+      // Insert activity log
       const { error } = await supabase
         .from('activity_logs')
         .insert({
+          entity_type: activity.entity_type,
+          entity_id: activity.entity_id,
+          action: activity.action,
+          details: activity.details || {},
           user_id: user.id,
-          entity_type: params.entityType,
-          entity_id: params.entityId,
-          action: params.action,
-          details: params.details || {},
-          company_id: user.company_id
+          company_id: user.user_metadata?.company_id
         });
       
       if (error) {
         console.error("Error logging activity:", error);
       }
     } catch (error) {
-      console.error("Exception while logging activity:", error);
+      console.error("Failed to log activity:", error);
     }
   };
   
   return { logActivity };
-};
-
-// Helper function to get the authenticated user
-function useAuth() {
-  // Simple implementation just for the activity logger
-  // This should be replaced with proper authentication hook
-  const storedUser = typeof window !== 'undefined' ? localStorage.getItem('authUser') : null;
-  return storedUser ? JSON.parse(storedUser) : null;
-}
-
-// Function to fetch activity logs for an entity
-export const fetchActivityLogs = async (entityType: EntityType, entityId: string): Promise<ActivityLog[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('activity_logs')
-      .select(`
-        id,
-        action,
-        created_at,
-        user_id,
-        details
-      `)
-      .eq('entity_type', entityType)
-      .eq('entity_id', entityId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      throw error;
-    }
-    
-    // Transform the data to match the ActivityLog interface
-    // Parse or ensure details is a proper object and not a string
-    return (data || []).map(item => ({
-      id: item.id,
-      action: item.action,
-      timestamp: item.created_at,
-      user: item.user_id,
-      details: typeof item.details === 'string' 
-        ? JSON.parse(item.details)
-        : item.details || {}
-    }));
-  } catch (error) {
-    console.error("Error fetching activity logs:", error);
-    return [];
-  }
 };

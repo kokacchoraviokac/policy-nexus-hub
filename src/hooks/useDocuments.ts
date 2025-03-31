@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Document, EntityType } from "@/types/documents";
+import { Document, DocumentCategory, EntityType } from "@/types/documents";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -23,8 +23,9 @@ export const useDocuments = ({ entityType, entityId }: UseDocumentsParams) => {
   const documentsQuery = useQuery({
     queryKey: ['documents', entityType, entityId],
     queryFn: async (): Promise<Document[]> => {
+      // Use type assertion to fix the Supabase query type error
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select(`
           id,
           document_name,
@@ -50,7 +51,8 @@ export const useDocuments = ({ entityType, entityId }: UseDocumentsParams) => {
         throw error;
       }
       
-      return data.map(doc => ({
+      // Map the data to Document type
+      return (data || []).map(doc => ({
         id: doc.id,
         document_name: doc.document_name,
         document_type: doc.document_type,
@@ -64,10 +66,15 @@ export const useDocuments = ({ entityType, entityId }: UseDocumentsParams) => {
         version: doc.version || 1,
         status: doc.status,
         tags: doc.tags,
-        category: (doc.category || 'other') as Document['category'],
+        category: (doc.category || 'other') as DocumentCategory,
         mime_type: doc.mime_type,
         is_latest_version: doc.is_latest_version,
-        original_document_id: doc.original_document_id
+        original_document_id: doc.original_document_id,
+        // Add approval fields with default values to match Document type
+        approval_status: "pending",
+        approved_by: undefined,
+        approved_at: undefined,
+        approval_notes: undefined
       }));
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -76,8 +83,9 @@ export const useDocuments = ({ entityType, entityId }: UseDocumentsParams) => {
   // Mutation to delete a document
   const deleteDocumentMutation = useMutation({
     mutationFn: async (documentId: string) => {
+      // Use type assertion to fix the Supabase query type error
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq('id', documentId)
         .select()

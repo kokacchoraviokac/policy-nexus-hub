@@ -34,8 +34,8 @@ export function MultilingualField({
   description,
   multiline = false,
 }: MultilingualFieldProps) {
-  const { language } = useLanguage();
-  const [activeTab, setActiveTab] = React.useState<string>(language);
+  const { currentLanguage } = useLanguage();
+  const [activeTab, setActiveTab] = React.useState<string>(currentLanguage);
   const translations = form.watch(translationsName) || {};
 
   const handleTranslationChange = (lang: string, value: string) => {
