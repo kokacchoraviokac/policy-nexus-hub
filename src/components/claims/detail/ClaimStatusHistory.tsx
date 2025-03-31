@@ -2,7 +2,7 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, HistoryIcon } from "lucide-react";
+import { Clock } from "lucide-react";
 import ClaimStatusBadge from "../ClaimStatusBadge";
 
 interface StatusHistoryEntry {
@@ -17,7 +17,18 @@ interface ClaimStatusHistoryProps {
 }
 
 const ClaimStatusHistory: React.FC<ClaimStatusHistoryProps> = ({ statusHistory }) => {
-  const { t, formatDate, formatTime } = useLanguage();
+  const { t, formatDate } = useLanguage();
+  
+  // Add the formatTime function since it's not provided by the language context
+  const formatTime = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return '';
+    }
+  };
   
   // Sort history by timestamp, newest first
   const sortedHistory = [...statusHistory].sort((a, b) => 
