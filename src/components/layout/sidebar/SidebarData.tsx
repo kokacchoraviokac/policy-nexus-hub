@@ -1,4 +1,3 @@
-
 import {
   Book,
   DollarSign,
@@ -278,6 +277,18 @@ export const sidebarItems = [
         path: "/settings/instructions",
         requiredPrivilege: "settings:view",
         icon: HelpCircle
+      },
+      {
+        label: "userManagement",
+        path: "/settings/users",
+        requiredPrivilege: "users:manage",
+        icon: UserCog
+      },
+      {
+        label: "privilegeTesting",
+        path: "/settings/privileges/test",
+        requiredPrivilege: "settings:view",
+        icon: Shield
       }
     ]
   }
