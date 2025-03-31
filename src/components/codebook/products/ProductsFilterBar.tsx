@@ -26,7 +26,7 @@ const ProductsFilterBar: React.FC<ProductsFilterBarProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
       <SearchInput
         value={searchTerm}
         onChange={setSearchTerm}

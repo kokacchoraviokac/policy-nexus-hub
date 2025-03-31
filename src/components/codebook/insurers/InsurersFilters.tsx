@@ -3,7 +3,6 @@ import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SearchInput from "@/components/ui/search-input";
 import FilterButton from "@/components/codebook/filters/FilterButton";
-import SimpleSavedFiltersButton from "@/components/codebook/filters/SimpleSavedFiltersButton";
 import ActiveFilters from "@/components/codebook/filters/ActiveFilters";
 import { CodebookFilterState } from "@/types/codebook";
 import { SavedFilter } from "@/types/savedFilters";
@@ -35,7 +34,7 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
   onClearFilter,
   onOpenFilterDialog,
   activeFilterCount,
-  // Saved filters props
+  // Saved filters props - we're not using these for now
   savedFilters,
   onSaveFilter,
   onDeleteFilter,
@@ -46,12 +45,9 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
 }) => {
   const { t } = useLanguage();
 
-  // Set this to false to disable the saved filters functionality
-  const showSavedFiltersEnabled = false; // Temporarily disable
-
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
         <SearchInput
           value={searchTerm}
           onChange={onSearchChange}
@@ -73,22 +69,6 @@ const InsurersFilters: React.FC<InsurersFiltersProps> = ({
               <SelectItem value="inactive">{t("inactive")}</SelectItem>
             </SelectContent>
           </Select>
-          
-          {/* We'll leave this commented out for now
-          {showSavedFiltersEnabled && (
-            <SimpleSavedFiltersButton
-              savedFilters={savedFilters}
-              onApplyFilter={onFilterChange}
-              onSaveFilter={onSaveFilter}
-              onDeleteFilter={onDeleteFilter}
-              currentFilters={filters}
-              isSaving={isSaving}
-              isDeleting={isDeleting}
-              parseFilterData={parseFilterData}
-              entityType="insurers"
-            />
-          )}
-          */}
           
           <FilterButton
             activeFilterCount={activeFilterCount}

@@ -44,7 +44,7 @@ const FinancesPage = () => {
   
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="text-center mb-8">
+      <div className="flex flex-col items-center justify-center mb-8">
         <h1 className="text-2xl font-bold tracking-tight">{t("finances")}</h1>
         <p className="text-muted-foreground max-w-3xl mx-auto mt-2">
           {t("financesDescription")}
@@ -53,8 +53,8 @@ const FinancesPage = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {modules.map((module) => (
-          <Card key={module.id} className="overflow-hidden">
-            <CardHeader className="bg-muted/50 pb-4">
+          <Card key={module.id} className="overflow-hidden border shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="bg-muted/30 pb-4">
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-lg">{module.title}</CardTitle>
@@ -72,10 +72,10 @@ const FinancesPage = () => {
                 {t(`${module.id}ModuleDescription`)}
               </p>
             </CardContent>
-            <CardFooter className="border-t bg-muted/20 py-3">
+            <CardFooter className="border-t bg-muted/10 py-3">
               <Button 
                 onClick={() => navigate(module.path)} 
-                variant="outline" 
+                variant="default" 
                 className="w-full"
               >
                 {t("goTo")} {module.title}

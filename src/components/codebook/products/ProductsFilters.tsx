@@ -3,7 +3,6 @@ import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SearchInput from "@/components/ui/search-input";
 import FilterButton from "@/components/codebook/filters/FilterButton";
-import SimpleSavedFiltersButton from "@/components/codebook/filters/SimpleSavedFiltersButton";
 import ActiveFilters from "@/components/codebook/filters/ActiveFilters";
 import { CodebookFilterState } from "@/types/codebook";
 import { SavedFilter } from "@/types/savedFilters";
@@ -45,12 +44,9 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  // Since we've disabled the save functionality, we'll set this to false for now
-  const canShowSavedFilters = false; // Temporarily disable saved filters
-
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
         <SearchInput
           value={searchTerm}
           onChange={onSearchChange}
@@ -72,22 +68,6 @@ const ProductsFilters: React.FC<ProductsFiltersProps> = ({
               <SelectItem value="inactive">{t("inactive")}</SelectItem>
             </SelectContent>
           </Select>
-          
-          {/* We'll just leave this commented out for now
-          {canShowSavedFilters && (
-            <SimpleSavedFiltersButton
-              savedFilters={savedFilters}
-              onApplyFilter={onFilterChange}
-              onSaveFilter={onSaveFilter}
-              onDeleteFilter={onDeleteFilter}
-              currentFilters={filters}
-              isSaving={isSaving}
-              isDeleting={isDeleting}
-              parseFilterData={parseFilterData}
-              entityType="products"
-            />
-          )}
-          */}
           
           <FilterButton
             activeFilterCount={activeFilterCount}

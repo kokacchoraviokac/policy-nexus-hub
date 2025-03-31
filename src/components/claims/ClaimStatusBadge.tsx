@@ -33,31 +33,17 @@ const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }
     }
   };
   
-  const getBadgeVariant = (): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status.toLowerCase()) {
-      case 'accepted':
-        return "secondary";
-      case 'rejected':
-        return "destructive";
-      case 'in processing':
-      case 'reported':
-        return "default";
-      default:
-        return "outline";
-    }
-  };
-  
+  // Fixed: We'll use only one consistent approach - the custom color classes
   const statusDisplay = (() => {
     // Normalize status by removing spaces
     const normalizedStatus = status.toLowerCase().replace(/ /g, "");
     return t(normalizedStatus);
   })();
   
-  // Use the consistent styling approach - either use getBadgeVariant OR getStatusColor but not both
   return (
     <Badge 
-      variant={getBadgeVariant()} 
-      className={cn("font-medium capitalize", className)}
+      variant="outline" 
+      className={cn(getStatusColor(), "font-medium capitalize", className)}
     >
       {statusDisplay}
     </Badge>
