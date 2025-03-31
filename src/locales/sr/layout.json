@@ -72,5 +72,7 @@
   "employees": "Zaposleni",
   "privileges": "Privilegije",
   "companyData": "Podaci o Kompaniji",
-  "instructions": "Uputstva"
+  "instructions": "Uputstva",
+  "userManagement": "Upravljanje Korisnicima",
+  "privilegeTesting": "Testiranje Privilegija"
 }

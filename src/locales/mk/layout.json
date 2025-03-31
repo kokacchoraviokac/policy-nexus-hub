@@ -72,5 +72,7 @@
   "employees": "Вработени",
   "privileges": "Привилегии",
   "companyData": "Податоци за Компанијата",
-  "instructions": "Упатства"
+  "instructions": "Упатства",
+  "userManagement": "Управување со Корисници",
+  "privilegeTesting": "Тестирање на Привилегии"
 }

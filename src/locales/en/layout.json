@@ -72,5 +72,7 @@
   "employees": "Employees",
   "privileges": "Privileges",
   "companyData": "Company Data",
-  "instructions": "Instructions"
+  "instructions": "Instructions",
+  "userManagement": "User Management",
+  "privilegeTesting": "Privilege Testing"
 }

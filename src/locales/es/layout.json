@@ -72,5 +72,7 @@
   "employees": "Empleados",
   "privileges": "Privilegios",
   "companyData": "Datos de la Empresa",
-  "instructions": "Instrucciones"
+  "instructions": "Instrucciones",
+  "userManagement": "Gestión de Usuarios",
+  "privilegeTesting": "Prueba de Privilegios"
 }
