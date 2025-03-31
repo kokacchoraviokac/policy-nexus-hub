@@ -1,30 +1,32 @@
 
-import auth from './auth.json';
-import common from './common.json';
-import dashboard from './dashboard.json';
-import layout from './layout.json';
-import codebook from './codebook.json';
-import settings from './settings.json';
-import errors from './errors.json';
-import policyTranslations from './policies/index';
-import finances from './finances.json';
-import claims from './claims.json';
-import modules from './modules.json';
-import documents from './documents.json';
+import auth from "./auth.json";
+import claims from "./claims.json";
+import codebook from "./codebook.json";
+import common from "./common.json";
+import dashboard from "./dashboard.json";
+import documents from "./documents.json";
+import errors from "./errors.json";
+import finances from "./finances.json";
+import layout from "./layout.json";
+import modules from "./modules.json";
+import settings from "./settings.json";
+import agent from "./agent.json";
+import policies from "./policies";
 
-const translations = {
-  ...common,
+const en = {
   ...auth,
-  ...dashboard,
-  ...layout,
-  ...codebook,
-  ...settings,
-  ...errors,
-  ...policyTranslations,
-  ...finances,
   ...claims,
+  ...codebook,
+  ...common,
+  ...dashboard,
+  ...documents,
+  ...errors,
+  ...finances,
+  ...layout,
   ...modules,
-  ...documents
+  ...policies,
+  ...settings,
+  ...agent
 };
 
-export default translations;
+export default en;
