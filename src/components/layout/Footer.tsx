@@ -2,6 +2,7 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface FooterProps {
   className?: string;
@@ -24,15 +25,15 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          <Button variant="ghost" className="text-muted-foreground hover:text-foreground transition-colors">
             {t("privacyPolicy")}
-          </button>
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          </Button>
+          <Button variant="ghost" className="text-muted-foreground hover:text-foreground transition-colors">
             {t("termsOfService")}
-          </button>
-          <button className="text-muted-foreground hover:text-foreground transition-colors">
+          </Button>
+          <Button variant="ghost" className="text-muted-foreground hover:text-foreground transition-colors">
             {t("contact")}
-          </button>
+          </Button>
         </div>
       </div>
     </footer>

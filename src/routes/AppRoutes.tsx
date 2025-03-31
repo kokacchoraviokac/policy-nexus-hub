@@ -12,12 +12,15 @@ import { SettingsRoutes } from './SettingsRoutes';
 import { AgentRoutes } from './AgentRoutes';
 import AppLayout from '@/components/layout/AppLayout';
 import NotFound from '@/pages/NotFound';
+import Login from '@/pages/Login';
+import ResetPassword from '@/pages/ResetPassword';
 
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
       {/* Auth Routes */}
-      {AuthRoutes}
+      <Route path="/login" element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       
       {/* Dashboard Routes */}
       {DashboardRoutes}

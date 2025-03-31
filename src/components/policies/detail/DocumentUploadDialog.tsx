@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import {
   Dialog,
@@ -78,7 +79,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
         documentType,
         category: documentCategory,
         entityId,
-        entityType: "policy" as EntityType,
+        entityType,
         originalDocumentId,
         currentVersion
       });
@@ -86,9 +87,9 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
       if (result.success) {
         // Log activity
         await logActivity({
-          entity_type: "policy", // Use entity_type instead of entityType
+          entity_type: entityType,
           entity_id: entityId,
-          action: "upload",
+          action: "create",
           details: {
             document_name: documentName,
             document_type: documentType,
@@ -153,7 +154,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
             <Label htmlFor="category" className="text-right">
               {t("documentCategory")}
             </Label>
-            <Select onValueChange={setDocumentCategory}>
+            <Select value={documentCategory} onValueChange={setDocumentCategory}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder={t("selectCategory")} />
               </SelectTrigger>

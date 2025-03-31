@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 const countMissingTranslations = (language: string): number => {
   // This is a placeholder implementation
   // In a real app, this would count actual missing translations
-  return 0;
+  return language === "en" ? 0 : 5;
 }
 
 const TranslationTestStatus: React.FC = () => {

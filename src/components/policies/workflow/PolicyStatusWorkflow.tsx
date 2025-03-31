@@ -1,159 +1,106 @@
-import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  FileSpreadsheet, 
-  FileEdit, 
-  Clock, 
-  CheckCircle2
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useActivityLogger } from "@/utils/activityLogger";
-import { getNextWorkflowStatus, PolicyWorkflowStatus } from "@/utils/policyWorkflowUtils";
 
-export interface PolicyStatusWorkflowProps {
-  policyId: string;
-  currentStatus: string;
-  currentWorkflowStatus: string;
-  onStatusUpdated: () => void;
+import React from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Policy } from "@/types/policies";
+import { useActivityLogger } from "@/utils/activityLogger";
+
+interface PolicyStatusWorkflowProps {
+  policy: Policy;
 }
 
-const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({
-  policyId,
-  currentStatus,
-  currentWorkflowStatus,
-  onStatusUpdated
-}) => {
+// Define valid workflow status values
+type WorkflowStatus = 'imported' | 'in_progress' | 'pending_review' | 'approved' | 'rejected';
+
+const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { logActivity } = useActivityLogger();
   
-  const updateWorkflowStatusMutation = useMutation({
-    mutationFn: async (newStatus: string) => {
-      const { data, error } = await supabase
+  const updateStatus = useMutation({
+    mutationFn: async (status: WorkflowStatus) => {
+      const { error } = await supabase
         .from('policies')
-        .update({ 
-          workflow_status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', policyId)
-        .select()
-        .single();
+        .update({ workflow_status: status })
+        .eq('id', policy.id);
       
       if (error) throw error;
-      return data;
-    },
-    onSuccess: (data, newStatus) => {
-      queryClient.invalidateQueries({ queryKey: ['policies'] });
-      queryClient.invalidateQueries({ queryKey: ['policy', policyId] });
-      
+
+      // Log the activity
       logActivity({
         entity_type: "policy",
-        entity_id: policyId,
-        action: "update_status",
+        entity_id: policy.id,
+        action: "update",
         details: {
-          previous_status: currentWorkflowStatus,
-          new_status: newStatus,
+          previous_status: policy.workflow_status,
+          new_status: status,
           timestamp: new Date().toISOString()
         }
       });
       
-      onStatusUpdated();
-      
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['policy', policy.id] });
       toast({
         title: t("statusUpdated"),
-        description: t("policyWorkflowStatusUpdated", { status: t(newStatus.replace('_', '')) }),
+        description: t("policyStatusHasBeenUpdated"),
       });
     },
-    onError: (error) => {
-      console.error("Error updating workflow status:", error);
+    onError: (error: any) => {
       toast({
         title: t("errorUpdatingStatus"),
-        description: error instanceof Error ? error.message : t("unknownError"),
+        description: error.message || t("unknownError"),
         variant: "destructive",
       });
-    }
+    },
   });
   
-  const handleAdvanceWorkflow = () => {
-    const nextStatus = getNextWorkflowStatus(currentWorkflowStatus as PolicyWorkflowStatus);
-    updateWorkflowStatusMutation.mutate(nextStatus);
-  };
-  
-  const workflowStages = [
-    {
-      id: "draft",
-      name: t("draft"),
-      icon: FileSpreadsheet,
-      color: "text-blue-500",
-    },
-    {
-      id: "in_review",
-      name: t("inReview"),
-      icon: FileEdit,
-      color: "text-orange-500",
-    },
-    {
-      id: "ready",
-      name: t("ready"),
-      icon: Clock,
-      color: "text-yellow-500",
-    },
-    {
-      id: "complete",
-      name: t("complete"),
-      icon: CheckCircle2,
-      color: "text-green-500",
-    },
-  ];
-  
-  const getStepStatus = (stepId: string) => {
-    const statusIndex = workflowStages.findIndex(stage => stage.id === currentWorkflowStatus);
-    const stepIndex = workflowStages.findIndex(stage => stage.id === stepId);
-    
-    if (stepId === currentWorkflowStatus) return "current";
-    if (stepIndex < statusIndex) return "complete";
-    return "upcoming";
-  };
-
   return (
-    <div className="flex items-center justify-center w-full py-4">
-      <div className="flex items-center w-full max-w-3xl">
-        {workflowStages.map((stage, index) => (
-          <React.Fragment key={stage.id}>
-            <div className="flex flex-col items-center">
-              <div 
-                className={`h-10 w-10 rounded-full flex items-center justify-center
-                  ${getStepStatus(stage.id) === "current" ? "bg-blue-100 border-2 border-blue-500" : 
-                  getStepStatus(stage.id) === "complete" ? "bg-green-100" : "bg-gray-100"}`}
-              >
-                <stage.icon 
-                  className={`h-5 w-5 
-                    ${getStepStatus(stage.id) === "current" ? stage.color : 
-                    getStepStatus(stage.id) === "complete" ? "text-green-500" : "text-gray-400"}`} 
-                />
-              </div>
-              <span 
-                className={`mt-2 text-xs font-medium
-                  ${getStepStatus(stage.id) === "current" ? "text-blue-700" : 
-                  getStepStatus(stage.id) === "complete" ? "text-green-700" : "text-gray-500"}`}
-              >
-                {stage.name}
-              </span>
-            </div>
-            
-            {index < workflowStages.length - 1 && (
-              <div 
-                className={`flex-1 h-0.5 
-                  ${getStepStatus(workflowStages[index + 1].id) === "complete" ? 
-                  "bg-green-500" : getStepStatus(stage.id) === "complete" ? 
-                  "bg-green-300" : "bg-gray-200"}`}
-              />
-            )}
-          </React.Fragment>
-        ))}
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-2">
+          <Select 
+            value={policy.workflow_status}
+            onValueChange={(value) => updateStatus.mutate(value as WorkflowStatus)}
+            disabled={updateStatus.isPending}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t("selectStatus")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="imported">{t("imported")}</SelectItem>
+              <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
+              <SelectItem value="pending_review">{t("pendingReview")}</SelectItem>
+              <SelectItem value="approved">{t("approved")}</SelectItem>
+              <SelectItem value="rejected">{t("rejected")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <Button 
+          variant="outline" 
+          disabled
+          className="col-span-1"
+        >
+          {updateStatus.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            t("history")
+          )}
+        </Button>
       </div>
     </div>
   );

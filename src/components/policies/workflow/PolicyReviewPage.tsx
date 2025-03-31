@@ -26,6 +26,7 @@ const PolicyReviewPage: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [documentsComplete, setDocumentsComplete] = useState(false);
   
   // Fetch policy data
   const { data: policy, isLoading, error } = useQuery({
@@ -43,26 +44,13 @@ const PolicyReviewPage: React.FC = () => {
     enabled: !!id
   });
   
-  // Fetch documents for this policy
-  const { data: documents, isLoading: isLoadingDocuments } = useQuery({
-    queryKey: ['policy-documents', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('policy_documents')
-        .select('*')
-        .eq('policy_id', id)
-        .eq('is_latest_version', true);
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id
-  });
-  
   // Determine if policy has all required information
   const isComplete = policy ? isPolicyComplete(policy) : false;
   const missingFields = policy ? getMissingFields(policy) : [];
-  const hasRequiredDocuments = documents && documents.length > 0;
+  
+  const handleDocumentsComplete = (complete: boolean) => {
+    setDocumentsComplete(complete);
+  };
   
   if (isLoading) {
     return (
@@ -152,9 +140,9 @@ const PolicyReviewPage: React.FC = () => {
               
               <TabsContent value="documents" className="mt-0">
                 <PolicyDocumentsTab 
-                  policyId={policy.id} 
-                  documents={documents || []}
-                  isLoading={isLoadingDocuments}
+                  policyId={policy.id}
+                  isComplete={documentsComplete}
+                  onCompleteChange={handleDocumentsComplete}
                 />
               </TabsContent>
             </CardContent>
@@ -195,7 +183,7 @@ const PolicyReviewPage: React.FC = () => {
               
               <PolicyReviewActions 
                 policy={policy} 
-                isComplete={isComplete && hasRequiredDocuments}
+                isComplete={isComplete && documentsComplete}
               />
             </CardContent>
           </Card>

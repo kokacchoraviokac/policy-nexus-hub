@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import TranslationDashboard from "./translation/TranslationDashboard";
 import TranslationStatus from "./TranslationStatus";
@@ -20,8 +21,15 @@ const WorkflowPanel: React.FC<WorkflowPanelProps> = ({ autoRun = false }) => {
   );
 };
 
+// Add props for TranslationDashboard
+interface TranslationDashboardProps {
+  exportLanguage: string;
+  setExportLanguage: (lang: string) => void;
+}
+
 const TranslationManager: React.FC = () => {
   const { t } = useLanguage();
+  const [exportLanguage, setExportLanguage] = useState("en");
 
   return (
     <div className="space-y-6">
@@ -31,10 +39,13 @@ const TranslationManager: React.FC = () => {
       <TranslationStatus />
       
       {/* Dashboard */}
-      <TranslationDashboard />
+      <TranslationDashboard 
+        exportLanguage={exportLanguage} 
+        setExportLanguage={setExportLanguage} 
+      />
       
       {/* WorkflowPanel */}
-      <WorkflowPanel />
+      <WorkflowPanel autoRun={false} />
     </div>
   );
 };

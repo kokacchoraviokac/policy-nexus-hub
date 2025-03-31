@@ -85,7 +85,7 @@ export const fetchActivityLogs = async (entityType: string, entityId: string): P
     
     // Fetch user profiles for user information
     const userIds = logs.map(log => log.user_id).filter(Boolean);
-    let userProfiles = {};
+    let userProfiles: any = {};
     
     if (userIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
@@ -94,7 +94,7 @@ export const fetchActivityLogs = async (entityType: string, entityId: string): P
         .in('id', userIds);
       
       if (!profilesError && profiles) {
-        userProfiles = profiles.reduce((acc, profile) => {
+        userProfiles = profiles.reduce((acc: any, profile: any) => {
           acc[profile.id] = profile;
           return acc;
         }, {});

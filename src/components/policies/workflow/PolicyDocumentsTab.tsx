@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -41,15 +42,15 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
     setIsComplete(initialIsComplete);
   }, [initialIsComplete]);
   
-  const handleCompleteChange = async (checked: boolean) => {
+  const handleCompleteChange = (checked: boolean) => {
     setIsComplete(checked);
     onCompleteChange(checked);
     
     // Log the activity
-    await logActivity({
+    logActivity({
       entity_type: "policy",
       entity_id: policyId,
-      action: "verify_documents",
+      action: "update",
       details: {
         status: isComplete ? "complete" : "incomplete",
         timestamp: new Date().toISOString()

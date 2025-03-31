@@ -3,19 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Document, DocumentTableName, EntityType } from "@/types/documents";
+import { Document, EntityType } from "@/types/documents";
 import { useAuth } from "@/contexts/auth/AuthContext";
-
-// Helper to get the table name for a given entity type
-const getTableNameForEntityType = (entityType: EntityType): string => {
-  switch (entityType) {
-    case "policy": return "policy_documents";
-    case "claim": return "claim_documents";
-    case "sales_process": return "sales_documents";
-    // Add other cases as needed
-    default: return "policy_documents"; // Default fallback
-  }
-};
+import { getDocumentTableName, DocumentTableName } from "@/utils/documentUploadUtils";
 
 export const useDocuments = (entityType: EntityType, entityId: string) => {
   const { t } = useLanguage();
@@ -23,15 +13,14 @@ export const useDocuments = (entityType: EntityType, entityId: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  const tableName = getTableNameForEntityType(entityType);
+  const tableName = getDocumentTableName(entityType);
   
   // Fetch all documents for the given entity
   const fetchDocuments = async (): Promise<Document[]> => {
-    // Use type assertion to bypass TypeScript's strict checking of table names
     const { data, error } = await supabase
-      .from(tableName as any)
+      .from(tableName)
       .select("*")
-      .eq("entity_id", entityId)
+      .eq(entityType === "policy" ? "policy_id" : "entity_id", entityId)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -44,25 +33,26 @@ export const useDocuments = (entityType: EntityType, entityId: string) => {
       created_at: item.created_at,
       file_path: item.file_path,
       entity_type: entityType,
-      entity_id: item.entity_id,
+      entity_id: item[entityType === "policy" ? "policy_id" : "entity_id"],
       uploaded_by: item.uploaded_by,
+      uploaded_by_id: item.uploaded_by,
       uploaded_by_name: "", // We'll populate this if needed
       description: item.description || "",
       version: item.version || 1,
       status: item.status || "active",
       tags: item.tags || [],
-      category: item.category || "",
+      category: item.category || "other",
       mime_type: item.mime_type || "",
       is_latest_version: item.is_latest_version || true,
       original_document_id: item.original_document_id || null,
+      approval_status: item.approval_status || "pending"
     }));
   };
 
   // Delete document mutation
   const deleteDocument = async (documentId: string) => {
-    // Use type assertion here too
     const { error } = await supabase
-      .from(tableName as any)
+      .from(tableName)
       .delete()
       .eq("id", documentId);
 
