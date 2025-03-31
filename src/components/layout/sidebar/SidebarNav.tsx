@@ -1,11 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import SidebarItem from "./SidebarItem";
 import { sidebarItems } from "./SidebarData";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useState } from "react";
 
 interface SidebarNavProps {
   collapsed: boolean;

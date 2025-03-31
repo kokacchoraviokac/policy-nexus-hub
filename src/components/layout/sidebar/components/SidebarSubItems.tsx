@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface SubItemProps {
   label: string;
   path: string;
+  requiredPrivilege: string;
   icon?: LucideIcon;
 }
 
