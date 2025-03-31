@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -51,16 +50,13 @@ const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({
       queryClient.invalidateQueries({ queryKey: ['policy', policyId] });
       
       logActivity({
-        entityType: "policy",
-        entityId: policyId,
-        action: "update",
+        entity_type: "policy",
+        entity_id: policyId,
+        action: "update_status",
         details: {
-          changes: { 
-            workflow_status: { 
-              old: currentWorkflowStatus, 
-              new: newStatus 
-            }
-          }
+          previous_status: currentWorkflowStatus,
+          new_status: newStatus,
+          timestamp: new Date().toISOString()
         }
       });
       

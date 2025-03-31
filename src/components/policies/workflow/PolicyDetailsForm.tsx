@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,12 +64,13 @@ const PolicyDetailsForm: React.FC<PolicyDetailsFormProps> = ({ policy }) => {
         description: t("policyUpdatedSuccessfully"),
       });
       
-      logActivity({
-        entityType: "policy",
-        entityId: policy.id,
+      await logActivity({
+        entity_type: "policy",
+        entity_id: policy.id,
         action: "update",
         details: {
-          changes: { ...formData }
+          fields: formData,
+          timestamp: new Date().toISOString()
         }
       });
     },

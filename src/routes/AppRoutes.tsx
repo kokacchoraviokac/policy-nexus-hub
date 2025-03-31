@@ -9,7 +9,7 @@ import { FinancesRoutes } from './FinancesRoutes';
 import { CodebookRoutes } from './CodebookRoutes';
 import { ReportsRoutes } from './ReportsRoutes';
 import { SettingsRoutes } from './SettingsRoutes';
-import { AuthRoutes } from './AuthRoutes';
+import { AgentRoutes } from './AgentRoutes';
 import AppLayout from '@/components/layout/AppLayout';
 import NotFound from '@/pages/NotFound';
 
@@ -36,6 +36,9 @@ const AppRoutes: React.FC = () => {
       
       {/* Codebook Routes */}
       {CodebookRoutes}
+      
+      {/* Agent Routes */}
+      {AgentRoutes}
       
       {/* Reports Routes */}
       {ReportsRoutes}

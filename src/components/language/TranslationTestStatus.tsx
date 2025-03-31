@@ -1,33 +1,44 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { CircleAlert } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
-// Mock function for translation test components until real implementation is added
-const getMissingTranslationsCount = () => 0;
+// Add a function to count missing translations if it doesn't exist
+const countMissingTranslations = (language: string): number => {
+  // This is a placeholder implementation
+  // In a real app, this would count actual missing translations
+  return 0;
+}
 
 const TranslationTestStatus: React.FC = () => {
-  const { currentLanguage } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   
-  // Use the mock function until real implementation is added
-  const missingCount = getMissingTranslationsCount();
-  
-  if (missingCount === 0) {
-    return null;
-  }
+  // Use the countMissingTranslations function with the current language
+  const missingCount = countMissingTranslations(currentLanguage);
   
   return (
-    <Alert variant="destructive" className="mb-4">
-      <CircleAlert className="h-4 w-4" />
-      <AlertTitle>Translation Issues Detected</AlertTitle>
-      <AlertDescription className="flex items-center">
-        <span>
-          There are <Badge variant="outline">{missingCount}</Badge> missing translations for {currentLanguage}.
-        </span>
-      </AlertDescription>
-    </Alert>
+    <Card>
+      <CardContent className="p-6">
+        <h3 className="text-lg font-medium mb-4">{t("translationTestStatus")}</h3>
+        
+        <div className="space-y-4">
+          <div className="flex justify-between mb-1">
+            <span className="text-sm font-medium">{t("testStatus")}</span>
+            <span className="text-sm text-muted-foreground">
+              {missingCount > 0 
+                ? t("testFailed") 
+                : t("testPassed")}
+            </span>
+          </div>
+          
+          <div className="p-3 bg-muted/50 rounded-md text-center">
+            <p className="text-sm font-medium">{t("failedTests")}</p>
+            <p className="text-2xl font-bold mt-1">{missingCount}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

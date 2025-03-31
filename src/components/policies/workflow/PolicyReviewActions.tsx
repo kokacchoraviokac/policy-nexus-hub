@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -53,17 +52,13 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
       queryClient.invalidateQueries({ queryKey: ['policy', policy.id] });
       queryClient.invalidateQueries({ queryKey: ['policies-workflow'] });
       
-      logActivity({
-        entityType: "policy",
-        entityId: policy.id,
-        action: "update",
+      await logActivity({
+        entity_type: "policy",
+        entity_id: policy.id,
+        action: "review",
         details: {
-          changes: { 
-            workflow_status: { 
-              old: policy.workflow_status, 
-              new: newStatus 
-            }
-          }
+          new_status: newStatus,
+          timestamp: new Date().toISOString()
         }
       });
       

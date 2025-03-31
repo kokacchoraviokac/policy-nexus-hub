@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -59,7 +58,6 @@ const PolicyEditForm: React.FC<PolicyEditFormProps> = ({ policy, onSuccess }) =>
   
   const updatePolicy = useMutation({
     mutationFn: async (formData: any) => {
-      // Include dates in the update
       const dataToUpdate = {
         ...formData,
         start_date: startDate ? formatDate(startDate) : null,
@@ -80,12 +78,28 @@ const PolicyEditForm: React.FC<PolicyEditFormProps> = ({ policy, onSuccess }) =>
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['policy', policy.id] });
       
-      logActivity({
-        entityType: "policy",
-        entityId: policy.id,
+      const policyId = policy.id;
+      const submittedValues = {
+        policy_number: data.policy_number,
+        policy_type: data.policy_type,
+        insurer_name: data.insurer_name,
+        product_name: data.product_name,
+        policyholder_name: data.policyholder_name,
+        insured_name: data.insured_name,
+        premium: data.premium,
+        currency: data.currency,
+        payment_frequency: data.payment_frequency,
+        commission_percentage: data.commission_percentage,
+        notes: data.notes
+      };
+      
+      await logActivity({
+        entity_type: "policy",
+        entity_id: policyId,
         action: "update",
         details: {
-          changes: { policy_updated: true }
+          fields: submittedValues,
+          timestamp: new Date().toISOString()
         }
       });
       
@@ -109,7 +123,6 @@ const PolicyEditForm: React.FC<PolicyEditFormProps> = ({ policy, onSuccess }) =>
   });
   
   const onSubmit = (data: any) => {
-    // Convert numeric fields
     data.premium = data.premium ? parseFloat(data.premium) : null;
     data.commission_percentage = data.commission_percentage ? parseFloat(data.commission_percentage) : null;
     
@@ -244,7 +257,6 @@ const PolicyEditForm: React.FC<PolicyEditFormProps> = ({ policy, onSuccess }) =>
                 <Select 
                   defaultValue={policy.currency || "EUR"} 
                   onValueChange={(value) => {
-                    // register doesn't work directly with Select, so we need to update the form manually
                     const event = {
                       target: {
                         name: "currency",
