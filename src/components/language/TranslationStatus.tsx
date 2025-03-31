@@ -3,19 +3,15 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-
-// Add a function to count missing translations
-const countMissingTranslations = (language: string): number => {
-  // This is a placeholder implementation
-  // In a real app, this would count actual missing translations
-  return language === "en" ? 0 : 5;
-}
+import { generateTranslationReport } from "@/utils/translationValidator";
 
 const TranslationStatus: React.FC = () => {
   const { t, currentLanguage } = useLanguage();
+  const report = generateTranslationReport();
   
-  // Pass the current language to the countMissingTranslations function
-  const missingCount = countMissingTranslations(currentLanguage || "en");
+  // Use the actual missing count for the current language
+  const missingCount = report.missingCount[currentLanguage];
+  const completionPercentage = report.completionPercentage[currentLanguage];
   
   return (
     <Card>
@@ -30,12 +26,16 @@ const TranslationStatus: React.FC = () => {
                 {missingCount > 0 ? t("incomplete") : t("complete")}
               </span>
             </div>
-            <Progress value={missingCount > 0 ? 80 : 100} className="h-2" />
+            <Progress value={completionPercentage} className="h-2" />
           </div>
           
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">{t("missingTranslations")}</span>
             <span className="text-sm font-semibold">{missingCount}</span>
+          </div>
+          
+          <div className="text-xs text-muted-foreground text-right">
+            {completionPercentage}% {t("complete")}
           </div>
         </div>
       </CardContent>
