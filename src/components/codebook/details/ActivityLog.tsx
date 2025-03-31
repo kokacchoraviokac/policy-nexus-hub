@@ -5,7 +5,7 @@ import { formatDate } from "@/utils/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { History, User, Calendar, Code } from "lucide-react";
 
-interface ActivityItem {
+export interface ActivityItem {
   id: string;
   action: string;
   timestamp: string;

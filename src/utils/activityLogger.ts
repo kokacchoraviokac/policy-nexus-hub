@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 
 export type EntityType = 
   | "policy" 
@@ -19,8 +18,17 @@ interface ActivityLogParams {
   details?: Record<string, any>;
 }
 
+export interface ActivityLog {
+  id: string;
+  action: string;
+  timestamp: string;
+  user: string;
+  details?: Record<string, any>;
+}
+
 export const useActivityLogger = () => {
-  const { user } = useAuth();
+  // We need to create a proper hook for authentication
+  const user = useAuth();
   
   const logActivity = async (params: ActivityLogParams) => {
     if (!user) {
@@ -51,16 +59,24 @@ export const useActivityLogger = () => {
   return { logActivity };
 };
 
+// Helper function to get the authenticated user
+function useAuth() {
+  // Simple implementation just for the activity logger
+  // This should be replaced with proper authentication hook
+  const storedUser = typeof window !== 'undefined' ? localStorage.getItem('authUser') : null;
+  return storedUser ? JSON.parse(storedUser) : null;
+}
+
 // Function to fetch activity logs for an entity
-export const fetchActivityLogs = async (entityType: EntityType, entityId: string) => {
+export const fetchActivityLogs = async (entityType: EntityType, entityId: string): Promise<ActivityLog[]> => {
   try {
     const { data, error } = await supabase
       .from('activity_logs')
       .select(`
         id,
         action,
-        created_at as timestamp,
-        user_id as user,
+        created_at,
+        user_id,
         details
       `)
       .eq('entity_type', entityType)
@@ -71,17 +87,17 @@ export const fetchActivityLogs = async (entityType: EntityType, entityId: string
       throw error;
     }
     
-    return data || [];
+    // Transform the data to match the ActivityLog interface
+    return (data || []).map(item => ({
+      id: item.id,
+      action: item.action,
+      timestamp: item.created_at,
+      user: item.user_id,
+      details: item.details
+    }));
   } catch (error) {
     console.error("Error fetching activity logs:", error);
     return [];
   }
 };
 
-export interface ActivityLog {
-  id: string;
-  action: string;
-  timestamp: string;
-  user: string;
-  details?: Record<string, any>;
-}

@@ -1,7 +1,6 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,12 +11,13 @@ interface PolicyHistoryTabProps {
   policyId: string;
 }
 
+// Define the ActivityItem type to match what the ActivityLog component expects
 interface ActivityItem {
   id: string;
   action: string;
   timestamp: string;
   user: string;
-  details?: Record<string, any>;
+  details?: string;
 }
 
 const PolicyHistoryTab: React.FC<PolicyHistoryTabProps> = ({ policyId }) => {

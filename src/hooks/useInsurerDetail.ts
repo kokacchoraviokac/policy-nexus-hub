@@ -6,7 +6,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
-import { useActivityLogger, fetchActivityLogs, ActivityLog } from "@/utils/activityLogger";
+import { useActivityLogger, fetchActivityLogs } from "@/utils/activityLogger";
 
 export interface ActivityItem {
   id: string;
