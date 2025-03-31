@@ -2,6 +2,7 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface ClaimStatusBadgeProps {
   status: string;
@@ -11,27 +12,24 @@ interface ClaimStatusBadgeProps {
 const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }) => {
   const { t } = useLanguage();
   
-  // Define a VariantType for the badge
-  type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
-  
-  const getStatusVariant = (): BadgeVariant => {
+  const getStatusColor = (): string => {
     switch (status.toLowerCase()) {
       case 'in processing':
-        return "default";
+        return "bg-primary/10 text-primary border-primary/20";
       case 'reported':
-        return "secondary";
+        return "bg-blue-100 text-blue-700 border-blue-200";
       case 'accepted':
-        return "default"; // Change from success to default as a workaround
+        return "bg-success/10 text-success border-success/20";
       case 'rejected':
-        return "destructive";
+        return "bg-destructive/10 text-destructive border-destructive/20";
       case 'appealed':
-        return "secondary"; // Change from warning to secondary as a workaround
+        return "bg-warning/10 text-warning border-warning/20";
       case 'partially accepted':
-        return "secondary"; // Change from warning to secondary as a workaround
+        return "bg-warning/10 text-warning border-warning/20";
       case 'withdrawn':
-        return "outline";
+        return "bg-muted/50 text-muted-foreground border-muted/30";
       default:
-        return "default";
+        return "bg-secondary/50 text-secondary-foreground border-secondary/20";
     }
   };
   
@@ -42,7 +40,12 @@ const ClaimStatusBadge: React.FC<ClaimStatusBadgeProps> = ({ status, className }
   })();
   
   return (
-    <Badge variant={getStatusVariant()} className={className}>{statusDisplay}</Badge>
+    <Badge 
+      variant="outline" 
+      className={cn(getStatusColor(), "font-medium capitalize", className)}
+    >
+      {statusDisplay}
+    </Badge>
   );
 };
 

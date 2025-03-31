@@ -7,13 +7,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import StatusSelector from "@/components/common/StatusSelector";
+import ClaimStatusBadge from "./ClaimStatusBadge";
 
 interface UpdateClaimStatusDialogProps {
   open: boolean;
@@ -63,13 +65,15 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("updateStatus")}</DialogTitle>
+          <DialogDescription>{t("updateStatusDescription")}</DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="currentStatus">{t("currentStatus")}</Label>
-            <div id="currentStatus" className="px-3 py-2 border rounded-md bg-muted/50">
-              {t(currentStatus.replace(/ /g, ""))}
+            <div className="flex items-center gap-2 mt-1">
+              <ClaimStatusBadge status={currentStatus} />
+              <span className="text-sm text-muted-foreground">{t("currentStatusDescription")}</span>
             </div>
           </div>
           
@@ -91,7 +95,7 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
               value={statusNote}
               onChange={(e) => setStatusNote(e.target.value)}
               placeholder={t("additionalNotesDescription")}
-              className="min-h-[100px]"
+              className="min-h-[100px] resize-none"
             />
           </div>
         </div>
@@ -101,12 +105,14 @@ const UpdateClaimStatusDialog: React.FC<UpdateClaimStatusDialogProps> = ({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isUpdating}
+            className="transition-colors hover:bg-secondary/70"
           >
             {t("cancel")}
           </Button>
           <Button 
             onClick={handleSubmit}
             disabled={isUpdating || newStatus === currentStatus}
+            className="transition-all hover:-translate-y-1"
           >
             {isUpdating ? (
               <>

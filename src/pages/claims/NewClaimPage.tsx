@@ -17,6 +17,7 @@ import ClaimDetailsForm, { ClaimFormValues } from "@/components/claims/forms/Cla
 import PolicySearchDialog from "@/components/claims/forms/PolicySearchDialog";
 import { usePolicySearch } from "@/hooks/claims/usePolicySearch";
 import { useClaimFormSubmit } from "@/hooks/claims/useClaimFormSubmit";
+import { toast } from "sonner";
 
 const NewClaimPage = () => {
   const [searchParams] = useSearchParams();
@@ -63,7 +64,16 @@ const NewClaimPage = () => {
   });
 
   // Form submission logic
-  const { createClaim, isSubmitting } = useClaimFormSubmit({ currentUser, userProfile });
+  const { createClaim, isSubmitting } = useClaimFormSubmit({ 
+    currentUser, 
+    userProfile,
+    onSuccess: () => {
+      toast.success(t("claimCreated"), {
+        description: t("claimCreatedDescription")
+      });
+      navigate("/claims");
+    } 
+  });
 
   // Default form values
   const defaultValues: ClaimFormValues = {
@@ -99,9 +109,15 @@ const NewClaimPage = () => {
   const handlePolicySelect = (policyId: string) => {
     defaultValues.policy_id = policyId;
     closeDialog();
+    toast.info(t("policySelected"), {
+      description: t("policySelectedDescription")
+    });
   };
 
   const handleCancel = () => {
+    toast.info(t("claimCancelled"), {
+      description: t("claimCancelledDescription")
+    });
     navigate(-1);
   };
 
@@ -115,7 +131,7 @@ const NewClaimPage = () => {
       <Button
         variant="outline"
         size="sm"
-        className="mb-4"
+        className="hover:bg-primary/10 hover:text-primary transition-colors"
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -129,7 +145,7 @@ const NewClaimPage = () => {
       </div>
 
       {/* Claim form */}
-      <Card className="max-w-4xl">
+      <Card className="max-w-4xl border hover:shadow-md transition-all duration-200">
         <CardHeader>
           <CardTitle>{t("claimDetails")}</CardTitle>
           <CardDescription>{t("enterClaimInformation")}</CardDescription>
@@ -142,7 +158,12 @@ const NewClaimPage = () => {
             onCancel={handleCancel}
             isSubmitting={isSubmitting}
             isFormDisabled={!currentUser || !userProfile}
-            openPolicySearch={openDialog}
+            openPolicySearch={() => {
+              openDialog();
+              toast.info(t("searchingForPolicy"), {
+                description: t("searchingForPolicyDescription")
+              });
+            }}
           />
         </CardContent>
       </Card>

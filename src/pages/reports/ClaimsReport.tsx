@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, FileDown, Search, RefreshCw, Calendar } from "lucide-react";
+import { ChevronLeft, FileDown, Search, RefreshCw, Calendar, FileText, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ClaimsReportFilters {
   startDate?: Date;
@@ -48,7 +49,7 @@ interface ClaimReportData {
 const ClaimsReport = () => {
   const { t, formatDate, formatCurrency } = useLanguage();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { toast: legacyToast } = useToast();
   const [filters, setFilters] = useState<ClaimsReportFilters>({
     startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)),
     endDate: new Date(),
@@ -123,10 +124,8 @@ const ClaimsReport = () => {
   
   const handleExport = async () => {
     if (!data || data.length === 0) {
-      toast({
-        title: t("noDataToExport"),
-        description: t("pleaseRefineFilters"),
-        variant: "destructive"
+      toast.error(t("noDataToExport"), {
+        description: t("pleaseRefineFilters")
       });
       return;
     }
@@ -170,16 +169,13 @@ const ClaimsReport = () => {
       link.click();
       document.body.removeChild(link);
       
-      toast({
-        title: t("exportSuccessful"),
+      toast.success(t("exportSuccessful"), {
         description: t("reportHasBeenDownloaded")
       });
     } catch (error) {
       console.error("Export error:", error);
-      toast({
-        title: t("exportFailed"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive"
+      toast.error(t("exportFailed"), {
+        description: error instanceof Error ? error.message : t("unknownError")
       });
     } finally {
       setIsExporting(false);
@@ -196,6 +192,9 @@ const ClaimsReport = () => {
   
   const handleViewClaim = (claimId: string) => {
     navigate(`/claims/${claimId}`);
+    toast.info(t("viewingClaimDetails"), {
+      description: t("viewingClaimDetailsDescription")
+    });
   };
   
   // Calculate summary data
@@ -208,7 +207,7 @@ const ClaimsReport = () => {
       <Button
         variant="outline"
         size="sm"
-        className="mb-4"
+        className="hover:bg-primary/10 hover:text-primary transition-colors"
         onClick={handleBackToReports}
       >
         <ChevronLeft className="mr-2 h-4 w-4" />
@@ -223,9 +222,10 @@ const ClaimsReport = () => {
       </div>
       
       {/* Filters */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-muted/30">
-          <CardTitle>{t("filters")}</CardTitle>
+      <Card className="overflow-hidden border hover:shadow-md transition-all duration-200">
+        <CardHeader className="bg-muted/20">
+          <CardTitle className="text-xl">{t("filters")}</CardTitle>
+          <CardDescription>{t("filterClaimsReport")}</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
@@ -266,8 +266,13 @@ const ClaimsReport = () => {
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => refetch()}
-                title={t("refresh")}
+                onClick={() => {
+                  refetch();
+                  toast.success(t("reportsRefreshed"), {
+                    description: t("reportsRefreshedDescription")
+                  });
+                }}
+                className="hover:bg-primary/10 transition-colors"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 {t("refresh")}
@@ -276,6 +281,7 @@ const ClaimsReport = () => {
               <Button 
                 onClick={handleExport}
                 disabled={isExporting || !data || data.length === 0}
+                className="transition-all hover:-translate-y-1"
               >
                 <FileDown className="h-4 w-4 mr-2" />
                 {t("exportToCsv")}
@@ -286,86 +292,97 @@ const ClaimsReport = () => {
       </Card>
       
       {/* Summary */}
-      <Card>
+      <Card className="border hover:shadow-md transition-all duration-200">
         <CardHeader>
           <CardTitle>{t("summary")}</CardTitle>
           <CardDescription>{t("claimsReportSummary")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-muted/30 p-4 rounded-lg">
+            <div className="bg-muted/20 rounded-lg p-6 hover:bg-muted/30 transition-colors">
               <h3 className="text-sm font-medium text-muted-foreground">{t("totalClaims")}</h3>
-              <p className="text-2xl font-bold">{claimCount}</p>
+              <p className="text-2xl font-bold mt-1">{claimCount}</p>
             </div>
-            <div className="bg-muted/30 p-4 rounded-lg">
+            <div className="bg-muted/20 rounded-lg p-6 hover:bg-muted/30 transition-colors">
               <h3 className="text-sm font-medium text-muted-foreground">{t("totalClaimedAmount")}</h3>
-              <p className="text-2xl font-bold">{formatCurrency(totalClaimedAmount)}</p>
+              <p className="text-2xl font-bold mt-1">{formatCurrency(totalClaimedAmount)}</p>
             </div>
-            <div className="bg-muted/30 p-4 rounded-lg">
+            <div className="bg-muted/20 rounded-lg p-6 hover:bg-muted/30 transition-colors">
               <h3 className="text-sm font-medium text-muted-foreground">{t("totalApprovedAmount")}</h3>
-              <p className="text-2xl font-bold">{formatCurrency(totalApprovedAmount)}</p>
+              <p className="text-2xl font-bold mt-1">{formatCurrency(totalApprovedAmount)}</p>
             </div>
           </div>
         </CardContent>
       </Card>
       
       {/* Claims Table */}
-      <Card>
+      <Card className="border hover:shadow-md transition-all duration-200">
         <CardHeader>
           <CardTitle>{t("claimsList")}</CardTitle>
           <CardDescription>{t("claimsMatchingFilters")}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">
-              <p>{t("loadingClaims")}</p>
+            <div className="text-center py-12 space-y-3">
+              <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
+              <p className="text-muted-foreground">{t("loadingClaims")}</p>
             </div>
           ) : !data || data.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>{t("noClaimsFound")}</p>
+            <div className="text-center py-12 space-y-3">
+              <div className="rounded-full bg-muted/20 p-3 w-12 h-12 mx-auto flex items-center justify-center">
+                <FileSpreadsheet className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="font-medium">{t("noClaimsFound")}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t("noClaimsFoundDescription")}
+                </p>
+              </div>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("claimNumber")}</TableHead>
-                  <TableHead>{t("policyNumber")}</TableHead>
-                  <TableHead>{t("policyholder")}</TableHead>
-                  <TableHead>{t("incidentDate")}</TableHead>
-                  <TableHead>{t("claimedAmount")}</TableHead>
-                  <TableHead>{t("approvedAmount")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((claim) => (
-                  <TableRow 
-                    key={claim.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => handleViewClaim(claim.id)}
-                  >
-                    <TableCell className="font-medium">{claim.claim_number}</TableCell>
-                    <TableCell>{claim.policy_number}</TableCell>
-                    <TableCell>{claim.policyholder_name}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                        {formatDate(claim.incident_date)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{formatCurrency(claim.claimed_amount)}</TableCell>
-                    <TableCell>
-                      {claim.approved_amount ? 
-                        formatCurrency(claim.approved_amount) : 
-                        "-"}
-                    </TableCell>
-                    <TableCell>
-                      <ClaimStatusBadge status={claim.status} />
-                    </TableCell>
+            <div className="rounded-md border overflow-hidden transition-all hover:shadow-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("claimNumber")}</TableHead>
+                    <TableHead>{t("policyNumber")}</TableHead>
+                    <TableHead>{t("policyholder")}</TableHead>
+                    <TableHead>{t("incidentDate")}</TableHead>
+                    <TableHead>{t("claimedAmount")}</TableHead>
+                    <TableHead>{t("approvedAmount")}</TableHead>
+                    <TableHead>{t("status")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {data.map((claim) => (
+                    <TableRow 
+                      key={claim.id}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleViewClaim(claim.id)}
+                    >
+                      <TableCell className="font-medium">{claim.claim_number}</TableCell>
+                      <TableCell>{claim.policy_number}</TableCell>
+                      <TableCell>{claim.policyholder_name}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                          {formatDate(claim.incident_date)}
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatCurrency(claim.claimed_amount)}</TableCell>
+                      <TableCell>
+                        {claim.approved_amount ? 
+                          formatCurrency(claim.approved_amount) : 
+                          "-"}
+                      </TableCell>
+                      <TableCell>
+                        <ClaimStatusBadge status={claim.status} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
