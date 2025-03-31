@@ -1,106 +1,69 @@
 
-import { Language } from "@/contexts/LanguageContext";
-
 /**
- * Format a date based on the current locale
+ * Format a date string to a localized format
  */
-export const formatDate = (date: Date | string | number, language: Language): string => {
-  if (!date) return '';
+export const formatDate = (dateString: string): string => {
+  if (!dateString) return '';
   
-  const dateObj = date instanceof Date ? date : new Date(date);
-  
-  const options: Intl.DateTimeFormatOptions = { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  };
-  
-  const localeMap: Record<Language, string> = {
-    en: 'en-US',
-    sr: 'sr-RS',
-    mk: 'mk-MK',
-    es: 'es-ES'
-  };
-  
-  return new Intl.DateTimeFormat(localeMap[language], options).format(dateObj);
-};
-
-/**
- * Format a number based on the current locale
- */
-export const formatNumber = (
-  number: number, 
-  language: Language, 
-  options?: Intl.NumberFormatOptions
-): string => {
-  if (number === undefined || number === null) return '';
-  
-  const localeMap: Record<Language, string> = {
-    en: 'en-US',
-    sr: 'sr-RS',
-    mk: 'mk-MK',
-    es: 'es-ES'
-  };
-  
-  return new Intl.NumberFormat(localeMap[language], options).format(number);
-};
-
-/**
- * Format currency based on the current locale and currency code
- */
-export const formatCurrency = (
-  amount: number, 
-  language: Language, 
-  currencyCode: string = 'EUR'
-): string => {
-  if (amount === undefined || amount === null) return '';
-  
-  const localeMap: Record<Language, string> = {
-    en: 'en-US',
-    sr: 'sr-RS',
-    mk: 'mk-MK',
-    es: 'es-ES'
-  };
-  
-  return new Intl.NumberFormat(localeMap[language], {
-    style: 'currency',
-    currency: currencyCode,
-  }).format(amount);
-};
-
-/**
- * Returns relative time (e.g., "2 days ago") based on current locale
- */
-export const formatRelativeTime = (
-  date: Date | string | number,
-  language: Language
-): string => {
-  if (!date) return '';
-  
-  const dateObj = date instanceof Date ? date : new Date(date);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
-  
-  const localeMap: Record<Language, string> = {
-    en: 'en-US',
-    sr: 'sr-RS',
-    mk: 'mk-MK',
-    es: 'es-ES'
-  };
-  
-  const rtf = new Intl.RelativeTimeFormat(localeMap[language], { numeric: 'auto' });
-  
-  if (diffInSeconds < 60) {
-    return rtf.format(-diffInSeconds, 'second');
-  } else if (diffInSeconds < 3600) {
-    return rtf.format(-Math.floor(diffInSeconds / 60), 'minute');
-  } else if (diffInSeconds < 86400) {
-    return rtf.format(-Math.floor(diffInSeconds / 3600), 'hour');
-  } else if (diffInSeconds < 2592000) {
-    return rtf.format(-Math.floor(diffInSeconds / 86400), 'day');
-  } else if (diffInSeconds < 31536000) {
-    return rtf.format(-Math.floor(diffInSeconds / 2592000), 'month');
-  } else {
-    return rtf.format(-Math.floor(diffInSeconds / 31536000), 'year');
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return dateString;
   }
+};
+
+/**
+ * Format a number as currency
+ */
+export const formatCurrency = (amount: number, currency: string = "EUR"): string => {
+  if (amount === null || amount === undefined) return '';
+  
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  } catch (error) {
+    console.error("Error formatting currency:", error);
+    return `${amount} ${currency}`;
+  }
+};
+
+/**
+ * Format a percentage value
+ */
+export const formatPercentage = (value: number): string => {
+  if (value === null || value === undefined) return '';
+  
+  try {
+    return `${value.toFixed(2)}%`;
+  } catch (error) {
+    console.error("Error formatting percentage:", error);
+    return `${value}%`;
+  }
+};
+
+/**
+ * Format a phone number
+ */
+export const formatPhoneNumber = (phone: string): string => {
+  if (!phone) return '';
+  
+  // This is a simple example, could be expanded for different formats
+  return phone;
+};
+
+/**
+ * Truncate text to a specific length
+ */
+export const truncateText = (text: string, maxLength: number = 100): string => {
+  if (!text) return '';
+  
+  if (text.length <= maxLength) return text;
+  
+  return `${text.substring(0, maxLength)}...`;
 };

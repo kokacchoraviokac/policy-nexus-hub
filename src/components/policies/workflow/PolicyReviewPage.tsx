@@ -3,340 +3,203 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy } from "@/types/policies";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, CheckCircle2, XCircle, Edit, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import WorkflowStatusBadge from "./WorkflowStatusBadge";
-import PolicyReviewForm from "./PolicyReviewForm";
-import PolicyReviewDetails from "./PolicyReviewDetails";
-import { useActivityLogger } from "@/utils/activityLogger";
+import { getMissingFields, isPolicyComplete } from "@/utils/policyWorkflowUtils";
+import { ArrowLeft, Info, AlertTriangle, Loader2 } from "lucide-react";
+import PolicyDetailsForm from "./PolicyDetailsForm";
+import PolicyDocumentsTab from "./PolicyDocumentsTab";
+import PolicyReviewActions from "./PolicyReviewActions";
+import PolicyReviewOverview from "./PolicyReviewOverview";
 
 const PolicyReviewPage: React.FC = () => {
-  const { policyId } = useParams<{ policyId: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t, formatDate, formatCurrency } = useLanguage();
-  const { logActivity } = useActivityLogger();
+  const { t } = useLanguage();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("review");
+  const [activeTab, setActiveTab] = useState<string>("overview");
   
   // Fetch policy data
   const { data: policy, isLoading, error } = useQuery({
-    queryKey: ["policy-review", policyId],
+    queryKey: ['policy', id],
     queryFn: async () => {
-      if (!policyId) throw new Error("No policy ID provided");
-      
       const { data, error } = await supabase
-        .from("policies")
-        .select("*")
-        .eq("id", policyId)
+        .from('policies')
+        .select('*')
+        .eq('id', id)
         .single();
       
       if (error) throw error;
       return data as Policy;
     },
-    enabled: !!policyId,
+    enabled: !!id
   });
   
-  // Approve policy mutation
-  const approveMutation = useMutation({
-    mutationFn: async (updatedPolicy: Partial<Policy>) => {
-      if (!policyId) throw new Error("No policy ID provided");
-      
-      const updateData = {
-        ...updatedPolicy,
-        workflow_status: "approved",
-        updated_at: new Date().toISOString(),
-      };
-      
+  // Fetch documents for this policy
+  const { data: documents, isLoading: isLoadingDocuments } = useQuery({
+    queryKey: ['policy-documents', id],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from("policies")
-        .update(updateData)
-        .eq("id", policyId)
-        .select()
-        .single();
+        .from('policy_documents')
+        .select('*')
+        .eq('policy_id', id)
+        .eq('is_latest_version', true);
       
       if (error) throw error;
-      
-      // Log activity
-      await logActivity({
-        entityType: "policy",
-        entityId: policyId,
-        action: "update",
-        details: {
-          action_type: "policy_approved",
-          previous_status: policy?.workflow_status,
-          new_status: "approved",
-        }
-      });
-      
       return data;
     },
-    onSuccess: () => {
-      toast.success(t("policyApproved"), {
-        description: t("policyApprovedSuccess"),
-      });
-      queryClient.invalidateQueries({ queryKey: ["policy-review", policyId] });
-      queryClient.invalidateQueries({ queryKey: ["workflow-policies"] });
-      navigate(`/policies/workflow/${policyId}`);
-    },
-    onError: (error) => {
-      toast.error(t("policyApproveError"), {
-        description: error instanceof Error ? error.message : t("unknownError"),
-      });
-    },
+    enabled: !!id
   });
   
-  // Reject policy mutation
-  const rejectMutation = useMutation({
-    mutationFn: async (reason: string) => {
-      if (!policyId) throw new Error("No policy ID provided");
-      
-      const updateData = {
-        workflow_status: "rejected",
-        notes: reason ? `${policy?.notes || ''}\n\nRejection reason: ${reason}` : policy?.notes,
-        updated_at: new Date().toISOString(),
-      };
-      
-      const { data, error } = await supabase
-        .from("policies")
-        .update(updateData)
-        .eq("id", policyId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Log activity
-      await logActivity({
-        entityType: "policy",
-        entityId: policyId,
-        action: "update",
-        details: {
-          action_type: "policy_rejected",
-          previous_status: policy?.workflow_status,
-          new_status: "rejected",
-          rejection_reason: reason,
-        }
-      });
-      
-      return data;
-    },
-    onSuccess: () => {
-      toast.success(t("policyRejected"), {
-        description: t("policyRejectedSuccess"),
-      });
-      queryClient.invalidateQueries({ queryKey: ["policy-review", policyId] });
-      queryClient.invalidateQueries({ queryKey: ["workflow-policies"] });
-      navigate(`/policies/workflow/${policyId}`);
-    },
-    onError: (error) => {
-      toast.error(t("policyRejectError"), {
-        description: error instanceof Error ? error.message : t("unknownError"),
-      });
-    },
-  });
-  
-  // Update policy mutation
-  const updateMutation = useMutation({
-    mutationFn: async (updatedPolicy: Partial<Policy>) => {
-      if (!policyId) throw new Error("No policy ID provided");
-      
-      const updateData = {
-        ...updatedPolicy,
-        workflow_status: "review",
-        updated_at: new Date().toISOString(),
-      };
-      
-      const { data, error } = await supabase
-        .from("policies")
-        .update(updateData)
-        .eq("id", policyId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Log activity
-      await logActivity({
-        entityType: "policy",
-        entityId: policyId,
-        action: "update",
-        details: {
-          action_type: "policy_updated",
-          previous_status: policy?.workflow_status,
-          new_status: "review",
-        }
-      });
-      
-      return data;
-    },
-    onSuccess: () => {
-      toast.success(t("policyUpdated"), {
-        description: t("policyUpdatedSuccess"),
-      });
-      queryClient.invalidateQueries({ queryKey: ["policy-review", policyId] });
-      queryClient.invalidateQueries({ queryKey: ["workflow-policies"] });
-      setActiveTab("details");
-    },
-    onError: (error) => {
-      toast.error(t("policyUpdateError"), {
-        description: error instanceof Error ? error.message : t("unknownError"),
-      });
-    },
-  });
-  
-  const handleGoBack = () => {
-    navigate("/policies/workflow");
-  };
-  
-  const handleApprove = () => {
-    if (!policy) return;
-    
-    // No changes needed, just approve the current policy
-    approveMutation.mutate({});
-  };
-  
-  const handleReject = () => {
-    const reason = prompt(t("enterRejectionReason"));
-    if (reason !== null) {
-      rejectMutation.mutate(reason);
-    }
-  };
-  
-  const handleSaveChanges = (updatedPolicy: Partial<Policy>) => {
-    updateMutation.mutate(updatedPolicy);
-  };
+  // Determine if policy has all required information
+  const isComplete = policy ? isPolicyComplete(policy) : false;
+  const missingFields = policy ? getMissingFields(policy) : [];
+  const hasRequiredDocuments = documents && documents.length > 0;
   
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={handleGoBack}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            {t("back")}
-          </Button>
-          <Skeleton className="h-8 w-64" />
-        </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-72" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {Array(6).fill(0).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="space-y-4 p-6">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-[400px] w-full" />
       </div>
     );
   }
   
   if (error || !policy) {
     return (
-      <div className="space-y-6">
-        <Button variant="ghost" size="sm" onClick={handleGoBack}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          {t("back")}
-        </Button>
+      <div className="p-6">
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t("errorLoadingPolicy")}</AlertTitle>
+          <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            {error instanceof Error ? error.message : t("unknownError")}
+            {t("policyLoadError")}
+            <p className="text-sm mt-2">{t("policyLoadErrorDescription")}</p>
           </AlertDescription>
         </Alert>
+        <Button 
+          className="mt-4" 
+          variant="outline" 
+          onClick={() => navigate('/policies/workflow')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("backToWorkflow")}
+        </Button>
       </div>
     );
   }
   
-  const isApprovable = policy.workflow_status === "draft" || policy.workflow_status === "review";
-  
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={handleGoBack}>
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          {t("back")}
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/policies/workflow')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("backToWorkflow")}
         </Button>
-        <WorkflowStatusBadge status={policy.workflow_status} />
+        <h1 className="text-2xl font-bold">{t("reviewPolicy")}</h1>
       </div>
       
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <CardTitle>{policy.policy_number}</CardTitle>
-                <CardDescription>
-                  {policy.insurer_name} | {formatCurrency(policy.premium, policy.currency)}
-                </CardDescription>
-              </div>
-              {isApprovable && (
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleReject}
-                    disabled={rejectMutation.isPending}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    {t("reject")}
-                  </Button>
-                  <Button 
-                    onClick={handleApprove}
-                    disabled={approveMutation.isPending}
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    {t("approve")}
-                  </Button>
+      {/* Policy Information Banner */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4 flex items-start gap-3">
+          <Info className="h-5 w-5 text-blue-500 mt-0.5" />
+          <div>
+            <h3 className="font-medium text-blue-800">
+              {policy.policy_number} - {policy.policyholder_name}
+            </h3>
+            <p className="text-sm text-blue-700">
+              {t("importedPolicyReviewNote")}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("editPolicyDetails")}</CardTitle>
+              <CardDescription>{t("reviewAndEditImportedPolicy")}</CardDescription>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList>
+                  <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+                  <TabsTrigger value="edit">{t("edit")}</TabsTrigger>
+                  <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </CardHeader>
+            
+            <CardContent className="p-6">
+              <TabsContent value="overview" className="mt-0">
+                <PolicyReviewOverview policy={policy} />
+              </TabsContent>
+              
+              <TabsContent value="edit" className="mt-0">
+                <PolicyDetailsForm policy={policy} />
+              </TabsContent>
+              
+              <TabsContent value="documents" className="mt-0">
+                <PolicyDocumentsTab 
+                  policyId={policy.id} 
+                  documents={documents || []}
+                  isLoading={isLoadingDocuments}
+                />
+              </TabsContent>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("workflowStatus")}</CardTitle>
+              <CardDescription>{t("manageWorkflowStatusOfPolicy")}</CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground mb-1">
+                  {t("currentStatus")}:
+                </p>
+                <div className="font-medium">
+                  {t(policy.workflow_status.replace('_', ''))}
                 </div>
+              </div>
+              
+              <Separator className="my-4" />
+              
+              {!isComplete && (
+                <Alert variant="warning" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    {t("missingRequiredFields")}
+                    <ul className="mt-2 list-disc list-inside text-sm">
+                      {missingFields.map((field) => (
+                        <li key={field}>{t(field)}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
               )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full mb-6">
-                <TabsTrigger value="review" disabled={!isApprovable}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  {t("review")}
-                </TabsTrigger>
-                <TabsTrigger value="details">
-                  {t("details")}
-                </TabsTrigger>
-              </TabsList>
               
-              <TabsContent value="review">
-                {isApprovable ? (
-                  <PolicyReviewForm 
-                    policy={policy} 
-                    onSave={handleSaveChanges} 
-                    isProcessing={updateMutation.isPending}
-                  />
-                ) : (
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>{t("reviewNotAvailable")}</AlertTitle>
-                    <AlertDescription>
-                      {t("policyNotInReviewState")}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="details">
-                <PolicyReviewDetails policy={policy} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+              <PolicyReviewActions 
+                policy={policy} 
+                isComplete={isComplete && hasRequiredDocuments}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

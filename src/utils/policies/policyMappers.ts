@@ -1,30 +1,64 @@
 
 import { Policy } from "@/types/policies";
-import { WorkflowPolicy } from "@/hooks/useWorkflowPolicies";
+
+export interface WorkflowPolicy {
+  id: string;
+  policyNumber: string;
+  policyholderName: string;
+  insurerName: string;
+  startDate: string;
+  expiryDate: string;
+  premium: number;
+  currency: string;
+  status: string;
+  workflowStatus: string;
+  lastUpdated: string;
+}
 
 /**
- * Converts a Policy object to a WorkflowPolicy object
+ * Map Policy objects to WorkflowPolicy objects for display in the workflow UI
  */
-export const policyToWorkflowPolicy = (policy: Policy): WorkflowPolicy => {
-  return {
+export const policiesToWorkflowPolicies = (policies: Policy[]): WorkflowPolicy[] => {
+  return policies.map(policy => ({
     id: policy.id,
     policyNumber: policy.policy_number,
-    insurer: policy.insurer_name,
-    client: policy.policyholder_name,
-    product: policy.product_name || '',
-    startDate: new Date(policy.start_date),
-    endDate: new Date(policy.expiry_date),
-    status: policy.workflow_status,
+    policyholderName: policy.policyholder_name,
+    insurerName: policy.insurer_name,
+    startDate: policy.start_date,
+    expiryDate: policy.expiry_date,
     premium: policy.premium,
     currency: policy.currency,
-    createdAt: new Date(policy.created_at),
-    updatedAt: new Date(policy.updated_at)
-  };
+    status: policy.status,
+    workflowStatus: policy.workflow_status,
+    lastUpdated: policy.updated_at
+  }));
 };
 
 /**
- * Converts an array of Policy objects to WorkflowPolicy objects
+ * Group policies by their workflow status
  */
-export const policiesToWorkflowPolicies = (policies: Policy[]): WorkflowPolicy[] => {
-  return policies.map(policy => policyToWorkflowPolicy(policy));
+export const groupPoliciesByWorkflowStatus = (policies: Policy[]) => {
+  return policies.reduce((groups, policy) => {
+    const status = policy.workflow_status;
+    if (!groups[status]) {
+      groups[status] = [];
+    }
+    groups[status].push(policy);
+    return groups;
+  }, {} as Record<string, Policy[]>);
+};
+
+/**
+ * Calculate policy statistics by workflow status
+ */
+export const calculatePolicyWorkflowStats = (policies: Policy[]) => {
+  const grouped = groupPoliciesByWorkflowStatus(policies);
+  
+  return {
+    draft: grouped.draft?.length || 0,
+    in_review: grouped.in_review?.length || 0,
+    ready: grouped.ready?.length || 0,
+    complete: grouped.complete?.length || 0,
+    total: policies.length
+  };
 };
