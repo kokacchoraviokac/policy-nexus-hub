@@ -1,6 +1,7 @@
 
 import { Document, DocumentCategory, EntityType } from "@/types/documents";
 import { FileTextIcon, ClipboardIcon, FileIcon, ReceiptIcon, InfoIcon } from "lucide-react";
+import React from "react";
 
 export const getDocumentIcon = (document: Document | { category: DocumentCategory }) => {
   switch (document.category) {
