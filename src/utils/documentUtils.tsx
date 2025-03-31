@@ -1,4 +1,3 @@
-
 import { Document, DocumentCategory, EntityType } from "@/types/documents";
 import { FileText, Clipboard, File, Receipt, Info } from "lucide-react";
 import React from "react";
