@@ -17,12 +17,14 @@ export interface DatePickerWithRangeProps {
   className?: string;
   dateRange: DateRange;
   onDateRangeChange: (range: DateRange) => void;
+  disabled?: boolean;
 }
 
 export function DatePickerWithRange({
   className,
   dateRange,
   onDateRangeChange,
+  disabled,
 }: DatePickerWithRangeProps) {
   const { t } = useLanguage();
 
@@ -37,6 +39,7 @@ export function DatePickerWithRange({
               "w-full justify-start text-left font-normal",
               !dateRange && "text-muted-foreground"
             )}
+            disabled={disabled}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {dateRange?.from ? (
@@ -62,6 +65,7 @@ export function DatePickerWithRange({
             onSelect={onDateRangeChange}
             numberOfMonths={2}
             className="pointer-events-auto"
+            disabled={disabled ? { before: new Date(0), after: new Date(0) } : undefined}
           />
         </PopoverContent>
       </Popover>

@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import PayoutPreviewTable from "./payout/PayoutPreviewTable";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 const CalculatePayouts = () => {
   const { t } = useLanguage();
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: new Date(),
     to: new Date()
   });
@@ -30,6 +31,8 @@ const CalculatePayouts = () => {
   } = useCalculatePayouts();
 
   const handleCalculate = () => {
+    if (!dateRange.from || !dateRange.to) return;
+    
     calculatePayoutPreview({
       agentId: selectedAgent,
       periodStart: format(dateRange.from, 'yyyy-MM-dd'),
@@ -38,12 +41,21 @@ const CalculatePayouts = () => {
   };
 
   const handleFinalize = () => {
+    if (!dateRange.from || !dateRange.to) return;
+    
     finalizePayouts({
       agentId: selectedAgent,
       periodStart: format(dateRange.from, 'yyyy-MM-dd'),
       periodEnd: format(dateRange.to, 'yyyy-MM-dd'),
       items: payoutPreviewData?.items || []
     });
+  };
+
+  const handleDateRangeChange = (range: DateRange) => {
+    // Only update if both from and to are set
+    if (range?.from && range?.to) {
+      setDateRange(range);
+    }
   };
 
   return (
@@ -75,18 +87,14 @@ const CalculatePayouts = () => {
               <DatePickerWithRange
                 className=""
                 dateRange={dateRange}
-                onDateRangeChange={(range) => {
-                  if (range?.from && range?.to) {
-                    setDateRange(range);
-                  }
-                }}
+                onDateRangeChange={handleDateRangeChange}
               />
             </div>
           </div>
           
           <Button 
             onClick={handleCalculate} 
-            disabled={!selectedAgent || isCalculating}
+            disabled={!selectedAgent || isCalculating || !dateRange.from || !dateRange.to}
             className="mt-4"
           >
             {isCalculating ? t("calculating") : t("calculatePayouts")}

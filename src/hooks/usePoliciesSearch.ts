@@ -9,11 +9,13 @@ export const usePoliciesSearch = () => {
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   
   const searchPolicies = useCallback(async (term: string) => {
     setIsLoading(true);
+    setIsSearching(true);
     setError(null);
     
     try {
@@ -33,6 +35,7 @@ export const usePoliciesSearch = () => {
       setError(err instanceof Error ? err : new Error('Unknown error occurred'));
     } finally {
       setIsLoading(false);
+      setIsSearching(false);
     }
   }, []);
   
@@ -51,6 +54,6 @@ export const usePoliciesSearch = () => {
     isLoading,
     error,
     searchPolicies,
-    isSearching: isLoading
+    isSearching
   };
 };
