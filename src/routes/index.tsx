@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { DashboardRoutes } from './DashboardRoutes';
 import { PolicyRoutes } from './PolicyRoutes'; 
 import { SalesRoutes } from './SalesRoutes';
