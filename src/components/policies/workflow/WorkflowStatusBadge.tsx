@@ -3,33 +3,66 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+type WorkflowStatus = "draft" | "in_review" | "ready" | "complete" | "rejected" | "approved" | string;
+
 interface WorkflowStatusBadgeProps {
-  status: string;
+  status: WorkflowStatus;
 }
 
 const WorkflowStatusBadge: React.FC<WorkflowStatusBadgeProps> = ({ status }) => {
   const { t } = useLanguage();
   
-  const getStatusConfig = (status: string) => {
+  // Define variant based on status
+  let variant: "default" | "secondary" | "destructive" | "outline" = "default";
+  
+  switch (status) {
+    case "draft":
+      variant = "outline";
+      break;
+    case "in_review":
+      variant = "secondary";
+      break;
+    case "ready":
+      variant = "default";
+      break;
+    case "complete":
+      variant = "default";
+      break;
+    case "approved":
+      variant = "default";
+      break;
+    case "rejected":
+      variant = "destructive";
+      break;
+    default:
+      variant = "outline";
+  }
+  
+  // Get translated status text
+  const getStatusText = (status: string) => {
     switch (status) {
       case "draft":
-        return { label: t("draft"), variant: "outline" as const };
-      case "review":
-        return { label: t("inReview"), variant: "secondary" as const };
+        return t("draft");
+      case "in_review":
+        return t("inReview");
+      case "ready":
+        return t("ready");
+      case "complete":
+        return t("complete");
       case "approved":
-        return { label: t("approved"), variant: "secondary" as const };
-      case "finalized":
-        return { label: t("finalized"), variant: "default" as const };
+        return t("approved");
       case "rejected":
-        return { label: t("rejected"), variant: "destructive" as const };
+        return t("rejected");
       default:
-        return { label: status, variant: "outline" as const };
+        return status;
     }
   };
   
-  const { label, variant } = getStatusConfig(status);
-  
-  return <Badge variant={variant}>{label}</Badge>;
+  return (
+    <Badge variant={variant}>
+      {getStatusText(status)}
+    </Badge>
+  );
 };
 
 export default WorkflowStatusBadge;
