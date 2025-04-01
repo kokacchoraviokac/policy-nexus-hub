@@ -1,6 +1,5 @@
 
-import * as pdfParse from "pdf-parse";
-import { createWorker } from "tesseract.js";
+import * as pdfjs from "pdf-parse";
 
 // Feature toggle - set to false by default
 // This can be changed to true when you're ready to use the feature
@@ -14,7 +13,7 @@ export const ENABLE_ENHANCED_EXTRACTION = false;
 export const extractTextFromPdf = async (file: File): Promise<string> => {
   try {
     const buffer = await file.arrayBuffer();
-    const data = await pdfParse(buffer);
+    const data = await pdfjs.default(Buffer.from(new Uint8Array(buffer)));
     return data.text || "No text could be extracted from this PDF.";
   } catch (error) {
     console.error("Error extracting text from PDF:", error);
@@ -29,6 +28,7 @@ export const extractTextFromPdf = async (file: File): Promise<string> => {
  */
 export const performOCR = async (file: File): Promise<string> => {
   try {
+    const { createWorker } = await import('tesseract.js');
     const worker = await createWorker();
     const imageUrl = URL.createObjectURL(file);
     
