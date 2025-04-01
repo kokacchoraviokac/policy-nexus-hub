@@ -24,7 +24,7 @@ export const useDocumentUpload = ({
   const queryClient = useQueryClient();
   const [documentName, setDocumentName] = useState<string>("");
   const [documentType, setDocumentType] = useState<string>("");
-  const [documentCategory, setDocumentCategory] = useState<DocumentCategory | string>("other");
+  const [documentCategory, setDocumentCategory] = useState<DocumentCategory | "">("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   
@@ -72,7 +72,7 @@ export const useDocumentUpload = ({
           uploaded_by: user.id,
           company_id: user?.user_metadata?.company_id,
           description: "",
-          category: documentCategory === "none" ? null : documentCategory,
+          category: documentCategory === "" ? null : documentCategory,
           version: version,
           is_latest_version: true,
           mime_type: file.type,
@@ -122,7 +122,7 @@ export const useDocumentUpload = ({
       // Reset form
       setDocumentName("");
       setDocumentType("");
-      setDocumentCategory("other");
+      setDocumentCategory("");
       setFile(null);
     }
   });

@@ -11,8 +11,8 @@ import {
 import { DocumentCategory } from "@/types/documents";
 
 interface DocumentCategorySelectorProps {
-  value: DocumentCategory | string;
-  onValueChange: (value: DocumentCategory | string) => void;
+  value: DocumentCategory | "";
+  onValueChange: (value: DocumentCategory | "") => void;
 }
 
 const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
@@ -22,7 +22,7 @@ const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
   const { t } = useLanguage();
   
   // Ensure value is always a valid string for the Select component
-  const safeValue = value || "none";
+  const safeValue = value || "";
   
   return (
     <div className="grid gap-2">
@@ -31,13 +31,13 @@ const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
       </label>
       <Select 
         value={safeValue.toString()} 
-        onValueChange={onValueChange}
+        onValueChange={(val) => onValueChange(val as DocumentCategory | "")}
       >
         <SelectTrigger id="documentCategory" className="w-full">
           <SelectValue placeholder={t("selectCategory")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="none">
+          <SelectItem value="">
             {t("none")}
           </SelectItem>
           <SelectItem value="claim_evidence">

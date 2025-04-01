@@ -1,5 +1,5 @@
 
-export type DocumentCategory = 'policy' | 'claim' | 'client' | 'invoice' | 'other';
+export type DocumentCategory = 'policy' | 'claim' | 'client' | 'invoice' | 'other' | 'claim_evidence' | 'medical' | 'legal' | 'financial' | 'lien' | 'notification' | 'correspondence';
 
 export type DocumentApprovalStatus = 'pending' | 'approved' | 'rejected' | 'needs_review';
 
