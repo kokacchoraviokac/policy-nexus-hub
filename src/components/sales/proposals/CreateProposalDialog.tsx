@@ -185,7 +185,7 @@ const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
-        entityType="sales_process" as EntityType
+        entityType={"sales_process" as EntityType}
         entityId={salesProcessId}
       />
     </>
