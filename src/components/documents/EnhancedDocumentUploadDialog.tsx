@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Sparkles } from "lucide-react";
 import { EntityType } from "@/types/documents";
