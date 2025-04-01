@@ -1,7 +1,3 @@
-
-// Import pdf-parse correctly
-const pdfParse = require('pdf-parse');
-
 // Feature toggle - set to false by default
 // This can be changed to true when you're ready to use the feature
 export const ENABLE_ENHANCED_EXTRACTION = false;
@@ -13,6 +9,8 @@ export const ENABLE_ENHANCED_EXTRACTION = false;
  */
 export const extractTextFromPdf = async (file: File): Promise<string> => {
   try {
+    // Dynamically import pdf-parse to avoid issues with bundling
+    const pdfParse = await import('pdf-parse').then(module => module.default);
     const buffer = await file.arrayBuffer();
     const data = await pdfParse(Buffer.from(new Uint8Array(buffer)));
     return data.text || "No text could be extracted from this PDF.";
