@@ -1,149 +1,199 @@
 
-import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Policy } from "@/types/policies";
-import { getMissingFields, isPolicyComplete } from "@/utils/policyWorkflowUtils";
-import { ArrowLeft, Info, AlertTriangle, Loader2 } from "lucide-react";
-import PolicyDetailsForm from "./PolicyDetailsForm";
-import PolicyDocumentsTab from "./PolicyDocumentsTab";
-import PolicyReviewActions from "./PolicyReviewActions";
-import PolicyReviewOverview from "./PolicyReviewOverview";
+import { 
+  ArrowLeft, 
+  Loader2, 
+  AlertTriangle, 
+  CheckCircle2,
+  ClipboardList,
+  ArrowRight
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePolicyWorkflow } from "@/hooks/usePolicyWorkflow";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PolicyOverviewTab from "@/components/policies/detail/PolicyOverviewTab";
+import PolicyDocumentsTab from "@/components/policies/detail/PolicyDocumentsTab";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 const PolicyReviewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<string>("overview");
-  const [documentsComplete, setDocumentsComplete] = useState(false);
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("overview");
   
-  // Fetch policy data
-  const { data: policy, isLoading, error } = useQuery({
-    queryKey: ['policy', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('policies')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      return data as Policy;
-    },
-    enabled: !!id
-  });
+  const { 
+    policy, 
+    isLoading, 
+    error, 
+    advanceWorkflow, 
+    isUpdating 
+  } = usePolicyWorkflow(id);
   
-  // Determine if policy has all required information
-  const isComplete = policy ? isPolicyComplete(policy) : false;
-  const missingFields = policy ? getMissingFields(policy) : [];
+  const getWorkflowStepDescription = (status: string): string => {
+    switch (status) {
+      case "draft":
+        return t("draftStageDescription");
+      case "in_review":
+        return t("inReviewStageDescription");
+      case "ready":
+        return t("readyStageDescription");
+      case "complete":
+        return t("completeStageDescription");
+      default:
+        return "";
+    }
+  };
   
-  const handleDocumentsComplete = (complete: boolean) => {
-    setDocumentsComplete(complete);
+  const getWorkflowActionLabel = (status: string): string => {
+    switch (status) {
+      case "draft":
+        return t("moveToReview");
+      case "in_review":
+        return t("markAsReady");
+      case "ready":
+        return t("complete");
+      default:
+        return t("complete");
+    }
+  };
+  
+  const getWorkflowStatusBadge = (status: string) => {
+    switch(status) {
+      case 'draft':
+        return <Badge variant="outline">{t("draft")}</Badge>;
+      case 'in_review':
+        return <Badge variant="secondary">{t("inReview")}</Badge>;
+      case 'ready':
+        return <Badge variant="success">{t("ready")}</Badge>;
+      case 'complete':
+        return <Badge variant="default">{t("complete")}</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+  
+  const handleBackToWorkflow = () => {
+    navigate("/policies/workflow");
   };
   
   if (isLoading) {
     return (
-      <div className="space-y-4 p-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-[400px] w-full" />
+      <div className="space-y-6">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBackToWorkflow}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("backToWorkflow")}
+        </Button>
+        
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">{t("loadingPolicy")}</p>
+        </div>
       </div>
     );
   }
   
   if (error || !policy) {
     return (
-      <div className="p-6">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {t("policyLoadError")}
-            <p className="text-sm mt-2">{t("policyLoadErrorDescription")}</p>
-          </AlertDescription>
-        </Alert>
-        <Button 
-          className="mt-4" 
-          variant="outline" 
-          onClick={() => navigate('/policies/workflow')}
+      <div className="space-y-6">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBackToWorkflow}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t("backToWorkflow")}
         </Button>
+        
+        <Card className="border-destructive">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <CardTitle>{t("policyLoadError")}</CardTitle>
+            </div>
+            <CardDescription>{t("policyLoadErrorDescription")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => window.location.reload()}>
+              {t("retry")}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/policies/workflow')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t("backToWorkflow")}
-        </Button>
-        <h1 className="text-2xl font-bold">{t("reviewPolicy")}</h1>
+    <div className="space-y-6">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleBackToWorkflow}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        {t("backToWorkflow")}
+      </Button>
+      
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("reviewPolicy")}</h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-muted-foreground">
+              {policy.policy_number}
+            </span>
+            {getWorkflowStatusBadge(policy.workflow_status)}
+          </div>
+        </div>
+        
+        {policy.workflow_status !== "complete" && (
+          <Button 
+            onClick={advanceWorkflow}
+            disabled={isUpdating}
+            className="mt-2 sm:mt-0"
+          >
+            {isUpdating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowRight className="mr-2 h-4 w-4" />
+            )}
+            {getWorkflowActionLabel(policy.workflow_status)}
+          </Button>
+        )}
       </div>
       
-      {/* Policy Information Banner */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="p-4 flex items-start gap-3">
-          <Info className="h-5 w-5 text-blue-500 mt-0.5" />
-          <div>
-            <h3 className="font-medium text-blue-800">
-              {policy.policy_number} - {policy.policyholder_name}
-            </h3>
-            <p className="text-sm text-blue-700">
-              {t("importedPolicyReviewNote")}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <Alert className="mb-6">
+        <ClipboardList className="h-4 w-4" />
+        <AlertTitle>{t("importedPolicyReviewNote")}</AlertTitle>
+        <AlertDescription>
+          {getWorkflowStepDescription(policy.workflow_status)}
+        </AlertDescription>
+      </Alert>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="md:col-span-3">
           <Card>
-            <CardHeader>
-              <CardTitle>{t("editPolicyDetails")}</CardTitle>
-              <CardDescription>{t("reviewAndEditImportedPolicy")}</CardDescription>
-              
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <CardHeader className="px-6 py-4 border-b">
+              <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
                 <TabsList>
                   <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
-                  <TabsTrigger value="edit">{t("edit")}</TabsTrigger>
                   <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
                 </TabsList>
               </Tabs>
             </CardHeader>
-            
             <CardContent className="p-6">
-              <TabsContent value="overview" className="mt-0">
-                <PolicyReviewOverview policy={policy} />
+              <TabsContent value="overview">
+                <PolicyOverviewTab policy={policy} />
               </TabsContent>
-              
-              <TabsContent value="edit" className="mt-0">
-                <PolicyDetailsForm policy={policy} />
-              </TabsContent>
-              
-              <TabsContent value="documents" className="mt-0">
-                <PolicyDocumentsTab 
-                  policyId={policy.id}
-                  isComplete={documentsComplete}
-                  onCompleteChange={handleDocumentsComplete}
-                />
+              <TabsContent value="documents">
+                <PolicyDocumentsTab policyId={policy.id} />
               </TabsContent>
             </CardContent>
           </Card>
@@ -151,40 +201,109 @@ const PolicyReviewPage: React.FC = () => {
         
         <div>
           <Card>
-            <CardHeader>
-              <CardTitle>{t("workflowStatus")}</CardTitle>
-              <CardDescription>{t("manageWorkflowStatusOfPolicy")}</CardDescription>
+            <CardHeader className="px-6 py-4">
+              <CardTitle>{t("workflowActions")}</CardTitle>
+              <CardDescription>
+                {t("manageWorkflowStatusOfPolicy")}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="mb-4">
-                <p className="text-sm text-muted-foreground mb-1">
-                  {t("currentStatus")}:
-                </p>
-                <div className="font-medium">
-                  {t(policy.workflow_status.replace('_', ''))}
+            <CardContent className="px-6 pb-6">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium">{t("workflowStages")}</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t("policyWorkflowStagesDescription")}
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={policy.workflow_status === "draft" ? "default" : "outline"}>
+                          1
+                        </Badge>
+                        <span>{t("draft")}</span>
+                      </div>
+                      
+                      {policy.workflow_status === "draft" && (
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                      )}
+                      {policy.workflow_status !== "draft" && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={policy.workflow_status === "in_review" ? "default" : "outline"}>
+                          2
+                        </Badge>
+                        <span>{t("inReview")}</span>
+                      </div>
+                      
+                      {policy.workflow_status === "in_review" && (
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                      )}
+                      {policy.workflow_status !== "in_review" && policy.workflow_status !== "draft" && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={policy.workflow_status === "ready" ? "default" : "outline"}>
+                          3
+                        </Badge>
+                        <span>{t("ready")}</span>
+                      </div>
+                      
+                      {policy.workflow_status === "ready" && (
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                      )}
+                      {policy.workflow_status === "complete" && (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={policy.workflow_status === "complete" ? "default" : "outline"}>
+                          4
+                        </Badge>
+                        <span>{t("complete")}</span>
+                      </div>
+                      
+                      {policy.workflow_status === "complete" && (
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                      )}
+                    </div>
+                  </div>
                 </div>
+                
+                <Separator />
+                
+                {policy.workflow_status !== "complete" && (
+                  <Button 
+                    onClick={advanceWorkflow}
+                    disabled={isUpdating}
+                    className="w-full"
+                  >
+                    {isUpdating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <ArrowRight className="mr-2 h-4 w-4" />
+                    )}
+                    {getWorkflowActionLabel(policy.workflow_status)}
+                  </Button>
+                )}
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => navigate(`/policies/${policy.id}`)}
+                >
+                  {t("viewPolicyDetails")}
+                </Button>
               </div>
-              
-              <Separator className="my-4" />
-              
-              {!isComplete && (
-                <Alert variant="warning" className="mb-4">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    {t("missingRequiredFields")}
-                    <ul className="mt-2 list-disc list-inside text-sm">
-                      {missingFields.map((field) => (
-                        <li key={field}>{t(field)}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
-              
-              <PolicyReviewActions 
-                policy={policy} 
-                isComplete={isComplete && documentsComplete}
-              />
             </CardContent>
           </Card>
         </div>

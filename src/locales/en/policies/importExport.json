@@ -47,7 +47,7 @@
   "continue": "Continue",
   "importContainsErrors": "Import contains {{count}} errors",
   "importContainsErrorsWarning": "This import contains errors. Invalid policies will not be imported.",
-  "allPoliciesValidProceed": "All policies are valid. You can proceed with the import.",
+  "allPoliciesValid": "All policies are valid",
   "valid": "Valid",
   "invalid": "Invalid",
   "isRequired": "is required",
@@ -76,7 +76,6 @@
   "parseError": "Parse Error",
   "noPoliciesFoundInFile": "No policies found in the file",
   "unknownError": "Unknown error",
-  
   "importPolicyFromSalesProcess": "Import Policy from Sales Process",
   "importPolicyFromSalesProcessDescription": "Create a new policy based on the completed sales process",
   "reviewAndImportPolicyFromSalesProcess": "Review and import the policy data from your sales process",
@@ -97,5 +96,7 @@
   "errorPreparingImport": "Error preparing import",
   "tryAgainLater": "Please try again later",
   "importingFromSalesProcess": "Importing from Sales Process",
-  "policyDataPreparedFromSalesProcess": "The policy data has been prepared based on your sales process information"
+  "policyDataPreparedFromSalesProcess": "The policy data has been prepared based on your sales process information",
+  "upload": "Upload",
+  "back": "Back"
 }

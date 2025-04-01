@@ -2,15 +2,39 @@
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Policy } from "@/types/policies";
-import { ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, Save } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertTriangle,
+  FileCheck,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  CheckCircle,
+  X,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface PolicyImportReviewProps {
   policies: Partial<Policy>[];
-  invalidPolicies: { policy: Partial<Policy>; errors: string[] }[];
+  invalidPolicies: { policy: Partial<Policy>; errors: any[] }[];
   onBack?: () => void;
   onImport?: () => void;
 }
@@ -19,240 +43,267 @@ const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
   policies,
   invalidPolicies,
   onBack,
-  onImport
+  onImport,
 }) => {
-  const { t } = useLanguage();
+  const { t, formatDate, formatCurrency } = useLanguage();
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewingInvalid, setViewingInvalid] = useState(false);
+  const [displayInvalid, setDisplayInvalid] = useState(false);
   
-  const itemsPerPage = 10;
-  const startIndex = (currentPage - 1) * itemsPerPage;
+  const pageSize = 5;
+  const totalItems = displayInvalid ? invalidPolicies.length : policies.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
   
-  const currentPolicies = viewingInvalid 
-    ? invalidPolicies.slice(startIndex, startIndex + itemsPerPage) 
-    : policies.slice(startIndex, startIndex + itemsPerPage);
-  
-  const totalPages = viewingInvalid
-    ? Math.ceil(invalidPolicies.length / itemsPerPage)
-    : Math.ceil(policies.length / itemsPerPage);
-  
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  // Get current page items
+  const getCurrentPageItems = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    
+    if (displayInvalid) {
+      return invalidPolicies.slice(startIndex, endIndex);
+    } else {
+      return policies.slice(startIndex, endIndex);
+    }
   };
   
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
   
-  const toggleView = () => {
-    setViewingInvalid(!viewingInvalid);
-    setCurrentPage(1);
+  // Page numbering logic for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('ellipsis');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('ellipsis');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('ellipsis');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('ellipsis');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+  
+  const renderStatusBadge = (item: any) => {
+    if (displayInvalid) {
+      return (
+        <Badge variant="destructive" className="gap-1.5">
+          <X className="h-3.5 w-3.5" />
+          {t("invalid")}
+        </Badge>
+      );
+    }
+    
+    return (
+      <Badge variant="success" className="gap-1.5">
+        <CheckCircle className="h-3.5 w-3.5" />
+        {t("valid")}
+      </Badge>
+    );
   };
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h3 className="text-lg font-medium mb-1">{t("reviewPolicies")}</h3>
+          <h3 className="text-lg font-medium">
+            {t("reviewPolicies")}
+          </h3>
           <p className="text-sm text-muted-foreground">
             {t("reviewPoliciesDescription")}
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="flex items-center">
-            <div className="bg-green-100 text-green-700 font-medium rounded-md py-1 px-2 text-xs flex items-center">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              {policies.length} {t("validPolicies")}
-            </div>
-          </div>
+        <div className="flex gap-2">
+          <Button
+            variant={displayInvalid ? "outline" : "default"}
+            size="sm"
+            onClick={() => {
+              setDisplayInvalid(false);
+              setCurrentPage(1);
+            }}
+            className="text-xs gap-1.5"
+          >
+            <FileCheck className="h-4 w-4" />
+            {t("valid")} ({policies.length})
+          </Button>
           
-          {invalidPolicies.length > 0 && (
-            <div className="flex items-center">
-              <div className="bg-amber-100 text-amber-700 font-medium rounded-md py-1 px-2 text-xs flex items-center">
-                <AlertTriangle className="h-3 w-3 mr-1" />
-                {invalidPolicies.length} {t("invalidPolicies")}
-              </div>
-            </div>
-          )}
+          <Button
+            variant={displayInvalid ? "default" : "outline"}
+            size="sm"
+            disabled={invalidPolicies.length === 0}
+            onClick={() => {
+              if (invalidPolicies.length > 0) {
+                setDisplayInvalid(true);
+                setCurrentPage(1);
+              }
+            }}
+            className="text-xs gap-1.5"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            {t("invalid")} ({invalidPolicies.length})
+          </Button>
         </div>
       </div>
       
-      {policies.length === 0 && invalidPolicies.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p>{t("noPoliciesFound")}</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {invalidPolicies.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 flex items-start gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <h4 className="font-medium text-yellow-800">
-                  {t("importContainsErrors", { count: invalidPolicies.length })}
-                </h4>
-                <p className="text-sm text-yellow-700 mt-1">
-                  {t("importContainsErrorsWarning")}
-                </p>
-              </div>
-            </div>
-          )}
-          
-          {invalidPolicies.length === 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-              <div>
-                <h4 className="font-medium text-green-800">
-                  {t("allPoliciesValidProceed")}
-                </h4>
-              </div>
-            </div>
-          )}
-          
-          <div className="flex justify-between items-center">
-            <div className="space-x-2">
-              <Button
-                size="sm"
-                variant={viewingInvalid ? "outline" : "default"}
-                onClick={() => !viewingInvalid || toggleView()}
-                disabled={policies.length === 0}
-              >
-                {t("valid")}
-              </Button>
-              <Button
-                size="sm"
-                variant={viewingInvalid ? "default" : "outline"}
-                onClick={() => viewingInvalid || toggleView()}
-                disabled={invalidPolicies.length === 0}
-              >
-                {t("invalid")}
-              </Button>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <Label className="text-sm">
-                {t("page")} {currentPage} {t("of")} {totalPages || 1}
-              </Label>
-              
-              <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-          
-          <Card>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">{t("policyNumber")}</TableHead>
-                    <TableHead>{t("insurer")}</TableHead>
-                    <TableHead>{t("policyholder")}</TableHead>
-                    <TableHead>{t("startDate")}</TableHead>
-                    <TableHead>{t("expiryDate")}</TableHead>
-                    <TableHead>{t("premium")}</TableHead>
-                    {viewingInvalid && (
-                      <TableHead>{t("errors")}</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentPolicies.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={viewingInvalid ? 7 : 6} className="text-center py-6">
-                        {viewingInvalid
-                          ? t("noInvalidPolicies")
-                          : t("noValidPolicies")}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    viewingInvalid
-                      ? currentPolicies.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">
-                              {item.policy?.policy_number || '-'}
-                            </TableCell>
-                            <TableCell>{item.policy?.insurer_name || '-'}</TableCell>
-                            <TableCell>{item.policy?.policyholder_name || '-'}</TableCell>
-                            <TableCell>{item.policy?.start_date || '-'}</TableCell>
-                            <TableCell>{item.policy?.expiry_date || '-'}</TableCell>
-                            <TableCell>
-                              {item.policy?.premium 
-                                ? `${item.policy.premium} ${item.policy.currency}` 
-                                : '-'}
-                            </TableCell>
-                            <TableCell className="text-red-500 text-xs">
-                              <ul className="list-disc pl-4">
-                                {item.errors.map((error, i) => (
-                                  <li key={i}>{error}</li>
-                                ))}
-                              </ul>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      : currentPolicies.map((policy, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">
-                              {policy.policy_number || '-'}
-                            </TableCell>
-                            <TableCell>{policy.insurer_name || '-'}</TableCell>
-                            <TableCell>{policy.policyholder_name || '-'}</TableCell>
-                            <TableCell>{policy.start_date || '-'}</TableCell>
-                            <TableCell>{policy.expiry_date || '-'}</TableCell>
-                            <TableCell>
-                              {policy.premium 
-                                ? `${policy.premium} ${policy.currency}` 
-                                : '-'}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </Card>
-          
-          <div className="flex justify-between mt-6">
-            {onBack && (
-              <Button
-                variant="outline"
-                onClick={onBack}
-              >
-                {t("back")}
-              </Button>
-            )}
-            
-            {onImport && policies.length > 0 && (
-              <Button
-                onClick={onImport}
-                className="ml-auto"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {invalidPolicies.length > 0 
-                  ? t("importWithErrors") 
-                  : t("importPolicies")}
-              </Button>
-            )}
-          </div>
-        </>
+      {invalidPolicies.length > 0 && !displayInvalid && (
+        <Alert variant="warning">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t("importContainsErrors", { count: invalidPolicies.length })}</AlertTitle>
+          <AlertDescription>
+            {t("importContainsErrorsWarning")}
+          </AlertDescription>
+        </Alert>
       )}
+      
+      {invalidPolicies.length === 0 && !displayInvalid && (
+        <Alert variant="success" className="bg-green-50 border-green-200">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertTitle className="text-green-700">{t("allPoliciesValid")}</AlertTitle>
+          <AlertDescription className="text-green-600">
+            {t("allPoliciesValidProceed")}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <div className="rounded-md border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("status")}</TableHead>
+              <TableHead>{t("policyNumber")}</TableHead>
+              <TableHead>{t("policyholder")}</TableHead>
+              <TableHead>{t("insurer")}</TableHead>
+              <TableHead>{t("startDate")}</TableHead>
+              <TableHead>{t("expiryDate")}</TableHead>
+              <TableHead className="text-right">{t("premium")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {getCurrentPageItems().map((item, index) => {
+              const policy = displayInvalid ? item.policy : item;
+              const errors = displayInvalid ? item.errors : [];
+              
+              return (
+                <TableRow key={index}>
+                  <TableCell>
+                    {renderStatusBadge(item)}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {policy.policy_number}
+                    {displayInvalid && errors && errors.length > 0 && (
+                      <div className="text-xs text-destructive mt-1">
+                        {errors.map((err, i) => (
+                          <div key={i}>
+                            {err.field ? `${err.field}: ${err.message}` : err.message || err}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>{policy.policyholder_name}</TableCell>
+                  <TableCell>{policy.insurer_name}</TableCell>
+                  <TableCell>
+                    {policy.start_date ? formatDate(policy.start_date) : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {policy.expiry_date ? formatDate(policy.expiry_date) : "-"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {policy.premium
+                      ? formatCurrency(policy.premium, policy.currency || "EUR")
+                      : "-"}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {totalPages > 1 && (
+        <Pagination className="mt-4">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+            
+            {getPageNumbers().map((page, index) => (
+              <PaginationItem key={index}>
+                {page === 'ellipsis' ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink
+                    onClick={() => handlePageChange(page as number)}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
+      
+      <div className="flex justify-between mt-6">
+        <Button variant="outline" onClick={onBack}>
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          {t("back")}
+        </Button>
+        
+        <Button
+          onClick={onImport}
+          disabled={policies.length === 0}
+          className={invalidPolicies.length > 0 ? "bg-amber-500 hover:bg-amber-600" : ""}
+        >
+          {invalidPolicies.length > 0 ? t("importWithErrors") : t("importPolicies")}
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+      
+      <div className="flex justify-between text-sm text-muted-foreground mt-2">
+        <div>
+          {t("totalPolicies")}: {policies.length + invalidPolicies.length}
+        </div>
+        <div className="flex gap-4">
+          <span>{t("validPolicies")}: {policies.length}</span>
+          <span>{t("invalidPolicies")}: {invalidPolicies.length}</span>
+        </div>
+      </div>
     </div>
   );
 };
