@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { KanbanSquare, UserPlus, Clipboard, Users } from "lucide-react";
+import { KanbanSquare, UserPlus, Clipboard, Users, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -63,6 +63,22 @@ const Sales = () => {
           <CardFooter>
             <Button asChild>
               <Link to="/sales/processes">{t("manageSalesProcesses")}</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        {/* Client Authorizations */}
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <div className="flex items-start mb-2">
+              <FileCheck className="h-10 w-10 text-primary" />
+            </div>
+            <CardTitle>{t("clientAuthorizations")}</CardTitle>
+            <CardDescription>{t("clientAuthorizationsDescription")}</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button asChild>
+              <Link to="/sales/authorizations">{t("viewAuthorization")}</Link>
             </Button>
           </CardFooter>
         </Card>

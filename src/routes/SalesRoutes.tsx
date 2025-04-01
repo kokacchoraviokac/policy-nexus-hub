@@ -8,6 +8,7 @@ import PipelineOverview from "@/pages/sales/PipelineOverview";
 import Leads from "@/pages/sales/Leads";
 import SalesProcesses from "@/pages/sales/SalesProcesses";
 import ResponsiblePersons from "@/pages/sales/ResponsiblePersons";
+import ClientAuthorizations from "@/pages/sales/ClientAuthorizations";
 
 export const SalesRoutes = [
   <Route
@@ -61,6 +62,17 @@ export const SalesRoutes = [
       <ProtectedRoute requiredPrivilege="sales:view">
         <AppLayout>
           <ResponsiblePersons />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="sales-authorizations"
+    path="/sales/authorizations"
+    element={
+      <ProtectedRoute requiredPrivilege="sales:view">
+        <AppLayout>
+          <ClientAuthorizations />
         </AppLayout>
       </ProtectedRoute>
     }
