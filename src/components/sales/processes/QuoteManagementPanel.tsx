@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { 
@@ -64,6 +65,7 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
   onQuoteSelected
 }) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [quotes, setQuotes] = useState<InsuranceQuote[]>(mockQuotes);
   const [addQuoteOpen, setAddQuoteOpen] = useState(false);
   const [importPolicyOpen, setImportPolicyOpen] = useState(false);
@@ -153,6 +155,9 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
   };
   
   const selectedQuote = quotes.find(quote => quote.status === "selected");
+  
+  // Check if the sales process is eligible for policy import
+  const isPolicyImportReady = process.stage === "concluded" && process.status === "completed" && selectedQuote;
   
   return (
     <div className="space-y-4">
@@ -250,11 +255,15 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
       )}
       
       {selectedQuote && (
-        <Card className="border-green-200 bg-green-50 dark:bg-green-900/10">
+        <Card 
+          className={`border-green-200 ${isPolicyImportReady ? 'bg-green-50 dark:bg-green-900/10' : 'bg-blue-50 dark:bg-blue-900/10 border-blue-200'}`}
+        >
           <CardHeader>
             <CardTitle className="text-base">{t("selectedQuote")}</CardTitle>
             <CardDescription>
-              {t("policyImportAvailable")}
+              {isPolicyImportReady 
+                ? t("policyImportAvailable") 
+                : t("salesProcessFinalizationNeeded")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -271,6 +280,13 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
                 <span className="text-sm font-medium">{t("coverage")}:</span>
                 <p className="text-sm mt-1">{selectedQuote.coverage}</p>
               </div>
+              {!isPolicyImportReady && (
+                <div className="mt-4 p-2 bg-blue-100 dark:bg-blue-800/20 rounded text-sm">
+                  <p className="text-blue-700 dark:text-blue-300">
+                    {t("finalizeProcessBeforeImport")}
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
           <CardFooter>
@@ -278,6 +294,7 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
               variant="default" 
               className="w-full"
               onClick={handleImportPolicy}
+              disabled={!isPolicyImportReady}
             >
               <ArrowRight className="h-4 w-4 mr-1.5" />
               {t("importPolicy")}
