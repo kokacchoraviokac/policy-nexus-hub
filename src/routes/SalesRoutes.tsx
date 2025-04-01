@@ -9,6 +9,7 @@ import Leads from "@/pages/sales/Leads";
 import SalesProcesses from "@/pages/sales/SalesProcesses";
 import ResponsiblePersons from "@/pages/sales/ResponsiblePersons";
 import ClientAuthorizations from "@/pages/sales/ClientAuthorizations";
+import PolicyProposals from "@/pages/sales/PolicyProposals";
 
 export const SalesRoutes = [
   <Route
@@ -51,6 +52,17 @@ export const SalesRoutes = [
       <ProtectedRoute requiredPrivilege="sales:view">
         <AppLayout>
           <SalesProcesses />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="sales-proposals"
+    path="/sales/proposals"
+    element={
+      <ProtectedRoute requiredPrivilege="sales:view">
+        <AppLayout>
+          <PolicyProposals />
         </AppLayout>
       </ProtectedRoute>
     }
