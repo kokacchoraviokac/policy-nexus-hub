@@ -1,5 +1,6 @@
 
-import pdfParse from "pdf-parse";
+// Import pdf-parse correctly
+const pdfParse = require('pdf-parse');
 
 // Feature toggle - set to false by default
 // This can be changed to true when you're ready to use the feature
