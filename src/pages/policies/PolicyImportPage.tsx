@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,14 +30,16 @@ const PolicyImportPage = () => {
     parseCSVFile, 
     savePolicies, 
     clearImportData,
-    salesProcessData
+    salesProcessData,
+    quoteData
   } = usePolicyImport();
   
   useEffect(() => {
-    if (salesProcessData && importedPolicies.length > 0) {
+    // If we have data from sales process or quote, go directly to review
+    if ((salesProcessData || quoteData) && importedPolicies.length > 0) {
       setActiveStep("review");
     }
-  }, [salesProcessData, importedPolicies]);
+  }, [salesProcessData, quoteData, importedPolicies]);
   
   const handleBackToWorkflow = () => {
     navigate("/policies/workflow");
@@ -86,6 +89,8 @@ const PolicyImportPage = () => {
     if (activeStep === "review") {
       if (salesProcessData) {
         navigate(`/sales/processes`);
+      } else if (quoteData) {
+        navigate(`/sales/processes`);
       } else {
         setActiveStep("upload");
       }
@@ -100,6 +105,29 @@ const PolicyImportPage = () => {
   const handleNext = () => {
     if (activeStep === "instructions") {
       setActiveStep("upload");
+    }
+  };
+  
+  const getImportSourceText = () => {
+    if (quoteData) {
+      return {
+        title: t("importPolicyFromQuote"),
+        description: t("importPolicyFromQuoteDescription"),
+        alertTitle: t("importingFromQuote"),
+        alertDescription: t("policyDataPreparedFromQuote")
+      };
+    } else if (salesProcessData) {
+      return {
+        title: t("importPolicyFromSalesProcess"),
+        description: t("importPolicyFromSalesProcessDescription"),
+        alertTitle: t("importingFromSalesProcess"),
+        alertDescription: t("policyDataPreparedFromSalesProcess")
+      };
+    } else {
+      return {
+        title: t("importPolicies"),
+        description: t("importPoliciesFromInsuranceCompanies")
+      };
     }
   };
   
@@ -122,15 +150,15 @@ const PolicyImportPage = () => {
       case "review":
         return (
           <>
-            {salesProcessData && (
+            {(salesProcessData || quoteData) && (
               <div className="mb-4">
                 <Alert className="bg-blue-50 border border-blue-200 rounded-md">
                   <FileSpreadsheet className="h-5 w-5 text-blue-500" />
                   <AlertTitle className="text-blue-700">
-                    {t("importingFromSalesProcess")}
+                    {getImportSourceText().alertTitle}
                   </AlertTitle>
                   <AlertDescription className="text-blue-600">
-                    {t("policyDataPreparedFromSalesProcess")}
+                    {getImportSourceText().alertDescription}
                   </AlertDescription>
                 </Alert>
               </div>
@@ -161,6 +189,8 @@ const PolicyImportPage = () => {
     }
   };
   
+  const importSourceText = getImportSourceText();
+  
   return (
     <div className="container mx-auto py-6 space-y-6">
       <Button
@@ -176,14 +206,10 @@ const PolicyImportPage = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {salesProcessData 
-              ? t("importPolicyFromSalesProcess") 
-              : t("importPolicies")}
+            {importSourceText.title}
           </h1>
           <p className="text-muted-foreground">
-            {salesProcessData
-              ? t("importPolicyFromSalesProcessDescription") 
-              : t("importPoliciesFromInsuranceCompanies")}
+            {importSourceText.description}
           </p>
         </div>
       </div>
@@ -191,14 +217,10 @@ const PolicyImportPage = () => {
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>
-            {salesProcessData 
-              ? t("importPolicyFromSalesProcess") 
-              : t("importPolicies")}
+            {importSourceText.title}
           </CardTitle>
           <CardDescription>
-            {salesProcessData
-              ? t("reviewAndImportPolicyFromSalesProcess") 
-              : t("importPoliciesFromInsuranceCompanies")}
+            {importSourceText.description}
           </CardDescription>
           
           <ImportStepIndicator activeStep={activeStep} />

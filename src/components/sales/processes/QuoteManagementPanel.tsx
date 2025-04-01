@@ -11,9 +11,10 @@ import {
   CardTitle
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, Send, Check, RefreshCw } from "lucide-react";
+import { Plus, FileText, Send, Check, RefreshCw, ArrowRight } from "lucide-react";
 import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
 import AddQuoteDialog from "./AddQuoteDialog";
+import ImportPolicyFromQuoteDialog from "./ImportPolicyFromQuoteDialog";
 import { toast } from "sonner";
 
 interface InsuranceQuote {
@@ -65,14 +66,16 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
   const { t } = useLanguage();
   const [quotes, setQuotes] = useState<InsuranceQuote[]>(mockQuotes);
   const [addQuoteOpen, setAddQuoteOpen] = useState(false);
+  const [importPolicyOpen, setImportPolicyOpen] = useState(false);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   
-  const handleAddQuote = (quoteData: Partial<InsuranceQuote>) => {
+  const handleAddQuote = (quoteData: { insurer: string; amount: string; coverage: string }) => {
     const newQuote: InsuranceQuote = {
       id: `quote-${Date.now()}`,
-      insurer: quoteData.insurer || "",
-      amount: quoteData.amount || "",
-      coverage: quoteData.coverage || "",
+      insurer: quoteData.insurer,
+      amount: quoteData.amount,
+      coverage: quoteData.coverage,
       status: "pending",
       date: new Date().toISOString().split('T')[0]
     };
@@ -87,6 +90,18 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
     setRefreshing(true);
     // Simulate API refresh delay
     setTimeout(() => {
+      // Simulate receiving updated quotes from insurers
+      const updatedQuotes = [...quotes];
+      updatedQuotes.forEach(quote => {
+        if (quote.status === "pending") {
+          // Random chance to change pending quotes to received
+          if (Math.random() > 0.5) {
+            quote.status = "received";
+          }
+        }
+      });
+      
+      setQuotes(updatedQuotes);
       setRefreshing(false);
       toast.success(t("quotesRefreshed"), {
         description: t("quotesRefreshedDescription")
@@ -101,6 +116,8 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
               quote.status === "selected" ? "received" : quote.status
     })));
     
+    setSelectedQuoteId(quoteId);
+    
     if (onQuoteSelected) {
       onQuoteSelected(quoteId);
     }
@@ -108,6 +125,16 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
     toast.success(t("quoteSelected"), {
       description: t("quoteSelectedDescription")
     });
+  };
+  
+  const handleSendReminder = (quoteId: string) => {
+    toast.success(t("reminderSent"), {
+      description: t("reminderSentDescription")
+    });
+  };
+  
+  const handleImportPolicy = () => {
+    setImportPolicyOpen(true);
   };
   
   const getStatusBadge = (status: string) => {
@@ -162,7 +189,7 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {quotes.map(quote => (
-            <Card key={quote.id} className="border">
+            <Card key={quote.id} className={`border ${quote.status === "selected" ? "border-green-300 bg-green-50/30" : ""}`}>
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-base">{quote.insurer}</CardTitle>
@@ -199,6 +226,7 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
                     variant="outline" 
                     size="sm" 
                     className="w-full"
+                    onClick={() => handleSendReminder(quote.id)}
                   >
                     <Send className="h-4 w-4 mr-1.5" />
                     {t("sendReminder")}
@@ -249,8 +277,9 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
             <Button 
               variant="default" 
               className="w-full"
+              onClick={handleImportPolicy}
             >
-              <FileText className="h-4 w-4 mr-1.5" />
+              <ArrowRight className="h-4 w-4 mr-1.5" />
               {t("importPolicy")}
             </Button>
           </CardFooter>
@@ -262,6 +291,15 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
         onOpenChange={setAddQuoteOpen}
         onQuoteAdded={handleAddQuote}
       />
+      
+      {selectedQuote && (
+        <ImportPolicyFromQuoteDialog
+          open={importPolicyOpen}
+          onOpenChange={setImportPolicyOpen}
+          process={process}
+          quote={selectedQuote}
+        />
+      )}
     </div>
   );
 };
