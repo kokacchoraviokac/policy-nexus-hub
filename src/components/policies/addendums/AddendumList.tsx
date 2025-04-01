@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -44,7 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import AddendumFormDialog from "./AddendumFormDialog";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AddendumListProps {
@@ -74,7 +73,6 @@ const AddendumList: React.FC<AddendumListProps> = ({
   const [editAddendum, setEditAddendum] = useState<PolicyAddendum | null>(null);
   const [addendumToDelete, setAddendumToDelete] = useState<string | null>(null);
   
-  // Get policy number for the current policy (if policyId is provided)
   const { data: policy } = useQuery({
     queryKey: ['policy-for-addendum-list', policyId],
     queryFn: async () => {
