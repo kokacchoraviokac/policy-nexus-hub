@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
@@ -82,7 +81,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
   const handleQuoteSelected = (quoteId: string) => {
     setSelectedQuoteId(quoteId);
     
-    // If the process is in the quote stage, enable moving to the next stage
     if (updatedProcess.stage === "quote") {
       toast.success(t("quoteSelectedReadyToMove"), {
         description: t("canProceedToNextStage"),
@@ -91,20 +89,17 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
   };
   
   const handleMoveToNextStage = () => {
-    // Map of stage transitions
     const nextStage: Record<SalesProcessStage, SalesProcessStage> = {
       "quote": "authorization",
       "authorization": "proposal",
       "proposal": "signed",
       "signed": "concluded",
-      "concluded": "concluded" // Cannot move past concluded
+      "concluded": "concluded"
     };
     
-    // If there's a next stage defined
     if (nextStage[updatedProcess.stage]) {
       const newStage = nextStage[updatedProcess.stage];
       
-      // If it's the quote stage and no quote is selected, show warning
       if (updatedProcess.stage === "quote" && !selectedQuoteId) {
         toast.warning(t("noSelectedQuote"), {
           description: t("selectQuoteBeforeProceeding"),
@@ -112,7 +107,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
         return;
       }
       
-      // If it's the final transition, also update the status
       const newStatus = newStage === "concluded" ? "completed" : updatedProcess.status;
       
       const updated: SalesProcess = {
@@ -123,7 +117,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
       
       setUpdatedProcess(updated);
       
-      // Call the external handler if provided
       if (onMoveToNextStage) {
         onMoveToNextStage(updated);
       }
@@ -132,7 +125,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
         description: t("processMovedToStage", { stage: t(newStage) }),
       });
       
-      // If moved to concluded stage, notify about policy import
       if (newStage === "concluded" && newStatus === "completed") {
         toast.info(t("processReachedFinalStage"), {
           description: t("canNowImportPolicy"),
@@ -230,7 +222,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
               <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("salesProcessStages")}</h4>
                 <div className="flex items-center space-x-1 text-sm">
-                  <div className={`px-2 py-1 rounded ${updatedProcess.stage === 'quote' ? 'bg-blue-100 text-blue-700' : updatedProcess.stage !== 'quote' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
+                  <div className={`px-2 py-1 rounded ${updatedProcess.stage === 'quote' ? 'bg-blue-100 text-blue-700' : (updatedProcess.stage !== 'quote') ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
                     {t("quoteManagement")}
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
