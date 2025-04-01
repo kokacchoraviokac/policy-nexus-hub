@@ -73,6 +73,7 @@
   "totalAddendums": "Total Addendums",
   "enterNegativeValueForReduction": "Enter a negative value for a premium reduction",
   "addendumManagement": "Addendum Management",
+  "addendumsManagement": "Addendums Management",
   "searchAddendums": "Search addendums...",
   "filterByStatus": "Filter by Status",
   "filterByWorkflowStatus": "Filter by Workflow Status",
@@ -87,5 +88,16 @@
   "errorLoadingAddendums": "Error Loading Addendums",
   "unknownError": "An unknown error occurred.",
   "tryAgain": "Try Again",
-  "view": "View"
+  "view": "View",
+  "actions": "Actions",
+  "noAddendumsFound": "No addendums found matching your criteria.",
+  "noPolicySelected": "No policy was selected.",
+  "goToAddendums": "Go to Addendums",
+  "selectDate": "Select date",
+  "policyAddenda": "Policy Addenda",
+  "addendaForPolicy": "Addenda for Policy: {policyNumber}",
+  "policyAddendaDescription": "View and manage addenda for this policy.",
+  "noAddendaForPolicy": "No addenda found for this policy.",
+  "viewAddenda": "View Addenda",
+  "addAddendum": "Add Addendum"
 }

@@ -6,7 +6,7 @@ import PolicyOverviewTab from "./PolicyOverviewTab";
 import PolicyClaimsTab from "./PolicyClaimsTab";
 import PolicyFinancialsTab from "./PolicyFinancialsTab";
 import PolicyDocumentsTab from "./PolicyDocumentsTab";
-import PolicyAddendumTab from "./PolicyAddendumTab";
+import PolicyAddendaTab from "./PolicyAddendaTab";
 import PolicyActivityTab from "./PolicyActivityTab";
 import PolicyPaymentsTab from "./PolicyPaymentsTab";
 
@@ -31,7 +31,7 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
         <TabsTrigger value="financials">{t("financials")}</TabsTrigger>
         <TabsTrigger value="payments">{t("payments")}</TabsTrigger>
         <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
-        <TabsTrigger value="addenda">{t("addenda")}</TabsTrigger>
+        <TabsTrigger value="addenda" data-value="addenda">{t("addenda")}</TabsTrigger>
         <TabsTrigger value="activity">{t("activity")}</TabsTrigger>
       </TabsList>
       
@@ -56,7 +56,7 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
       </TabsContent>
       
       <TabsContent value="addenda" className="space-y-4">
-        <PolicyAddendumTab policyId={policy.id} />
+        <PolicyAddendaTab policyId={policy.id} />
       </TabsContent>
       
       <TabsContent value="activity" className="space-y-4">

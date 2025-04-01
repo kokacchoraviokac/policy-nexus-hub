@@ -15,6 +15,7 @@ import PolicyImportPage from "@/pages/policies/PolicyImportPage";
 import UnlinkedPayments from "@/pages/policies/UnlinkedPayments";
 import PolicyWorkflowPage from "@/pages/policies/PolicyWorkflowPage";
 import PolicyReviewPage from "@/pages/policies/PolicyReviewPage";
+import NewAddendumPage from "@/pages/policies/addendums/NewAddendumPage";
 
 export const PolicyRoutes = [
   <Route
@@ -102,6 +103,17 @@ export const PolicyRoutes = [
       <ProtectedRoute>
         <AppLayout>
           <PolicyAddendums />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="policies-addendums-new"
+    path="/policies/addendums/new"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <NewAddendumPage />
         </AppLayout>
       </ProtectedRoute>
     }

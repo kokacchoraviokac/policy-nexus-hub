@@ -19,7 +19,7 @@ import { Policy } from "@/types/policies";
 interface SelectAddendumPolicyDialogProps {
   open: boolean;
   onClose: () => void;
-  onPolicySelected: (policyId: string, policyNumber: string) => void;
+  onPolicySelected: (policyId: string, policyNumber?: string) => void;
 }
 
 const SelectAddendumPolicyDialog: React.FC<SelectAddendumPolicyDialogProps> = ({
@@ -51,6 +51,7 @@ const SelectAddendumPolicyDialog: React.FC<SelectAddendumPolicyDialogProps> = ({
       if (error) throw error;
       return data as Policy[];
     },
+    enabled: open,
   });
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,7 +60,6 @@ const SelectAddendumPolicyDialog: React.FC<SelectAddendumPolicyDialogProps> = ({
 
   const handlePolicySelect = (policyId: string, policyNumber: string) => {
     onPolicySelected(policyId, policyNumber);
-    onClose();
   };
 
   return (

@@ -44,7 +44,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AddendumFormDialogProps {
   policyId: string;
@@ -112,10 +111,8 @@ const AddendumFormDialog: React.FC<AddendumFormDialogProps> = ({
   
   const createAddendumMutation = useMutation({
     mutationFn: async (data: AddendumFormValues) => {
-      // Format the date for Supabase
       const effectiveDate = data.effective_date.toISOString().split('T')[0];
       
-      // Prepare addendum data with correctly typed fields
       const addendumData = {
         policy_id: policyId,
         addendum_number: data.addendum_number,
@@ -160,10 +157,8 @@ const AddendumFormDialog: React.FC<AddendumFormDialogProps> = ({
     mutationFn: async (data: AddendumFormValues) => {
       if (!editAddendum) throw new Error("No addendum to update");
       
-      // Format the date for Supabase
       const effectiveDate = data.effective_date.toISOString().split('T')[0];
       
-      // Prepare addendum data with correctly typed fields
       const addendumData = {
         addendum_number: data.addendum_number,
         effective_date: effectiveDate,
