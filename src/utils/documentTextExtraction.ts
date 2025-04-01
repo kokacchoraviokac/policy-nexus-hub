@@ -1,9 +1,16 @@
+import { enhancedExtractTextFromFile, ENABLE_ENHANCED_EXTRACTION } from "./enhancedDocumentExtraction";
 
 export const extractTextFromFile = async (file: File): Promise<string> => {
   if (!file) {
     throw new Error("No file provided");
   }
 
+  // Use the enhanced extraction if it's enabled
+  if (ENABLE_ENHANCED_EXTRACTION) {
+    return enhancedExtractTextFromFile(file);
+  }
+
+  // Otherwise, use the current simple extraction logic
   // Handle text files directly
   if (file.type === "text/plain") {
     return await file.text();

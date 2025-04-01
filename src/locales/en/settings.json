@@ -1,4 +1,3 @@
-
 {
   "settings": "Settings",
   "settingsDescription": "Manage application settings and user preferences",
@@ -39,5 +38,11 @@
   "simplePermissionCheckDescription": "Enter a privilege name to check if the current user has it",
   "contextBasedPermissionCheck": "Context-Based Permission Check",
   "contextBasedPermissionCheckDescription": "Check permissions with additional context like ownership",
-  "examplePermissionsToTest": "Example Permissions to Test"
+  "examplePermissionsToTest": "Example Permissions to Test",
+  "advancedFeatures": "Advanced Features",
+  "manageAdvancedFeatures": "Enable or disable advanced functionality",
+  "enhancedDocumentExtraction": "Enhanced Document Extraction & OCR",
+  "enhancedDocumentExtractionDescription": "Extract text from PDFs and perform OCR on images and scanned documents",
+  "enhancedExtractionEnabled": "Enhanced extraction is currently enabled. You can process PDFs, scanned documents, and images with OCR.",
+  "featureFlagChangeRequiresCodeUpdate": "To activate this feature, a code update is required. Contact your development team."
 }
