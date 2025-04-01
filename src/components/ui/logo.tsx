@@ -10,7 +10,7 @@ interface LogoProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Logo: React.FC<LogoProps> = ({ collapsed = false, className, ...props }) => {
-  const logoPath = "/lovable-uploads/3b177361-b829-4fcf-ad25-4f4eb04166bf.png";
+  const logoPath = "/lovable-uploads/1b311c28-eb7c-4569-8dad-cac01c35303c.png";
   
   return (
     <div 
