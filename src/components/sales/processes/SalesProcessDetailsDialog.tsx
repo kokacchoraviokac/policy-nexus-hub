@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
@@ -14,6 +15,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
 import ImportPolicyFromSalesDialog from "./ImportPolicyFromSalesDialog";
+import QuoteManagementPanel from "./QuoteManagementPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUp } from "lucide-react";
 
 interface SalesProcessDetailsDialogProps {
@@ -29,6 +32,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
 }) => {
   const { t } = useLanguage();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const getStageBadge = (stage: string) => {
     switch (stage) {
@@ -73,7 +77,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>{process.title}</span>
@@ -86,79 +90,81 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
             )}
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">{t("clientInformation")}</h4>
-                <div className="mt-1 space-y-2">
-                  <p className="text-sm">
-                    <span className="font-medium">{t("clientName")}: </span>
-                    {process.client_name}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-medium">{t("insuranceType")}: </span>
-                    {getInsuranceTypeBadge(process.insurance_type)}
-                  </p>
-                  {process.estimated_value && (
+          <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="mt-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+              <TabsTrigger value="quotes">{t("quotes")}</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">{t("clientInformation")}</h4>
+                  <div className="mt-1 space-y-2">
                     <p className="text-sm">
-                      <span className="font-medium">{t("estimatedValue")}: </span>
-                      {process.estimated_value}
+                      <span className="font-medium">{t("clientName")}: </span>
+                      {process.client_name}
                     </p>
-                  )}
+                    <p className="text-sm">
+                      <span className="font-medium">{t("insuranceType")}: </span>
+                      {getInsuranceTypeBadge(process.insurance_type)}
+                    </p>
+                    {process.estimated_value && (
+                      <p className="text-sm">
+                        <span className="font-medium">{t("estimatedValue")}: </span>
+                        {process.estimated_value}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">{t("processDetails")}</h4>
+                  <div className="mt-1 space-y-2">
+                    <p className="text-sm">
+                      <span className="font-medium">{t("createdAt")}: </span>
+                      {format(new Date(process.created_at), "PPP")}
+                    </p>
+                    {process.expected_close_date && (
+                      <p className="text-sm">
+                        <span className="font-medium">{t("expectedCloseDate")}: </span>
+                        {format(new Date(process.expected_close_date), "PPP")}
+                      </p>
+                    )}
+                    <p className="text-sm">
+                      <span className="font-medium">{t("responsiblePerson")}: </span>
+                      {process.responsible_person || t("notAssigned")}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">{t("status")}: </span>
+                      <Badge 
+                        variant={process.status === "active" ? "default" : process.status === "completed" ? "secondary" : "destructive"}
+                        className={process.status === "completed" ? "bg-green-100 text-green-800 hover:bg-green-100 text-xs" : "text-xs"}
+                      >
+                        {t(process.status)}
+                      </Badge>
+                    </p>
+                  </div>
                 </div>
               </div>
               
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">{t("processDetails")}</h4>
-                <div className="mt-1 space-y-2">
-                  <p className="text-sm">
-                    <span className="font-medium">{t("createdAt")}: </span>
-                    {format(new Date(process.created_at), "PPP")}
-                  </p>
-                  {process.expected_close_date && (
-                    <p className="text-sm">
-                      <span className="font-medium">{t("expectedCloseDate")}: </span>
-                      {format(new Date(process.expected_close_date), "PPP")}
-                    </p>
-                  )}
-                  <p className="text-sm">
-                    <span className="font-medium">{t("responsiblePerson")}: </span>
-                    {process.responsible_person || t("notAssigned")}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-medium">{t("status")}: </span>
-                    <Badge 
-                      variant={process.status === "active" ? "default" : process.status === "completed" ? "secondary" : "destructive"}
-                      className={process.status === "completed" ? "bg-green-100 text-green-800 hover:bg-green-100 text-xs" : "text-xs"}
-                    >
-                      {t(process.status)}
-                    </Badge>
-                  </p>
-                </div>
-              </div>
-            </div>
+              {process.notes && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("notes")}</h4>
+                    <p className="text-sm whitespace-pre-wrap">{process.notes}</p>
+                  </div>
+                </>
+              )}
+              
+              <Separator />
+            </TabsContent>
             
-            {process.notes && (
-              <>
-                <Separator />
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("notes")}</h4>
-                  <p className="text-sm whitespace-pre-wrap">{process.notes}</p>
-                </div>
-              </>
-            )}
-            
-            <Separator />
-            
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("quoteInformation")}</h4>
-              <p className="text-sm text-muted-foreground italic">
-                {process.stage === "quote" 
-                  ? t("noQuotesYet") 
-                  : t("quotesInProgress")}
-              </p>
-            </div>
-          </div>
+            <TabsContent value="quotes" className="pt-4">
+              <QuoteManagementPanel process={process} />
+            </TabsContent>
+          </Tabs>
           
           <DialogFooter className="flex justify-between items-center">
             <div>
