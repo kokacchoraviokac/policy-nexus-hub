@@ -4,16 +4,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileSpreadsheet, Import } from "lucide-react";
-import PolicyImportFileUpload from "@/components/policies/import/PolicyImportFileUpload";
-import PolicyImportReview from "@/components/policies/import/PolicyImportReview";
-import PolicyImportInstructions from "@/components/policies/import/PolicyImportInstructions";
-import ImportStepIndicator from "@/components/policies/import/ImportStepIndicator";
-import ImportingStep from "@/components/policies/import/ImportingStep";
-import CompleteStep from "@/components/policies/import/CompleteStep";
 import { usePolicyImport } from "@/hooks/usePolicyImport";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useImportSourceText } from "@/hooks/policies/useImportSourceText";
+import ImportStepIndicator from "@/components/policies/import/ImportStepIndicator";
+import PolicyImportHeader from "@/components/policies/import/PolicyImportHeader";
+import PolicyImportStepContent from "@/components/policies/import/PolicyImportStepContent";
 
 const PolicyImportPage = () => {
   const { t } = useLanguage();
@@ -32,6 +27,8 @@ const PolicyImportPage = () => {
     clearImportData,
     salesProcessData
   } = usePolicyImport();
+  
+  const importSourceText = useImportSourceText(salesProcessData);
   
   useEffect(() => {
     // If we have data from sales process and importedPolicies exist, go directly to review
@@ -105,104 +102,13 @@ const PolicyImportPage = () => {
     }
   };
   
-  const getImportSourceText = () => {
-    if (salesProcessData) {
-      return {
-        title: t("importPolicyFromSalesProcess"),
-        description: t("importPolicyFromSalesProcessDescription"),
-        alertTitle: t("importingFromSalesProcess"),
-        alertDescription: t("policyDataPreparedFromSalesProcess")
-      };
-    } else {
-      return {
-        title: t("importPolicies"),
-        description: t("importPoliciesFromInsuranceCompanies")
-      };
-    }
-  };
-  
-  const renderStepContent = () => {
-    switch (activeStep) {
-      case "instructions":
-        return (
-          <PolicyImportInstructions onContinue={handleNext} />
-        );
-        
-      case "upload":
-        return (
-          <PolicyImportFileUpload 
-            onFileUpload={handleFileUpload} 
-            isUploading={isImporting}
-            onBack={handleBack}
-          />
-        );
-        
-      case "review":
-        return (
-          <>
-            {salesProcessData && (
-              <div className="mb-4">
-                <Alert className="bg-blue-50 border border-blue-200 rounded-md">
-                  <FileSpreadsheet className="h-5 w-5 text-blue-500" />
-                  <AlertTitle className="text-blue-700">
-                    {getImportSourceText().alertTitle}
-                  </AlertTitle>
-                  <AlertDescription className="text-blue-600">
-                    {getImportSourceText().alertDescription}
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
-            <PolicyImportReview 
-              policies={importedPolicies}
-              invalidPolicies={invalidPolicies}
-              onBack={handleBack}
-              onImport={handleImportComplete}
-            />
-          </>
-        );
-        
-      case "importing":
-        return <ImportingStep importProgress={importProgress} />;
-        
-      case "complete":
-        return (
-          <CompleteStep 
-            importedPolicies={importedPolicies}
-            invalidPolicies={invalidPolicies}
-            onGoToWorkflow={handleGoToWorkflow}
-          />
-        );
-        
-      default:
-        return null;
-    }
-  };
-  
-  const importSourceText = getImportSourceText();
-  
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <Button
-        variant="outline"
-        size="sm"
-        className="mb-4"
-        onClick={handleBackToWorkflow}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {t("backToPoliciesWorkflow")}
-      </Button>
-      
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            {importSourceText.title}
-          </h1>
-          <p className="text-muted-foreground">
-            {importSourceText.description}
-          </p>
-        </div>
-      </div>
+      <PolicyImportHeader 
+        title={importSourceText.title}
+        description={importSourceText.description}
+        onBackToWorkflow={handleBackToWorkflow}
+      />
       
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
@@ -216,7 +122,20 @@ const PolicyImportPage = () => {
           <ImportStepIndicator activeStep={activeStep} />
         </CardHeader>
         <CardContent className="pt-6">
-          {renderStepContent()}
+          <PolicyImportStepContent
+            activeStep={activeStep}
+            importProgress={importProgress}
+            importedPolicies={importedPolicies}
+            invalidPolicies={invalidPolicies}
+            salesProcessData={salesProcessData}
+            isImporting={isImporting}
+            onFileUpload={handleFileUpload}
+            onBack={handleBack}
+            onImport={handleImportComplete}
+            onNext={handleNext}
+            onGoToWorkflow={handleGoToWorkflow}
+            importSourceText={importSourceText}
+          />
         </CardContent>
       </Card>
     </div>
