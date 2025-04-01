@@ -5,13 +5,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Import, AlertCircle, RefreshCw, PlusCircle } from "lucide-react";
+import { Import, AlertCircle, RefreshCw } from "lucide-react";
 import WorkflowFilters from "@/components/policies/workflow/WorkflowFilters";
 import WorkflowPoliciesList from "@/components/policies/workflow/WorkflowPoliciesList";
 import { supabase } from "@/integrations/supabase/client";
 import { Policy } from "@/types/policies";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { policiesToWorkflowPolicies } from "@/utils/policies/policyMappers";
 
 const PolicyWorkflow = () => {
   const { t } = useLanguage();
@@ -185,7 +186,7 @@ const PolicyWorkflow = () => {
               </div>
               
               <WorkflowPoliciesList 
-                policies={policies}
+                policies={policiesToWorkflowPolicies(policies)}
                 isLoading={isLoading}
                 isError={!!error}
                 onReviewPolicy={handlePolicySelect}
@@ -210,7 +211,7 @@ const PolicyWorkflow = () => {
               </div>
               
               <WorkflowPoliciesList 
-                policies={policies}
+                policies={policiesToWorkflowPolicies(policies)}
                 isLoading={isLoading}
                 isError={!!error}
                 onReviewPolicy={handlePolicySelect}
@@ -235,7 +236,7 @@ const PolicyWorkflow = () => {
               </div>
               
               <WorkflowPoliciesList 
-                policies={policies}
+                policies={policiesToWorkflowPolicies(policies)}
                 isLoading={isLoading}
                 isError={!!error}
                 onReviewPolicy={handlePolicySelect}
