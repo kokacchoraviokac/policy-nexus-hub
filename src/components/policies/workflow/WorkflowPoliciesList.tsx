@@ -19,7 +19,7 @@ import {
   ClipboardCheck,
   ArrowRightCircle
 } from "lucide-react";
-import { Policy } from "@/types/policies";
+import { WorkflowPolicy } from "@/utils/policies/policyMappers";
 import { 
   Select, 
   SelectContent, 
@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/pagination";
 
 interface WorkflowPoliciesListProps {
-  policies: Policy[];
+  policies: WorkflowPolicy[];
   isLoading: boolean;
   isError?: boolean;
   onReviewPolicy: (policyId: string) => void;
@@ -184,13 +184,13 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
           <TableBody>
             {policies.map((policy) => (
               <TableRow key={policy.id}>
-                <TableCell className="font-medium">{policy.policy_number}</TableCell>
-                <TableCell>{policy.policyholder_name}</TableCell>
-                <TableCell>{policy.insurer_name}</TableCell>
-                <TableCell>{formatDate(policy.start_date)}</TableCell>
-                <TableCell>{formatDate(policy.expiry_date)}</TableCell>
+                <TableCell className="font-medium">{policy.policyNumber}</TableCell>
+                <TableCell>{policy.policyholderName}</TableCell>
+                <TableCell>{policy.insurerName}</TableCell>
+                <TableCell>{formatDate(policy.startDate)}</TableCell>
+                <TableCell>{formatDate(policy.expiryDate)}</TableCell>
                 <TableCell>{formatCurrency(policy.premium, policy.currency)}</TableCell>
-                <TableCell>{getWorkflowStatusBadge(policy.workflow_status)}</TableCell>
+                <TableCell>{getWorkflowStatusBadge(policy.workflowStatus)}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <Button
@@ -207,19 +207,19 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
                       size="sm"
                       onClick={() => onReviewPolicy(policy.id)}
                     >
-                      {policy.workflow_status === 'draft' && (
+                      {policy.workflowStatus === 'draft' && (
                         <ClipboardCheck className="h-4 w-4 mr-2" />
                       )}
-                      {policy.workflow_status === 'in_review' && (
+                      {policy.workflowStatus === 'in_review' && (
                         <ClipboardCheck className="h-4 w-4 mr-2" />
                       )}
-                      {policy.workflow_status === 'ready' && (
+                      {policy.workflowStatus === 'ready' && (
                         <ArrowRightCircle className="h-4 w-4 mr-2" />
                       )}
-                      {policy.workflow_status === 'draft' && t("review")}
-                      {policy.workflow_status === 'in_review' && t("review")}
-                      {policy.workflow_status === 'ready' && t("finalizePolicy")}
-                      {policy.workflow_status === 'complete' && t("view")}
+                      {policy.workflowStatus === 'draft' && t("review")}
+                      {policy.workflowStatus === 'in_review' && t("review")}
+                      {policy.workflowStatus === 'ready' && t("finalizePolicy")}
+                      {policy.workflowStatus === 'complete' && t("view")}
                     </Button>
                   </div>
                 </TableCell>
