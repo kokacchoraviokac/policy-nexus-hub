@@ -58,7 +58,14 @@ const AddQuoteDialog: React.FC<AddQuoteDialogProps> = ({
 
   // Handle form submission
   const onSubmit = (values: FormValues) => {
-    onQuoteAdded(values);
+    // Explicitly type the values to match the expected type for onQuoteAdded
+    const quoteData: { insurer: string; amount: string; coverage: string } = {
+      insurer: values.insurer,
+      amount: values.amount,
+      coverage: values.coverage,
+    };
+    
+    onQuoteAdded(quoteData);
     form.reset();
     onOpenChange(false);
   };
