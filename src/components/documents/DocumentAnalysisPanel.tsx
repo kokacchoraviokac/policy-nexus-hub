@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, FileText, FileSearch, FileSummary } from "lucide-react";
+import { Loader2, FileText, FileSearch, FileDigit } from "lucide-react";
 import { useDocumentAnalysis } from "@/hooks/useDocumentAnalysis";
 import { extractTextFromFile } from "@/utils/documentTextExtraction";
 import { DocumentCategory } from "@/types/documents";
@@ -158,7 +158,7 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
               {t("extract")}
             </TabsTrigger>
             <TabsTrigger value="summarize" className="flex items-center gap-2">
-              <FileSummary className="h-4 w-4" />
+              <FileDigit className="h-4 w-4" />
               {t("summarize")}
             </TabsTrigger>
           </TabsList>
