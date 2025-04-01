@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -11,8 +12,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { 
+  Card,
+  CardContent,
+} from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, FileUp, AlertTriangle, ArrowRight } from "lucide-react";
+import { CheckCircle, FileUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ImportPolicyFromSalesDialogProps {
@@ -30,15 +35,21 @@ const ImportPolicyFromSalesDialog: React.FC<ImportPolicyFromSalesDialogProps> = 
   const navigate = useNavigate();
   const [isImporting, setIsImporting] = useState(false);
 
-  const isReadyForImport = process.stage === "concluded" && process.status === "completed";
-
   const handlePolicyImport = async () => {
     try {
       setIsImporting(true);
       
-      console.log("Preparing policy import from sales process:", process.id);
+      // Log the data we would send to the server in a real implementation
+      console.log("Preparing policy import from sales process:", {
+        processId: process.id,
+        title: process.title,
+        clientName: process.client_name,
+        insuranceType: process.insurance_type,
+        estimatedValue: process.estimated_value
+      });
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       toast.success(t("salesProcessReadyForImport"), {
         description: t("redirectingToPolicyImport"),
@@ -46,6 +57,7 @@ const ImportPolicyFromSalesDialog: React.FC<ImportPolicyFromSalesDialogProps> = 
       
       onOpenChange(false);
       
+      // Navigate to policy import with sales process ID
       navigate(`/policies/import?from_sales=${process.id}`);
       
     } catch (error) {
@@ -58,13 +70,15 @@ const ImportPolicyFromSalesDialog: React.FC<ImportPolicyFromSalesDialogProps> = 
     }
   };
 
+  const isReadyForImport = process.stage === "concluded" && process.status === "completed";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t("importPolicyFromSales")}</DialogTitle>
+          <DialogTitle>{t("importPolicyFromSalesProcess")}</DialogTitle>
           <DialogDescription>
-            {t("importPolicyFromSalesDescription")}
+            {t("importPolicyFromSalesProcessDescription")}
           </DialogDescription>
         </DialogHeader>
         
@@ -78,30 +92,31 @@ const ImportPolicyFromSalesDialog: React.FC<ImportPolicyFromSalesDialogProps> = 
               </AlertDescription>
             </Alert>
           ) : (
-            <Alert variant="warning">
-              <AlertTriangle className="h-4 w-4" />
+            <Alert variant="destructive">
               <AlertTitle>{t("notReadyForImport")}</AlertTitle>
               <AlertDescription>
-                {process.stage !== "concluded" 
-                  ? t("salesProcessMustBeConcluded") 
-                  : t("salesProcessMustBeCompleted")}
+                {t("salesProcessMustBeConcluded")}
+                <br />
+                {t("salesProcessMustBeCompleted")}
               </AlertDescription>
             </Alert>
           )}
           
-          <div className="rounded-md border p-4 bg-muted/50">
-            <h3 className="text-sm font-medium mb-2">{t("salesProcessDetails")}</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div><span className="font-medium">{t("processTitle")}:</span> {process.title}</div>
-              <div><span className="font-medium">{t("clientName")}:</span> {process.client_name}</div>
-              <div><span className="font-medium">{t("stage")}:</span> {t(process.stage)}</div>
-              <div><span className="font-medium">{t("status")}:</span> {t(process.status)}</div>
-              <div><span className="font-medium">{t("insuranceType")}:</span> {t(process.insurance_type)}</div>
-              {process.estimated_value && (
-                <div><span className="font-medium">{t("estimatedValue")}:</span> {process.estimated_value}</div>
-              )}
-            </div>
-          </div>
+          <Card className="border">
+            <CardContent className="pt-6 pb-4">
+              <h3 className="text-sm font-medium mb-3">{t("salesProcessDetails")}</h3>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div><span className="font-medium">{t("processTitle")}:</span> {process.title}</div>
+                  <div><span className="font-medium">{t("clientName")}:</span> {process.client_name}</div>
+                  <div><span className="font-medium">{t("insuranceType")}:</span> {process.insurance_type}</div>
+                  {process.estimated_value && (
+                    <div><span className="font-medium">{t("estimatedValue")}:</span> {process.estimated_value}</div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         
         <DialogFooter>
@@ -110,11 +125,14 @@ const ImportPolicyFromSalesDialog: React.FC<ImportPolicyFromSalesDialogProps> = 
           </Button>
           <Button 
             onClick={handlePolicyImport} 
-            disabled={!isReadyForImport || isImporting}
+            disabled={isImporting || !isReadyForImport}
             className="gap-2"
           >
             {isImporting ? (
-              <>{t("preparing")}...</>
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("preparing")}...
+              </>
             ) : (
               <>
                 <FileUp className="h-4 w-4" />

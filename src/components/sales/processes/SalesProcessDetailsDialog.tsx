@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess, SalesProcessStage } from "@/hooks/sales/useSalesProcessData";
 import ImportPolicyFromSalesDialog from "./ImportPolicyFromSalesDialog";
 import QuoteManagementPanel from "./QuoteManagementPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,7 +39,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [updatedProcess, setUpdatedProcess] = useState<SalesProcess>(process);
 
-  const getStageBadge = (stage: string) => {
+  const getStageBadge = (stage: SalesProcessStage) => {
     switch (stage) {
       case 'quote':
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("quoteManagement")}</Badge>;
@@ -92,11 +92,12 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
   
   const handleMoveToNextStage = () => {
     // Map of stage transitions
-    const nextStage: Record<string, string> = {
+    const nextStage: Record<SalesProcessStage, SalesProcessStage> = {
       "quote": "authorization",
       "authorization": "proposal",
       "proposal": "signed",
-      "signed": "concluded"
+      "signed": "concluded",
+      "concluded": "concluded" // Cannot move past concluded
     };
     
     // If there's a next stage defined
@@ -114,7 +115,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
       // If it's the final transition, also update the status
       const newStatus = newStage === "concluded" ? "completed" : updatedProcess.status;
       
-      const updated = {
+      const updated: SalesProcess = {
         ...updatedProcess,
         stage: newStage,
         status: newStatus
@@ -233,11 +234,11 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
                     {t("quoteManagement")}
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  <div className={`px-2 py-1 rounded ${updatedProcess.stage === 'authorization' ? 'bg-blue-100 text-blue-700' : updatedProcess.stage === 'proposal' || updatedProcess.stage === 'signed' || updatedProcess.stage === 'concluded' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
+                  <div className={`px-2 py-1 rounded ${updatedProcess.stage === 'authorization' ? 'bg-blue-100 text-blue-700' : (updatedProcess.stage === 'proposal' || updatedProcess.stage === 'signed' || updatedProcess.stage === 'concluded') ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
                     {t("clientAuthorization")}
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  <div className={`px-2 py-1 rounded ${updatedProcess.stage === 'proposal' ? 'bg-blue-100 text-blue-700' : updatedProcess.stage === 'signed' || updatedProcess.stage === 'concluded' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
+                  <div className={`px-2 py-1 rounded ${updatedProcess.stage === 'proposal' ? 'bg-blue-100 text-blue-700' : (updatedProcess.stage === 'signed' || updatedProcess.stage === 'concluded') ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>
                     {t("policyProposal")}
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />

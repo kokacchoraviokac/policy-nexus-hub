@@ -30,16 +30,15 @@ const PolicyImportPage = () => {
     parseCSVFile, 
     savePolicies, 
     clearImportData,
-    salesProcessData,
-    quoteData
+    salesProcessData
   } = usePolicyImport();
   
   useEffect(() => {
-    // If we have data from sales process or quote, go directly to review
-    if ((salesProcessData || quoteData) && importedPolicies.length > 0) {
+    // If we have data from sales process and importedPolicies exist, go directly to review
+    if (salesProcessData && importedPolicies.length > 0) {
       setActiveStep("review");
     }
-  }, [salesProcessData, quoteData, importedPolicies]);
+  }, [salesProcessData, importedPolicies]);
   
   const handleBackToWorkflow = () => {
     navigate("/policies/workflow");
@@ -89,8 +88,6 @@ const PolicyImportPage = () => {
     if (activeStep === "review") {
       if (salesProcessData) {
         navigate(`/sales/processes`);
-      } else if (quoteData) {
-        navigate(`/sales/processes`);
       } else {
         setActiveStep("upload");
       }
@@ -109,14 +106,7 @@ const PolicyImportPage = () => {
   };
   
   const getImportSourceText = () => {
-    if (quoteData) {
-      return {
-        title: t("importPolicyFromQuote"),
-        description: t("importPolicyFromQuoteDescription"),
-        alertTitle: t("importingFromQuote"),
-        alertDescription: t("policyDataPreparedFromQuote")
-      };
-    } else if (salesProcessData) {
+    if (salesProcessData) {
       return {
         title: t("importPolicyFromSalesProcess"),
         description: t("importPolicyFromSalesProcessDescription"),
@@ -150,7 +140,7 @@ const PolicyImportPage = () => {
       case "review":
         return (
           <>
-            {(salesProcessData || quoteData) && (
+            {salesProcessData && (
               <div className="mb-4">
                 <Alert className="bg-blue-50 border border-blue-200 rounded-md">
                   <FileSpreadsheet className="h-5 w-5 text-blue-500" />
