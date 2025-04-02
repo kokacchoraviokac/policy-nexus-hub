@@ -1,8 +1,8 @@
 
 import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Upload, X } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { FileUp, Loader2 } from "lucide-react";
 
 interface DocumentUploadActionsProps {
   onClose: () => void;
@@ -18,21 +18,34 @@ const DocumentUploadActions: React.FC<DocumentUploadActionsProps> = ({
   isValid
 }) => {
   const { t } = useLanguage();
-
+  
   return (
-    <>
-      <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
+    <div className="flex justify-end space-x-2">
+      <Button 
+        variant="outline"
+        onClick={onClose}
+        disabled={isSubmitting}
+      >
         {t("cancel")}
       </Button>
-      <Button 
-        type="submit" 
-        onClick={onSubmit} 
+      
+      <Button
+        onClick={onSubmit}
         disabled={!isValid || isSubmitting}
       >
-        <Upload className="w-4 h-4 mr-2" />
-        {isSubmitting ? t("uploading") : t("upload")}
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {t("uploading")}
+          </>
+        ) : (
+          <>
+            <FileUp className="mr-2 h-4 w-4" />
+            {t("upload")}
+          </>
+        )}
       </Button>
-    </>
+    </div>
   );
 };
 

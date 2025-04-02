@@ -1,66 +1,91 @@
 
 import { useState } from "react";
-import { toast } from "sonner";
+import { DocumentCategory, EntityType } from "@/types/documents";
+import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { DocumentService } from "@/services/DocumentService";
 
 interface UseDocumentUploadStateProps {
+  entityType: EntityType;
   entityId: string;
-  entityType: string;
   onSuccess?: () => void;
+  originalDocumentId?: string | null;
+  currentVersion?: number;
 }
 
-export const useDocumentUploadState = ({
-  entityId,
-  entityType,
-  onSuccess
-}: UseDocumentUploadStateProps) => {
+export const useDocumentUploadState = (props: UseDocumentUploadStateProps) => {
+  const { entityType, entityId, onSuccess, originalDocumentId, currentVersion } = props;
+  const { toast } = useToast();
   const { t } = useLanguage();
+  
   const [documentName, setDocumentName] = useState("");
   const [documentType, setDocumentType] = useState("");
   const [documentCategory, setDocumentCategory] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   
-  const resetForm = () => {
-    setDocumentName("");
-    setDocumentType("");
-    setDocumentCategory("");
-    setFile(null);
+  const handleFileChange = (newFile: File | null) => {
+    setFile(newFile);
+    
+    // Auto-fill name if not already set
+    if (newFile && !documentName) {
+      setDocumentName(newFile.name.split('.')[0]);
+    }
   };
   
-  const isValid = !!documentName && !!documentType && !!file;
+  const isValid = !!file && !!documentName && !!documentType;
   
-  const handleSubmit = async () => {
+  const handleSubmit = async (additionalData?: Record<string, any>) => {
     if (!isValid) {
-      toast.warning(t("missingRequiredFields"));
+      toast({
+        title: t("missingRequiredFields"),
+        description: t("pleaseCompleteAllRequiredFields"),
+        variant: "destructive",
+      });
       return;
     }
+    
+    if (!file) return;
     
     setUploading(true);
     
     try {
-      // In a real implementation, this would call an API to upload the document
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      console.log("Uploading document:", {
-        name: documentName,
-        type: documentType,
-        category: documentCategory,
-        file: file.name,
+      const result = await DocumentService.uploadDocument({
+        file,
+        documentName,
+        documentType,
+        category: documentCategory || "other",
         entityId,
-        entityType
+        entityType,
+        originalDocumentId,
+        currentVersion,
+        additionalData
       });
       
-      toast.success(t("documentUploadedSuccessfully"));
-      resetForm();
+      if (!result.success) {
+        throw new Error(result.error || t("documentUploadFailed"));
+      }
+      
+      toast({
+        title: t("documentUploaded"),
+        description: t("documentUploadedSuccessfully"),
+      });
+      
+      // Clear form
+      setDocumentName("");
+      setDocumentType("");
+      setDocumentCategory("");
+      setFile(null);
       
       if (onSuccess) {
         onSuccess();
       }
-      
-    } catch (error) {
-      console.error("Error uploading document:", error);
-      toast.error(t("documentUploadFailed"));
+    } catch (error: any) {
+      toast({
+        title: t("documentUploadFailed"),
+        description: error.message || t("errorOccurredWhileUploading"),
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }
@@ -75,9 +100,11 @@ export const useDocumentUploadState = ({
     setDocumentCategory,
     file,
     setFile,
+    handleFileChange,
     uploading,
     isValid,
-    handleSubmit,
-    resetForm
+    handleSubmit
   };
 };
+
+export default useDocumentUploadState;

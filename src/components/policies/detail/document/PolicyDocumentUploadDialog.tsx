@@ -43,7 +43,7 @@ const PolicyDocumentUploadDialog: React.FC<PolicyDocumentUploadDialogProps> = ({
     documentCategory,
     setDocumentCategory,
     file,
-    setFile,
+    handleFileChange,
     uploading: isSubmitting,
     isValid,
     handleSubmit
@@ -72,9 +72,10 @@ const PolicyDocumentUploadDialog: React.FC<PolicyDocumentUploadDialogProps> = ({
           documentType={documentType}
           setDocumentType={setDocumentType}
           documentCategory={documentCategory}
-          setDocumentCategory={setDocumentCategory}
+          setDocumentCategory={(category) => setDocumentCategory(category)}
           file={file}
-          setFile={setFile}
+          handleFileChange={handleFileChange}
+          isNewVersion={false}
         />
 
         <DialogFooter>

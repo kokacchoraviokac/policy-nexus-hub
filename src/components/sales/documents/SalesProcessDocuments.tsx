@@ -52,6 +52,11 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
     setSelectedDocument(document);
     setUploadDialogOpen(true);
   };
+  
+  // Create a wrapper function that accepts a Document and calls deleteDocument with just the ID
+  const handleDelete = (document: Document) => {
+    deleteDocument(document.id);
+  };
 
   return (
     <div className="space-y-4">
@@ -90,7 +95,7 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
               isLoading={isLoading}
               isError={isError}
               error={error}
-              onDelete={deleteDocument}
+              onDelete={handleDelete}
               isDeleting={isDeleting}
               onUploadClick={handleOpenUploadDialog}
               showUploadButton={true}

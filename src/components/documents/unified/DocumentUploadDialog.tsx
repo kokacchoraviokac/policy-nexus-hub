@@ -136,7 +136,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           documentType={documentType}
           setDocumentType={setDocumentType}
           documentCategory={documentCategory}
-          setDocumentCategory={setDocumentCategory}
+          setDocumentCategory={(category) => setDocumentCategory(category as DocumentCategory)}
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={isNewVersion}

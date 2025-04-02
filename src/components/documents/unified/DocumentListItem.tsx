@@ -14,7 +14,7 @@ import {
   MoreHorizontal,
   FileUp
 } from "lucide-react";
-import { Document } from "@/types/documents";
+import { Document as DocumentType } from "@/types/documents";
 import { DocumentService } from "@/services/DocumentService";
 import { toast } from "sonner";
 import {
@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface DocumentListItemProps {
-  document: Document;
+  document: DocumentType;
   onDelete: () => void;
   isDeleting?: boolean;
   showApproval?: boolean;
@@ -87,13 +87,13 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
       a.href = downloadUrl;
       a.download = document.document_name;
       a.style.display = 'none';
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       
       // Trigger the download
       a.click();
       
       // Clean up
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       
       toast.success(t("downloadStarted"), {
         description: t("documentDownloadStarted")

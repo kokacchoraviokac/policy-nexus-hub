@@ -1,22 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentCategory, EntityType } from "@/types/documents";
-import { v4 as uuidv4 } from "uuid";
 
 // Define the document tables mapping for easier reuse
-export const DOCUMENT_TABLE_MAP: Record<EntityType, string> = {
-  'policy': 'policy_documents',
-  'claim': 'claim_documents',
-  'sales_process': 'sales_documents',
-  'client': 'policy_documents', // These will need proper tables in future
-  'invoice': 'policy_documents', // These will need proper tables in future
-  'addendum': 'policy_documents', // These will need proper tables in future
-  'agent': 'policy_documents',    // These will need proper tables in future
-  'insurer': 'policy_documents'   // These will need proper tables in future
-};
+// Use a strict type to ensure we're always using valid table names
+const DOCUMENT_TABLES = ["policy_documents", "claim_documents", "sales_documents"] as const;
+export type DocumentTableName = typeof DOCUMENT_TABLES[number];
 
 // Define the entity ID field mapping
-export const ENTITY_ID_FIELD_MAP: Record<EntityType, string> = {
+const ENTITY_ID_FIELD_MAP: Record<EntityType, string> = {
   'policy': 'policy_id',
   'claim': 'claim_id',
   'sales_process': 'sales_process_id',
@@ -25,6 +17,18 @@ export const ENTITY_ID_FIELD_MAP: Record<EntityType, string> = {
   'addendum': 'addendum_id',
   'agent': 'policy_id',   // These will need proper fields in future
   'insurer': 'policy_id'  // These will need proper fields in future
+};
+
+// Map EntityType to their respective table names
+const DOCUMENT_TABLE_MAP: Record<EntityType, DocumentTableName> = {
+  'policy': 'policy_documents',
+  'claim': 'claim_documents',
+  'sales_process': 'sales_documents',
+  'client': 'policy_documents', // These will need proper tables in future
+  'invoice': 'policy_documents', // These will need proper tables in future
+  'addendum': 'policy_documents', // These will need proper tables in future
+  'agent': 'policy_documents',    // These will need proper tables in future
+  'insurer': 'policy_documents'   // These will need proper tables in future
 };
 
 interface DocumentUploadOptions {
@@ -204,7 +208,7 @@ export class DocumentService {
       if (error) throw error;
 
       // Delete file from storage if exists
-      if (document?.file_path) {
+      if (document && document.file_path) {
         await supabase.storage
           .from('documents')
           .remove([document.file_path]);
@@ -249,6 +253,11 @@ export class DocumentService {
         .single();
 
       if (fetchError) throw fetchError;
+      
+      // Safety check
+      if (!document) {
+        return [];
+      }
 
       const originalId = document.original_document_id || documentId;
       const entityIdField = ENTITY_ID_FIELD_MAP[entityType];
@@ -290,4 +299,12 @@ export class DocumentService {
       return [];
     }
   }
+}
+
+// Helper function to generate UUIDs
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 }
