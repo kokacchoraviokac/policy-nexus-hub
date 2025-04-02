@@ -1,8 +1,7 @@
-
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
-import { SalesProcessStage } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcessStage } from "@/types/salesProcess";
 
 interface StageBadgeProps {
   stage: SalesProcessStage;

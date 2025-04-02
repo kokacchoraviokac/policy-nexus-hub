@@ -1,5 +1,5 @@
-
-import React, { useState } from "react";
+import React from "react";
+import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Dialog, 
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Proposal, ProposalStatus } from "./ProposalsList";
+import { Proposal, ProposalStatus } from "@/types/sales";
 import { toast } from "sonner";
 
 interface UpdateProposalStatusDialogProps {
@@ -34,7 +34,6 @@ const UpdateProposalStatusDialog: React.FC<UpdateProposalStatusDialogProps> = ({
   const [notes, setNotes] = useState("");
   const [updating, setUpdating] = useState(false);
   
-  // Determine available status transitions based on current status
   const getAvailableStatuses = () => {
     switch (proposal.status) {
       case "sent":
@@ -51,7 +50,6 @@ const UpdateProposalStatusDialog: React.FC<UpdateProposalStatusDialogProps> = ({
   const handleUpdate = () => {
     setUpdating(true);
     
-    // Simulate updating process
     setTimeout(() => {
       setUpdating(false);
       onStatusChange(status);

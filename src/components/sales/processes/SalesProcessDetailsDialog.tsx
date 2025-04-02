@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUp, ChevronRight, FileText } from "lucide-react";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess } from "@/types/salesProcess";
 import { StageBadge } from "./badges/StatusBadges";
 import ProcessOverviewTab from "./tabs/ProcessOverviewTab";
 import QuoteManagementPanel from "./QuoteManagementPanel";

@@ -1,5 +1,5 @@
-
-import React, { useState } from "react";
+import React from "react";
+import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Dialog, 
@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CalendarIcon, Send } from "lucide-react";
-import { Proposal } from "./ProposalsList";
+import { Proposal, ProposalStatus } from "@/types/sales";
 import { addDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {

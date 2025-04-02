@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -11,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Calendar, User, Building, FileCheck } from "lucide-react";
-import { Proposal } from "./ProposalsList";
+import { Proposal, ProposalStatus } from "@/types/sales";
 
 interface ProposalViewDialogProps {
   proposal: Proposal;
