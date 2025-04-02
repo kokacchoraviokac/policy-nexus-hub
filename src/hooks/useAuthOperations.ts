@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, AuthState } from "@/types/auth";
@@ -16,16 +17,16 @@ export const useAuthOperations = (
     
     try {
       // First check if the email matches a mock user - allow in all environments
-      const mockUser = MOCK_USERS.find(u => u.email === email);
+      const mockUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
       
       if (mockUser) {
-        console.log("Using mock user login");
+        console.log("Using mock user login for:", email);
         setAuthState({
           user: mockUser,
           isAuthenticated: true,
           isLoading: false,
         });
-        return;
+        return { error: null };
       }
       
       // If no matching mock user, try Supabase
@@ -41,20 +42,28 @@ export const useAuthOperations = (
       
       // Real Supabase auth - user profile is handled by the onAuthStateChange listener
       console.log("Supabase login successful");
+      
+      return { error: null };
     } catch (error) {
       console.error("Login failed:", error);
       setAuthState({ ...authState, isLoading: false });
-      throw error;
+      return { error };
     }
   };
 
   const logout = async () => {
     try {
       setAuthState({ ...authState, isLoading: true });
-      await supabase.auth.signOut();
       
-      // Auth state will be updated by the onAuthStateChange listener
-      // But let's also manually update state to ensure immediate UI response
+      // Check if we're dealing with a mock user
+      const isMockUser = authState.user ? MOCK_USERS.some(u => u.id === authState.user?.id) : false;
+      
+      if (!isMockUser) {
+        // Only call Supabase signOut if using a real auth session
+        await supabase.auth.signOut();
+      }
+      
+      // Always reset auth state regardless of mock or real user
       setAuthState({
         user: null,
         isAuthenticated: false,

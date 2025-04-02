@@ -1,10 +1,17 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, rolePrivileges } from "@/types/auth";
 import { toast } from "sonner";
+import { MOCK_USERS } from "@/data/mockUsers";
 
 export const fetchUserProfile = async (userId: string): Promise<User | null> => {
   try {
+    // First check if this is a mock user ID
+    const mockUser = MOCK_USERS.find(u => u.id === userId);
+    if (mockUser) {
+      return mockUser;
+    }
+
+    // Otherwise fetch from Supabase
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('name, email, role, avatar_url, company_id')
@@ -46,6 +53,20 @@ export const updateUserProfile = async (
   userData: Partial<User>
 ): Promise<boolean> => {
   try {
+    // Check if updating a mock user
+    const mockUserIndex = MOCK_USERS.findIndex(u => u.id === userId);
+    if (mockUserIndex >= 0) {
+      // Update the mock user in memory
+      // Note: This won't persist across page refreshes
+      MOCK_USERS[mockUserIndex] = {
+        ...MOCK_USERS[mockUserIndex],
+        ...userData
+      };
+      toast.success("Profile updated successfully (mock user)");
+      return true;
+    }
+
+    // Otherwise, update in Supabase
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -74,6 +95,13 @@ export const updateUserProfile = async (
 // Ensure profile creation with proper defaults when needed
 export const ensureUserProfile = async (userId: string, userData: Partial<User>): Promise<boolean> => {
   try {
+    // Check if this is a mock user ID
+    const mockUser = MOCK_USERS.find(u => u.id === userId);
+    if (mockUser) {
+      // Mock users already have profiles
+      return true;
+    }
+    
     // First check if profile exists
     const { data: existingProfile, error: checkError } = await supabase
       .from('profiles')
