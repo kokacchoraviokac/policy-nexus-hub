@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import { useProposalsData } from "@/hooks/sales/useProposalsData";
 import ProposalsList from "../proposals/ProposalsList";
 import CreateProposalDialog from "../proposals/CreateProposalDialog";
 import SalesProcessDocuments from "../documents/SalesProcessDocuments";
+import { getNextStage } from "@/utils/sales/stageTransitionConfig";
 
 interface SalesProcessDetailsDialogProps {
   process: SalesProcess;
@@ -57,6 +59,9 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
     salesProcessId: process.id,
     clientName: process.client_name
   });
+
+  // Determine if the process can move to the next stage
+  const hasNextStage = !!getNextStage(updatedProcess.stage);
 
   return (
     <>
@@ -143,15 +148,16 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
               >
                 {t("close")}
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleMoveToNextStage}
-                disabled={updatedProcess.stage === "concluded"}
-              >
-                <ChevronRight className="h-4 w-4 mr-1.5" />
-                {t("moveToNextStage")}
-              </Button>
+              {hasNextStage && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleMoveToNextStage}
+                >
+                  <ChevronRight className="h-4 w-4 mr-1.5" />
+                  {t("moveToNextStage")}
+                </Button>
+              )}
             </div>
             <div className="flex gap-2">
               {isReadyForPolicyImport && (
