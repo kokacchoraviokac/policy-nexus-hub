@@ -43,10 +43,10 @@ const LoginForm: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await login(values.email, values.password);
+      const result = await login(values.email, values.password);
       
-      if (error) {
-        throw error;
+      if (result && result.error) {
+        throw result.error;
       }
       
       toast.success(t("loginSuccessful"));

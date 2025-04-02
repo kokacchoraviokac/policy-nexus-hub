@@ -2,7 +2,7 @@
 import { User, UserRole, AuthState, CustomPrivilege } from "@/types/auth";
 
 export interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => void;
   hasPrivilege: (privilege: string) => boolean;
   hasPrivilegeWithContext: (

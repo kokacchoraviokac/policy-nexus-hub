@@ -12,7 +12,7 @@ export const useAuthOperations = (
 ) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<{ error: any }> => {
     setAuthState({ ...authState, isLoading: true });
     
     try {
