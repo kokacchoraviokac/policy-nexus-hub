@@ -2,20 +2,24 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Loader2, AlertCircle } from "lucide-react";
-import { Document } from "@/types/documents";
-import DocumentListItem from "../DocumentListItem";
+import { Button } from "@/components/ui/button";
+import { FileText, Loader2, AlertCircle, Plus } from "lucide-react";
+import { Document, EntityType } from "@/types/documents";
+import DocumentListItem from "./DocumentListItem";
 
 interface DocumentListProps {
   documents: Document[];
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
-  refetch: () => void;
   onDelete: (document: Document) => void;
   isDeleting?: boolean;
-  showUploadVersion?: boolean;
+  onUploadClick?: () => void;
+  showUploadButton?: boolean;
+  showApproval?: boolean;
+  filterCategory?: string;
   onUploadVersion?: (document: Document) => void;
+  emptyMessage?: string;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({
@@ -23,63 +27,95 @@ const DocumentList: React.FC<DocumentListProps> = ({
   isLoading,
   isError,
   error,
-  refetch,
   onDelete,
-  isDeleting,
-  showUploadVersion = false,
-  onUploadVersion
+  isDeleting = false,
+  onUploadClick,
+  showUploadButton = true,
+  showApproval = true,
+  filterCategory,
+  onUploadVersion,
+  emptyMessage
 }) => {
   const { t } = useLanguage();
   
+  // Filter documents by category if filterCategory is provided
+  const filteredDocuments = React.useMemo(() => {
+    if (!filterCategory) return documents;
+    return documents.filter(doc => doc.category === filterCategory);
+  }, [documents, filterCategory]);
+  
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-10">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">{t("loadingDocuments")}</p>
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">{t("loadingDocuments")}</span>
       </div>
     );
   }
-  
+
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-10">
-        <AlertCircle className="h-10 w-10 text-destructive mb-4" />
-        <p className="font-medium text-destructive">{t("errorLoadingDocuments")}</p>
-        <p className="text-sm text-muted-foreground mt-1 mb-3">{error?.message || t("unknownError")}</p>
-        <button 
-          className="text-sm text-primary hover:underline" 
-          onClick={() => refetch()}
-        >
-          {t("tryAgain")}
-        </button>
-      </div>
-    );
-  }
-  
-  if (documents.length === 0) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-10">
-          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-          <p className="font-medium">{t("noDocuments")}</p>
-          <p className="text-sm text-muted-foreground mt-1">{t("noDocumentsDescription")}</p>
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center text-center">
+            <AlertCircle className="h-10 w-10 text-destructive mb-2" />
+            <h3 className="text-lg font-medium">{t("errorLoadingDocuments")}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {error?.message || t("pleaseTryAgainLater")}
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
   }
-  
+
+  if (!filteredDocuments || filteredDocuments.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center text-center">
+            <FileText className="h-10 w-10 text-muted-foreground mb-2" />
+            <h3 className="text-lg font-medium">{t("noDocuments")}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {emptyMessage || 
+               (filterCategory 
+                ? t("noDocumentsInCategory", { category: filterCategory }) 
+                : t("noDocumentsUploaded"))}
+            </p>
+            {showUploadButton && onUploadClick && (
+              <Button onClick={onUploadClick} className="mt-4">
+                <Plus className="mr-2 h-4 w-4" />
+                {t("uploadDocument")}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {documents.map((document) => (
-        <DocumentListItem
-          key={document.id}
+      {filteredDocuments.map(document => (
+        <DocumentListItem 
+          key={document.id} 
           document={document}
           onDelete={() => onDelete(document)}
           isDeleting={isDeleting}
-          onUploadVersion={showUploadVersion && onUploadVersion ? 
+          showApproval={showApproval}
+          onUploadVersion={onUploadVersion ? 
             () => onUploadVersion(document) : undefined}
         />
       ))}
+      
+      {showUploadButton && onUploadClick && (
+        <div className="mt-4 flex justify-end">
+          <Button onClick={onUploadClick}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("uploadDocument")}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

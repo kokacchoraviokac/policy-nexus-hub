@@ -4,8 +4,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
-import EnhancedDocumentUploadDialog from "@/components/documents/EnhancedDocumentUploadDialog";
-import DocumentList from "@/components/documents/DocumentList";
+import { useDocumentManager } from "@/hooks/useDocumentManager";
+import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
+import DocumentList from "@/components/documents/unified/DocumentList";
 
 interface PolicyDocumentsTabProps {
   policyId: string;
@@ -14,6 +15,29 @@ interface PolicyDocumentsTabProps {
 const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  
+  const {
+    documents,
+    isLoading,
+    isError,
+    error,
+    deleteDocument,
+    isDeleting
+  } = useDocumentManager({ 
+    entityType: "policy",
+    entityId: policyId
+  });
+  
+  const handleUploadClick = () => {
+    setSelectedDocument(null);
+    setUploadDialogOpen(true);
+  };
+  
+  const handleUploadVersion = (document: any) => {
+    setSelectedDocument(document);
+    setUploadDialogOpen(true);
+  };
   
   return (
     <Card>
@@ -23,7 +47,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
             <CardTitle>{t("policyDocuments")}</CardTitle>
             <CardDescription>{t("documentsAttachedToPolicy")}</CardDescription>
           </div>
-          <Button onClick={() => setUploadDialogOpen(true)}>
+          <Button onClick={handleUploadClick}>
             <Upload className="h-4 w-4 mr-2" />
             {t("uploadDocument")}
           </Button>
@@ -31,16 +55,22 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
       </CardHeader>
       <CardContent>
         <DocumentList 
-          entityType="policy"
-          entityId={policyId}
+          documents={documents}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          onDelete={deleteDocument}
+          isDeleting={isDeleting}
           showUploadButton={false}
+          onUploadVersion={handleUploadVersion}
         />
         
-        <EnhancedDocumentUploadDialog
+        <DocumentUploadDialog
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
           entityType="policy"
           entityId={policyId}
+          selectedDocument={selectedDocument}
         />
       </CardContent>
     </Card>

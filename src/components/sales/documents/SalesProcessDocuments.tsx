@@ -4,10 +4,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FileUp } from "lucide-react";
-import { EntityType } from "@/types/documents";
-import DocumentList from "@/components/documents/DocumentList";
-import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
-import { useSalesProcessDocuments } from "@/hooks/sales/useSalesProcessDocuments";
+import { useDocumentManager } from "@/hooks/useDocumentManager";
+import DocumentList from "@/components/documents/unified/DocumentList";
+import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
+import { Document } from "@/types/documents";
 
 interface SalesProcessDocumentsProps {
   salesProcessId: string;
@@ -21,7 +21,19 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedStage, setSelectedStage] = useState<string>(currentStage);
-  const { documentsCount } = useSalesProcessDocuments(salesProcessId);
+  const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
+  
+  const {
+    documents,
+    isLoading,
+    isError,
+    error,
+    deleteDocument,
+    isDeleting
+  } = useDocumentManager({
+    entityType: "sales_process",
+    entityId: salesProcessId
+  });
   
   const stageCategories = [
     { id: "discovery", label: t("discovery") },
@@ -32,17 +44,23 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
   ];
   
   const handleOpenUploadDialog = () => {
+    setSelectedDocument(undefined);
     setUploadDialogOpen(true);
   };
   
+  const handleUploadVersion = (document: Document) => {
+    setSelectedDocument(document);
+    setUploadDialogOpen(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">
           {t("documents")} 
-          {documentsCount > 0 && (
+          {documents.length > 0 && (
             <span className="ml-2 text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
-              {documentsCount}
+              {documents.length}
             </span>
           )}
         </h3>
@@ -68,11 +86,16 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
         {stageCategories.map(stage => (
           <TabsContent key={stage.id} value={stage.id} className="mt-4">
             <DocumentList
-              entityType={"sales_process" as EntityType}
-              entityId={salesProcessId}
+              documents={documents}
+              isLoading={isLoading}
+              isError={isError}
+              error={error}
+              onDelete={deleteDocument}
+              isDeleting={isDeleting}
               onUploadClick={handleOpenUploadDialog}
-              showUploadButton={false}
+              showUploadButton={true}
               filterCategory={stage.id}
+              onUploadVersion={handleUploadVersion}
             />
           </TabsContent>
         ))}
@@ -81,8 +104,9 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
       <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
-        entityType={"sales_process" as EntityType}
+        entityType="sales_process"
         entityId={salesProcessId}
+        selectedDocument={selectedDocument}
         defaultCategory={selectedStage}
         salesStage={selectedStage}
       />
