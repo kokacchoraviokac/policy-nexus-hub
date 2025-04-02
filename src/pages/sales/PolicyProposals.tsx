@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,9 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ProposalsList, { Proposal } from "@/components/sales/proposals/ProposalsList";
+import ProposalsList from "@/components/sales/proposals/ProposalsList";
 import CreateProposalDialog from "@/components/sales/proposals/CreateProposalDialog";
 import { useProposalsData } from "@/hooks/sales/useProposalsData";
+import { Proposal } from "@/types/sales";
 
 const PolicyProposals = () => {
   const { t } = useLanguage();

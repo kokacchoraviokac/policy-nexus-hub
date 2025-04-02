@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Proposal } from "./ProposalsList";
+import { Proposal } from "@/types/sales";
 import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
 import { EntityType } from "@/types/documents";
 

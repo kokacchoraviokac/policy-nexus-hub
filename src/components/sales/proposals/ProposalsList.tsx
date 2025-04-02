@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -16,27 +15,9 @@ import { format } from "date-fns";
 import ProposalViewDialog from "./ProposalViewDialog";
 import SendProposalDialog from "./SendProposalDialog";
 import UpdateProposalStatusDialog from "./UpdateProposalStatusDialog";
+import { Proposal, ProposalStatus } from "@/types/sales";
 
-export type ProposalStatus = "draft" | "sent" | "viewed" | "accepted" | "rejected" | "expired";
-
-export interface Proposal {
-  id: string;
-  title: string;
-  clientName: string;
-  salesProcessId: string;
-  createdAt: string;
-  sentAt?: string;
-  viewedAt?: string;
-  expiresAt?: string;
-  status: ProposalStatus;
-  insurerName?: string;
-  coverageDetails?: string;
-  premium?: string;
-  notes?: string;
-  documents?: string[];
-}
-
-interface ProposalsListProps {
+export interface ProposalsListProps {
   proposals: Proposal[];
   onStatusChange?: (proposalId: string, status: ProposalStatus) => void;
 }
