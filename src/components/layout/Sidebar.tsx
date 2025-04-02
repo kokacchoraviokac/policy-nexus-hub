@@ -1,12 +1,12 @@
 
-import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import React from "react";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/contexts/LanguageContext";
 import ModernSidebar from "./sidebar/ModernSidebar";
 
+// This component is now just a wrapper for ModernSidebar
+// to maintain backward compatibility if needed
 const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
   
   return (
     <div className={cn("h-screen", className)}>

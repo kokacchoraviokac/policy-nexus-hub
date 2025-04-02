@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import TopBar from "./TopBar";
 import ModernSidebar from "./sidebar/ModernSidebar";

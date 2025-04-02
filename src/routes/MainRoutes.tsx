@@ -7,6 +7,8 @@ import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/NotFound";
 
 const MainRoutes = [
+  // Add a route for the root path to redirect to dashboard
+  <Route key="root" path="/" element={<AppLayout><Dashboard /></AppLayout>} />,
   <Route key="dashboard" path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />,
   ...ModuleRoutes.map(route => (
     <Route
