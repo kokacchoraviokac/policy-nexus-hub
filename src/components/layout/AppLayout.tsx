@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import TopBar from "./TopBar";
 import ModernSidebar from "./sidebar/ModernSidebar";
@@ -30,7 +31,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         setCollapsed={setSidebarCollapsed} 
       />
       
-      {/* Main content area */}
+      {/* Main content + fixed footer */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <TopBar 
           sidebarCollapsed={sidebarCollapsed} 

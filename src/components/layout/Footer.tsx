@@ -14,7 +14,7 @@ const Footer: React.FC<FooterProps> = ({ className }) => {
   
   return (
     <footer className={cn(
-      "border-t border-border py-3 px-6 text-center text-sm text-muted-foreground bg-background shadow-sm",
+      "border-t border-border py-4 px-6 text-center text-sm text-muted-foreground",
       className
     )}>
       <div className="flex justify-between items-center">

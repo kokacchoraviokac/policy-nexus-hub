@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UserProfileMenu from "@/components/auth/UserProfileMenu";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,7 +45,7 @@ const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }
   }, [user]);
 
   return (
-    <header className="h-16 border-b border-border flex items-center px-6 bg-white shadow-sm z-10">
+    <header className="h-16 border-b border-border flex items-center px-6 bg-white/80 backdrop-blur-sm">
       <div className="flex-1">
         {companyName && (
           <h2 className="text-lg font-semibold text-primary">
