@@ -2,7 +2,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { LanguageProvider } from './contexts/LanguageContext';
 import './App.css';
 import { AuthProvider } from './contexts/AuthContext';
 import MainRoutes from './routes/MainRoutes';
