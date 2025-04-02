@@ -26,7 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess } from "@/types/salesProcess";
 import SalesProcessDetailsDialog from "./SalesProcessDetailsDialog";
 import DeleteSalesProcessDialog from "./DeleteSalesProcessDialog";
 

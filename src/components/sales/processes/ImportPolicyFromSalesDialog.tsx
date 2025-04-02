@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess } from "@/types/salesProcess";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

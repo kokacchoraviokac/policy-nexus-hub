@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, Send, Check, RefreshCw, ArrowRight } from "lucide-react";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess } from "@/types/salesProcess";
 import AddQuoteDialog from "./AddQuoteDialog";
 import ImportPolicyFromQuoteDialog from "./ImportPolicyFromQuoteDialog";
 import { toast } from "sonner";

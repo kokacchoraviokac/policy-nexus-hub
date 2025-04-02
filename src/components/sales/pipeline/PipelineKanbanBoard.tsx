@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Grid } from "@/components/ui/grid";
@@ -19,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import SalesProcessDetailsDialog from "../processes/SalesProcessDetailsDialog";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess } from "@/types/salesProcess";
 
 // Types for the pipeline stages and items
 interface PipelineItem {

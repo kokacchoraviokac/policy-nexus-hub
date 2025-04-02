@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-import { SalesProcess, SalesProcessStage } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess, SalesProcessStage } from "@/types/salesProcess";
 
 type StageMoveCallback = (process: SalesProcess) => void;
 
