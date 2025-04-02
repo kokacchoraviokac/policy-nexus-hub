@@ -82,8 +82,8 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
       setIsDownloading(true);
       const downloadUrl = await DocumentService.getDownloadUrl(document.file_path);
       
-      // Create an invisible anchor element
-      const a = document.createElement('a');
+      // Create an invisible anchor element - use window.document instead of document
+      const a = window.document.createElement('a');
       a.href = downloadUrl;
       a.download = document.document_name;
       a.style.display = 'none';
