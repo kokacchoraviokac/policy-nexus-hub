@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import UserProfileMenu from "@/components/auth/UserProfileMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageSelector from "@/components/language/LanguageSelector";
+import NotificationsDropdown from "@/components/notifications/NotificationsDropdown";
 
 interface TopBarProps {
   sidebarCollapsed: boolean;
@@ -55,14 +56,7 @@ const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }
       
       <div className="flex items-center space-x-5">
         <LanguageSelector />
-        <button 
-          className="p-2 rounded-full hover:bg-secondary transition-colors relative" 
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary"></span>
-        </button>
-        
+        <NotificationsDropdown />
         <UserProfileMenu />
       </div>
     </header>
