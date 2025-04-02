@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-  DropdownMenuFooter,
 } from "@/components/ui/dropdown-menu";
 import { useNotificationsContext } from "@/contexts/NotificationsContext";
 import { Badge } from "@/components/ui/badge";
@@ -68,7 +67,7 @@ const NotificationsDropdown: React.FC = () => {
         )}
         
         <DropdownMenuSeparator />
-        <DropdownMenuFooter className="flex justify-between p-2">
+        <div className="flex justify-between p-2">
           <Button 
             variant="ghost" 
             size="sm"
@@ -87,7 +86,7 @@ const NotificationsDropdown: React.FC = () => {
             <Trash2 className="h-4 w-4 mr-1" />
             {t("clearAll")}
           </Button>
-        </DropdownMenuFooter>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
