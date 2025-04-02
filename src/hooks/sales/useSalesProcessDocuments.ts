@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Document } from "@/types/documents";
+import { Document, DocumentCategory } from "@/types/documents";
 
 export const useSalesProcessDocuments = (salesProcessId: string) => {
   const fetchDocuments = async (): Promise<Document[]> => {
@@ -27,7 +27,8 @@ export const useSalesProcessDocuments = (salesProcessId: string) => {
       version: item.version || 1,
       status: item.status || "active",
       tags: item.tags || [],
-      category: item.category || "other",
+      // Explicitly cast category to DocumentCategory to ensure type compatibility
+      category: (item.category || "other") as DocumentCategory,
       mime_type: item.mime_type || "",
       is_latest_version: item.is_latest_version || true,
       original_document_id: item.original_document_id || null,
