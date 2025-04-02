@@ -1,176 +1,85 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileText, FilePlus, Loader2, AlertCircle } from "lucide-react";
-import { Document, DocumentCategory, EntityType } from "@/types/documents";
-import DocumentListItem from "./DocumentListItem";
-import { useDocumentManager } from "@/hooks/useDocumentManager";
-import DocumentUploadDialog from "./DocumentUploadDialog";
+import { FileText, Loader2, AlertCircle } from "lucide-react";
+import { Document } from "@/types/documents";
+import DocumentListItem from "../DocumentListItem";
 
 interface DocumentListProps {
-  entityType: EntityType;
-  entityId: string;
-  showUploadButton?: boolean;
-  onUploadClick?: () => void;
-  filterCategory?: DocumentCategory | string;
-  filterSalesStage?: string;
-  title?: string;
+  documents: Document[];
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  refetch: () => void;
+  onDelete: (document: Document) => void;
+  isDeleting?: boolean;
+  showUploadVersion?: boolean;
+  onUploadVersion?: (document: Document) => void;
 }
 
-const DocumentList: React.FC<DocumentListProps> = ({ 
-  entityType, 
-  entityId,
-  showUploadButton = true,
-  onUploadClick,
-  filterCategory,
-  filterSalesStage,
-  title
+const DocumentList: React.FC<DocumentListProps> = ({
+  documents,
+  isLoading,
+  isError,
+  error,
+  refetch,
+  onDelete,
+  isDeleting,
+  showUploadVersion = false,
+  onUploadVersion
 }) => {
   const { t } = useLanguage();
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
   
-  const { 
-    documents, 
-    isLoading, 
-    isError, 
-    error,
-    refetch,
-    deleteDocument,
-    isDeletingDocument,
-    downloadDocument,
-    isDownloading
-  } = useDocumentManager(entityType, entityId);
-  
-  // Filter documents by category and/or sales stage
-  const filteredDocuments = React.useMemo(() => {
-    let result = documents;
-    
-    if (filterCategory) {
-      result = result.filter(doc => doc.category === filterCategory);
-    }
-    
-    if (filterSalesStage && entityType === 'sales_process') {
-      result = result.filter(doc => 'step' in doc && doc.step === filterSalesStage);
-    }
-    
-    return result;
-  }, [documents, filterCategory, filterSalesStage, entityType]);
-
-  const handleUploadClick = () => {
-    if (onUploadClick) {
-      onUploadClick();
-    } else {
-      setSelectedDocument(undefined);
-      setUploadDialogOpen(true);
-    }
-  };
-  
-  const handleUploadVersion = (document: Document) => {
-    setSelectedDocument(document);
-    setUploadDialogOpen(true);
-  };
-
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-10">
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">{t("loadingDocuments")}</p>
       </div>
     );
   }
-
+  
   if (isError) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center justify-center text-center">
-            <AlertCircle className="h-10 w-10 text-destructive mb-2" />
-            <h3 className="text-lg font-medium">{t("errorLoadingDocuments")}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {error instanceof Error ? error.message : t("pleaseTryAgainLater")}
-            </p>
-            <Button onClick={() => refetch()} variant="outline" className="mt-4">
-              {t("retry")}
-            </Button>
-          </div>
+      <div className="flex flex-col items-center justify-center py-10">
+        <AlertCircle className="h-10 w-10 text-destructive mb-4" />
+        <p className="font-medium text-destructive">{t("errorLoadingDocuments")}</p>
+        <p className="text-sm text-muted-foreground mt-1 mb-3">{error?.message || t("unknownError")}</p>
+        <button 
+          className="text-sm text-primary hover:underline" 
+          onClick={() => refetch()}
+        >
+          {t("tryAgain")}
+        </button>
+      </div>
+    );
+  }
+  
+  if (documents.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-10">
+          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
+          <p className="font-medium">{t("noDocuments")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("noDocumentsDescription")}</p>
         </CardContent>
       </Card>
     );
   }
-
-  if (!filteredDocuments || filteredDocuments.length === 0) {
-    return (
-      <>
-        {title && <h3 className="font-medium mb-4">{title}</h3>}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col items-center justify-center text-center">
-              <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-              <h3 className="text-lg font-medium">{t("noDocuments")}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {filterCategory 
-                  ? t("noDocumentsInCategory", { category: filterCategory }) 
-                  : t("noDocumentsUploaded")}
-              </p>
-              {showUploadButton && (
-                <Button onClick={handleUploadClick} className="mt-4">
-                  <FilePlus className="mr-2 h-4 w-4" />
-                  {t("uploadDocument")}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </>
-    );
-  }
-
+  
   return (
     <div className="space-y-4">
-      {title && (
-        <div className="flex justify-between items-center">
-          <h3 className="font-medium">{title}</h3>
-          {showUploadButton && (
-            <Button size="sm" onClick={handleUploadClick}>
-              <FilePlus className="mr-2 h-4 w-4" />
-              {t("uploadDocument")}
-            </Button>
-          )}
-        </div>
-      )}
-      
-      {filteredDocuments.map(document => (
-        <DocumentListItem 
-          key={document.id} 
+      {documents.map((document) => (
+        <DocumentListItem
+          key={document.id}
           document={document}
-          onDelete={() => deleteDocument(document.id)}
-          isDeleting={isDeletingDocument}
-          onDownload={() => downloadDocument(document)}
-          isDownloading={isDownloading}
-          onUploadVersion={handleUploadVersion}
+          onDelete={() => onDelete(document)}
+          isDeleting={isDeleting}
+          onUploadVersion={showUploadVersion && onUploadVersion ? 
+            () => onUploadVersion(document) : undefined}
         />
       ))}
-      
-      {showUploadButton && !title && (
-        <div className="mt-4 flex justify-end">
-          <Button onClick={handleUploadClick}>
-            <FilePlus className="mr-2 h-4 w-4" />
-            {t("uploadDocument")}
-          </Button>
-        </div>
-      )}
-      
-      <DocumentUploadDialog 
-        open={uploadDialogOpen} 
-        onOpenChange={setUploadDialogOpen} 
-        entityType={entityType}
-        entityId={entityId}
-        selectedDocument={selectedDocument}
-        defaultCategory={filterCategory as string}
-        salesStage={filterSalesStage}
-      />
     </div>
   );
 };

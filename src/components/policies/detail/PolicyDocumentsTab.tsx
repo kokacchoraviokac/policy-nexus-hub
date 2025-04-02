@@ -4,8 +4,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
-import DocumentList from "@/components/documents/unified/DocumentList";
-import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
+import EnhancedDocumentUploadDialog from "@/components/documents/EnhancedDocumentUploadDialog";
+import DocumentList from "@/components/documents/DocumentList";
 
 interface PolicyDocumentsTabProps {
   policyId: string;
@@ -36,7 +36,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
           showUploadButton={false}
         />
         
-        <DocumentUploadDialog
+        <EnhancedDocumentUploadDialog
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
           entityType="policy"

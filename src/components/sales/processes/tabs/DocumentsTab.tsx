@@ -2,7 +2,7 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SalesProcess } from "@/types/salesProcess";
-import DocumentList from "@/components/documents/unified/DocumentList";
+import SalesProcessDocuments from "../../documents/SalesProcessDocuments";
 
 interface DocumentsTabProps {
   process: SalesProcess;
@@ -13,10 +13,9 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ process }) => {
   
   return (
     <div className="pt-4">
-      <DocumentList
-        entityType="sales_process"
-        entityId={process.id}
-        title={t("salesProcessDocuments")}
+      <SalesProcessDocuments
+        salesProcessId={process.id}
+        currentStage={process.stage}
       />
     </div>
   );
