@@ -18,6 +18,8 @@ interface DocumentUploadDialogProps {
   onUploadComplete?: () => void; // Optional callback for when upload completes
   embedMode?: boolean; // Flag to indicate if component is embedded in another dialog
   onFileSelected?: (file: File | null) => void; // Callback to notify parent when file is selected
+  defaultCategory?: string; // Default category for the document
+  salesStage?: string; // Sales process stage
 }
 
 const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
@@ -28,7 +30,9 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   selectedDocument,
   onUploadComplete,
   embedMode = false,
-  onFileSelected
+  onFileSelected,
+  defaultCategory,
+  salesStage
 }) => {
   const { t } = useLanguage();
   const [uploadMode, setUploadMode] = useState<"new" | "version">(selectedDocument ? "version" : "new");
@@ -45,7 +49,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     file,
     handleFileChange,
     uploading,
-    handleUpload
+    handleUpload,
+    setSalesStage
   } = useDocumentUpload({ 
     entityType,
     entityId,
@@ -60,6 +65,20 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     originalDocumentId: isNewVersion ? (selectedDocument?.original_document_id || selectedDocument?.id) : undefined,
     currentVersion: isNewVersion ? (selectedDocument?.version || 1) : 0
   });
+  
+  // Set default category if provided
+  useEffect(() => {
+    if (defaultCategory && documentCategory === "") {
+      setDocumentCategory(defaultCategory as DocumentCategory);
+    }
+  }, [defaultCategory, documentCategory, setDocumentCategory]);
+
+  // Set sales stage if provided
+  useEffect(() => {
+    if (salesStage && setSalesStage) {
+      setSalesStage(salesStage);
+    }
+  }, [salesStage, setSalesStage]);
   
   // Pre-fill form if uploading a new version
   useEffect(() => {
@@ -103,6 +122,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={isNewVersion}
+          isSalesProcess={entityType === "sales_process"}
+          salesStage={salesStage}
         />
         
         <VersionInfoBox 
@@ -149,6 +170,8 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={isNewVersion}
+          isSalesProcess={entityType === "sales_process"}
+          salesStage={salesStage}
         />
         
         <VersionInfoBox 

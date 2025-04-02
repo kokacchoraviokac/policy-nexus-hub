@@ -21,6 +21,7 @@ import { useSalesProcessStageTransition } from "@/hooks/sales/useSalesProcessSta
 import { useProposalsData } from "@/hooks/sales/useProposalsData";
 import ProposalsList from "../proposals/ProposalsList";
 import CreateProposalDialog from "../proposals/CreateProposalDialog";
+import SalesProcessDocuments from "../documents/SalesProcessDocuments";
 
 interface SalesProcessDetailsDialogProps {
   process: SalesProcess;
@@ -75,10 +76,11 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
           </DialogHeader>
           
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="mt-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
               <TabsTrigger value="quotes">{t("quotes")}</TabsTrigger>
               <TabsTrigger value="proposals">{t("proposals")}</TabsTrigger>
+              <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="overview">
@@ -122,6 +124,13 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
                   onStatusChange={updateProposalStatus}
                 />
               )}
+            </TabsContent>
+
+            <TabsContent value="documents" className="pt-4">
+              <SalesProcessDocuments
+                salesProcessId={process.id}
+                currentStage={updatedProcess.stage || "discovery"}
+              />
             </TabsContent>
           </Tabs>
           

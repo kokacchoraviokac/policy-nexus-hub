@@ -25,6 +25,7 @@ export const useDocumentUpload = ({
   const [documentName, setDocumentName] = useState<string>("");
   const [documentType, setDocumentType] = useState<string>("");
   const [documentCategory, setDocumentCategory] = useState<DocumentCategory | "">("");
+  const [salesStage, setSalesStage] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   
@@ -63,12 +64,11 @@ export const useDocumentUpload = ({
         // 4. Calculate new version if it's a version update
         const version = currentVersion > 0 ? currentVersion + 1 : 1;
         
-        // 5. Create document record in database - use type assertion to fix the overload issue
-        const documentData = {
+        // 5. Prepare document data based on entity type
+        let documentData: any = {
           document_name: documentName,
           document_type: documentType,
           file_path: filePath,
-          entity_id: entityId,
           uploaded_by: user.id,
           company_id: user?.user_metadata?.company_id,
           description: "",
@@ -78,6 +78,19 @@ export const useDocumentUpload = ({
           mime_type: file.type,
           original_document_id: originalDocumentId || null
         };
+        
+        // Add specific fields based on entity type
+        if (tableName === "policy_documents") {
+          documentData.policy_id = entityId;
+        } else if (tableName === "claim_documents") {
+          documentData.claim_id = entityId;
+        } else if (tableName === "sales_documents") {
+          documentData.sales_process_id = entityId;
+          // Add sales-specific fields
+          if (salesStage) {
+            documentData.step = salesStage;
+          }
+        }
         
         // Insert the document using type assertion to fix the overload issue
         const { data, error: dbError } = await supabase
@@ -115,6 +128,13 @@ export const useDocumentUpload = ({
         queryKey: ['documents', entityType, entityId]
       });
       
+      // Also invalidate sales-documents query if it's a sales process document
+      if (entityType === 'sales_process') {
+        queryClient.invalidateQueries({
+          queryKey: ['sales-documents', entityId]
+        });
+      }
+      
       if (onSuccess) {
         onSuccess();
       }
@@ -138,6 +158,8 @@ export const useDocumentUpload = ({
     setDocumentType,
     documentCategory,
     setDocumentCategory,
+    salesStage,
+    setSalesStage,
     file,
     handleFileChange,
     uploading,

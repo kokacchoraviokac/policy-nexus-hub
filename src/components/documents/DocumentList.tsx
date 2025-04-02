@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useMemo } from "react";
 import { useDocuments } from "@/hooks/useDocuments";
 import { Loader2, FileX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +15,7 @@ interface DocumentListProps {
   onUploadClick?: () => void;
   showUploadButton?: boolean;
   showApproval?: boolean;
+  filterCategory?: string;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ 
@@ -21,7 +23,8 @@ const DocumentList: React.FC<DocumentListProps> = ({
   entityId,
   onUploadClick,
   showUploadButton = true,
-  showApproval = true
+  showApproval = true,
+  filterCategory
 }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -34,6 +37,12 @@ const DocumentList: React.FC<DocumentListProps> = ({
     deleteDocument, 
     isDeletingDocument 
   } = useDocuments(entityType, entityId);
+  
+  // Filter documents by category if filterCategory is provided
+  const filteredDocuments = useMemo(() => {
+    if (!filterCategory) return documents;
+    return documents.filter(doc => doc.category === filterCategory);
+  }, [documents, filterCategory]);
 
   const handleUploadClick = () => {
     if (onUploadClick) {
@@ -73,14 +82,16 @@ const DocumentList: React.FC<DocumentListProps> = ({
     );
   }
 
-  if (!documents || documents.length === 0) {
+  if (!filteredDocuments || filteredDocuments.length === 0) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col items-center justify-center text-center">
             <h3 className="text-lg font-medium">{t("noDocuments")}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {t("noDocumentsUploaded")}
+              {filterCategory 
+                ? t("noDocumentsInCategory", { category: filterCategory }) 
+                : t("noDocumentsUploaded")}
             </p>
             {showUploadButton && (
               <Button onClick={handleUploadClick} className="mt-4">
@@ -95,7 +106,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
 
   return (
     <div className="space-y-4">
-      {documents.map(document => (
+      {filteredDocuments.map(document => (
         <DocumentListItem 
           key={document.id} 
           document={document}
