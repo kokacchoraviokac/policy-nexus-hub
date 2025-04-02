@@ -23,17 +23,18 @@ export const useSalesProcessDocuments = (salesProcessId: string) => {
       entity_id: item.sales_process_id,
       uploaded_by_id: item.uploaded_by,
       uploaded_by_name: "", // We can populate this if needed
-      description: item.description || "",
+      // Handle missing properties with default values
+      description: "", // Default empty string for description
       version: item.version || 1,
-      status: item.status || "active",
-      tags: item.tags || [],
+      status: "active", // Default status
+      tags: [], // Default empty array for tags
       // Explicitly cast category to DocumentCategory to ensure type compatibility
       category: (item.category || "other") as DocumentCategory,
       mime_type: item.mime_type || "",
       is_latest_version: item.is_latest_version || true,
       original_document_id: item.original_document_id || null,
       step: item.step || "",
-      approval_status: item.approval_status || "pending"
+      approval_status: "pending" // Default approval status
     }));
   };
   
