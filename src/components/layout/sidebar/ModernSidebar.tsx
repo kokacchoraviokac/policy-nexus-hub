@@ -14,7 +14,7 @@ const ModernSidebar: React.FC<ModernSidebarProps> = ({ collapsed, setCollapsed }
   return (
     <div
       className={cn(
-        "h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300",
+        "h-screen bg-sidebar text-sidebar-foreground transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >

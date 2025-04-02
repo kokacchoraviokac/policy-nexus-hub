@@ -11,7 +11,7 @@ interface SidebarHeaderProps {
 
 const SidebarHeader: React.FC<SidebarHeaderProps> = ({ collapsed, setCollapsed }) => {
   return (
-    <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
+    <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
       <Logo collapsed={collapsed} />
       <button 
         onClick={() => setCollapsed(!collapsed)}

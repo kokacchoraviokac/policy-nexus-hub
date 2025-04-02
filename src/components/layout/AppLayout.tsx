@@ -30,7 +30,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         setCollapsed={setSidebarCollapsed} 
       />
       
-      {/* Main content + fixed footer */}
+      {/* Main content area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <TopBar 
           sidebarCollapsed={sidebarCollapsed} 
