@@ -1,28 +1,23 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileUp, ChevronRight, FileText } from "lucide-react";
 import { SalesProcess } from "@/types/salesProcess";
 import { StageBadge } from "./badges/StatusBadges";
 import ProcessOverviewTab from "./tabs/ProcessOverviewTab";
-import QuoteManagementPanel from "./QuoteManagementPanel";
 import ImportPolicyFromSalesDialog from "./ImportPolicyFromSalesDialog";
 import { useSalesProcessStageTransition } from "@/hooks/sales/useSalesProcessStageTransition";
-import { useProposalsData } from "@/hooks/sales/useProposalsData";
-import ProposalsList from "../proposals/ProposalsList";
-import CreateProposalDialog from "../proposals/CreateProposalDialog";
-import SalesProcessDocuments from "../documents/SalesProcessDocuments";
-import { getNextStage } from "@/utils/sales/stageTransitionConfig";
+import QuotesTab from "./tabs/QuotesTab";
+import ProposalsTab from "./tabs/ProposalsTab";
+import DocumentsTab from "./tabs/DocumentsTab";
+import SalesProcessDialogFooter from "./SalesProcessDialogFooter";
 
 interface SalesProcessDetailsDialogProps {
   process: SalesProcess;
@@ -40,7 +35,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
   const { t } = useLanguage();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [createProposalDialogOpen, setCreateProposalDialogOpen] = useState(false);
   
   const {
     process: updatedProcess,
@@ -49,19 +43,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
     handleQuoteSelected,
     handleMoveToNextStage
   } = useSalesProcessStageTransition(process, onMoveToNextStage);
-
-  const { 
-    proposals, 
-    isLoading: proposalsLoading, 
-    createProposal,
-    updateProposalStatus
-  } = useProposalsData({
-    salesProcessId: process.id,
-    clientName: process.client_name
-  });
-
-  // Determine if the process can move to the next stage
-  const hasNextStage = !!getNextStage(updatedProcess.stage);
 
   return (
     <>
@@ -91,91 +72,26 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
               <ProcessOverviewTab process={updatedProcess} />
             </TabsContent>
             
-            <TabsContent value="quotes" className="pt-4">
-              <QuoteManagementPanel 
-                process={updatedProcess} 
-                onQuoteSelected={handleQuoteSelected}
-              />
+            <TabsContent value="quotes">
+              <QuotesTab process={updatedProcess} onQuoteSelected={handleQuoteSelected} />
             </TabsContent>
             
-            <TabsContent value="proposals" className="pt-4">
-              <div className="flex justify-between mb-4">
-                <h3 className="text-lg font-medium">{t("proposalManagement")}</h3>
-                <Button size="sm" onClick={() => setCreateProposalDialogOpen(true)}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  {t("createProposal")}
-                </Button>
-              </div>
-              
-              {proposalsLoading ? (
-                <div className="flex justify-center items-center h-48">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              ) : proposals.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center h-48 p-6 border rounded-md">
-                  <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                  <h3 className="text-lg font-medium">{t("noProposalsYet")}</h3>
-                  <p className="text-sm text-muted-foreground mt-1 mb-4">
-                    {t("createFirstProposal")}
-                  </p>
-                  <Button onClick={() => setCreateProposalDialogOpen(true)}>
-                    {t("createProposal")}
-                  </Button>
-                </div>
-              ) : (
-                <ProposalsList 
-                  proposals={proposals}
-                  onStatusChange={updateProposalStatus}
-                />
-              )}
+            <TabsContent value="proposals">
+              <ProposalsTab process={updatedProcess} />
             </TabsContent>
 
-            <TabsContent value="documents" className="pt-4">
-              <SalesProcessDocuments
-                salesProcessId={process.id}
-                currentStage={updatedProcess.stage || "discovery"}
-              />
+            <TabsContent value="documents">
+              <DocumentsTab process={updatedProcess} />
             </TabsContent>
           </Tabs>
           
-          <DialogFooter className="flex justify-between items-center">
-            <div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mr-2"
-                onClick={() => onOpenChange(false)}
-              >
-                {t("close")}
-              </Button>
-              {hasNextStage && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleMoveToNextStage}
-                >
-                  <ChevronRight className="h-4 w-4 mr-1.5" />
-                  {t("moveToNextStage")}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              {isReadyForPolicyImport && (
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  className="gap-1"
-                  onClick={() => setImportDialogOpen(true)}
-                >
-                  <FileUp className="h-4 w-4" />
-                  {t("importPolicy")}
-                </Button>
-              )}
-              <Button variant="default" size="sm">
-                {t("editProcess")}
-              </Button>
-            </div>
-          </DialogFooter>
+          <SalesProcessDialogFooter
+            process={updatedProcess}
+            onClose={() => onOpenChange(false)}
+            onMoveToNextStage={handleMoveToNextStage}
+            isReadyForPolicyImport={isReadyForPolicyImport}
+            onImportPolicy={() => setImportDialogOpen(true)}
+          />
         </DialogContent>
       </Dialog>
 
@@ -183,14 +99,6 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
         process={updatedProcess}
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-      />
-      
-      <CreateProposalDialog
-        open={createProposalDialogOpen}
-        onOpenChange={setCreateProposalDialogOpen}
-        salesProcessId={process.id}
-        clientName={process.client_name}
-        onProposalCreated={createProposal}
       />
     </>
   );

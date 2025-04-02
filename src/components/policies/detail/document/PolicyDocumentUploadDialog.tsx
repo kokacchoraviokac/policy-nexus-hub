@@ -9,9 +9,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useDocumentFormState } from "@/hooks/useDocumentFormState";
 import { EntityType } from "@/types/documents";
-import DocumentUploadForm from "./DocumentUploadForm";
+import { useDocumentUploadState } from "@/components/documents/unified/hooks/useDocumentUploadState";
+import DocumentUploadForm from "@/components/documents/unified/DocumentUploadForm";
 import DocumentUploadActions from "./DocumentUploadActions";
 
 interface PolicyDocumentUploadDialogProps {
@@ -44,14 +44,12 @@ const PolicyDocumentUploadDialog: React.FC<PolicyDocumentUploadDialogProps> = ({
     setDocumentCategory,
     file,
     setFile,
-    isSubmitting,
+    uploading: isSubmitting,
     isValid,
     handleSubmit
-  } = useDocumentFormState({
+  } = useDocumentUploadState({
     entityId,
     entityType,
-    originalDocumentId,
-    currentVersion,
     onSuccess: () => {
       onSuccess();
       onClose();
