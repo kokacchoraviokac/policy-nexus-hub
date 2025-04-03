@@ -1,12 +1,14 @@
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Upload, Loader2 } from "lucide-react";
 import { useDocumentManager } from "@/hooks/useDocumentManager";
-import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
-import DocumentList from "@/components/documents/unified/DocumentList";
+
+// Lazy load the document components
+const DocumentList = React.lazy(() => import("@/components/documents/unified/DocumentList"));
+const DocumentUploadDialog = React.lazy(() => import("@/components/documents/unified/DocumentUploadDialog"));
 
 interface PolicyDocumentsTabProps {
   policyId: string;
@@ -54,24 +56,34 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
         </div>
       </CardHeader>
       <CardContent>
-        <DocumentList 
-          documents={documents}
-          isLoading={isLoading}
-          isError={isError}
-          error={error}
-          onDelete={deleteDocument}
-          isDeleting={isDeleting}
-          showUploadButton={false}
-          onUploadVersion={handleUploadVersion}
-        />
+        <Suspense fallback={
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        }>
+          <DocumentList 
+            documents={documents}
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            onDelete={deleteDocument}
+            isDeleting={isDeleting}
+            showUploadButton={false}
+            onUploadVersion={handleUploadVersion}
+          />
+        </Suspense>
         
-        <DocumentUploadDialog
-          open={uploadDialogOpen}
-          onOpenChange={setUploadDialogOpen}
-          entityType="policy"
-          entityId={policyId}
-          selectedDocument={selectedDocument}
-        />
+        <Suspense fallback={null}>
+          {uploadDialogOpen && (
+            <DocumentUploadDialog
+              open={uploadDialogOpen}
+              onOpenChange={setUploadDialogOpen}
+              entityType="policy"
+              entityId={policyId}
+              selectedDocument={selectedDocument}
+            />
+          )}
+        </Suspense>
       </CardContent>
     </Card>
   );

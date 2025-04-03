@@ -1,15 +1,11 @@
 
-export { DataTable } from "../data-table/DataTable";
-export type { DataTableProps, Column } from "../data-table/DataTable";
+import React from "react";
+import { cn } from "@/lib/utils";
 
-export { FilterBar } from "../filters/FilterBar";
-export type { FilterOption, FilterGroup, ActiveFilter } from "../filters/FilterBar";
+// Export a lazy-loaded PageHeader component
+export const PageHeader = React.lazy(() => import("@/components/ui/page/PageHeader"));
 
-export { ActionButtons } from "../actions/ActionButtons";
-export type { ActionItem } from "../actions/ActionButtons";
-
-export { PageHeader } from "../page/PageHeader";
-
-// Re-export Button for convenience
-export { Button } from "../button";
-export { RefreshCcw, Search, Download, Upload, File, FileText } from "lucide-react"; 
+// Export other common components as needed
+export const LoadingSpinner = ({ className }: { className?: string }) => (
+  <div className={cn("animate-spin rounded-full border-4 border-primary border-t-transparent", className || "h-8 w-8")}></div>
+);

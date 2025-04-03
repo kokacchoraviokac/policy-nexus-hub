@@ -10,6 +10,7 @@ import { ReportsRoutes } from "./ReportsRoutes";
 import { AgentRoutes } from "./AgentRoutes";
 import { documentRoutes } from "./documentRoutes";
 
+// Export all routes for direct import
 export const ModuleRoutes = [
   ...DashboardRoutes,
   ...PolicyRoutes,
@@ -20,5 +21,8 @@ export const ModuleRoutes = [
   ...AgentRoutes,
   ...ReportsRoutes,
   ...SettingsRoutes,
-  ...documentRoutes  // Add document routes here
+  ...documentRoutes
 ];
+
+// Default export for backwards compatibility
+export default ModuleRoutes;
