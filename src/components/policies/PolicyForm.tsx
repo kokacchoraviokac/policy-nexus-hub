@@ -79,7 +79,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
       const startDate = data.start_date.toISOString().split('T')[0];
       const expiryDate = data.expiry_date.toISOString().split('T')[0];
       
-      // Prepare policy data
+      // Prepare policy data with required fields
       const policyData = {
         ...data,
         start_date: startDate,
@@ -88,6 +88,8 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
         created_by: user?.id,
         commission_amount: data.premium * (data.commission_percentage || 0) / 100,
         workflow_status: "draft",
+        insurer_name: data.insurer_name || "", // Ensure required field is set
+        policyholder_name: data.policyholder_name || "", // Ensure required field is set
       };
 
       const { data: policy, error } = await supabase
@@ -120,6 +122,8 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
         expiry_date: expiryDate,
         updated_at: new Date().toISOString(),
         commission_amount: data.premium * (data.commission_percentage || 0) / 100,
+        insurer_name: data.insurer_name || "", // Ensure required field is set
+        policyholder_name: data.policyholder_name || "", // Ensure required field is set
       };
 
       const { data: policy, error } = await supabase
@@ -171,8 +175,8 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
   };
 
   return (
-    <Form {...form.form}>
-      <form onSubmit={form.form.handleSubmit(form.handleSubmitWithToast)} className="space-y-8">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(form.handleSubmitWithToast)} className="space-y-8">
         <Tabs defaultValue="basic" className="w-full">
           <TabsList className="grid grid-cols-3 mb-6">
             <TabsTrigger value="basic">{t("basicInfo")}</TabsTrigger>
@@ -181,12 +185,12 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
           </TabsList>
           
           <TabsContent value="basic">
-            <PolicyBasicInfoTab form={form.form} />
+            <PolicyBasicInfoTab form={form} />
           </TabsContent>
           
           <TabsContent value="parties">
             <PolicyPartiesTab 
-              form={form.form}
+              form={form}
               clients={clients}
               insurers={insurers}
               products={products}
@@ -198,7 +202,7 @@ const PolicyForm: React.FC<PolicyFormProps> = ({
           </TabsContent>
           
           <TabsContent value="financial">
-            <PolicyFinancialTab form={form.form} />
+            <PolicyFinancialTab form={form} />
           </TabsContent>
         </Tabs>
         

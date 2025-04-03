@@ -8,17 +8,21 @@ import AnalysisTabs from "./analysis/AnalysisTabs";
 import AnalysisTabsList from "./analysis/AnalysisTabsList";
 
 interface DocumentAnalysisPanelProps {
-  documentId: string;
-  documentUrl: string;
+  documentId?: string;
+  documentUrl?: string;
   documentType: string;
+  file?: File | null;
   onAnalysisComplete?: (result: any) => void;
+  onCategoryDetected?: (category: string) => void;
 }
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   documentId,
   documentUrl,
   documentType,
-  onAnalysisComplete
+  file,
+  onAnalysisComplete,
+  onCategoryDetected
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("classify");
@@ -85,6 +89,15 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
       if (onAnalysisComplete) {
         onAnalysisComplete(mockResult);
       }
+
+      if (onCategoryDetected && activeTab === 'classify') {
+        try {
+          const classificationResult = JSON.parse(mockResult.analysis);
+          onCategoryDetected(classificationResult.documentType);
+        } catch (e) {
+          console.error("Error parsing classification result:", e);
+        }
+      }
       
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unknown error occurred");
@@ -105,7 +118,7 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
           <div className="mt-6">
             <Button 
               onClick={handleAnalyze}
-              disabled={isProcessing}
+              disabled={isProcessing || (!file && !documentUrl)}
             >
               {isProcessing ? t("analyzing") : t("analyze")}
             </Button>

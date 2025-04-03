@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -83,7 +82,7 @@ const NewClaimPage = () => {
     incident_date: new Date().toISOString().split("T")[0],
     claimed_amount: 0,
     deductible: 0,
-    status: "in processing",
+    status: "in_processing",
     notes: "",
   };
 

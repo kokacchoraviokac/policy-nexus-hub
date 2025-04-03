@@ -11,16 +11,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import CreateInvitationForm from './CreateInvitationForm';
-import * as z from 'zod';
-import { createInviteFormSchema } from './CreateInvitationForm';
+import CreateInvitationForm, { createInviteFormSchema, InviteFormValues } from './CreateInvitationForm';
 
 interface CreateInvitationDialogProps {
   companies: Company[];
   isSuperAdmin: boolean;
   defaultCompanyId?: string;
   isSubmitting: boolean;
-  onSubmit: (values: z.infer<ReturnType<typeof createInviteFormSchema>>) => Promise<void>;
+  onSubmit: (values: InviteFormValues) => Promise<void>;
 }
 
 const CreateInvitationDialog: React.FC<CreateInvitationDialogProps> = ({

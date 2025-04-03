@@ -24,6 +24,7 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
   const { t } = useLanguage();
   const [uploadMode, setUploadMode] = useState<"basic" | "ai-assisted">("basic");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [detectedCategory, setDetectedCategory] = useState<string>("");
   
   const handleFileSelected = (file: File | null) => {
     setSelectedFile(file);
@@ -76,7 +77,7 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
                 file={selectedFile}
                 documentType="policy"
                 onCategoryDetected={(category) => {
-                  // Implement action on category detection if needed
+                  setDetectedCategory(category);
                 }}
               />
             </div>

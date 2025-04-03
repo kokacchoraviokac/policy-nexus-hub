@@ -68,7 +68,7 @@ export function createModelSchema(type: string, options: { isRequired?: boolean,
 }
 
 // Function to create a schema with translations
-export function createSchemaWithTranslations(baseSchema: z.ZodType<any>) {
+export function createSchemaWithTranslations<T extends z.ZodRawShape>(baseSchema: z.ZodObject<T>) {
   return baseSchema.extend({
     translations: z.record(z.string()).optional().nullable(),
   });

@@ -35,7 +35,7 @@ interface CreateInvitationFormProps {
   onSubmit: (values: InviteFormValues) => Promise<void>;
 }
 
-const createInviteFormSchema = (t: (key: string) => string) => z.object({
+export const createInviteFormSchema = (t: (key: string) => string) => z.object({
   email: emailSchema(t('invalidEmail')).refine(val => val !== "", {
     message: t('emailRequired'),
   }),
@@ -43,7 +43,7 @@ const createInviteFormSchema = (t: (key: string) => string) => z.object({
   company_id: createModelSchema('Company', { isRequired: true, errorMessage: t('companyRequired') }),
 });
 
-type InviteFormValues = z.infer<ReturnType<typeof createInviteFormSchema>>;
+export type InviteFormValues = z.infer<ReturnType<typeof createInviteFormSchema>>;
 
 const CreateInvitationForm: React.FC<CreateInvitationFormProps> = ({
   companies,
