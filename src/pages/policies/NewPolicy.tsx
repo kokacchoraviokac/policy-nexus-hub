@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import PolicyForm from "@/components/policies/PolicyForm";
+import { PageHeader } from "@/components/ui/common";
 
 const NewPolicy = () => {
   const { t } = useLanguage();
