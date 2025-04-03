@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { z } from 'zod';
 import { Company } from '@/hooks/useCompanies';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -26,20 +24,26 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import useZodForm from '@/hooks/useZodForm';
+import { emailSchema, createModelSchema } from '@/utils/formSchemas';
 
 interface CreateInvitationFormProps {
   companies: Company[];
   isSuperAdmin: boolean;
   defaultCompanyId?: string;
   isSubmitting: boolean;
-  onSubmit: (values: z.infer<ReturnType<typeof createInviteFormSchema>>) => Promise<void>;
+  onSubmit: (values: InviteFormValues) => Promise<void>;
 }
 
-export const createInviteFormSchema = (t: (key: string) => string) => z.object({
-  email: z.string().email(t('invalidEmail')),
+const createInviteFormSchema = (t: (key: string) => string) => z.object({
+  email: emailSchema(t('invalidEmail')).refine(val => val !== "", {
+    message: t('emailRequired'),
+  }),
   role: z.enum(['admin', 'employee']),
-  company_id: z.string().uuid(),
+  company_id: createModelSchema('Company', { isRequired: true, errorMessage: t('companyRequired') }),
 });
+
+type InviteFormValues = z.infer<ReturnType<typeof createInviteFormSchema>>;
 
 const CreateInvitationForm: React.FC<CreateInvitationFormProps> = ({
   companies,
@@ -52,13 +56,16 @@ const CreateInvitationForm: React.FC<CreateInvitationFormProps> = ({
   
   const inviteFormSchema = createInviteFormSchema(t);
   
-  const form = useForm<z.infer<typeof inviteFormSchema>>({
-    resolver: zodResolver(inviteFormSchema),
+  const form = useZodForm({
+    schema: inviteFormSchema,
     defaultValues: {
       email: '',
       role: 'employee',
       company_id: defaultCompanyId || '',
     },
+    onSubmit,
+    successMessage: t('invitationSentSuccess'),
+    errorMessage: t('invitationSentError'),
   });
 
   return (
@@ -139,9 +146,9 @@ const CreateInvitationForm: React.FC<CreateInvitationFormProps> = ({
           </DialogClose>
           <Button 
             type="submit" 
-            disabled={isSubmitting}
+            disabled={isSubmitting || form.isSubmitting}
           >
-            {isSubmitting ? 'Sending...' : 'Send Invitation'}
+            {isSubmitting || form.isSubmitting ? 'Sending...' : 'Send Invitation'}
           </Button>
         </DialogFooter>
       </form>

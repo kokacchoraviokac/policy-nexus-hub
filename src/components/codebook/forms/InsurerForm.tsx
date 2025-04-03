@@ -1,8 +1,6 @@
 
 import React from "react";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { ContactFields } from "./shared/ContactFields";
@@ -10,21 +8,35 @@ import { AddressFields } from "./shared/AddressFields";
 import { CompanyFields } from "./shared/CompanyFields";
 import { FormActions } from "./shared/FormActions";
 import { StatusField } from "./shared/StatusField";
+import useZodForm from "@/hooks/useZodForm";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  nameSchema,
+  emailSchema,
+  phoneSchema,
+  addressSchema,
+  citySchema,
+  postalCodeSchema,
+  countrySchema,
+  registrationNumberSchema,
+  isActiveSchema,
+} from "@/utils/formSchemas";
 
-const insurerFormSchema = z.object({
-  name: z.string().min(1, "Company name is required"),
-  contact_person: z.string().optional(),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  postal_code: z.string().optional(),
-  country: z.string().optional(),
-  registration_number: z.string().optional(),
-  is_active: z.boolean().default(true),
-});
+const createInsurerFormSchema = (t: (key: string) => string) =>
+  z.object({
+    name: nameSchema(t("companyNameRequired")),
+    contact_person: z.string().optional(),
+    email: emailSchema(t("invalidEmail")),
+    phone: phoneSchema(),
+    address: addressSchema(),
+    city: citySchema(),
+    postal_code: postalCodeSchema(),
+    country: countrySchema(),
+    registration_number: registrationNumberSchema(),
+    is_active: isActiveSchema(),
+  });
 
-type InsurerFormValues = z.infer<typeof insurerFormSchema>;
+type InsurerFormValues = z.infer<ReturnType<typeof createInsurerFormSchema>>;
 
 interface InsurerFormProps {
   defaultValues?: Partial<InsurerFormValues>;
@@ -48,13 +60,23 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
   },
   onSubmit,
   onCancel,
-  isSubmitting,
+  isSubmitting: externalIsSubmitting,
 }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
+  
+  const schema = createInsurerFormSchema(t);
 
-  const form = useForm<InsurerFormValues>({
-    resolver: zodResolver(insurerFormSchema),
+  const form = useZodForm({
+    schema,
     defaultValues,
+    onSubmit,
+    successMessage: defaultValues.name 
+      ? t("insurerUpdateSuccess") 
+      : t("insurerCreateSuccess"),
+    errorMessage: defaultValues.name 
+      ? t("insurerUpdateError") 
+      : t("insurerCreateError"),
   });
 
   return (
@@ -78,7 +100,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
 
         <FormActions
           onCancel={onCancel}
-          isSubmitting={isSubmitting}
+          isSubmitting={externalIsSubmitting || form.isSubmitting}
           isEditing={!!defaultValues.name}
           entityName="Insurer"
         />

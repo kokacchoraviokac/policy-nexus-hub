@@ -1,28 +1,29 @@
 
 import React from "react";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
-import { InsuranceProduct } from "@/types/codebook";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { FormActions } from "./shared/FormActions";
 import { ProductFields } from "./shared/ProductFields";
 import { StatusField } from "./shared/StatusField";
+import useZodForm from "@/hooks/useZodForm";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { nameSchema, isActiveSchema, createModelSchema } from "@/utils/formSchemas";
 
-const productFormSchema = z.object({
-  code: z.string().min(1, "Code is required"),
-  name: z.string().min(1, "Name is required"),
-  category: z.string().optional(),
-  description: z.string().optional(),
-  is_active: z.boolean().default(true),
-  insurer_id: z.string().min(1, "Insurer is required"),
-  name_translations: z.record(z.string()).optional().nullable(),
-  description_translations: z.record(z.string()).optional().nullable(),
-  category_translations: z.record(z.string()).optional().nullable(),
-});
+const createProductFormSchema = (t: (key: string) => string) =>
+  z.object({
+    code: z.string().min(1, t("codeRequired")),
+    name: nameSchema(t("nameRequired")),
+    category: z.string().optional(),
+    description: z.string().optional(),
+    is_active: isActiveSchema(),
+    insurer_id: createModelSchema("Insurer", { isRequired: true, errorMessage: t("insurerRequired") }),
+    name_translations: z.record(z.string()).optional().nullable(),
+    description_translations: z.record(z.string()).optional().nullable(),
+    category_translations: z.record(z.string()).optional().nullable(),
+  });
 
-type ProductFormValues = z.infer<typeof productFormSchema>;
+type ProductFormValues = z.infer<ReturnType<typeof createProductFormSchema>>;
 
 interface ProductFormProps {
   defaultValues?: Partial<ProductFormValues>;
@@ -48,21 +49,31 @@ const ProductForm: React.FC<ProductFormProps> = ({
   },
   onSubmit,
   onCancel,
-  isSubmitting,
+  isSubmitting: externalIsSubmitting,
   preselectedInsurerId,
   preselectedInsurerName,
   enableMultilingual = true
 }) => {
   const { user } = useAuth();
-
+  const { t } = useLanguage();
+  
   // If we have a preselected insurer, make sure it's set in the default values
   if (preselectedInsurerId && !defaultValues.insurer_id) {
     defaultValues.insurer_id = preselectedInsurerId;
   }
+  
+  const schema = createProductFormSchema(t);
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productFormSchema),
+  const form = useZodForm({
+    schema,
     defaultValues,
+    onSubmit,
+    successMessage: defaultValues.code 
+      ? t("productUpdateSuccess") 
+      : t("productCreateSuccess"),
+    errorMessage: defaultValues.code 
+      ? t("productUpdateError") 
+      : t("productCreateError"),
   });
 
   return (
@@ -82,7 +93,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
         <FormActions
           onCancel={onCancel}
-          isSubmitting={isSubmitting}
+          isSubmitting={externalIsSubmitting || form.isSubmitting}
           isEditing={!!defaultValues.code}
           entityName="Product"
         />
