@@ -1,75 +1,63 @@
 
-export type EntityType = 
-  | "policy"
-  | "claim"
-  | "client" 
-  | "insurer"
-  | "sales_process"
-  | "agent"
-  | "invoice"
-  | "addendum";
+export type DocumentCategory = 'policy' | 'claim' | 'client' | 'invoice' | 'other' | 'claim_evidence' | 'medical' | 'legal' | 'financial' | 'lien' | 'notification' | 'correspondence';
 
-export type DocumentApprovalStatus = 
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "needs_review";
-
-export type DocumentCategory = 
-  | "policy"
-  | "claim"
-  | "client"
-  | "invoice"
-  | "legal"
-  | "correspondence"
-  | "discovery"
-  | "quote"
-  | "proposal"
-  | "contract"
-  | "closeout"
-  | "other";
+export type DocumentApprovalStatus = 'pending' | 'approved' | 'rejected' | 'needs_review';
 
 export interface Document {
   id: string;
   document_name: string;
   document_type: string;
-  category?: DocumentCategory | string;
-  file_path: string;
-  file_url?: string;
-  file_size?: number;
-  file_type?: string;
-  mime_type?: string;
-  entity_id: string;
-  entity_type: EntityType;
-  uploaded_by: string;
-  uploaded_by_name?: string;
-  company_id: string;
   created_at: string;
-  updated_at?: string;
+  file_path: string;
+  entity_type: EntityType;
+  entity_id: string;
+  uploaded_by_id: string;
+  uploaded_by_name: string;
+  description?: string;
   version?: number;
+  status?: string;
+  tags?: string[];
+  category: DocumentCategory;
+  
+  // Add missing properties
+  mime_type?: string;
   is_latest_version?: boolean;
   original_document_id?: string | null;
   approval_status?: DocumentApprovalStatus;
-  approval_notes?: string;
   approved_by?: string;
   approved_at?: string;
-  metadata?: Record<string, any> | string;
+  approval_notes?: string;
 }
 
-export interface DocumentUploadOptions {
+export interface DocumentVersion {
+  id: string;
+  document_id: string;
+  version_number: number;
+  created_at: string;
+  file_path: string;
+  created_by_id: string;
+  created_by_name: string;
+}
+
+export interface DocumentUploadRequest {
+  document_name: string;
+  document_type: string;
+  entity_type: string;
+  entity_id: string;
+  description?: string;
+  tags?: string[];
+  category: DocumentCategory;
   file: File;
-  documentName: string;
-  documentType: string;
-  category: DocumentCategory | string;
-  entityId: string;
-  entityType: EntityType;
-  originalDocumentId?: string | null;
-  currentVersion?: number;
-  additionalData?: Record<string, any>;
 }
 
-export interface ErrorResponse {
-  code?: string;
-  message: string;
-  details?: any;
+export interface DocumentApprovalInfo {
+  id: string;
+  document_id: string;
+  status: DocumentApprovalStatus;
+  reviewer_id?: string;
+  reviewer_name?: string;
+  reviewed_at?: string;
+  comments?: string;
 }
+
+export type EntityType = 'policy' | 'claim' | 'client' | 'invoice' | 'addendum' | 'sales_process' | 'agent' | 'insurer';

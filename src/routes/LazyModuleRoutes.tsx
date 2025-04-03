@@ -1,6 +1,6 @@
 
 import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import AppLayout from '@/components/layout/AppLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -12,20 +12,20 @@ const ModuleLoadingFallback = () => (
   </div>
 );
 
-// Import routes
-import { DashboardRoutes } from './DashboardRoutes';
-import { PolicyRoutes } from './PolicyRoutes';
-import { SalesRoutes } from './SalesRoutes';
-import { ClaimsRoutes } from './ClaimsRoutes';
-import { FinancesRoutes } from './FinancesRoutes';
-import { CodebookRoutes } from './CodebookRoutes';
-import { AgentRoutes } from './AgentRoutes';
-import { ReportsRoutes } from './ReportsRoutes';
-import { SettingsRoutes } from './SettingsRoutes';
-import { documentRoutes } from './documentRoutes';
+// Lazy loaded route groups
+const DashboardRoutes = React.lazy(() => import('./DashboardRoutes').then(module => ({ default: module.DashboardRoutes })));
+const PolicyRoutes = React.lazy(() => import('./PolicyRoutes').then(module => ({ default: module.PolicyRoutes })));
+const SalesRoutes = React.lazy(() => import('./SalesRoutes').then(module => ({ default: module.SalesRoutes })));
+const ClaimsRoutes = React.lazy(() => import('./ClaimsRoutes').then(module => ({ default: module.ClaimsRoutes })));
+const FinancesRoutes = React.lazy(() => import('./FinancesRoutes').then(module => ({ default: module.FinancesRoutes })));
+const CodebookRoutes = React.lazy(() => import('./CodebookRoutes').then(module => ({ default: module.CodebookRoutes })));
+const AgentRoutes = React.lazy(() => import('./AgentRoutes').then(module => ({ default: module.AgentRoutes })));
+const ReportsRoutes = React.lazy(() => import('./ReportsRoutes').then(module => ({ default: module.ReportsRoutes })));
+const SettingsRoutes = React.lazy(() => import('./SettingsRoutes').then(module => ({ default: module.SettingsRoutes })));
+const DocumentRoutes = React.lazy(() => import('./documentRoutes').then(module => ({ default: module.documentRoutes })));
 
-// Wrapper component for routes
-const RouteWrapper = ({ children }: { children: React.ReactNode }) => (
+// Wrapper component for lazily loaded routes
+const LazyRouteWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <Suspense fallback={<ModuleLoadingFallback />}>
     <ProtectedRoute>
       <AppLayout>
@@ -37,118 +37,85 @@ const RouteWrapper = ({ children }: { children: React.ReactNode }) => (
 
 const LazyModuleRoutes: React.FC = () => (
   <Routes>
-    <Route 
-      path="/dashboard/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {DashboardRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
+    <Route path="/dashboard/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <DashboardRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
     
-    <Route 
-      path="/policies/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            <PolicyRoutes />
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
-
-    <Route 
-      path="/sales/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {SalesRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
-
-    <Route 
-      path="/claims/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {ClaimsRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
-
-    <Route 
-      path="/finances/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {FinancesRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
-
-    <Route 
-      path="/codebook/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {CodebookRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
-
-    <Route 
-      path="/agent/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {AgentRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
-
-    <Route 
-      path="/reports/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {ReportsRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
-
-    <Route 
-      path="/settings/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {SettingsRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
+    <Route path="/policies/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <PolicyRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
     
-    <Route 
-      path="/documents/*" 
-      element={
-        <RouteWrapper>
-          <Routes>
-            {documentRoutes}
-          </Routes>
-        </RouteWrapper>
-      } 
-    />
+    <Route path="/sales/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <SalesRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
     
-    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    <Route path="/claims/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <ClaimsRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
+    
+    <Route path="/finances/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <FinancesRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
+    
+    <Route path="/codebook/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <CodebookRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
+    
+    <Route path="/agent/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <AgentRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
+    
+    <Route path="/reports/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <ReportsRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
+    
+    <Route path="/settings/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <SettingsRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
+    
+    <Route path="/documents/*" element={
+      <LazyRouteWrapper>
+        <Suspense fallback={<ModuleLoadingFallback />}>
+          <DocumentRoutes />
+        </Suspense>
+      </LazyRouteWrapper>
+    } />
   </Routes>
 );
 
