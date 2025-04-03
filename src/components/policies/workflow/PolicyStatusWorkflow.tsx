@@ -1,7 +1,5 @@
 
 import React from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   Select, 
   SelectContent, 
@@ -11,10 +9,11 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy } from "@/types/policies";
 import { useActivityLogger } from "@/utils/activityLogger";
+import { useApiService } from "@/hooks/useApiService";
+import { PolicyService } from "@/services/PolicyService";
 
 interface PolicyStatusWorkflowProps {
   policy: Policy;
@@ -22,23 +21,26 @@ interface PolicyStatusWorkflowProps {
 }
 
 // Define valid workflow status values
-type WorkflowStatus = 'imported' | 'in_progress' | 'pending_review' | 'approved' | 'rejected';
+type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
 
 const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy, onStatusUpdated }) => {
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const { logActivity } = useActivityLogger();
+  const { isLoading, executeService } = useApiService();
   
-  const updateStatus = useMutation({
-    mutationFn: async (status: WorkflowStatus) => {
-      const { error } = await supabase
-        .from('policies')
-        .update({ workflow_status: status })
-        .eq('id', policy.id);
-      
-      if (error) throw error;
-
+  const handleStatusChange = async (status: string) => {
+    if (status === policy.workflow_status) return;
+    
+    const result = await executeService(
+      () => PolicyService.updatePolicyStatus(policy.id, status as WorkflowStatus),
+      {
+        successMessage: t("statusUpdated"),
+        errorMessage: t("errorUpdatingStatus"),
+        invalidateQueryKeys: [['policy', policy.id], ['policies-workflow']]
+      }
+    );
+    
+    if (result) {
       // Log the activity
       logActivity({
         entity_type: "policy",
@@ -51,27 +53,11 @@ const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy, onS
         }
       });
       
-      return { success: true };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['policy', policy.id] });
-      toast({
-        title: t("statusUpdated"),
-        description: t("policyStatusHasBeenUpdated"),
-      });
-      
       if (onStatusUpdated) {
         onStatusUpdated();
       }
-    },
-    onError: (error: any) => {
-      toast({
-        title: t("errorUpdatingStatus"),
-        description: error.message || t("unknownError"),
-        variant: "destructive",
-      });
-    },
-  });
+    }
+  };
   
   return (
     <div className="space-y-4">
@@ -79,18 +65,17 @@ const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy, onS
         <div className="col-span-2">
           <Select 
             value={policy.workflow_status}
-            onValueChange={(value) => updateStatus.mutate(value as WorkflowStatus)}
-            disabled={updateStatus.isPending}
+            onValueChange={handleStatusChange}
+            disabled={isLoading}
           >
             <SelectTrigger>
               <SelectValue placeholder={t("selectStatus")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="imported">{t("imported")}</SelectItem>
-              <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
-              <SelectItem value="pending_review">{t("pendingReview")}</SelectItem>
-              <SelectItem value="approved">{t("approved")}</SelectItem>
-              <SelectItem value="rejected">{t("rejected")}</SelectItem>
+              <SelectItem value="draft">{t("draft")}</SelectItem>
+              <SelectItem value="in_review">{t("inReview")}</SelectItem>
+              <SelectItem value="ready">{t("ready")}</SelectItem>
+              <SelectItem value="complete">{t("complete")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -100,7 +85,7 @@ const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy, onS
           disabled
           className="col-span-1"
         >
-          {updateStatus.isPending ? (
+          {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             t("history")

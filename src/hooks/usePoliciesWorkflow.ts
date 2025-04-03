@@ -1,96 +1,73 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Policy } from "@/types/policies";
+import { PolicyService } from "@/services/PolicyService";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useApiService } from "./useApiService";
 
 export const usePoliciesWorkflow = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { executeService } = useApiService();
   
   const [activeTab, setActiveTab] = useState("draft");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [policies, setPolicies] = useState<Policy[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const [statusFilter, setStatusFilter] = useState("all");
   const pageSize = 10;
 
-  useEffect(() => {
-    fetchPolicies();
-  }, [activeTab, searchTerm, currentPage, statusFilter]);
-
-  const fetchPolicies = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Determine which workflow statuses to fetch based on active tab
-      let workflowStatuses: string[] = [];
+  // Fetch policies using the PolicyService
+  const {
+    data,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['policies-workflow', activeTab, searchTerm, currentPage, statusFilter],
+    queryFn: async () => {
+      // Determine workflow status based on active tab
+      let workflowStatus = undefined;
       
-      if (activeTab === "draft") {
-        workflowStatuses = ["draft", "in_review"];
-      } else if (activeTab === "ready") {
-        workflowStatuses = ["ready"];
-      } else if (activeTab === "complete") {
-        workflowStatuses = ["complete"];
+      if (activeTab !== 'all' && statusFilter === 'all') {
+        workflowStatus = activeTab as any;
+      } else if (statusFilter !== 'all') {
+        workflowStatus = statusFilter as any;
       }
       
-      // If statusFilter is not 'all', override with the specific filter
-      if (statusFilter !== "all") {
-        workflowStatuses = [statusFilter];
-      }
-      
-      // Calculate pagination
-      const from = (currentPage - 1) * pageSize;
-      const to = from + pageSize - 1;
-      
-      // Build query
-      let query = supabase
-        .from("policies")
-        .select("*", { count: "exact" });
-      
-      // Apply workflow status filter
-      if (workflowStatuses.length > 0) {
-        query = query.in("workflow_status", workflowStatuses);
-      }
-      
-      // Apply search filter if provided
-      if (searchTerm) {
-        query = query.or(
-          `policy_number.ilike.%${searchTerm}%,policyholder_name.ilike.%${searchTerm}%,insurer_name.ilike.%${searchTerm}%`
-        );
-      }
-      
-      // Apply pagination
-      query = query.range(from, to).order("created_at", { ascending: false });
-      
-      // Execute query
-      const { data, error, count } = await query;
-      
-      if (error) throw error;
-      
-      setPolicies(data || []);
-      setTotalCount(count || 0);
-    } catch (err) {
-      console.error("Error fetching policies:", err);
-      setError(err instanceof Error ? err : new Error("Unknown error fetching policies"));
-      
-      toast({
-        title: t("error"),
-        description: t("errorLoadingPolicies"),
-        variant: "destructive",
+      const response = await PolicyService.getPolicies({
+        page: currentPage,
+        pageSize,
+        search: searchTerm,
+        workflowStatus,
+        orderBy: 'created_at',
+        orderDirection: 'desc'
       });
-    } finally {
-      setIsLoading(false);
+      
+      if (!response.success) {
+        throw new Error(response.error?.message || "Failed to fetch policies");
+      }
+      
+      return response.data;
     }
+  });
+
+  // Update policy status
+  const updatePolicyStatus = async (policyId: string, status: string) => {
+    return executeService(
+      () => PolicyService.updatePolicyStatus(policyId, status as any),
+      {
+        successMessage: t("policyStatusUpdatedSuccessfully"),
+        errorMessage: t("errorUpdatingPolicyStatus"),
+        invalidateQueryKeys: [['policies-workflow'], ['policy', policyId]]
+      }
+    );
   };
 
   const handleRefresh = () => {
-    fetchPolicies();
+    refetch();
     
     toast({
       title: t("refreshing"),
@@ -103,16 +80,16 @@ export const usePoliciesWorkflow = () => {
     setActiveTab,
     searchTerm,
     setSearchTerm,
-    policies,
+    policies: data?.policies || [],
     isLoading,
     error,
     currentPage,
     setCurrentPage,
-    totalCount,
+    totalCount: data?.totalCount || 0,
     pageSize,
     statusFilter,
     setStatusFilter,
     handleRefresh,
-    fetchPolicies
+    updatePolicyStatus
   };
 };
