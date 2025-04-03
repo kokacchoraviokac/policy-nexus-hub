@@ -1,8 +1,6 @@
 
 import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,20 +22,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SelectedPolicyDisplay from "./SelectedPolicyDisplay";
+import useZodForm from "@/hooks/useZodForm";
+import {
+  claimStatusSchema,
+  damageDescriptionSchema,
+  claimAmountSchema,
+  createModelSchema
+} from "@/utils/formSchemas";
 
-// Schema for claim form validation
-const claimFormSchema = z.object({
-  policy_id: z.string().min(1, { message: "Policy is required" }),
-  claim_number: z.string().min(1, { message: "Claim number is required" }),
-  damage_description: z.string().min(1, { message: "Damage description is required" }),
-  incident_date: z.string().min(1, { message: "Incident date is required" }),
-  claimed_amount: z.number().min(0, { message: "Amount must be greater than or equal to 0" }),
+// Create the schema for claim form validation
+const createClaimSchema = (t: (key: string) => string) => z.object({
+  policy_id: createModelSchema("Policy", { isRequired: true, errorMessage: t("policyRequired") }),
+  claim_number: z.string().min(1, { message: t("claimNumberRequired") }),
+  damage_description: damageDescriptionSchema(t("damageDescriptionRequired")),
+  incident_date: z.string().min(1, { message: t("incidentDateRequired") }),
+  claimed_amount: claimAmountSchema(t("claimedAmountInvalid")),
   deductible: z.number().optional(),
-  status: z.string().min(1, { message: "Status is required" }),
+  status: claimStatusSchema(),
   notes: z.string().optional(),
 });
 
-export type ClaimFormValues = z.infer<typeof claimFormSchema>;
+export type ClaimFormValues = z.infer<ReturnType<typeof createClaimSchema>>;
 
 interface ClaimDetailsFormProps {
   defaultValues: ClaimFormValues;
@@ -60,18 +65,19 @@ const ClaimDetailsForm: React.FC<ClaimDetailsFormProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  const form = useForm<ClaimFormValues>({
-    resolver: zodResolver(claimFormSchema),
-    defaultValues
+  const claimSchema = createClaimSchema(t);
+  
+  const form = useZodForm({
+    schema: claimSchema,
+    defaultValues,
+    onSubmit,
+    successMessage: t("claimSavedSuccess"),
+    errorMessage: t("claimSaveError")
   });
-
-  const handleSubmit = (values: ClaimFormValues) => {
-    onSubmit(values);
-  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Policy Section */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">

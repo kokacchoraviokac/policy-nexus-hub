@@ -48,6 +48,16 @@ export const percentageSchema = (errorMessage = "Percentage must be between 0 an
   z.coerce.number().min(0, { message: "Percentage cannot be negative" })
     .max(100, { message: "Percentage cannot exceed 100" });
 
+// Document schemas
+export const documentNameSchema = (errorMessage = "Document name is required") =>
+  z.string().min(1, { message: errorMessage });
+
+export const documentTypeSchema = () =>
+  z.string().min(1, { message: "Document type is required" });
+
+export const documentCategorySchema = () =>
+  z.string().min(1, { message: "Document category is required" });
+
 // Helper to create schemas for related models
 export function createModelSchema(type: string, options: { isRequired?: boolean, errorMessage?: string } = {}) {
   const { isRequired = false, errorMessage = `${type} is required` } = options;
@@ -63,3 +73,35 @@ export function createSchemaWithTranslations(baseSchema: z.ZodType<any>) {
     translations: z.record(z.string()).optional().nullable(),
   });
 }
+
+// Policy specific schemas
+export const policyNumberSchema = (errorMessage = "Policy number is required") =>
+  z.string().min(1, { message: errorMessage });
+
+export const policyTypeSchema = () =>
+  z.enum(["internal", "external"]);
+
+export const policyStatusSchema = () =>
+  z.enum(["active", "pending", "expired", "cancelled"]).default("active");
+
+export const workflowStatusSchema = () =>
+  z.enum(["draft", "review", "approved", "rejected"]).default("draft");
+
+// Claim specific schemas
+export const claimStatusSchema = () =>
+  z.enum(["in_processing", "reported", "accepted", "rejected", "partially_accepted", "appealed", "withdrawn"])
+    .default("in_processing");
+
+export const damageDescriptionSchema = (errorMessage = "Damage description is required") =>
+  z.string().min(1, { message: errorMessage });
+
+export const claimAmountSchema = (errorMessage = "Claimed amount must be a non-negative number") =>
+  z.coerce.number().min(0, { message: errorMessage });
+
+// Invoice specific schemas
+export const invoiceNumberSchema = (errorMessage = "Invoice number is required") =>
+  z.string().min(1, { message: errorMessage });
+
+export const invoiceStatusSchema = () =>
+  z.enum(["draft", "issued", "paid", "partially_paid", "overdue", "cancelled"])
+    .default("draft");

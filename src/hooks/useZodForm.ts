@@ -12,6 +12,7 @@ interface UseZodFormProps<T extends FieldValues> extends UseFormProps<T> {
   onError?: (error: unknown) => void;
   successMessage?: string;
   errorMessage?: string;
+  resetOnSuccess?: boolean;
 }
 
 export function useZodForm<T extends FieldValues>({
@@ -20,6 +21,7 @@ export function useZodForm<T extends FieldValues>({
   onError,
   successMessage,
   errorMessage,
+  resetOnSuccess = false,
   ...formProps
 }: UseZodFormProps<T>): UseFormReturn<T> & {
   handleSubmitWithToast: () => Promise<void>;
@@ -48,7 +50,12 @@ export function useZodForm<T extends FieldValues>({
               description: successMessage,
             });
           }
-          form.reset(values); // Keep the form values instead of clearing
+          
+          if (resetOnSuccess) {
+            form.reset(); // Reset the form if specified
+          } else {
+            form.reset(values); // Keep the form values instead of clearing
+          }
         } catch (error) {
           if (onError) {
             onError(error);
