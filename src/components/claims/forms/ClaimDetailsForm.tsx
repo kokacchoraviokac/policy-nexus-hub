@@ -191,10 +191,10 @@ const ClaimDetailsForm: React.FC<ClaimDetailsFormProps> = ({
               control={form.control}
               name="status"
               render={({ field }) => (
-                <FormItem className="col-span-1 md:col-span-2">
+                <FormItem>
                   <FormLabel>{t("status")}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
+                  <Select 
+                    onValueChange={field.onChange} 
                     defaultValue={field.value}
                     disabled={isFormDisabled || isSubmitting}
                   >
@@ -204,54 +204,51 @@ const ClaimDetailsForm: React.FC<ClaimDetailsFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="in processing">{t("inProcessing")}</SelectItem>
+                      <SelectItem value="in_processing">{t("inProcessing")}</SelectItem>
                       <SelectItem value="reported">{t("reported")}</SelectItem>
                       <SelectItem value="accepted">{t("accepted")}</SelectItem>
                       <SelectItem value="rejected">{t("rejected")}</SelectItem>
+                      <SelectItem value="partially_accepted">{t("partiallyAccepted")}</SelectItem>
                       <SelectItem value="appealed">{t("appealed")}</SelectItem>
+                      <SelectItem value="withdrawn">{t("withdrawn")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
+            <FormField
+              control={form.control}
+              name="damage_description"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>{t("damageDescription")}</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      {...field}
+                      className="min-h-[100px]" 
+                      disabled={isFormDisabled || isSubmitting} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-        </div>
-        
-        {/* Damage Description */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">{t("damageInformation")}</h3>
-          
-          <FormField
-            control={form.control}
-            name="damage_description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t("damageDescription")}</FormLabel>
-                <FormControl>
-                  <Textarea 
-                    {...field} 
-                    rows={4}
-                    disabled={isFormDisabled || isSubmitting} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           
           <FormField
             control={form.control}
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("additionalNotes")}</FormLabel>
+                <FormLabel>{t("notes")}</FormLabel>
                 <FormControl>
                   <Textarea 
-                    {...field} 
-                    rows={3}
-                    placeholder={t("additionalNotesDescription")}
+                    {...field}
+                    className="min-h-[80px]" 
                     disabled={isFormDisabled || isSubmitting} 
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -260,27 +257,26 @@ const ClaimDetailsForm: React.FC<ClaimDetailsFormProps> = ({
           />
         </div>
         
-        {/* Form Actions */}
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button
-            type="button"
+        <div className="flex justify-end gap-2">
+          <Button 
+            type="button" 
             variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
           >
             {t("cancel")}
           </Button>
-          <Button
+          <Button 
             type="submit"
-            disabled={isFormDisabled || isSubmitting || !selectedPolicy}
+            disabled={isSubmitting || isFormDisabled}
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("creating")}
+                {t("saving")}
               </>
             ) : (
-              t("createClaim")
+              t("save")
             )}
           </Button>
         </div>

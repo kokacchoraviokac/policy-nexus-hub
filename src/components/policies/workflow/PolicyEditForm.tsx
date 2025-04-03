@@ -239,7 +239,7 @@ const PolicyEditForm: React.FC<PolicyEditFormProps> = ({ policy }) => {
         <div className="space-y-2">
           <Label htmlFor="status">{t("status")}</Label>
           <Select 
-            defaultValue={policy.status}
+            defaultValue={policy.status || "active"}
             onValueChange={(value) => {
               // register doesn't work well with controlled Select
               // we'd need to use react-hook-form controller for this
