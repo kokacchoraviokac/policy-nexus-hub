@@ -8,6 +8,7 @@ import { CodebookRoutes } from "./CodebookRoutes";
 import { SettingsRoutes } from "./SettingsRoutes";
 import { ReportsRoutes } from "./ReportsRoutes";
 import { AgentRoutes } from "./AgentRoutes";
+import { documentRoutes } from "./documentRoutes";
 
 export const ModuleRoutes = [
   ...DashboardRoutes,
@@ -18,5 +19,6 @@ export const ModuleRoutes = [
   ...CodebookRoutes,
   ...AgentRoutes,
   ...ReportsRoutes,
-  ...SettingsRoutes
+  ...SettingsRoutes,
+  ...documentRoutes  // Add document routes here
 ];
