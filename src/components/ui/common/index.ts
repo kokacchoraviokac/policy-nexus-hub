@@ -12,4 +12,4 @@ export { PageHeader } from "../page/PageHeader";
 
 // Re-export Button for convenience
 export { Button } from "../button";
-export { RefreshCcw } from "lucide-react"; 
+export { RefreshCcw, Search, Download, Upload, File, FileText } from "lucide-react"; 

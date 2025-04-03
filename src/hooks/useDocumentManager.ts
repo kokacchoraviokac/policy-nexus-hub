@@ -5,6 +5,7 @@ import { Document, EntityType } from "@/types/documents";
 import { DocumentService } from "@/services/DocumentService";
 import { useApiService } from "./useApiService";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toast } from "sonner";
 
 interface UseDocumentManagerProps {
   entityType: EntityType;
@@ -40,15 +41,21 @@ export const useDocumentManager = ({ entityType, entityId }: UseDocumentManagerP
   });
 
   // Delete document mutation
-  const deleteDocument = async (document: Document) => {
-    return executeService(
-      () => DocumentService.deleteDocument(document.id),
-      {
-        successMessage: t("documentDeletedSuccessfully"),
-        errorMessage: t("errorDeletingDocument"),
-        invalidateQueryKeys: [['documents', entityType, entityId]]
-      }
-    );
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (document: Document) => {
+      return executeService(
+        () => DocumentService.deleteDocument(document.id),
+        {
+          successMessage: t("documentDeletedSuccessfully"),
+          errorMessage: t("errorDeletingDocument"),
+          invalidateQueryKeys: [['documents', entityType, entityId]]
+        }
+      );
+    }
+  });
+
+  const deleteDocument = (document: Document) => {
+    deleteDocumentMutation.mutate(document);
   };
 
   // Fetch document versions
@@ -61,6 +68,31 @@ export const useDocumentManager = ({ entityType, entityId }: UseDocumentManagerP
     );
   };
 
+  // Update document approval status
+  const updateDocumentApproval = async (
+    documentId: string, 
+    status: string, 
+    notes?: string
+  ) => {
+    try {
+      // Implementation will depend on how your DocumentService is structured
+      // This is a placeholder implementation
+      const result = await executeService(
+        () => DocumentService.updateDocumentStatus(documentId, status, notes),
+        {
+          successMessage: t("documentStatusUpdateSuccess"),
+          errorMessage: t("errorUpdatingDocumentStatus"),
+          invalidateQueryKeys: [['documents', entityType, entityId]]
+        }
+      );
+      
+      return result;
+    } catch (error) {
+      console.error("Error updating document approval:", error);
+      return null;
+    }
+  };
+
   return {
     documents,
     isLoading,
@@ -71,5 +103,7 @@ export const useDocumentManager = ({ entityType, entityId }: UseDocumentManagerP
     setSelectedDocument,
     deleteDocument,
     getDocumentVersions,
+    isDeleting: deleteDocumentMutation.isPending,
+    updateDocumentApproval
   };
 };

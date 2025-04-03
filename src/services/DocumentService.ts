@@ -1,6 +1,5 @@
-
 import { BaseService, ServiceResponse } from "./BaseService";
-import { Document, DocumentCategory, EntityType } from "@/types/documents";
+import { Document, DocumentCategory, EntityType, DocumentApprovalStatus } from "@/types/documents";
 
 /**
  * Document upload parameters
@@ -221,6 +220,68 @@ export class DocumentService extends BaseService {
     } catch (error) {
       const service = new DocumentService();
       const errorResponse = service.handleError(error);
+      return service.createResponse(false, undefined, errorResponse);
+    }
+  }
+  
+  /**
+   * Update document approval status
+   */
+  static async updateDocumentStatus(
+    documentId: string,
+    status: DocumentApprovalStatus,
+    notes?: string
+  ): Promise<ServiceResponse<Document>> {
+    try {
+      const service = new DocumentService();
+      const supabase = service.getClient();
+      
+      // First get the document to determine the correct table
+      const { data: document, error: fetchError } = await supabase
+        .from('documents')
+        .select('entity_type, id')
+        .eq('id', documentId)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      if (!document) {
+        throw new Error('Document not found');
+      }
+      
+      // Get current user for approval tracking
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Prepare update data
+      const updateData = {
+        approval_status: status,
+        approval_notes: notes,
+        approved_by: user.id,
+        approved_at: new Date().toISOString()
+      };
+      
+      // Update the document
+      const { data, error } = await supabase
+        .from('documents')
+        .update(updateData)
+        .eq('id', documentId)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return service.createResponse(true, data);
+    } catch (error) {
+      const service = new DocumentService();
+      const errorResponse = service.handleError(error);
+      service.showErrorToast(errorResponse);
       return service.createResponse(false, undefined, errorResponse);
     }
   }

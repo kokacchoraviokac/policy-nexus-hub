@@ -1,17 +1,32 @@
 
-import React from "react";
-import { Download, Trash2, FileText, Upload, Info } from "lucide-react";
+import React, { useState } from "react";
+import { Download, Trash2, FileText, Upload, Info, CheckCircle, XCircle, AlertCircle, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getDocumentIcon, getDocumentTypeLabel } from "@/utils/documentUtils";
-import { Document } from "@/types/documents";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Document, DocumentApprovalStatus } from "@/types/documents";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import DocumentPreview from "./DocumentPreview";
+import DocumentApprovalDialog from "./DocumentApprovalDialog";
 
 interface DocumentListItemProps {
   document: Document;
   onDownload: () => void;
   onDelete: () => void;
   onUploadVersion?: () => void;
+  showApproval?: boolean;
   isDeleting: boolean;
   isDownloading: boolean;
 }
@@ -21,11 +36,48 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
   onDownload,
   onDelete,
   onUploadVersion,
+  showApproval = true,
   isDeleting,
   isDownloading
 }) => {
-  const { formatDate } = useLanguage();
-  const { t } = useLanguage();
+  const { formatDate, t } = useLanguage();
+  const [showPreview, setShowPreview] = useState(false);
+  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  
+  const getApprovalStatusIcon = (status?: DocumentApprovalStatus) => {
+    switch (status) {
+      case "approved":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "rejected":
+        return <XCircle className="h-4 w-4 text-destructive" />;
+      case "needs_review":
+        return <AlertCircle className="h-4 w-4 text-amber-500" />;
+      case "pending":
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+    }
+  };
+  
+  const getApprovalStatusBadge = (status?: DocumentApprovalStatus) => {
+    if (!status) return null;
+    
+    const variants: Record<DocumentApprovalStatus, string> = {
+      approved: "bg-green-100 text-green-800 border-green-200",
+      rejected: "bg-red-100 text-red-800 border-red-200",
+      needs_review: "bg-amber-100 text-amber-800 border-amber-200",
+      pending: "bg-gray-100 text-gray-800 border-gray-200"
+    };
+    
+    return (
+      <Badge 
+        variant="outline" 
+        className={`ml-2 text-xs ${variants[status]}`}
+      >
+        {getApprovalStatusIcon(status)}
+        <span className="ml-1">{t(status)}</span>
+      </Badge>
+    );
+  };
   
   return (
     <div className="py-4 flex justify-between items-start border-b last:border-b-0">
@@ -35,7 +87,12 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
         </div>
         <div>
           <div className="flex items-center">
-            <p className="font-medium">{document.document_name}</p>
+            <p 
+              className="font-medium cursor-pointer hover:underline"
+              onClick={() => setShowPreview(true)}
+            >
+              {document.document_name}
+            </p>
             {document.version > 1 && (
               <span className="ml-2 text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">
                 v{document.version}
@@ -46,6 +103,7 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
                 {t("latest")}
               </span>
             )}
+            {showApproval && getApprovalStatusBadge(document.approval_status)}
           </div>
           <div className="text-sm text-muted-foreground">
             <span className="mr-3">{getDocumentTypeLabel(document.document_type)}</span>
@@ -59,61 +117,58 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
         </div>
       </div>
       <div className="flex space-x-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onDownload}
-                disabled={isDownloading}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{t("download")}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        {onUploadVersion && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={onUploadVersion}
-                >
-                  <Upload className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t("uploadNewVersion")}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onDelete}
-                disabled={isDeleting}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{t("delete")}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setShowPreview(true)}>
+              <FileText className="mr-2 h-4 w-4" />
+              {t("preview")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onDownload} disabled={isDownloading}>
+              <Download className="mr-2 h-4 w-4" />
+              {isDownloading ? t("downloading") : t("download")}
+            </DropdownMenuItem>
+            {onUploadVersion && (
+              <DropdownMenuItem onClick={onUploadVersion}>
+                <Upload className="mr-2 h-4 w-4" />
+                {t("uploadNewVersion")}
+              </DropdownMenuItem>
+            )}
+            {showApproval && (
+              <DropdownMenuItem onClick={() => setShowApprovalDialog(true)}>
+                {getApprovalStatusIcon(document.approval_status)}
+                <span className="ml-2">{t("updateApprovalStatus")}</span>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem 
+              onClick={onDelete}
+              disabled={isDeleting}
+              className="text-destructive"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {isDeleting ? t("deleting") : t("delete")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+      
+      <DocumentPreview
+        document={document}
+        open={showPreview}
+        onOpenChange={setShowPreview}
+      />
+      
+      {showApproval && (
+        <DocumentApprovalDialog
+          document={document}
+          open={showApprovalDialog}
+          onOpenChange={setShowApprovalDialog}
+        />
+      )}
     </div>
   );
 };
