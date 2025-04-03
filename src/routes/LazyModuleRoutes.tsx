@@ -12,17 +12,17 @@ const ModuleLoadingFallback = () => (
   </div>
 );
 
-// Lazy loaded route groups
-const DashboardRoutes = React.lazy(() => import('./DashboardRoutes').then(module => ({ default: module.DashboardRoutes })));
-const PolicyRoutes = React.lazy(() => import('./PolicyRoutes').then(module => ({ default: module.PolicyRoutes })));
-const SalesRoutes = React.lazy(() => import('./SalesRoutes').then(module => ({ default: module.SalesRoutes })));
-const ClaimsRoutes = React.lazy(() => import('./ClaimsRoutes').then(module => ({ default: module.ClaimsRoutes })));
-const FinancesRoutes = React.lazy(() => import('./FinancesRoutes').then(module => ({ default: module.FinancesRoutes })));
-const CodebookRoutes = React.lazy(() => import('./CodebookRoutes').then(module => ({ default: module.CodebookRoutes })));
-const AgentRoutes = React.lazy(() => import('./AgentRoutes').then(module => ({ default: module.AgentRoutes })));
-const ReportsRoutes = React.lazy(() => import('./ReportsRoutes').then(module => ({ default: module.ReportsRoutes })));
-const SettingsRoutes = React.lazy(() => import('./SettingsRoutes').then(module => ({ default: module.SettingsRoutes })));
-const DocumentRoutes = React.lazy(() => import('./documentRoutes').then(module => ({ default: module.documentRoutes })));
+// Import routes directly instead of using dynamic imports
+import { DashboardRoutes } from './DashboardRoutes';
+import { PolicyRoutes } from './PolicyRoutes';
+import { SalesRoutes } from './SalesRoutes';
+import { ClaimsRoutes } from './ClaimsRoutes';
+import { FinancesRoutes } from './FinancesRoutes';
+import { CodebookRoutes } from './CodebookRoutes';
+import { AgentRoutes } from './AgentRoutes';
+import { ReportsRoutes } from './ReportsRoutes';
+import { SettingsRoutes } from './SettingsRoutes';
+import { documentRoutes } from './documentRoutes';
 
 // Wrapper component for lazily loaded routes
 const LazyRouteWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -112,7 +112,7 @@ const LazyModuleRoutes: React.FC = () => (
     <Route path="/documents/*" element={
       <LazyRouteWrapper>
         <Suspense fallback={<ModuleLoadingFallback />}>
-          <DocumentRoutes />
+          {documentRoutes}
         </Suspense>
       </LazyRouteWrapper>
     } />

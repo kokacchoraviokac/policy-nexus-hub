@@ -6,9 +6,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import Login from '@/pages/Login';
 import ResetPassword from '@/pages/ResetPassword';
 import NotFound from '@/pages/NotFound';
-
-// Lazy loaded module routes
-const ModuleRoutes = React.lazy(() => import('./LazyModuleRoutes'));
+import LazyModuleRoutes from './LazyModuleRoutes';
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -24,12 +22,12 @@ const AppRoutes: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       
-      {/* Lazily loaded Module Routes with Suspense */}
+      {/* Module Routes with Suspense */}
       <Route
         path="/*"
         element={
           <Suspense fallback={<LoadingFallback />}>
-            <ModuleRoutes />
+            <LazyModuleRoutes />
           </Suspense>
         }
       />
