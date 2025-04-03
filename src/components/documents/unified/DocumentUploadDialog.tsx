@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { FileUp, Loader2 } from "lucide-react";
+import { useDocumentUpload } from "@/hooks/useDocumentUpload";
 import { Document, DocumentCategory, EntityType } from "@/types/documents";
-import { useDocumentManager } from "@/hooks/useDocumentManager";
 import DocumentUploadForm from "./DocumentUploadForm";
+import DocumentUploadActions from "./DocumentUploadActions";
+import VersionInfoBox from "./VersionInfoBox";
 
 interface DocumentUploadDialogProps {
   open: boolean;
@@ -14,9 +14,9 @@ interface DocumentUploadDialogProps {
   entityType: EntityType;
   entityId: string;
   selectedDocument?: Document; // For version control
-  onSuccess?: () => void;
-  defaultCategory?: string;
-  salesStage?: string;
+  onUploadComplete?: () => void; // Optional callback for when upload completes
+  defaultCategory?: string; // Default category for the document
+  salesStage?: string; // Sales process stage
 }
 
 const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
@@ -25,7 +25,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   entityType,
   entityId,
   selectedDocument,
-  onSuccess,
+  onUploadComplete,
   defaultCategory,
   salesStage
 }) => {
@@ -35,73 +35,58 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   const {
     documentName,
     setDocumentName,
-    documentType,
+    documentType, 
     setDocumentType,
     documentCategory,
     setDocumentCategory,
     file,
     handleFileChange,
-    isUploading,
-    handleSubmit,
-    isFormValid
-  } = useDocumentManager({ 
+    uploading,
+    handleUpload,
+    setSalesStage
+  } = useDocumentUpload({ 
     entityType,
-    entityId
+    entityId,
+    onSuccess: () => {
+      onOpenChange(false);
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
+    },
+    originalDocumentId: isNewVersion ? (selectedDocument?.original_document_id || selectedDocument?.id) : undefined,
+    currentVersion: isNewVersion ? (selectedDocument?.version || 1) : 0
   });
+  
+  // Set default category if provided
+  useEffect(() => {
+    if (defaultCategory && documentCategory === "") {
+      setDocumentCategory(defaultCategory as DocumentCategory);
+    }
+  }, [defaultCategory, documentCategory, setDocumentCategory]);
 
+  // Set sales stage if provided
+  useEffect(() => {
+    if (salesStage && setSalesStage) {
+      setSalesStage(salesStage);
+    }
+  }, [salesStage, setSalesStage]);
+  
   // Pre-fill form if uploading a new version
   useEffect(() => {
     if (isNewVersion && selectedDocument) {
       setDocumentName(selectedDocument.document_name);
       setDocumentType(selectedDocument.document_type);
       if (selectedDocument.category) {
-        setDocumentCategory(selectedDocument.category);
+        // Force type as DocumentCategory to avoid type error
+        setDocumentCategory(selectedDocument.category as DocumentCategory);
       }
     }
   }, [isNewVersion, selectedDocument, setDocumentName, setDocumentType, setDocumentCategory]);
 
-  // Set default category if provided
-  useEffect(() => {
-    if (defaultCategory && !documentCategory) {
-      setDocumentCategory(defaultCategory as DocumentCategory);
-    }
-  }, [defaultCategory, documentCategory, setDocumentCategory]);
-
-  const handleUploadClick = () => {
-    const additionalData: Record<string, any> = {};
-    
-    // Add sales stage if this is a sales process document
-    if (entityType === 'sales_process' && salesStage) {
-      additionalData.step = salesStage;
-    }
-    
-    // Add version information if this is a new version
-    const versionInfo = isNewVersion && selectedDocument ? {
-      originalDocumentId: selectedDocument.original_document_id || selectedDocument.id,
-      currentVersion: selectedDocument.version || 1
-    } : {};
-    
-    handleSubmit({
-      ...additionalData,
-      ...versionInfo
-    });
-    
-    if (onSuccess) {
-      onSuccess();
-    }
-    
-    onOpenChange(false);
-  };
-
+  const canUpload = !!file && !!documentName;
+  
   return (
-    <Dialog 
-      open={open} 
-      onOpenChange={(newOpen) => {
-        if (!isUploading) {
-          onOpenChange(newOpen);
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
@@ -109,65 +94,35 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        {selectedDocument && (
-          <div className="flex space-x-4 mb-2">
-            <Button
-              variant={isNewVersion ? "default" : "outline"}
-              onClick={() => setIsNewVersion(true)}
-              size="sm"
-              className="flex-1"
-            >
-              {t("newVersion")}
-            </Button>
-            <Button
-              variant={!isNewVersion ? "default" : "outline"}
-              onClick={() => setIsNewVersion(false)}
-              size="sm"
-              className="flex-1"
-            >
-              {t("newDocument")}
-            </Button>
-          </div>
-        )}
-        
         <DocumentUploadForm
           documentName={documentName}
           setDocumentName={setDocumentName}
           documentType={documentType}
           setDocumentType={setDocumentType}
           documentCategory={documentCategory}
+          // Cast the setter to match the expected type
           setDocumentCategory={(category) => setDocumentCategory(category as DocumentCategory)}
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={isNewVersion}
-          isSalesProcess={entityType === 'sales_process'}
+          isSalesProcess={entityType === "sales_process"}
           salesStage={salesStage}
         />
         
+        {isNewVersion && selectedDocument && (
+          <VersionInfoBox 
+            selectedDocument={selectedDocument}
+          />
+        )}
+        
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isUploading}
-          >
-            {t("cancel")}
-          </Button>
-          <Button
-            onClick={handleUploadClick}
-            disabled={!isFormValid || isUploading}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("uploading")}
-              </>
-            ) : (
-              <>
-                <FileUp className="mr-2 h-4 w-4" />
-                {isNewVersion ? t("uploadNewVersion") : t("upload")}
-              </>
-            )}
-          </Button>
+          <DocumentUploadActions
+            uploading={uploading}
+            isNewVersion={isNewVersion}
+            canUpload={canUpload}
+            onCancel={() => onOpenChange(false)}
+            onUpload={handleUpload}
+          />
         </DialogFooter>
       </DialogContent>
     </Dialog>

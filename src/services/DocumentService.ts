@@ -1,14 +1,22 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentCategory, EntityType } from "@/types/documents";
 import { v4 as uuidv4 } from "uuid";
 
-// Define the document tables as constant string literals to avoid type recursion
-const POLICY_DOCUMENTS = 'policy_documents';
-const CLAIM_DOCUMENTS = 'claim_documents';
-const SALES_DOCUMENTS = 'sales_documents';
+// Define the document tables mapping
+export type DocumentTableName = 'policy_documents' | 'claim_documents' | 'sales_documents';
 
-// Define the document tables mapping for easier reuse
-export type DocumentTableName = typeof POLICY_DOCUMENTS | typeof CLAIM_DOCUMENTS | typeof SALES_DOCUMENTS;
+// Map EntityType to their respective table names
+const DOCUMENT_TABLE_MAP: Record<EntityType, DocumentTableName> = {
+  'policy': 'policy_documents',
+  'claim': 'claim_documents',
+  'sales_process': 'sales_documents',
+  'client': 'policy_documents', // These will need proper tables in future
+  'invoice': 'policy_documents', // These will need proper tables in future
+  'addendum': 'policy_documents', // These will need proper tables in future
+  'agent': 'policy_documents',    // These will need proper tables in future
+  'insurer': 'policy_documents'   // These will need proper tables in future
+};
 
 // Define the entity ID field mapping
 const ENTITY_ID_FIELD_MAP: Record<EntityType, string> = {
@@ -20,18 +28,6 @@ const ENTITY_ID_FIELD_MAP: Record<EntityType, string> = {
   'addendum': 'addendum_id',
   'agent': 'policy_id',   // These will need proper fields in future
   'insurer': 'policy_id'  // These will need proper fields in future
-};
-
-// Map EntityType to their respective table names
-const DOCUMENT_TABLE_MAP: Record<EntityType, DocumentTableName> = {
-  'policy': POLICY_DOCUMENTS,
-  'claim': CLAIM_DOCUMENTS,
-  'sales_process': SALES_DOCUMENTS,
-  'client': POLICY_DOCUMENTS, // These will need proper tables in future
-  'invoice': POLICY_DOCUMENTS, // These will need proper tables in future
-  'addendum': POLICY_DOCUMENTS, // These will need proper tables in future
-  'agent': POLICY_DOCUMENTS,    // These will need proper tables in future
-  'insurer': POLICY_DOCUMENTS   // These will need proper tables in future
 };
 
 interface DocumentUploadOptions {
@@ -109,19 +105,9 @@ export class DocumentService {
       // Set the appropriate entity ID field based on the table
       documentData[entityIdField] = entityId;
 
-      // Insert the document record - Using explicit table name to avoid type recursion
-      let query;
-      if (tableName === POLICY_DOCUMENTS) {
-        query = supabase.from(POLICY_DOCUMENTS);
-      } else if (tableName === CLAIM_DOCUMENTS) {
-        query = supabase.from(CLAIM_DOCUMENTS);
-      } else if (tableName === SALES_DOCUMENTS) {
-        query = supabase.from(SALES_DOCUMENTS);
-      } else {
-        throw new Error(`Unsupported document table: ${tableName}`);
-      }
-      
-      const { data, error: dbError } = await query
+      // Insert the document record
+      const { data, error: dbError } = await supabase
+        .from(tableName)
         .insert(documentData)
         .select()
         .single();
@@ -139,16 +125,8 @@ export class DocumentService {
 
       // If this is a new version, update previous version
       if (originalDocumentId) {
-        let updateQuery;
-        if (tableName === POLICY_DOCUMENTS) {
-          updateQuery = supabase.from(POLICY_DOCUMENTS);
-        } else if (tableName === CLAIM_DOCUMENTS) {
-          updateQuery = supabase.from(CLAIM_DOCUMENTS);
-        } else if (tableName === SALES_DOCUMENTS) {
-          updateQuery = supabase.from(SALES_DOCUMENTS);
-        }
-        
-        await updateQuery
+        await supabase
+          .from(tableName)
           .update({ is_latest_version: false })
           .eq('id', originalDocumentId);
       }
@@ -168,19 +146,8 @@ export class DocumentService {
       const tableName = DOCUMENT_TABLE_MAP[entityType];
       const entityIdField = ENTITY_ID_FIELD_MAP[entityType];
       
-      // Query the appropriate table with explicit table references to avoid type recursion
-      let query;
-      if (tableName === POLICY_DOCUMENTS) {
-        query = supabase.from(POLICY_DOCUMENTS);
-      } else if (tableName === CLAIM_DOCUMENTS) {
-        query = supabase.from(CLAIM_DOCUMENTS);
-      } else if (tableName === SALES_DOCUMENTS) {
-        query = supabase.from(SALES_DOCUMENTS);
-      } else {
-        throw new Error(`Unsupported document table: ${tableName}`);
-      }
-      
-      const { data, error } = await query
+      const { data, error } = await supabase
+        .from(tableName)
         .select('*')
         .eq(entityIdField, entityId)
         .order('created_at', { ascending: false });
@@ -221,19 +188,9 @@ export class DocumentService {
     try {
       const tableName = DOCUMENT_TABLE_MAP[entityType];
       
-      // Get document info first to retrieve file path - using explicit reference
-      let fetchQuery;
-      if (tableName === POLICY_DOCUMENTS) {
-        fetchQuery = supabase.from(POLICY_DOCUMENTS);
-      } else if (tableName === CLAIM_DOCUMENTS) {
-        fetchQuery = supabase.from(CLAIM_DOCUMENTS);
-      } else if (tableName === SALES_DOCUMENTS) {
-        fetchQuery = supabase.from(SALES_DOCUMENTS);
-      } else {
-        throw new Error(`Unsupported document table: ${tableName}`);
-      }
-      
-      const { data: document, error: fetchError } = await fetchQuery
+      // Get document info first to retrieve file path
+      const { data: document, error: fetchError } = await supabase
+        .from(tableName)
         .select('file_path')
         .eq('id', documentId)
         .single();
@@ -241,16 +198,8 @@ export class DocumentService {
       if (fetchError) throw fetchError;
 
       // Delete document record from database
-      let deleteQuery;
-      if (tableName === POLICY_DOCUMENTS) {
-        deleteQuery = supabase.from(POLICY_DOCUMENTS);
-      } else if (tableName === CLAIM_DOCUMENTS) {
-        deleteQuery = supabase.from(CLAIM_DOCUMENTS);
-      } else if (tableName === SALES_DOCUMENTS) {
-        deleteQuery = supabase.from(SALES_DOCUMENTS);
-      }
-      
-      const { error } = await deleteQuery
+      const { error } = await supabase
+        .from(tableName)
         .delete()
         .eq('id', documentId);
 
@@ -294,19 +243,9 @@ export class DocumentService {
     try {
       const tableName = DOCUMENT_TABLE_MAP[entityType];
       
-      // Get the original document first - using explicit table reference
-      let fetchQuery;
-      if (tableName === POLICY_DOCUMENTS) {
-        fetchQuery = supabase.from(POLICY_DOCUMENTS);
-      } else if (tableName === CLAIM_DOCUMENTS) {
-        fetchQuery = supabase.from(CLAIM_DOCUMENTS);
-      } else if (tableName === SALES_DOCUMENTS) {
-        fetchQuery = supabase.from(SALES_DOCUMENTS);
-      } else {
-        throw new Error(`Unsupported document table: ${tableName}`);
-      }
-      
-      const { data: document, error: fetchError } = await fetchQuery
+      // Get the original document first
+      const { data: document, error: fetchError } = await supabase
+        .from(tableName)
         .select('*')
         .eq('id', documentId)
         .single();
@@ -323,16 +262,8 @@ export class DocumentService {
       const entityId = document[entityIdField];
 
       // Get all versions (both original and versions pointing to it)
-      let versionsQuery;
-      if (tableName === POLICY_DOCUMENTS) {
-        versionsQuery = supabase.from(POLICY_DOCUMENTS);
-      } else if (tableName === CLAIM_DOCUMENTS) {
-        versionsQuery = supabase.from(CLAIM_DOCUMENTS);
-      } else if (tableName === SALES_DOCUMENTS) {
-        versionsQuery = supabase.from(SALES_DOCUMENTS);
-      }
-      
-      const { data: versions, error } = await versionsQuery
+      const { data: versions, error } = await supabase
+        .from(tableName)
         .select('*')
         .or(`original_document_id.eq.${originalId},id.eq.${originalId}`)
         .eq(entityIdField, entityId)

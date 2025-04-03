@@ -38,12 +38,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
     setSelectedDocument(document);
     setUploadDialogOpen(true);
   };
-  
-  // Create a wrapper function that accepts a Document and calls deleteDocument with just the ID
-  const handleDelete = (document: any) => {
-    deleteDocument(document.id);
-  };
-  
+
   return (
     <Card>
       <CardHeader>
@@ -64,7 +59,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
           isLoading={isLoading}
           isError={isError}
           error={error}
-          onDelete={handleDelete}
+          onDelete={deleteDocument}
           isDeleting={isDeleting}
           showUploadButton={false}
           onUploadVersion={handleUploadVersion}
