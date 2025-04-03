@@ -1,19 +1,11 @@
 
-import React, { Suspense } from 'react';
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { ModuleRoutes } from './ModuleRoutes';
 import AppLayout from '@/components/layout/AppLayout';
+import NotFound from '@/pages/NotFound';
 import Login from '@/pages/Login';
 import ResetPassword from '@/pages/ResetPassword';
-import NotFound from '@/pages/NotFound';
-import LazyModuleRoutes from './LazyModuleRoutes';
-
-// Loading fallback component
-const LoadingFallback = () => (
-  <div className="flex h-screen w-full items-center justify-center">
-    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-  </div>
-);
 
 const AppRoutes: React.FC = () => {
   return (
@@ -22,15 +14,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       
-      {/* Module Routes with Suspense */}
-      <Route
-        path="/*"
-        element={
-          <Suspense fallback={<LoadingFallback />}>
-            <LazyModuleRoutes />
-          </Suspense>
-        }
-      />
+      {/* Module Routes */}
+      {ModuleRoutes}
       
       {/* 404 */}
       <Route

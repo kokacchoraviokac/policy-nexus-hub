@@ -1,5 +1,5 @@
 
-import React, { useState, Suspense } from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Tabs, 
@@ -9,19 +9,10 @@ import {
 } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/ui/common";
 import { Button } from "@/components/ui/button";
-import { Upload, Filter, Search as SearchIcon, Loader2 } from "lucide-react";
+import { Upload, Filter, Search as SearchIcon } from "lucide-react";
+import DocumentSearch from "@/components/documents/search/DocumentSearch";
+import DocumentBatchUpload from "@/components/documents/unified/DocumentBatchUpload";
 import { EntityType } from "@/types/documents";
-
-// Lazy load the document components
-const DocumentSearch = React.lazy(() => import("@/components/documents/search/DocumentSearch"));
-const DocumentBatchUpload = React.lazy(() => import("@/components/documents/unified/DocumentBatchUpload"));
-
-// Loading fallback component
-const ComponentLoader = () => (
-  <div className="flex justify-center items-center p-12">
-    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-  </div>
-);
 
 const DocumentManagement: React.FC = () => {
   const { t } = useLanguage();
@@ -30,12 +21,10 @@ const DocumentManagement: React.FC = () => {
   
   return (
     <div className="container mx-auto px-4 py-6">
-      <Suspense fallback={<ComponentLoader />}>
-        <PageHeader
-          title={t("documentManagement")}
-          subtitle={t("manageAllDocumentsInOnePlace")}
-        />
-      </Suspense>
+      <PageHeader
+        title={t("documentManagement")}
+        subtitle={t("manageAllDocumentsInOnePlace")}
+      />
       
       <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center mb-6">
         <Tabs 
@@ -60,21 +49,15 @@ const DocumentManagement: React.FC = () => {
           </TabsList>
           
           <TabsContent value="search" className="mt-6">
-            <Suspense fallback={<ComponentLoader />}>
-              <DocumentSearch />
-            </Suspense>
+            <DocumentSearch />
           </TabsContent>
           
           <TabsContent value="approved" className="mt-6">
-            <Suspense fallback={<ComponentLoader />}>
-              <DocumentSearch filterStatus="approved" />
-            </Suspense>
+            <DocumentSearch filterStatus="approved" />
           </TabsContent>
           
           <TabsContent value="pending" className="mt-6">
-            <Suspense fallback={<ComponentLoader />}>
-              <DocumentSearch filterStatus="pending" />
-            </Suspense>
+            <DocumentSearch filterStatus="pending" />
           </TabsContent>
         </Tabs>
         
@@ -86,20 +69,16 @@ const DocumentManagement: React.FC = () => {
         </div>
       </div>
       
-      <Suspense fallback={null}>
-        {uploadDialogOpen && (
-          <DocumentBatchUpload
-            open={uploadDialogOpen}
-            onOpenChange={setUploadDialogOpen}
-            entityType={"policy" as EntityType} // Default entity type
-            entityId={"0"} // Default ID, would be updated when a specific entity is selected
-            onSuccess={() => {
-              // Refresh document list after upload
-              setActiveTab("search");
-            }}
-          />
-        )}
-      </Suspense>
+      <DocumentBatchUpload
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        entityType={"policy" as EntityType} // Default entity type
+        entityId={"0"} // Default ID, would be updated when a specific entity is selected
+        onSuccess={() => {
+          // Refresh document list after upload
+          setActiveTab("search");
+        }}
+      />
     </div>
   );
 };
