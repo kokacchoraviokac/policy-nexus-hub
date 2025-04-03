@@ -157,7 +157,7 @@ const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           {t("documentCategory")}
         </Label>
         <Select 
-          value={documentCategory} 
+          value={documentCategory || "other"} // Provide default value
           onValueChange={setDocumentCategory}
           disabled={isNewVersion}
         >
@@ -168,7 +168,7 @@ const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
             {categoryOptions.map(option => (
               <SelectItem 
                 key={option.value} 
-                value={option.value}
+                value={option.value || "other"} // Ensure no empty strings
               >
                 {option.label}
               </SelectItem>
@@ -182,7 +182,7 @@ const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           {t("documentType")}
         </Label>
         <Select 
-          value={documentType} 
+          value={documentType || "other"} // Provide default value
           onValueChange={setDocumentType}
         >
           <SelectTrigger id="type" className="col-span-3">
@@ -192,7 +192,7 @@ const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
             {typeOptions.map(option => (
               <SelectItem 
                 key={option.value} 
-                value={option.value}
+                value={option.value || "other"} // Ensure no empty strings
               >
                 {option.label}
               </SelectItem>

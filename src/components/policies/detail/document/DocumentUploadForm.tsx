@@ -75,7 +75,7 @@ const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
         <Label htmlFor="category" className="text-right">
           {t("documentCategory")}
         </Label>
-        <Select value={documentCategory} onValueChange={setDocumentCategory}>
+        <Select value={documentCategory || "other"} onValueChange={setDocumentCategory}>
           <SelectTrigger className="col-span-3">
             <SelectValue placeholder={t("selectCategory")} />
           </SelectTrigger>
