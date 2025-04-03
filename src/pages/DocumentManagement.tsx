@@ -53,11 +53,11 @@ const DocumentManagement: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="approved" className="mt-6">
-            <DocumentSearch />
+            <DocumentSearch filterStatus="approved" />
           </TabsContent>
           
           <TabsContent value="pending" className="mt-6">
-            <DocumentSearch />
+            <DocumentSearch filterStatus="pending" />
           </TabsContent>
         </Tabs>
         

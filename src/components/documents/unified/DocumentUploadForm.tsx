@@ -67,7 +67,7 @@ const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           </SelectTrigger>
           <SelectContent>
             {supportedDocumentTypes.map((type) => (
-              <SelectItem key={type.value} value={type.value}>
+              <SelectItem key={type.value} value={type.value || "other"}>
                 {t(type.label)}
               </SelectItem>
             ))}
@@ -89,7 +89,7 @@ const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
           </SelectTrigger>
           <SelectContent>
             {documentCategories.map((category) => (
-              <SelectItem key={category.value} value={category.value}>
+              <SelectItem key={category.value} value={category.value || "other"}>
                 {t(category.label)}
               </SelectItem>
             ))}

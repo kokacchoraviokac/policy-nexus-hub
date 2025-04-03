@@ -36,7 +36,10 @@ const DocumentTypeSelector: React.FC<DocumentTypeSelectorProps> = ({
         </SelectTrigger>
         <SelectContent>
           {types.map((type) => (
-            <SelectItem key={type.value} value={type.value || "undefined_item"}>
+            <SelectItem 
+              key={type.value} 
+              value={type.value || "undefined_item"} // Ensure we never have an empty string
+            >
               {type.label}
             </SelectItem>
           ))}
