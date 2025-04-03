@@ -47,6 +47,18 @@ const DocumentManagement: React.FC = () => {
               {t("pending")}
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="search" className="mt-6">
+            <DocumentSearch />
+          </TabsContent>
+          
+          <TabsContent value="approved" className="mt-6">
+            <DocumentSearch />
+          </TabsContent>
+          
+          <TabsContent value="pending" className="mt-6">
+            <DocumentSearch />
+          </TabsContent>
         </Tabs>
         
         <div>
@@ -56,18 +68,6 @@ const DocumentManagement: React.FC = () => {
           </Button>
         </div>
       </div>
-      
-      <TabsContent value="search" className="mt-6">
-        <DocumentSearch />
-      </TabsContent>
-      
-      <TabsContent value="approved" className="mt-6">
-        <DocumentSearch />
-      </TabsContent>
-      
-      <TabsContent value="pending" className="mt-6">
-        <DocumentSearch />
-      </TabsContent>
       
       <DocumentBatchUpload
         open={uploadDialogOpen}
