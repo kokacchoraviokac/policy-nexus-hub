@@ -1,67 +1,70 @@
 
-import { createClient } from "@supabase/supabase-js";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
-export interface ServiceResponse<T = any> {
+export interface ServiceResponse<T> {
   success: boolean;
   data?: T;
-  error?: string | Record<string, any>;
+  error?: string | ErrorResponse;
+  status?: number;
+}
+
+export interface ErrorResponse {
+  code?: string;
+  message: string;
+  details?: any;
 }
 
 export class BaseService {
-  protected supabaseClient;
-  
-  constructor() {
-    this.supabaseClient = createClient(
-      import.meta.env.VITE_SUPABASE_URL || '',
-      import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-    );
+  static getClient() {
+    return supabase;
   }
-  
-  getClient() {
-    return this.supabaseClient;
+
+  static createResponse<T>(success: boolean, data?: T, error?: string | ErrorResponse, status?: number): ServiceResponse<T> {
+    return { success, data, error, status };
   }
-  
-  getCompanyId() {
-    // This should ideally come from a context or state
-    // For now, return a default or fetch from local storage
-    return localStorage.getItem('companyId') || 'default-company-id';
-  }
-  
-  getCurrentUserId() {
-    // This should ideally come from auth context
-    return localStorage.getItem('currentUserId') || 'default-user-id';
-  }
-  
-  createResponse<T>(success: boolean, data?: T, error?: string | Record<string, any>): ServiceResponse<T> {
-    return {
-      success,
-      data,
-      error
-    };
-  }
-  
-  handleError(error: any): string {
+
+  static handleError(error: any): string | ErrorResponse {
     console.error("Service error:", error);
-    
-    if (typeof error === 'string') {
+
+    if (typeof error === "string") {
       return error;
     }
-    
-    if (error?.message) {
+
+    // Handle Supabase errors
+    if (error?.code && error?.message) {
+      return {
+        code: error.code,
+        message: error.message,
+        details: error.details || error.hint
+      };
+    }
+
+    // Handle generic Error objects
+    if (error instanceof Error) {
       return error.message;
     }
-    
-    return "An unknown error occurred";
+
+    // Fallback
+    return "An unexpected error occurred";
   }
-  
-  showErrorToast(errorMessage: string) {
-    const { toast } = useToast();
-    
+
+  static showErrorToast(error: string | ErrorResponse) {
+    const errorMessage = typeof error === "string" 
+      ? error 
+      : error.message || "An unexpected error occurred";
+
     toast({
       title: "Error",
       description: errorMessage,
       variant: "destructive",
+    });
+  }
+
+  static showSuccessToast(message: string) {
+    toast({
+      title: "Success",
+      description: message,
     });
   }
 }

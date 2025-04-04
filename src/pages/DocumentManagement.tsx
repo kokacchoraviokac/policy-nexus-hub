@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Tabs, 
@@ -7,21 +7,21 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
+import { PageHeader } from "@/components/ui/common";
 import { Button } from "@/components/ui/button";
-import { Upload, Filter, Search as SearchIcon } from "lucide-react";
-import DocumentSearch from "@/components/documents/search/DocumentSearch";
-import DocumentBatchUpload from "@/components/documents/unified/DocumentBatchUpload";
+import { Upload, Filter, Search as SearchIcon, Loader2 } from "lucide-react";
 import { EntityType } from "@/types/documents";
 
-// Define PageHeader since it's missing
-const PageHeader: React.FC<{ title: string, subtitle?: string }> = ({ title, subtitle }) => {
-  return (
-    <div className="mb-8">
-      <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-      {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
-    </div>
-  );
-};
+// Lazy load the document components
+const DocumentSearch = React.lazy(() => import("@/components/documents/search/DocumentSearch"));
+const DocumentBatchUpload = React.lazy(() => import("@/components/documents/unified/DocumentBatchUpload"));
+
+// Loading fallback component
+const ComponentLoader = () => (
+  <div className="flex justify-center items-center p-12">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 const DocumentManagement: React.FC = () => {
   const { t } = useLanguage();
@@ -30,10 +30,12 @@ const DocumentManagement: React.FC = () => {
   
   return (
     <div className="container mx-auto px-4 py-6">
-      <PageHeader
-        title={t("documentManagement")}
-        subtitle={t("manageAllDocumentsInOnePlace")}
-      />
+      <Suspense fallback={<ComponentLoader />}>
+        <PageHeader
+          title={t("documentManagement")}
+          subtitle={t("manageAllDocumentsInOnePlace")}
+        />
+      </Suspense>
       
       <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center mb-6">
         <Tabs 
@@ -58,15 +60,21 @@ const DocumentManagement: React.FC = () => {
           </TabsList>
           
           <TabsContent value="search" className="mt-6">
-            <DocumentSearch />
+            <Suspense fallback={<ComponentLoader />}>
+              <DocumentSearch />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="approved" className="mt-6">
-            <DocumentSearch filterStatus="approved" />
+            <Suspense fallback={<ComponentLoader />}>
+              <DocumentSearch filterStatus="approved" />
+            </Suspense>
           </TabsContent>
           
           <TabsContent value="pending" className="mt-6">
-            <DocumentSearch filterStatus="pending" />
+            <Suspense fallback={<ComponentLoader />}>
+              <DocumentSearch filterStatus="pending" />
+            </Suspense>
           </TabsContent>
         </Tabs>
         
@@ -78,16 +86,20 @@ const DocumentManagement: React.FC = () => {
         </div>
       </div>
       
-      <DocumentBatchUpload
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        entityType={"policy" as EntityType} // Default entity type
-        entityId={"0"} // Default ID, would be updated when a specific entity is selected
-        onSuccess={() => {
-          // Refresh document list after upload
-          setActiveTab("search");
-        }}
-      />
+      <Suspense fallback={null}>
+        {uploadDialogOpen && (
+          <DocumentBatchUpload
+            open={uploadDialogOpen}
+            onOpenChange={setUploadDialogOpen}
+            entityType={"policy" as EntityType} // Default entity type
+            entityId={"0"} // Default ID, would be updated when a specific entity is selected
+            onSuccess={() => {
+              // Refresh document list after upload
+              setActiveTab("search");
+            }}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };

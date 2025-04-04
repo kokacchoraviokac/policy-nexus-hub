@@ -2,7 +2,7 @@
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SalesProcess } from "@/types/salesProcess";
-import QuoteManagementPanel from "@/components/sales/quotes/QuoteManagementPanel";
+import QuoteManagementPanel from "../QuoteManagementPanel";
 
 interface QuotesTabProps {
   process: SalesProcess;

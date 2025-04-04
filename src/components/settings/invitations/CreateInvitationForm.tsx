@@ -32,7 +32,7 @@ interface CreateInvitationFormProps {
   isSuperAdmin: boolean;
   defaultCompanyId?: string;
   isSubmitting: boolean;
-  onSubmit: (values: z.infer<ReturnType<typeof createInviteFormSchema>>) => Promise<void>;
+  onSubmit: (values: InviteFormValues) => Promise<void>;
 }
 
 export const createInviteFormSchema = (t: (key: string) => string) => z.object({
