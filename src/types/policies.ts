@@ -1,4 +1,3 @@
-
 export interface Policy {
   id: string;
   policy_number: string;
@@ -30,6 +29,22 @@ export interface Policy {
   updated_at?: string;
 }
 
+export interface PolicyAddendum {
+  id: string;
+  policy_id: string;
+  addendum_number: string;
+  effective_date: string;
+  description: string;
+  premium_adjustment?: number;
+  lien_status: boolean;
+  status: string;
+  workflow_status: string;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  company_id?: string;
+}
+
 export interface PolicyFilterParams {
   page?: number;
   pageSize?: number;
@@ -45,3 +60,19 @@ export interface PolicyFilterParams {
 }
 
 export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
+
+export interface UnlinkedPaymentType {
+  id: string;
+  amount: number;
+  payment_date: string;
+  payer_name?: string;
+  reference?: string;
+  status: string;
+  currency: string;
+  linked_at?: string;
+  linked_by?: string;
+  linked_policy_id?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+}

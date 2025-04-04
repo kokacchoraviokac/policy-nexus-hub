@@ -1,107 +1,108 @@
 
 import { z } from "zod";
 
-// Common field schemas
-export const nameSchema = (errorMessage = "Name is required") => 
-  z.string().min(1, { message: errorMessage });
+// Base schemas
+export const nameSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name cannot exceed 100 characters")
+});
 
-export const emailSchema = (errorMessage = "Invalid email address") => 
-  z.string().email({ message: errorMessage }).optional().or(z.literal(""));
+export const emailSchema = z.object({
+  email: z.string().email("Invalid email format")
+});
 
-export const phoneSchema = () => 
-  z.string().optional().or(z.literal(""));
+export const passwordSchema = z.object({
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+});
 
-export const taxIdSchema = () => 
-  z.string().optional().or(z.literal(""));
+export const confirmPasswordSchema = z.object({
+  confirmPassword: z.string()
+});
 
-export const registrationNumberSchema = () => 
-  z.string().optional().or(z.literal(""));
-
-export const addressSchema = () => 
-  z.string().optional().or(z.literal(""));
-
-export const citySchema = () => 
-  z.string().optional().or(z.literal(""));
-
-export const postalCodeSchema = () => 
-  z.string().optional().or(z.literal(""));
-
-export const countrySchema = () => 
-  z.string().optional().or(z.literal(""));
-
-export const isActiveSchema = () => 
-  z.boolean().default(true);
-
-export const notesSchema = () => 
-  z.string().optional().or(z.literal(""));
-
-export const currencySchema = () => 
-  z.enum(["EUR", "USD", "GBP", "RSD", "MKD"]).default("EUR");
-
-export const dateSchema = (errorMessage = "Date is required") => 
-  z.date({ required_error: errorMessage });
-
-export const premiumSchema = (errorMessage = "Premium must be a positive number") => 
-  z.coerce.number().positive({ message: errorMessage });
-
-export const percentageSchema = (errorMessage = "Percentage must be between 0 and 100") => 
-  z.coerce.number().min(0, { message: "Percentage cannot be negative" })
-    .max(100, { message: "Percentage cannot exceed 100" });
-
-// Document schemas
-export const documentNameSchema = (errorMessage = "Document name is required") =>
-  z.string().min(1, { message: errorMessage });
-
-export const documentTypeSchema = () =>
-  z.string().min(1, { message: "Document type is required" });
-
-export const documentCategorySchema = () =>
-  z.string().min(1, { message: "Document category is required" });
-
-// Helper to create schemas for related models
-export function createModelSchema(type: string, options: { isRequired?: boolean, errorMessage?: string } = {}) {
-  const { isRequired = false, errorMessage = `${type} is required` } = options;
-  
-  return isRequired 
-    ? z.string().min(1, { message: errorMessage })
-    : z.string().optional();
-}
-
-// Function to create a schema with translations
-export function createSchemaWithTranslations<T extends z.ZodRawShape>(baseSchema: z.ZodObject<T>) {
-  return baseSchema.extend({
-    translations: z.record(z.string()).optional().nullable(),
+// Form schemas
+export const registerFormSchema = z
+  .object({
+    ...nameSchema.shape,
+    ...emailSchema.shape,
+    ...passwordSchema.shape,
+    ...confirmPasswordSchema.shape
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"]
   });
-}
 
-// Policy specific schemas
-export const policyNumberSchema = (errorMessage = "Policy number is required") =>
-  z.string().min(1, { message: errorMessage });
+export const loginFormSchema = z.object({
+  ...emailSchema.shape,
+  ...passwordSchema.shape,
+  rememberMe: z.boolean().optional()
+});
 
-export const policyTypeSchema = () =>
-  z.enum(["internal", "external"]);
+export const forgotPasswordFormSchema = z.object({
+  ...emailSchema.shape
+});
 
-export const policyStatusSchema = () =>
-  z.enum(["active", "pending", "expired", "cancelled"]).default("active");
+export const resetPasswordFormSchema = z
+  .object({
+    ...passwordSchema.shape,
+    ...confirmPasswordSchema.shape
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"]
+  });
 
-export const workflowStatusSchema = () =>
-  z.enum(["draft", "review", "approved", "rejected"]).default("draft");
+export const updateProfileFormSchema = z.object({
+  ...nameSchema.shape,
+  ...emailSchema.shape,
+  phone: z.string().optional(),
+  company: z.string().optional(),
+  position: z.string().optional()
+});
 
-// Claim specific schemas
-export const claimStatusSchema = () =>
-  z.enum(["in_processing", "reported", "accepted", "rejected", "partially_accepted", "appealed", "withdrawn"])
-    .default("in_processing");
+export const updatePasswordFormSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    ...passwordSchema.shape,
+    ...confirmPasswordSchema.shape
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"]
+  });
 
-export const damageDescriptionSchema = (errorMessage = "Damage description is required") =>
-  z.string().min(1, { message: errorMessage });
+export const basicUserFormSchema = z.object({
+  ...nameSchema.shape,
+  ...emailSchema.shape
+});
 
-export const claimAmountSchema = (errorMessage = "Claimed amount must be a non-negative number") =>
-  z.coerce.number().min(0, { message: errorMessage });
+// Create a new schema without ZodType.extend which doesn't exist in some Zod versions
+export const userFormSchema = z.object({
+  ...nameSchema.shape,
+  ...emailSchema.shape,
+  role: z.enum(["admin", "user", "manager"]),
+  status: z.enum(["active", "inactive", "pending"]).optional()
+});
 
-// Invoice specific schemas
-export const invoiceNumberSchema = (errorMessage = "Invoice number is required") =>
-  z.string().min(1, { message: errorMessage });
+export const createUserFormSchema = z
+  .object({
+    ...userFormSchema.shape,
+    ...passwordSchema.shape,
+    ...confirmPasswordSchema.shape
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"]
+  });
 
-export const invoiceStatusSchema = () =>
-  z.enum(["draft", "issued", "paid", "partially_paid", "overdue", "cancelled"])
-    .default("draft");
+export const organizationFormSchema = z.object({
+  ...nameSchema.shape,
+  industry: z.string().min(2, "Industry must be at least 2 characters").optional(),
+  size: z.enum(["small", "medium", "large", "enterprise"]).optional(),
+  website: z.string().url("Invalid URL format").optional().or(z.literal("")),
+  description: z.string().max(500, "Description cannot exceed 500 characters").optional()
+});

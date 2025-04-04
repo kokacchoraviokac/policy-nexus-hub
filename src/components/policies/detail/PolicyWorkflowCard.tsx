@@ -49,9 +49,9 @@ const PolicyWorkflowCard: React.FC<PolicyWorkflowCardProps> = ({ policy }) => {
   };
 
   // Create a Policy object from the limited data we have
-  const policyData: Policy = {
+  const policyData = {
     id: policy.id,
-    policy_number: "", // We don't have this data, but it's required by the Policy type
+    policy_number: "",
     policy_type: "",
     policyholder_name: "",
     insurer_name: "",
@@ -63,8 +63,9 @@ const PolicyWorkflowCard: React.FC<PolicyWorkflowCardProps> = ({ policy }) => {
     workflow_status: policy.workflow_status,
     created_at: "",
     updated_at: policy.updated_at,
-    company_id: ""
-  };
+    company_id: "",
+    client_id: "" // Add the required client_id field
+  } as Policy;
 
   return (
     <Card>
@@ -96,7 +97,6 @@ const PolicyWorkflowCard: React.FC<PolicyWorkflowCardProps> = ({ policy }) => {
             ({formatDistanceToNow(new Date(policy.updated_at), { addSuffix: true })})
           </div>
           
-          {/* Pass the full Policy object instead of just the ID */}
           <PolicyStatusWorkflow 
             policy={policyData}
             onStatusUpdated={() => {}}

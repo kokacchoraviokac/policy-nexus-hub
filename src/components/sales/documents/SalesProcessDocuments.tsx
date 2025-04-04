@@ -1,9 +1,9 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileUp } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useDocumentManager } from "@/hooks/useDocumentManager";
 import DocumentList from "@/components/documents/unified/DocumentList";
 import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
@@ -11,111 +11,71 @@ import { Document } from "@/types/documents";
 
 interface SalesProcessDocumentsProps {
   salesProcessId: string;
-  currentStage: string;
+  step?: string;
 }
 
 const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
   salesProcessId,
-  currentStage
+  step
 }) => {
   const { t } = useLanguage();
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [selectedStage, setSelectedStage] = useState<string>(currentStage);
-  const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
-  
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+
   const {
     documents,
     isLoading,
     isError,
     error,
     deleteDocument,
-    isDeleting
+    isDeleting,
+    approveDocument
   } = useDocumentManager({
     entityType: "sales_process",
     entityId: salesProcessId
   });
   
-  const stageCategories = [
-    { id: "discovery", label: t("discovery") },
-    { id: "quote", label: t("quoteManagement") },
-    { id: "proposal", label: t("proposals") },
-    { id: "contract", label: t("contracts") },
-    { id: "closeout", label: t("closeout") }
-  ];
-  
-  const handleOpenUploadDialog = () => {
-    setSelectedDocument(undefined);
-    setUploadDialogOpen(true);
+  const filteredDocuments = step
+    ? documents.filter(doc => doc.step === step)
+    : documents;
+
+  const handleAddDocument = () => {
+    setShowUploadDialog(true);
   };
-  
-  const handleUploadVersion = (document: Document) => {
-    setSelectedDocument(document);
-    setUploadDialogOpen(true);
-  };
-  
-  // Create a wrapper function that accepts a Document and calls deleteDocument with just the ID
-  const handleDelete = (document: Document) => {
-    deleteDocument(document.id);
+
+  const handleCloseUploadDialog = () => {
+    setShowUploadDialog(false);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">
-          {t("documents")} 
-          {documents.length > 0 && (
-            <span className="ml-2 text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
-              {documents.length}
-            </span>
-          )}
-        </h3>
-        <Button size="sm" onClick={handleOpenUploadDialog}>
-          <FileUp className="mr-2 h-4 w-4" />
-          {t("uploadDocument")}
-        </Button>
-      </div>
-      
-      <Tabs defaultValue={selectedStage} value={selectedStage} onValueChange={setSelectedStage}>
-        <TabsList className="grid grid-cols-5">
-          {stageCategories.map(stage => (
-            <TabsTrigger 
-              key={stage.id} 
-              value={stage.id}
-              className="text-xs sm:text-sm"
-            >
-              {stage.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        
-        {stageCategories.map(stage => (
-          <TabsContent key={stage.id} value={stage.id} className="mt-4">
-            <DocumentList
-              documents={documents}
-              isLoading={isLoading}
-              isError={isError}
-              error={error}
-              onDelete={handleDelete}
-              isDeleting={isDeleting}
-              onUploadClick={handleOpenUploadDialog}
-              showUploadButton={true}
-              filterCategory={stage.id}
-              onUploadVersion={handleUploadVersion}
-            />
-          </TabsContent>
-        ))}
-      </Tabs>
-      
-      <DocumentUploadDialog
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        entityType="sales_process"
-        entityId={salesProcessId}
-        selectedDocument={selectedDocument}
-        defaultCategory={selectedStage}
-        salesStage={selectedStage}
-      />
-    </div>
+    <Card>
+      <CardContent className="p-4 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium">{t("documents")}</h3>
+          <Button size="sm" onClick={handleAddDocument}>
+            <Plus className="h-4 w-4 mr-1" /> {t("addDocument")}
+          </Button>
+        </div>
+
+        <DocumentList
+          documents={filteredDocuments}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          onDelete={(documentId) => deleteDocument(documentId)}
+          isDeleting={isDeleting}
+          onApprove={approveDocument}
+        />
+
+        <DocumentUploadDialog
+          open={showUploadDialog}
+          onOpenChange={setShowUploadDialog}
+          entityType="sales_process"
+          entityId={salesProcessId}
+          onSuccess={handleCloseUploadDialog}
+          additionalData={{ step }}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

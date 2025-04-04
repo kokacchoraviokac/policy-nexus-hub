@@ -1,97 +1,116 @@
 
-import React from "react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import { ChevronRight, Loader2 } from "lucide-react";
 import { Policy } from "@/types/policies";
-import { useActivityLogger } from "@/utils/activityLogger";
-import { useApiService } from "@/hooks/useApiService";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PolicyService } from "@/services/PolicyService";
+import { useToast } from "@/hooks/use-toast";
 
 interface PolicyStatusWorkflowProps {
   policy: Policy;
-  onStatusUpdated?: () => void;
+  onStatusUpdated: () => void;
 }
 
-// Define valid workflow status values
-type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
-
-const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy, onStatusUpdated }) => {
+const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({
+  policy,
+  onStatusUpdated
+}) => {
   const { t } = useLanguage();
-  const { logActivity } = useActivityLogger();
-  const { isLoading, executeService } = useApiService();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isUpdating, setIsUpdating] = useState(false);
   
-  const handleStatusChange = async (status: string) => {
-    if (status === policy.workflow_status) return;
-    
-    const result = await executeService(
-      () => PolicyService.updatePolicyStatus(policy.id, status as WorkflowStatus),
-      {
-        successMessage: t("statusUpdated"),
-        errorMessage: t("errorUpdatingStatus"),
-        invalidateQueryKeys: [['policy', policy.id], ['policies-workflow']]
+  // Mutation to update policy status
+  const updatePolicyStatusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const response = await PolicyService.updatePolicyStatus(policy.id, newStatus);
+      if (!response.success) {
+        throw new Error(response.error?.toString() || "Failed to update policy status");
       }
-    );
-    
-    if (result) {
-      // Log the activity
-      logActivity({
-        entity_type: "policy",
-        entity_id: policy.id,
-        action: "update",
-        details: {
-          previous_status: policy.workflow_status,
-          new_status: status,
-          timestamp: new Date().toISOString()
-        }
+      return response.data;
+    },
+    onMutate: () => {
+      setIsUpdating(true);
+    },
+    onSuccess: () => {
+      toast({
+        title: t("success"),
+        description: t("policyStatusUpdated")
       });
-      
-      if (onStatusUpdated) {
-        onStatusUpdated();
-      }
+      queryClient.invalidateQueries({ queryKey: ["policy", policy.id] });
+      queryClient.invalidateQueries({ queryKey: ["policies"] });
+      onStatusUpdated();
+    },
+    onError: (error) => {
+      toast({
+        title: t("error"),
+        description: error instanceof Error ? error.message : t("errorUpdatingPolicyStatus"),
+        variant: "destructive"
+      });
+    },
+    onSettled: () => {
+      setIsUpdating(false);
+    }
+  });
+  
+  const getNextStatus = () => {
+    switch (policy.workflow_status) {
+      case "draft":
+        return "in_review";
+      case "in_review":
+        return "ready";
+      case "ready":
+        return "complete";
+      default:
+        return null;
     }
   };
   
+  const getButtonText = () => {
+    switch (policy.workflow_status) {
+      case "draft":
+        return t("moveToReview");
+      case "in_review":
+        return t("markAsReady");
+      case "ready":
+        return t("finalizePolicy");
+      case "complete":
+        return t("alreadyComplete");
+      default:
+        return t("updateStatus");
+    }
+  };
+  
+  const handleUpdateStatus = () => {
+    const nextStatus = getNextStatus();
+    if (nextStatus && !isUpdating) {
+      updatePolicyStatusMutation.mutate(nextStatus);
+    }
+  };
+  
+  // Don't show the workflow controls if policy is complete
+  if (policy.workflow_status === "complete") {
+    return null;
+  }
+  
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
-          <Select 
-            value={policy.workflow_status}
-            onValueChange={handleStatusChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t("selectStatus")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">{t("draft")}</SelectItem>
-              <SelectItem value="in_review">{t("inReview")}</SelectItem>
-              <SelectItem value="ready">{t("ready")}</SelectItem>
-              <SelectItem value="complete">{t("complete")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <Button 
-          variant="outline" 
-          disabled
-          className="col-span-1"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            t("history")
-          )}
-        </Button>
-      </div>
+    <div className="flex items-center">
+      <Button
+        variant="default"
+        size="sm"
+        className="w-full"
+        disabled={isUpdating || policy.workflow_status === "complete"}
+        onClick={handleUpdateStatus}
+      >
+        {isUpdating ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        ) : (
+          <ChevronRight className="h-4 w-4 mr-2" />
+        )}
+        {getButtonText()}
+      </Button>
     </div>
   );
 };

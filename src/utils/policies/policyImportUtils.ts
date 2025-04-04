@@ -197,7 +197,7 @@ const transformPolicyData = async (policy: ImportedPolicy): Promise<Policy> => {
     policy_type: policy.policy_type || 'Standard',
     insurer_name: policy.insurer_name,
     product_name: policy.product_name || null,
-    product_code: policy.product_code || null,
+    product_id: productId, // Use product_id instead of product_code
     policyholder_name: policy.policyholder_name,
     insured_name: policy.insured_name || policy.policyholder_name,
     start_date: policy.start_date,
