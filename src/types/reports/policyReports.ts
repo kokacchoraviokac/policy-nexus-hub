@@ -8,7 +8,7 @@ export interface PolicyReportFilters {
   clientId?: string;
   agentId?: string;
   policyType?: string;
-  status?: string; // Add status property
+  status?: string;
 }
 
 export interface PolicyReportItem {

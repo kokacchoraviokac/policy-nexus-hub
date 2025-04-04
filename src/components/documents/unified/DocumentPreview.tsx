@@ -1,227 +1,149 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { BaseService } from "@/services/BaseService";
-import { Document } from "@/types/documents";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Document } from "@/types/documents";
+import { FileIcon, Download, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+// Extend Document type for file_url and file_type support
+interface ExtendedDocument extends Document {
+  file_url?: string;
+  file_type?: string;
+}
 
 interface DocumentPreviewProps {
-  document: Document | null;
+  document: ExtendedDocument | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const DocumentPreview: React.FC<DocumentPreviewProps> = ({ 
-  document, 
-  open, 
-  onOpenChange 
+const DocumentPreview: React.FC<DocumentPreviewProps> = ({
+  document,
+  open,
+  onOpenChange,
 }) => {
   const { t } = useLanguage();
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("preview");
-  
+
   useEffect(() => {
-    const loadPreview = async () => {
-      if (!document) {
-        setError(t("noDocumentSelected"));
-        return;
-      }
+    const fetchDocumentUrl = async () => {
+      if (!document) return;
       
       try {
         setIsLoading(true);
         setError(null);
         
-        // If the document already has a URL, use it
+        // Check if document already has a file_url
         if (document.file_url) {
-          setPreviewUrl(document.file_url);
+          setDocumentUrl(document.file_url);
           return;
         }
         
-        // Otherwise, get the URL from the file path
-        if (document.file_path) {
-          const service = new BaseService();
-          const supabaseClient = service.getClient();
-          
-          const { data } = supabaseClient
-            .storage
-            .from('documents')
-            .getPublicUrl(document.file_path);
-            
-          if (data?.publicUrl) {
-            setPreviewUrl(data.publicUrl);
-          } else {
-            setError(t("errorLoadingPreview"));
-          }
-        } else {
-          setError(t("documentPathMissing"));
+        // Otherwise, use the file_path to get the URL
+        if (!document.file_path) {
+          throw new Error("Document has no file path");
         }
+        
+        const { data, error } = await supabase
+          .storage
+          .from('documents')
+          .createSignedUrl(document.file_path, 3600); // 1 hour expiry
+        
+        if (error) throw error;
+        
+        setDocumentUrl(data.signedUrl);
       } catch (err) {
-        setError(t("errorLoadingPreview"));
-        console.error("Error loading preview:", err);
+        console.error("Error fetching document URL:", err);
+        setError(t("errorFetchingDocument"));
       } finally {
         setIsLoading(false);
       }
     };
     
     if (open && document) {
-      loadPreview();
+      fetchDocumentUrl();
+    } else {
+      setDocumentUrl(null);
     }
   }, [document, open, t]);
   
-  const handleDownload = () => {
-    if (!previewUrl) return;
-    
-    // Create a temporary link and trigger download
-    const downloadLink = window.document.createElement('a');
-    downloadLink.href = previewUrl;
-    downloadLink.download = document?.document_name || 'document';
-    window.document.body.appendChild(downloadLink);
-    downloadLink.click();
-    window.document.body.removeChild(downloadLink);
-  };
-  
   const renderPreview = () => {
-    if (isLoading) {
-      return (
-        <div className="flex justify-center items-center p-12">
-          <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full border-t-transparent"></div>
-        </div>
-      );
-    }
+    if (!document || !documentUrl) return null;
     
-    if (error) {
-      return (
-        <div className="flex flex-col items-center justify-center p-12 text-center">
-          <p className="text-destructive mb-4">{error}</p>
-          <Button variant="outline" onClick={handleDownload} disabled={!previewUrl}>
-            <Download className="mr-2 h-4 w-4" />
-            {t("downloadToView")}
-          </Button>
-        </div>
-      );
-    }
+    // Extract file extension from path or file_type
+    const fileExtension = document.file_path 
+      ? document.file_path.split('.').pop()?.toLowerCase()
+      : document.file_type 
+        ? document.file_type.split('/').pop()?.toLowerCase()
+        : null;
+        
+    // Determine if the document is an image
+    const isImage = fileExtension && ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(fileExtension);
     
-    if (!previewUrl) {
-      return (
-        <div className="flex justify-center items-center p-12">
-          <p>{t("noPreviewAvailable")}</p>
-        </div>
-      );
-    }
+    // Determine if the document is a PDF
+    const isPdf = fileExtension === 'pdf';
     
-    // Check file type to determine preview method
-    const fileType = document?.mime_type || "";
-    
-    if (fileType.startsWith('image/')) {
+    if (isImage) {
       return (
-        <div className="flex justify-center p-4">
-          <img 
-            src={previewUrl} 
-            alt={document?.document_name || 'Document preview'} 
-            className="max-w-full max-h-[70vh] object-contain"
-          />
-        </div>
-      );
-    }
-    
-    if (fileType === 'application/pdf') {
-      return (
-        <iframe 
-          src={`${previewUrl}#toolbar=0`}
-          className="w-full h-[70vh] border-0" 
-          title={document?.document_name || 'PDF preview'}
+        <img 
+          src={documentUrl} 
+          alt={document.document_name} 
+          className="max-w-full max-h-[600px] object-contain mx-auto"
         />
       );
     }
     
-    // For other file types, show download button
-    return (
-      <div className="flex flex-col items-center justify-center p-12 text-center">
-        <p className="mb-4">{t("fileTypeNotPreviewable")}</p>
-        <Button onClick={handleDownload}>
-          <Download className="mr-2 h-4 w-4" />
-          {t("download")}
-        </Button>
-      </div>
-    );
-  };
-  
-  const renderDetails = () => {
-    if (!document) return null;
+    if (isPdf) {
+      return (
+        <iframe 
+          src={`${documentUrl}#toolbar=0`} 
+          className="w-full h-[600px] border-0"
+          title={document.document_name}
+        />
+      );
+    }
     
+    // Fallback for other document types
     return (
-      <div className="p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("documentName")}</h4>
-            <p>{document.document_name}</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("documentType")}</h4>
-            <p>{document.document_type}</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("uploadedOn")}</h4>
-            <p>{new Date(document.created_at).toLocaleDateString()}</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("fileType")}</h4>
-            <p>{document.mime_type || t("unknown")}</p>
-          </div>
-          {document.version && (
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("version")}</h4>
-              <p>{document.version}</p>
-            </div>
-          )}
-          {document.category && (
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("category")}</h4>
-              <p>{document.category}</p>
-            </div>
-          )}
-        </div>
-        
-        <div className="pt-4">
-          <Button onClick={handleDownload} className="w-full">
-            <Download className="mr-2 h-4 w-4" />
+      <div className="flex flex-col items-center justify-center p-10 text-center">
+        <FileIcon className="h-16 w-16 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium mb-2">{document.document_name}</h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          {t("fileTypeNotPreviewable", { type: fileExtension || t("unknown") })}
+        </p>
+        <Button asChild>
+          <a href={documentUrl} download={document.document_name} target="_blank" rel="noopener noreferrer">
+            <Download className="h-4 w-4 mr-2" />
             {t("download")}
-          </Button>
-        </div>
+          </a>
+        </Button>
       </div>
     );
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-xl">
-            {document?.document_name || t("documentPreview")}
-          </DialogTitle>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
-            <X className="h-4 w-4" />
-          </Button>
-        </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="preview">{t("preview")}</TabsTrigger>
-            <TabsTrigger value="details">{t("details")}</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="preview" className="flex-1 overflow-auto">
-            {renderPreview()}
-          </TabsContent>
-          
-          <TabsContent value="details">
-            {renderDetails()}
-          </TabsContent>
-        </Tabs>
+      <DialogContent className="sm:max-w-4xl">
+        <div className="min-h-[200px] flex items-center justify-center">
+          {isLoading ? (
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+              <p className="text-sm text-muted-foreground">{t("loadingDocument")}</p>
+            </div>
+          ) : error ? (
+            <div className="text-center">
+              <p className="text-sm text-destructive mb-2">{error}</p>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                {t("close")}
+              </Button>
+            </div>
+          ) : (
+            renderPreview()
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,5 +1,5 @@
 
-import { createClient, PostgrestFilterBuilder } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { useToast } from "@/components/ui/use-toast";
 
 export interface ServiceResponse<T = any> {

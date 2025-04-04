@@ -7,7 +7,7 @@ export interface FinancialReportFilters {
   insurerId?: string;
   clientId?: string;
   policyType?: string;
-  status?: string; // Add status property
+  status?: string;
 }
 
 export interface FinancialReportItem {

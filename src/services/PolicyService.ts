@@ -1,181 +1,164 @@
 
+import { supabase } from "@/integrations/supabase/client";
 import { Policy } from "@/types/policies";
-import { BaseService } from "./BaseService";
+import { BaseService, ServiceResponse } from "./BaseService";
 
+// Define Policy Filter Parameters
 export interface PolicyFilterParams {
   status?: string;
-  clientId?: string;
+  workflow_status?: string;
   insurerId?: string;
-  query?: string;
-  startDate?: string;
-  endDate?: string;
-  policyType?: string;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  page?: number;
-  pageSize?: number;
+  clientId?: string;
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
+  searchTerm?: string;
 }
 
-export class PolicyService extends BaseService {
-  /**
-   * Create a new policy
-   */
-  static async createPolicy(policyData: Partial<Policy>): Promise<Policy> {
+// PolicyService class extends BaseService
+class PolicyServiceClass extends BaseService {
+  
+  // Get all policies
+  async getPolicies(): Promise<ServiceResponse<Policy[]>> {
     try {
-      const service = new PolicyService();
-      const supabase = service.getClient();
-      
-      const { data, error } = await supabase
+      const { data, error } = await this.getClient()
         .from('policies')
-        .insert({ 
-          ...policyData,
-          company_id: service.getCompanyId(),
-          created_by: service.getCurrentUserId(),
-        })
-        .select('*')
-        .single();
+        .select('*');
       
       if (error) throw error;
-      return data;
+      
+      return this.createResponse(true, data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Error creating policy: ${errorMessage}`);
+      return this.createResponse(false, [], this.handleError(error));
     }
   }
   
-  /**
-   * Get a policy by ID
-   */
-  static async getPolicy(policyId: string): Promise<Policy> {
+  // Get policies with filters
+  async getPoliciesWithFilters(filters: PolicyFilterParams): Promise<ServiceResponse<Policy[]>> {
     try {
-      const service = new PolicyService();
-      const supabase = service.getClient();
-      
-      const { data, error } = await supabase
+      let query = this.getClient()
         .from('policies')
-        .select('*')
-        .eq('id', policyId)
-        .single();
+        .select('*');
       
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Error retrieving policy: ${errorMessage}`);
-    }
-  }
-  
-  /**
-   * Update a policy
-   */
-  static async updatePolicy(policyId: string, policyData: Partial<Policy>): Promise<Policy> {
-    try {
-      const service = new PolicyService();
-      const supabase = service.getClient();
-      
-      const { data, error } = await supabase
-        .from('policies')
-        .update({
-          ...policyData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', policyId)
-        .select('*')
-        .single();
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Error updating policy: ${errorMessage}`);
-    }
-  }
-  
-  /**
-   * Delete a policy
-   */
-  static async deletePolicy(policyId: string): Promise<void> {
-    try {
-      const service = new PolicyService();
-      const supabase = service.getClient();
-      
-      const { error } = await supabase
-        .from('policies')
-        .delete()
-        .eq('id', policyId);
-      
-      if (error) throw error;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Error deleting policy: ${errorMessage}`);
-    }
-  }
-  
-  /**
-   * Get policies with optional filtering
-   */
-  static async getPolicies(filters?: PolicyFilterParams): Promise<Policy[]> {
-    try {
-      const service = new PolicyService();
-      const supabase = service.getClient();
-      
-      let query = supabase
-        .from('policies')
-        .select('*')
-        .eq('company_id', service.getCompanyId());
-      
-      // Apply filters
-      if (filters?.status) {
+      if (filters.status) {
         query = query.eq('status', filters.status);
       }
       
-      if (filters?.clientId) {
-        query = query.eq('client_id', filters.clientId);
+      if (filters.workflow_status) {
+        query = query.eq('workflow_status', filters.workflow_status);
       }
       
-      if (filters?.insurerId) {
+      if (filters.insurerId) {
         query = query.eq('insurer_id', filters.insurerId);
       }
       
-      if (filters?.policyType) {
-        query = query.eq('policy_type', filters.policyType);
+      if (filters.clientId) {
+        query = query.eq('client_id', filters.clientId);
       }
       
-      if (filters?.query) {
-        query = query.or(`policy_number.ilike.%${filters.query}%,policyholder_name.ilike.%${filters.query}%`);
+      if (filters.searchTerm) {
+        query = query.or(`policy_number.ilike.%${filters.searchTerm}%,policyholder_name.ilike.%${filters.searchTerm}%`);
       }
       
-      if (filters?.startDate) {
-        query = query.gte('start_date', filters.startDate);
+      if (filters.dateRange?.from) {
+        query = query.gte('start_date', filters.dateRange.from);
       }
       
-      if (filters?.endDate) {
-        query = query.lte('expiry_date', filters.endDate);
-      }
-      
-      // Sort
-      if (filters?.sortBy) {
-        query = query.order(filters.sortBy, { 
-          ascending: filters.sortDirection !== 'desc'
-        });
-      } else {
-        query = query.order('created_at', { ascending: false });
-      }
-      
-      // Pagination
-      if (filters?.page && filters?.pageSize) {
-        const from = (filters.page - 1) * filters.pageSize;
-        const to = from + filters.pageSize - 1;
-        query = query.range(from, to);
+      if (filters.dateRange?.to) {
+        query = query.lte('expiry_date', filters.dateRange.to);
       }
       
       const { data, error } = await query;
       
       if (error) throw error;
-      return data;
+      
+      return this.createResponse(true, data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Error retrieving policies: ${errorMessage}`);
+      return this.createResponse(false, [], this.handleError(error));
+    }
+  }
+  
+  // Get policy by ID
+  async getPolicyById(id: string): Promise<ServiceResponse<Policy>> {
+    try {
+      const { data, error } = await this.getClient()
+        .from('policies')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      
+      return this.createResponse(true, data);
+    } catch (error) {
+      return this.createResponse(false, undefined, this.handleError(error));
+    }
+  }
+  
+  // Create policy
+  async createPolicy(policy: Partial<Policy>): Promise<ServiceResponse<Policy>> {
+    try {
+      const { data, error } = await this.getClient()
+        .from('policies')
+        .insert({
+          ...policy,
+          company_id: this.getCompanyId(),
+          created_by: this.getCurrentUserId()
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return this.createResponse(true, data);
+    } catch (error) {
+      return this.createResponse(false, undefined, this.handleError(error));
+    }
+  }
+  
+  // Update policy
+  async updatePolicy(id: string, updates: Partial<Policy>): Promise<ServiceResponse<Policy>> {
+    try {
+      const { data, error } = await this.getClient()
+        .from('policies')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return this.createResponse(true, data);
+    } catch (error) {
+      return this.createResponse(false, undefined, this.handleError(error));
+    }
+  }
+  
+  // Update policy status - new method
+  async updatePolicyStatus(id: string, status: string): Promise<ServiceResponse<Policy>> {
+    try {
+      const { data, error } = await this.getClient()
+        .from('policies')
+        .update({
+          workflow_status: status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return this.createResponse(true, data);
+    } catch (error) {
+      return this.createResponse(false, undefined, this.handleError(error));
     }
   }
 }
+
+// Export a singleton instance of the service
+export const PolicyService = new PolicyServiceClass();

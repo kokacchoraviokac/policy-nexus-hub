@@ -28,3 +28,47 @@ export interface Policy {
   policyholder_name: string;
   insured_name?: string;
 }
+
+export interface PolicyAddendum {
+  id: string;
+  policy_id: string;
+  addendum_number: string;
+  description: string;
+  effective_date: string;
+  premium_adjustment?: number;
+  status: string;
+  workflow_status: string;
+  lien_status?: boolean;
+  created_by?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UnlinkedPaymentType {
+  id: string;
+  amount: number;
+  currency: string;
+  payment_date: string;
+  payer_name?: string;
+  reference?: string;
+  status: string;
+  linked_policy_id?: string;
+  linked_at?: string;
+  linked_by?: string;
+  created_at: string;
+  updated_at: string;
+  company_id: string;
+}
+
+export interface PolicyFilterParams {
+  status?: string;
+  workflow_status?: string;
+  insurer_id?: string;
+  client_id?: string;
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
+  searchTerm?: string;
+}

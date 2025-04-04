@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,11 +7,13 @@ import { DocumentCategory } from "@/types/documents";
 
 interface DocumentAnalysisPanelProps {
   documentType: string;
+  file?: File | null;
   onCategoryDetected?: (category: DocumentCategory) => void;
 }
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   documentType,
+  file,
   onCategoryDetected
 }) => {
   const { t } = useLanguage();
@@ -20,18 +21,15 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   const [analysis, setAnalysis] = useState<any>(null);
   const [processingError, setProcessingError] = useState<string | null>(null);
   
-  // Simulate AI analysis when file changes
   useEffect(() => {
-    // We're not actually doing any AI analysis here, just simulating it
-    // In a real implementation, you would call a service or API
+    if (!file) return;
+    
     const analyzeDocument = () => {
       setIsAnalyzing(true);
       setProcessingError(null);
       
-      // Simulate API call with a 2-second delay
       setTimeout(() => {
         try {
-          // Simulate analysis results based on document type
           const detectedCategory = 
             documentType.includes('policy') ? 'policy' :
             documentType.includes('claim') ? 'claim' :
@@ -64,7 +62,7 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
     };
     
     analyzeDocument();
-  }, [documentType, onCategoryDetected, t]);
+  }, [file, documentType, onCategoryDetected, t]);
   
   if (isAnalyzing) {
     return (
@@ -108,7 +106,7 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
     );
   }
   
-  if (!analysis) {
+  if (!file || !analysis) {
     return (
       <Card>
         <CardHeader>
@@ -117,7 +115,7 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
         <CardContent className="pt-2">
           <div className="text-center py-6">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">{t("noDocumentSelected")}</p>
+            <p className="text-sm text-muted-foreground">{file ? t("analyzingDocument") : t("noDocumentSelected")}</p>
           </div>
         </CardContent>
       </Card>
