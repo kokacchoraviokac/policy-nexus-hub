@@ -1,360 +1,288 @@
+import { BaseService, ServiceResponse } from "./BaseService";
+import { Document, DocumentCategory, EntityType, DocumentApprovalStatus } from "@/types/documents";
 
-import { supabase } from "@/integrations/supabase/client";
-import { Document, DocumentCategory, DocumentApprovalStatus, EntityType } from "@/types/documents";
-import { getDocumentTableName } from "@/utils/documentUploadUtils";
-import { v4 as uuidv4 } from "uuid";
-import { ServiceResponse } from "@/types/services";
+/**
+ * Document upload parameters
+ */
+export interface DocumentUploadParams {
+  file: File;
+  documentName: string;
+  documentType: string;
+  category: DocumentCategory | string;
+  entityId: string;
+  entityType: EntityType;
+  originalDocumentId?: string | null;
+  currentVersion?: number;
+  additionalData?: Record<string, any>;
+}
 
-export const DocumentService = {
-  async uploadDocument({
-    document_name,
-    document_type, 
-    category,
-    file_path,
-    file_url,
-    file_size,
-    file_type,
-    entity_id,
-    entity_type,
-    version = 1,
-    original_document_id = null,
-    metadata = "{}"
-  }: Partial<Document> & {
-    file_url?: string;
-    file_size?: number;
-    file_type?: string;
-    metadata?: string;
-  }): Promise<ServiceResponse<Document>> {
+/**
+ * Document service responsible for all document operations
+ */
+export class DocumentService extends BaseService {
+  /**
+   * Upload a document
+   */
+  static async uploadDocument(params: DocumentUploadParams): Promise<ServiceResponse<Document>> {
     try {
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return { 
-          success: false, 
-          error: "User not authenticated" 
-        };
-      }
-      
-      // Get the user's company ID
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single();
-      
-      if (!profile?.company_id) {
-        return { 
-          success: false, 
-          error: "User's company ID not found" 
-        };
-      }
-      
-      const tableName = getDocumentTableName(entity_type);
-      
-      // Create the document record
-      const documentData = {
-        id: uuidv4(),
-        document_name,
-        document_type,
-        category: category || 'other',
-        file_path,
-        mime_type: file_type,
-        uploaded_by: user.id,
-        company_id: profile.company_id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        version,
-        is_latest_version: true,
-        original_document_id
-      };
-      
-      // Add entity-specific fields based on the entity type
-      if (entity_type === 'policy') {
-        Object.assign(documentData, { policy_id: entity_id });
-      } else if (entity_type === 'claim') {
-        Object.assign(documentData, { claim_id: entity_id });
-      } else if (entity_type === 'sales_process') {
-        Object.assign(documentData, { 
-          sales_process_id: entity_id,
-          step: document_type || 'general'
-        });
-      }
-      
-      const { data, error } = await supabase
-        .from(tableName)
-        .insert(documentData)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      
-      return {
-        success: true,
-        data: data as Document
-      };
-      
-    } catch (error) {
-      console.error("Error uploading document:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred"
-      };
-    }
-  },
+      const { 
+        file, 
+        documentName, 
+        documentType, 
+        category, 
+        entityId, 
+        entityType,
+        originalDocumentId,
+        currentVersion = 0,
+        additionalData = {}
+      } = params;
 
-  async getDocuments(entityType: EntityType, entityId: string): Promise<ServiceResponse<Document[]>> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return { 
-          success: false, 
-          error: "User not authenticated" 
-        };
-      }
+      // Generate a unique file path for this document
+      const fileExt = file.name.split('.').pop() || "";
+      const filePath = `${entityType}/${entityId}/${Date.now()}.${fileExt}`;
       
-      const tableName = getDocumentTableName(entityType);
+      // Create storage instance
+      const service = new DocumentService();
+      const supabase = service.getClient();
       
-      // Create a query based on the entity type
-      let query = supabase
-        .from(tableName)
-        .select("*");
-        
-      // Add the entity-specific filter
-      if (entityType === 'policy') {
-        query = query.eq('policy_id', entityId);
-      } else if (entityType === 'claim') {
-        query = query.eq('claim_id', entityId);
-      } else if (entityType === 'sales_process') {
-        query = query.eq('sales_process_id', entityId);
-      }
-      
-      const { data, error } = await query
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      return {
-        success: true,
-        data: data as unknown as Document[]
-      };
-      
-    } catch (error) {
-      console.error("Error getting documents:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred"
-      };
-    }
-  },
-
-  async getDocumentSignedUrl(filePath: string): Promise<ServiceResponse<string>> {
-    try {
-      if (!filePath) throw new Error("File path is required");
-      
-      const { data: { signedUrl }, error } = await supabase
+      // Upload the file to storage
+      const { data: storageData, error: storageError } = await supabase
         .storage
         .from('documents')
-        .createSignedUrl(filePath, 60 * 60); // URL valid for 1 hour
-        
-      if (error) throw error;
-      if (!signedUrl) throw new Error("Unable to generate signed URL");
-      
-      return {
-        success: true,
-        data: signedUrl
-      };
-      
-    } catch (error) {
-      console.error("Error getting document signed URL:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred"
-      };
-    }
-  },
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-  async getDocumentVersions(documentId: string, entityType: EntityType): Promise<ServiceResponse<Document[]>> {
-    try {
-      const tableName = getDocumentTableName(entityType);
+      if (storageError) {
+        throw storageError;
+      }
+
+      // Get public URL for the file
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('documents')
+        .getPublicUrl(filePath);
       
-      // Find the original document first
-      const { data: document, error: docError } = await supabase
-        .from(tableName)
+      // Prepare document database record
+      const isNewVersion = originalDocumentId && currentVersion > 0;
+      
+      const documentRecord = {
+        document_name: documentName,
+        document_type: documentType,
+        category,
+        file_path: filePath,
+        file_url: publicUrl,
+        file_size: file.size,
+        file_type: file.type,
+        entity_id: entityId,
+        entity_type: entityType,
+        version: isNewVersion ? currentVersion + 1 : 1,
+        original_document_id: isNewVersion ? originalDocumentId : null,
+        metadata: additionalData ? JSON.stringify(additionalData) : null,
+      };
+
+      // Save document record to database
+      const { data, error } = await supabase
+        .from('documents')
+        .insert(documentRecord)
         .select('*')
-        .eq('id', documentId)
         .single();
         
-      if (docError) throw docError;
+      if (error) {
+        throw error;
+      }
       
-      // Get the original document ID or use the current document ID if it's the original
-      const originalId = document.original_document_id || document.id;
-      
-      // Get all versions
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('*')
-        .or(`id.eq.${originalId},original_document_id.eq.${originalId}`)
-        .order('version', { ascending: false });
-        
-      if (error) throw error;
-      
-      return {
-        success: true,
-        data: data as unknown as Document[]
-      };
-      
+      return service.createResponse(true, data);
     } catch (error) {
-      console.error("Error getting document versions:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred"
-      };
+      const service = new DocumentService();
+      const errorResponse = service.handleError(error);
+      service.showErrorToast(errorResponse);
+      return service.createResponse(false, undefined, errorResponse);
     }
-  },
+  }
 
-  async deleteDocument(documentId: string): Promise<ServiceResponse<boolean>> {
+  /**
+   * Get documents for an entity
+   */
+  static async getDocuments(
+    entityType: EntityType, 
+    entityId: string
+  ): Promise<ServiceResponse<Document[]>> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return { 
-          success: false, 
-          error: "User not authenticated" 
-        };
+      const service = new DocumentService();
+      const supabase = service.getClient();
+      
+      const { data, error, status } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('entity_type', entityType)
+        .eq('entity_id', entityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
       }
       
-      // First, we need to find the document to get its entity type
-      // We'll try each table
-      const entityTypes: EntityType[] = ['policy', 'claim', 'sales_process'];
-      let documentFound = false;
-      let filePath: string | null = null;
+      return service.createResponse(true, data);
+    } catch (error) {
+      const service = new DocumentService();
+      const errorResponse = service.handleError(error);
+      return service.createResponse(false, undefined, errorResponse);
+    }
+  }
+
+  /**
+   * Delete a document
+   */
+  static async deleteDocument(documentId: string): Promise<ServiceResponse<void>> {
+    try {
+      const service = new DocumentService();
+      const supabase = service.getClient();
       
-      for (const entityType of entityTypes) {
-        const tableName = getDocumentTableName(entityType);
-        
-        const { data, error } = await supabase
-          .from(tableName)
-          .select('file_path')
-          .eq('id', documentId)
-          .maybeSingle();
-          
-        if (!error && data) {
-          documentFound = true;
-          filePath = data.file_path;
-          
-          // Delete the document from the database
-          const { error: deleteError } = await supabase
-            .from(tableName)
-            .delete()
-            .eq('id', documentId);
-            
-          if (deleteError) throw deleteError;
-          break;
-        }
+      // First get the document to know the file path
+      const { data: document, error: fetchError } = await supabase
+        .from('documents')
+        .select('file_path')
+        .eq('id', documentId)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
       }
       
-      if (!documentFound) {
-        return {
-          success: false,
-          error: "Document not found"
-        };
-      }
-      
-      // If we have a file path, delete the file from storage
-      if (filePath) {
+      // Then delete from storage
+      if (document?.file_path) {
         const { error: storageError } = await supabase
           .storage
           .from('documents')
-          .remove([filePath]);
-          
+          .remove([document.file_path]);
+        
         if (storageError) {
-          console.warn("Error deleting file from storage:", storageError);
-          // We won't fail the entire operation if storage delete fails
+          throw storageError;
         }
       }
       
-      return {
-        success: true,
-        data: true
-      };
+      // Finally delete the record
+      const { error } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', documentId);
       
+      if (error) {
+        throw error;
+      }
+      
+      return service.createResponse(true);
     } catch (error) {
-      console.error("Error deleting document:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred"
-      };
+      const service = new DocumentService();
+      const errorResponse = service.handleError(error);
+      service.showErrorToast(errorResponse);
+      return service.createResponse(false, undefined, errorResponse);
     }
-  },
+  }
 
-  async approveDocument(
-    documentId: string, 
+  /**
+   * Get document versions
+   */
+  static async getDocumentVersions(
+    documentId: string
+  ): Promise<ServiceResponse<Document[]>> {
+    try {
+      const service = new DocumentService();
+      const supabase = service.getClient();
+      
+      // Get the original document ID (either the document's original_document_id or its own ID if it's the original)
+      const { data: document, error: fetchError } = await supabase
+        .from('documents')
+        .select('id, original_document_id')
+        .eq('id', documentId)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      const originalId = document?.original_document_id || document?.id;
+      
+      // Get all versions of this document (including the original)
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .or(`id.eq.${originalId},original_document_id.eq.${originalId}`)
+        .order('version', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return service.createResponse(true, data);
+    } catch (error) {
+      const service = new DocumentService();
+      const errorResponse = service.handleError(error);
+      return service.createResponse(false, undefined, errorResponse);
+    }
+  }
+  
+  /**
+   * Update document approval status
+   */
+  static async updateDocumentStatus(
+    documentId: string,
     status: DocumentApprovalStatus,
     notes?: string
   ): Promise<ServiceResponse<Document>> {
     try {
+      const service = new DocumentService();
+      const supabase = service.getClient();
+      
+      // First get the document to determine the correct table
+      const { data: document, error: fetchError } = await supabase
+        .from('documents')
+        .select('entity_type, id')
+        .eq('id', documentId)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      if (!document) {
+        throw new Error('Document not found');
+      }
+      
+      // Get current user for approval tracking
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        return { 
-          success: false, 
-          error: "User not authenticated" 
-        };
+        throw new Error('User not authenticated');
       }
       
-      // First, find the document to get its entity type
-      const entityTypes: EntityType[] = ['policy', 'claim', 'sales_process'];
-      let documentFound = false;
-      let updatedDocument = null;
-      
-      for (const entityType of entityTypes) {
-        const tableName = getDocumentTableName(entityType);
-        
-        const { data: document, error: findError } = await supabase
-          .from(tableName)
-          .select('*')
-          .eq('id', documentId)
-          .maybeSingle();
-          
-        if (!findError && document) {
-          documentFound = true;
-          
-          // Update the document with approval status
-          const { data, error: updateError } = await supabase
-            .from(tableName)
-            .update({
-              approval_status: status,
-              approval_notes: notes,
-              approved_by: user.id,
-              approved_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', documentId)
-            .select()
-            .single();
-            
-          if (updateError) throw updateError;
-          updatedDocument = data;
-          break;
-        }
-      }
-      
-      if (!documentFound) {
-        return {
-          success: false,
-          error: "Document not found"
-        };
-      }
-      
-      return {
-        success: true,
-        data: updatedDocument as unknown as Document
+      // Prepare update data
+      const updateData = {
+        approval_status: status,
+        approval_notes: notes,
+        approved_by: user.id,
+        approved_at: new Date().toISOString()
       };
       
+      // Update the document
+      const { data, error } = await supabase
+        .from('documents')
+        .update(updateData)
+        .eq('id', documentId)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return service.createResponse(true, data);
     } catch (error) {
-      console.error("Error approving document:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error occurred"
-      };
+      const service = new DocumentService();
+      const errorResponse = service.handleError(error);
+      service.showErrorToast(errorResponse);
+      return service.createResponse(false, undefined, errorResponse);
     }
   }
-};
+}

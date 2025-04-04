@@ -1,179 +1,161 @@
+import { BaseService, ServiceResponse } from "./BaseService";
+import { Policy, PolicyFilterParams } from "@/types/policies";
 
-import { Policy } from "@/types/policies";
-import { supabase } from "@/integrations/supabase/client";
-import { v4 as uuidv4 } from "uuid";
-import { ServiceResponse } from "@/types/services";
-
-const getClient = () => {
-  return supabase;
-};
-
-const handleError = (error: any): string => {
-  if (typeof error === 'string') return error;
-  return error.message || "An unknown error occurred";
-};
-
-const createResponse = <T>(success: boolean, data?: T, error?: any): ServiceResponse<T> => {
-  return {
-    success,
-    data: data || null,
-    error: error ? handleError(error) : null
-  };
-};
-
-export const PolicyService = {
-  getClient,
-  handleError,
-  createResponse,
-  
-  async getPolicies(params: {
-    page?: number;
-    pageSize?: number;
-    search?: string;
-    status?: string;
-    workflowStatus?: string;
-    orderBy?: string;
-    orderDirection?: 'asc' | 'desc';
-  }) {
+export class PolicyService extends BaseService {
+  /**
+   * Get a paginated list of policies with optional filtering
+   */
+  static async getPolicies(params: PolicyFilterParams): Promise<ServiceResponse<{ policies: Policy[], totalCount: number }>> {
     try {
-      const client = getClient();
-      let query = client.from('policies').select('*', { count: 'exact' });
+      const { page = 1, pageSize = 10, search = '', orderBy = 'created_at', orderDirection = 'desc', workflowStatus } = params;
+      
+      // Calculate offset
+      const offset = (page - 1) * pageSize;
+      
+      // Build query
+      let query = this.getClient()
+        .from('policies')
+        .select('*', { count: 'exact' });
       
       // Apply filters
-      if (params.status) {
-        query = query.eq('status', params.status);
+      if (search) {
+        query = query.or(`policy_number.ilike.%${search}%,policyholder_name.ilike.%${search}%,insurer_name.ilike.%${search}%`);
       }
       
-      if (params.workflowStatus) {
-        query = query.eq('workflow_status', params.workflowStatus);
+      if (workflowStatus) {
+        query = query.eq('workflow_status', workflowStatus);
       }
       
-      if (params.search) {
-        query = query.or(`policy_number.ilike.%${params.search}%,policyholder_name.ilike.%${params.search}%,insurer_name.ilike.%${params.search}%`);
+      // Apply sorting and pagination
+      const { data, error, count } = await query
+        .order(orderBy, { ascending: orderDirection === 'asc' })
+        .range(offset, offset + pageSize - 1);
+        
+      if (error) {
+        throw error;
       }
       
-      // Apply sorting
-      const orderBy = params.orderBy || 'created_at';
-      const orderDirection = params.orderDirection || 'desc';
-      query = query.order(orderBy, { ascending: orderDirection === 'asc' });
-      
-      // Apply pagination
-      if (params.page !== undefined && params.pageSize !== undefined) {
-        const from = params.page * params.pageSize;
-        const to = from + params.pageSize - 1;
-        query = query.range(from, to);
-      }
-      
-      const { data, error, count } = await query;
-      
-      if (error) throw error;
-      
-      return createResponse({
-        policies: data,
-        totalCount: count || 0
+      return this.createResponse(true, { 
+        policies: data as Policy[], 
+        totalCount: count || 0 
       });
     } catch (error) {
-      console.error("Error fetching policies:", error);
-      return createResponse(false, null, error);
+      const errorResponse = this.handleError(error);
+      return this.createResponse(false, undefined, errorResponse);
     }
-  },
+  }
   
-  async getPolicy(policyId: string) {
+  /**
+   * Get a single policy by ID
+   */
+  static async getPolicy(id: string): Promise<ServiceResponse<Policy>> {
     try {
-      const client = getClient();
-      const { data, error } = await client
+      const { data, error } = await this.getClient()
         .from('policies')
         .select('*')
-        .eq('id', policyId)
+        .eq('id', id)
         .single();
+        
+      if (error) {
+        throw error;
+      }
       
-      if (error) throw error;
-      
-      return createResponse(data);
+      return this.createResponse(true, data as Policy);
     } catch (error) {
-      console.error("Error fetching policy:", error);
-      return createResponse(false, null, error);
+      const errorResponse = this.handleError(error);
+      return this.createResponse(false, undefined, errorResponse);
     }
-  },
-  
-  async createPolicy(policyData: Partial<Policy>) {
+  }
+
+  /**
+   * Update policy workflow status
+   */
+  static async updatePolicyStatus(id: string, status: 'draft' | 'in_review' | 'ready' | 'complete'): Promise<ServiceResponse<Policy>> {
     try {
-      const client = getClient();
-      const id = policyData.id || uuidv4();
-      
-      const { data, error } = await client
+      const { data, error } = await this.getClient()
         .from('policies')
-        .insert({ ...policyData, id })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return createResponse(data);
-    } catch (error) {
-      console.error("Error creating policy:", error);
-      return createResponse(false, null, error);
-    }
-  },
-  
-  async updatePolicy(policyId: string, policyData: Partial<Policy>) {
-    try {
-      const client = getClient();
-      const { data, error } = await client
-        .from('policies')
-        .update({ 
-          ...policyData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', policyId)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return createResponse(data);
-    } catch (error) {
-      console.error("Error updating policy:", error);
-      return createResponse(false, null, error);
-    }
-  },
-  
-  async deletePolicy(policyId: string) {
-    try {
-      const client = getClient();
-      const { error } = await client
-        .from('policies')
-        .delete()
-        .eq('id', policyId);
-      
-      if (error) throw error;
-      
-      return createResponse(true);
-    } catch (error) {
-      console.error("Error deleting policy:", error);
-      return createResponse(false, null, error);
-    }
-  },
-  
-  async updatePolicyStatus(policyId: string, status: string) {
-    try {
-      const client = getClient();
-      const { data, error } = await client
-        .from('policies')
-        .update({ 
+        .update({
           workflow_status: status,
           updated_at: new Date().toISOString()
         })
-        .eq('id', policyId)
+        .eq('id', id)
         .select()
         .single();
+        
+      if (error) {
+        throw error;
+      }
       
-      if (error) throw error;
-      
-      return createResponse(data);
+      return this.createResponse(true, data as Policy);
     } catch (error) {
-      console.error("Error updating policy status:", error);
-      return createResponse(false, null, error);
+      const errorResponse = this.handleError(error);
+      return this.createResponse(false, undefined, errorResponse);
     }
   }
-};
+
+  /**
+   * Create a new policy
+   */
+  static async createPolicy(policy: Policy): Promise<ServiceResponse<Policy>> {
+    try {
+      const { data, error } = await this.getClient()
+        .from('policies')
+        .insert([policy])
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return this.createResponse(true, data as Policy);
+    } catch (error) {
+      const errorResponse = this.handleError(error);
+      return this.createResponse(false, undefined, errorResponse);
+    }
+  }
+
+  /**
+   * Update an existing policy
+   */
+  static async updatePolicy(id: string, updates: Partial<Policy>): Promise<ServiceResponse<Policy>> {
+    try {
+      const { data, error } = await this.getClient()
+        .from('policies')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return this.createResponse(true, data as Policy);
+    } catch (error) {
+      const errorResponse = this.handleError(error);
+      return this.createResponse(false, undefined, errorResponse);
+    }
+  }
+
+  /**
+   * Delete a policy by ID
+   */
+  static async deletePolicy(id: string): Promise<ServiceResponse<null>> {
+    try {
+      const { error } = await this.getClient()
+        .from('policies')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+
+      return this.createResponse(true, null);
+    } catch (error) {
+      const errorResponse = this.handleError(error);
+      return this.createResponse(false, undefined, errorResponse);
+    }
+  }
+}

@@ -1,188 +1,153 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Policy } from "@/types/policies";
+import { formatDate, formatCurrency } from "@/utils/formatters";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { AlertTriangle, Calendar, User, Building, CreditCard } from "lucide-react";
 
 interface PolicyReviewOverviewProps {
   policy: Policy;
 }
 
-interface PolicyDetail {
-  label: string;
-  value: string | number;
-  valueClass?: string;
-}
-
 const PolicyReviewOverview: React.FC<PolicyReviewOverviewProps> = ({ policy }) => {
-  const { t, formatCurrency, formatDate } = useLanguage();
-  
-  const getPolicyStatusBadge = (status: string) => {
-    switch(status) {
-      case 'active':
-        return <Badge variant="default">{t("active")}</Badge>;
-      case 'pending':
-        return <Badge variant="warning">{t("pending")}</Badge>;
-      case 'expired':
-        return <Badge variant="destructive">{t("expired")}</Badge>;
-      case 'cancelled':
-        return <Badge variant="destructive">{t("cancelled")}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-  
-  const getWorkflowStatusBadge = (status: string) => {
-    switch(status) {
-      case 'draft':
-        return <Badge variant="outline">{t("draft")}</Badge>;
-      case 'in_review':
-        return <Badge variant="secondary">{t("inReview")}</Badge>;
-      case 'ready':
-        return <Badge variant="warning">{t("ready")}</Badge>;
-      case 'complete':
-        return <Badge variant="default">{t("complete")}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-  
-  const mainDetails: PolicyDetail[] = [
-    { label: t("policyNumber"), value: policy.policy_number },
-    { label: t("policyType"), value: policy.policy_type },
-    { label: t("status"), value: getPolicyStatusBadge(policy.status) },
-    { label: t("workflowStatus"), value: getWorkflowStatusBadge(policy.workflow_status) }
-  ];
-  
-  const partyDetails: PolicyDetail[] = [
-    { label: t("insurer"), value: policy.insurer_name },
-    { label: t("policyholder"), value: policy.policyholder_name },
-    { label: t("insured"), value: policy.insured_name || policy.policyholder_name }
-  ];
-  
-  const coverageDetails: PolicyDetail[] = [
-    { label: t("startDate"), value: formatDate(policy.start_date) },
-    { label: t("expiryDate"), value: formatDate(policy.expiry_date) }
-  ];
-  
-  const financialDetails: PolicyDetail[] = [
-    { 
-      label: t("premium"), 
-      value: formatCurrency(policy.premium, policy.currency), 
-      valueClass: "font-semibold text-primary" 
-    },
-    { label: t("currency"), value: policy.currency }
-  ];
-  
-  // Add product name and product_id instead of product_code if available
-  const productDetails: PolicyDetail[] = [];
-  
-  if (policy.product_name) {
-    productDetails.push({ label: t("productName"), value: policy.product_name });
-  }
-  
-  if (policy.product_id) {
-    productDetails.push({ label: t("productId"), value: policy.product_id });
-  }
-  
-  if (policy.commission_percentage) {
-    financialDetails.push({ 
-      label: t("commissionPercentage"), 
-      value: `${policy.commission_percentage}%` 
-    });
-  }
-  
-  if (policy.commission_amount) {
-    financialDetails.push({ 
-      label: t("commissionAmount"), 
-      value: formatCurrency(policy.commission_amount, policy.currency) 
-    });
-  }
+  const { t } = useLanguage();
   
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="space-y-6">
-          {/* Main Details */}
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <h3 className="font-medium text-lg flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-blue-600" />
+          {t("basicInformation")}
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t("policyDetails")}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mainDetails.map((detail, index) => (
-                <div key={`main-${index}`} className="flex flex-col">
-                  <span className="text-sm text-muted-foreground">{detail.label}</span>
-                  <span className={detail.valueClass || ""}>{detail.value}</span>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground">{t("policyNumber")}</p>
+            <p className="font-medium">{policy.policy_number}</p>
           </div>
-          
-          <Separator />
-          
-          {/* Party Details */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t("parties")}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {partyDetails.map((detail, index) => (
-                <div key={`party-${index}`} className="flex flex-col">
-                  <span className="text-sm text-muted-foreground">{detail.label}</span>
-                  <span className={detail.valueClass || ""}>{detail.value}</span>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground">{t("policyType")}</p>
+            <p className="font-medium">{policy.policy_type}</p>
           </div>
-          
-          <Separator />
-          
-          {/* Product Details (if available) */}
-          {productDetails.length > 0 && (
-            <>
-              <div>
-                <h3 className="text-lg font-semibold mb-4">{t("product")}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {productDetails.map((detail, index) => (
-                    <div key={`product-${index}`} className="flex flex-col">
-                      <span className="text-sm text-muted-foreground">{detail.label}</span>
-                      <span className={detail.valueClass || ""}>{detail.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <Separator />
-            </>
-          )}
-          
-          {/* Coverage Details */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t("coverage")}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {coverageDetails.map((detail, index) => (
-                <div key={`coverage-${index}`} className="flex flex-col">
-                  <span className="text-sm text-muted-foreground">{detail.label}</span>
-                  <span className={detail.valueClass || ""}>{detail.value}</span>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground">{t("startDate")}</p>
+            <p className="font-medium">{formatDate(policy.start_date)}</p>
           </div>
-          
-          <Separator />
-          
-          {/* Financial Details */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t("financial")}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {financialDetails.map((detail, index) => (
-                <div key={`financial-${index}`} className="flex flex-col">
-                  <span className="text-sm text-muted-foreground">{detail.label}</span>
-                  <span className={detail.valueClass || ""}>{detail.value}</span>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground">{t("expiryDate")}</p>
+            <p className="font-medium">{formatDate(policy.expiry_date)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("status")}</p>
+            <Badge variant={policy.status === "active" ? "secondary" : "outline"}>
+              {t(policy.status)}
+            </Badge>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("workflowStatus")}</p>
+            <Badge variant="outline">{t(policy.workflow_status.replace('_', ''))}</Badge>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      <Separator />
+      
+      <div className="space-y-4">
+        <h3 className="font-medium text-lg flex items-center gap-2">
+          <User className="h-5 w-5 text-blue-600" />
+          {t("parties")}
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">{t("policyholder")}</p>
+            <p className="font-medium">{policy.policyholder_name}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("insured")}</p>
+            <p className="font-medium">{policy.insured_name || policy.policyholder_name}</p>
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      <div className="space-y-4">
+        <h3 className="font-medium text-lg flex items-center gap-2">
+          <Building className="h-5 w-5 text-blue-600" />
+          {t("insurer")}
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">{t("insurerName")}</p>
+            <p className="font-medium">{policy.insurer_name}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("product")}</p>
+            <p className="font-medium">{policy.product_name || t("notSpecified")}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("productCode")}</p>
+            <p className="font-medium">{policy.product_code || t("notSpecified")}</p>
+          </div>
+        </div>
+      </div>
+      
+      <Separator />
+      
+      <div className="space-y-4">
+        <h3 className="font-medium text-lg flex items-center gap-2">
+          <CreditCard className="h-5 w-5 text-blue-600" />
+          {t("financialDetails")}
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-muted-foreground">{t("premium")}</p>
+            <p className="font-medium">{formatCurrency(policy.premium, policy.currency)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("currency")}</p>
+            <p className="font-medium">{policy.currency}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("paymentFrequency")}</p>
+            <p className="font-medium">{t(policy.payment_frequency || "notSpecified")}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("commissionPercentage")}</p>
+            <p className="font-medium">
+              {policy.commission_percentage ? `${policy.commission_percentage}%` : t("notSpecified")}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("commissionAmount")}</p>
+            <p className="font-medium">
+              {policy.commission_amount 
+                ? formatCurrency(policy.commission_amount, policy.currency) 
+                : t("notSpecified")}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{t("commissionType")}</p>
+            <p className="font-medium">{t(policy.commission_type || "notSpecified")}</p>
+          </div>
+        </div>
+      </div>
+      
+      {policy.notes && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <h3 className="font-medium text-lg">{t("notes")}</h3>
+            <p className="text-sm">{policy.notes}</p>
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 

@@ -5,8 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { useDocumentManager } from "@/hooks/useDocumentManager";
-import DocumentList from "@/components/documents/unified/DocumentList";
 import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
+import DocumentList from "@/components/documents/unified/DocumentList";
 
 interface PolicyDocumentsTabProps {
   policyId: string;
@@ -23,8 +23,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
     isError,
     error,
     deleteDocument,
-    isDeleting,
-    approveDocument
+    isDeleting
   } = useDocumentManager({ 
     entityType: "policy",
     entityId: policyId
@@ -60,22 +59,19 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
           isLoading={isLoading}
           isError={isError}
           error={error}
-          onDelete={(documentId) => deleteDocument(documentId)}
+          onDelete={deleteDocument}
           isDeleting={isDeleting}
           showUploadButton={false}
           onUploadVersion={handleUploadVersion}
-          onApprove={approveDocument}
         />
         
-        {uploadDialogOpen && (
-          <DocumentUploadDialog
-            open={uploadDialogOpen}
-            onOpenChange={setUploadDialogOpen}
-            entityType="policy"
-            entityId={policyId}
-            selectedDocument={selectedDocument}
-          />
-        )}
+        <DocumentUploadDialog
+          open={uploadDialogOpen}
+          onOpenChange={setUploadDialogOpen}
+          entityType="policy"
+          entityId={policyId}
+          selectedDocument={selectedDocument}
+        />
       </CardContent>
     </Card>
   );

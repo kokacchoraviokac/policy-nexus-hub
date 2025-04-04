@@ -1,15 +1,17 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Policy } from "@/types/policies";
 import { PolicyService } from "@/services/PolicyService";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useApiService } from "./useApiService";
 
 export const usePoliciesWorkflow = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { executeService } = useApiService();
   
   const [activeTab, setActiveTab] = useState("draft");
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -30,13 +32,13 @@ export const usePoliciesWorkflow = () => {
       let workflowStatus = undefined;
       
       if (activeTab !== 'all' && statusFilter === 'all') {
-        workflowStatus = activeTab;
+        workflowStatus = activeTab as any;
       } else if (statusFilter !== 'all') {
-        workflowStatus = statusFilter;
+        workflowStatus = statusFilter as any;
       }
       
       const response = await PolicyService.getPolicies({
-        page: currentPage - 1,
+        page: currentPage,
         pageSize,
         search: searchTerm,
         workflowStatus,
@@ -45,10 +47,7 @@ export const usePoliciesWorkflow = () => {
       });
       
       if (!response.success) {
-        const errorMessage = typeof response.error === 'string' 
-          ? response.error 
-          : response.error?.message || "Failed to fetch policies";
-        throw new Error(errorMessage);
+        throw new Error(response.error?.message || "Failed to fetch policies");
       }
       
       return response.data;
@@ -56,25 +55,16 @@ export const usePoliciesWorkflow = () => {
   });
 
   // Update policy status
-  const updatePolicyStatusMutation = useMutation({
-    mutationFn: (params: { policyId: string, status: string }) => {
-      return PolicyService.updatePolicyStatus(params.policyId, params.status);
-    },
-    onSuccess: () => {
-      toast({
-        title: t("policyStatusUpdatedSuccessfully"),
-        description: t("policyWorkflowUpdated"),
-      });
-      queryClient.invalidateQueries({ queryKey: ['policies-workflow'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: t("errorUpdatingPolicyStatus"),
-        description: error?.message || t("unknownError"),
-        variant: "destructive",
-      });
-    }
-  });
+  const updatePolicyStatus = async (policyId: string, status: string) => {
+    return executeService(
+      () => PolicyService.updatePolicyStatus(policyId, status as any),
+      {
+        successMessage: t("policyStatusUpdatedSuccessfully"),
+        errorMessage: t("errorUpdatingPolicyStatus"),
+        invalidateQueryKeys: [['policies-workflow'], ['policy', policyId]]
+      }
+    );
+  };
 
   const handleRefresh = () => {
     refetch();
@@ -100,8 +90,6 @@ export const usePoliciesWorkflow = () => {
     statusFilter,
     setStatusFilter,
     handleRefresh,
-    updatePolicyStatus: (policyId: string, status: string) => 
-      updatePolicyStatusMutation.mutate({ policyId, status }),
-    isUpdatingStatus: updatePolicyStatusMutation.isPending
+    updatePolicyStatus
   };
 };

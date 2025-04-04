@@ -1,144 +1,149 @@
 
-import { useState, useCallback } from "react";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useState } from "react";
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { FinancialReportFilters } from "@/utils/reports/financialReportUtils";
+import { toast } from "sonner";
 
-export interface FinancialReportFilters {
-  startDate?: string;
-  endDate?: string;
-  insurerId?: string;
-  clientId?: string;
-  paymentStatus?: string;
-  invoiceStatus?: string;
-  commissionStatus?: string;
+export interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  type: string;
+  category: string;
+  amount: number;
+  status: string;
+  reference?: string;
 }
 
 export interface FinancialReportData {
-  id: string;
-  date: string;
-  client: string;
-  insurer: string;
-  policy: string;
-  premium: number;
-  commission: number;
-  status: string;
-  invoice: string;
+  transactions: Transaction[];
+  summary: {
+    totalIncome: number;
+    totalExpenses: number;
+    netIncome: number;
+    commissionEarned: number;
+    invoicesPaid: number;
+    outstandingInvoices: number;
+  };
 }
 
-export const useFinancialReport = () => {
-  const { toast } = useToast();
-  const { t } = useLanguage();
-  const queryClient = useQueryClient();
+export const useFinancialReport = (filters: FinancialReportFilters): UseQueryResult<FinancialReportData> & {
+  isExporting: boolean;
+  setIsExporting: (value: boolean) => void;
+} => {
+  const [isExporting, setIsExporting] = useState(false);
 
-  const [filters, setFilters] = useState<FinancialReportFilters>({});
-  const [data, setData] = useState<FinancialReportData[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const { mutate: generateReport, isPending } = useMutation({
-    mutationFn: async (reportFilters: FinancialReportFilters) => {
-      setLoading(true);
+  const query = useQuery({
+    queryKey: ['financial-report', filters],
+    queryFn: async () => {
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1200));
-        
-        // Generate mock data based on filters
-        const mockData: FinancialReportData[] = [];
-        const startDate = reportFilters.startDate ? new Date(reportFilters.startDate) : new Date(2023, 0, 1);
-        const endDate = reportFilters.endDate ? new Date(reportFilters.endDate) : new Date();
-        
-        for (let i = 0; i < 20; i++) {
-          const date = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime()));
+        // Build commission query
+        let commissionQuery = supabase
+          .from('commissions')
+          .select('id, calculated_amount, base_amount, rate, status, payment_date, created_at');
           
-          const paymentStatusFilter = reportFilters.paymentStatus || 'all';
-          const invoiceStatusFilter = reportFilters.invoiceStatus || 'all';
-          const commissionStatusFilter = reportFilters.commissionStatus || 'all';
+        // Build invoice query  
+        let invoiceQuery = supabase
+          .from('invoices')
+          .select('id, total_amount, status, issue_date, due_date, created_at');
           
-          // Apply status filters
-          const statuses = ['paid', 'pending', 'partial', 'overdue'];
-          const status = statuses[Math.floor(Math.random() * statuses.length)];
-          
-          if (paymentStatusFilter !== 'all' && paymentStatusFilter !== status) {
-            continue;
-          }
-          
-          if (invoiceStatusFilter !== 'all' && invoiceStatusFilter !== status) {
-            continue;
-          }
-          
-          if (commissionStatusFilter !== 'all' && commissionStatusFilter !== status) {
-            continue;
-          }
-          
-          mockData.push({
-            id: `fin-${i}`,
-            date: date.toISOString().split('T')[0],
-            client: `Client ${i + 1}`,
-            insurer: `Insurer ${(i % 5) + 1}`,
-            policy: `POL-2023-${1000 + i}`,
-            premium: Math.round(Math.random() * 1000) * 10,
-            commission: Math.round(Math.random() * 100) * 10,
-            status: status,
-            invoice: `INV-2023-${2000 + i}`
-          });
+        // Apply date filters if provided
+        if (filters.startDate) {
+          commissionQuery = commissionQuery.gte('created_at', filters.startDate.toISOString());
+          invoiceQuery = invoiceQuery.gte('created_at', filters.startDate.toISOString());
         }
         
-        return mockData;
+        if (filters.endDate) {
+          commissionQuery = commissionQuery.lte('created_at', filters.endDate.toISOString());
+          invoiceQuery = invoiceQuery.lte('created_at', filters.endDate.toISOString());
+        }
+        
+        // Apply status filters if provided
+        if (filters.status && filters.status !== 'all') {
+          commissionQuery = commissionQuery.eq('status', filters.status);
+          invoiceQuery = invoiceQuery.eq('status', filters.status);
+        }
+        
+        // Execute queries in parallel
+        const [commissionResult, invoiceResult] = await Promise.all([
+          commissionQuery,
+          invoiceQuery
+        ]);
+        
+        if (commissionResult.error) throw commissionResult.error;
+        if (invoiceResult.error) throw invoiceResult.error;
+        
+        const commissions = commissionResult.data || [];
+        const invoices = invoiceResult.data || [];
+        
+        // Prepare transactions from both data sources
+        const transactions: Transaction[] = [
+          ...commissions.map(comm => ({
+            id: comm.id,
+            date: comm.payment_date || comm.created_at,
+            description: `Commission (${comm.rate}%)`,
+            type: 'commission',
+            category: 'income',
+            amount: comm.calculated_amount,
+            status: comm.status
+          })),
+          ...invoices.map(inv => ({
+            id: inv.id,
+            date: inv.issue_date || inv.created_at,
+            description: `Invoice due ${inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}`,
+            type: 'invoice',
+            category: 'income',
+            amount: inv.total_amount,
+            status: inv.status
+          }))
+        ];
+        
+        // Calculate summary metrics
+        const totalIncome = transactions
+          .filter(t => t.category === 'income' && t.status !== 'cancelled')
+          .reduce((sum, t) => sum + t.amount, 0);
+          
+        const totalExpenses = transactions
+          .filter(t => t.category === 'expense' && t.status !== 'cancelled')
+          .reduce((sum, t) => sum + t.amount, 0);
+          
+        const commissionEarned = commissions
+          .filter(c => c.status !== 'cancelled')
+          .reduce((sum, c) => sum + c.calculated_amount, 0);
+          
+        const invoicesPaid = invoices
+          .filter(i => i.status === 'paid')
+          .reduce((sum, i) => sum + i.total_amount, 0);
+          
+        const outstandingInvoices = invoices
+          .filter(i => i.status !== 'paid' && i.status !== 'cancelled')
+          .reduce((sum, i) => sum + i.total_amount, 0);
+        
+        return {
+          transactions,
+          summary: {
+            totalIncome,
+            totalExpenses,
+            netIncome: totalIncome - totalExpenses,
+            commissionEarned,
+            invoicesPaid,
+            outstandingInvoices
+          }
+        };
       } catch (error) {
-        console.error("Error generating report:", error);
+        console.error("Error fetching financial report data:", error);
+        toast.error("Failed to fetch financial report");
         throw error;
-      } finally {
-        setLoading(false);
       }
     },
-    onSuccess: (result) => {
-      setData(result);
-      toast({
-        title: t("reportGenerated"),
-        description: t("financialReportGenerated"),
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: t("reportError"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive",
-      });
-    }
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
 
-  const updateFilters = useCallback((newFilters: Partial<FinancialReportFilters>) => {
-    setFilters(prev => ({
-      ...prev,
-      ...newFilters
-    }));
-  }, []);
-
-  const runReport = useCallback(() => {
-    generateReport(filters);
-  }, [generateReport, filters]);
-
-  const exportToExcel = useCallback(() => {
-    toast({
-      title: t("exportStarted"),
-      description: t("exportingToExcel"),
-    });
-    
-    // Simulate export
-    setTimeout(() => {
-      toast({
-        title: t("exportComplete"),
-        description: t("reportExportedToExcel"),
-      });
-    }, 1500);
-  }, [toast, t]);
-
   return {
-    filters,
-    updateFilters,
-    runReport,
-    data,
-    loading: isPending || loading,
-    exportToExcel
+    ...query,
+    isExporting,
+    setIsExporting
   };
 };
