@@ -7,12 +7,21 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { PageHeader } from "@/components/ui/common";
 import { Button } from "@/components/ui/button";
 import { Upload, Filter, Search as SearchIcon } from "lucide-react";
 import DocumentSearch from "@/components/documents/search/DocumentSearch";
 import DocumentBatchUpload from "@/components/documents/unified/DocumentBatchUpload";
 import { EntityType } from "@/types/documents";
+
+// Define PageHeader since it's missing
+const PageHeader: React.FC<{ title: string, subtitle?: string }> = ({ title, subtitle }) => {
+  return (
+    <div className="mb-8">
+      <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+      {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+    </div>
+  );
+};
 
 const DocumentManagement: React.FC = () => {
   const { t } = useLanguage();

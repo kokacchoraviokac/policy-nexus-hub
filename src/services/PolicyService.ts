@@ -1,161 +1,181 @@
-import { BaseService, ServiceResponse } from "./BaseService";
-import { Policy, PolicyFilterParams } from "@/types/policies";
+
+import { Policy } from "@/types/policies";
+import { BaseService } from "./BaseService";
+
+export interface PolicyFilterParams {
+  status?: string;
+  clientId?: string;
+  insurerId?: string;
+  query?: string;
+  startDate?: string;
+  endDate?: string;
+  policyType?: string;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+}
 
 export class PolicyService extends BaseService {
   /**
-   * Get a paginated list of policies with optional filtering
+   * Create a new policy
    */
-  static async getPolicies(params: PolicyFilterParams): Promise<ServiceResponse<{ policies: Policy[], totalCount: number }>> {
+  static async createPolicy(policyData: Partial<Policy>): Promise<Policy> {
     try {
-      const { page = 1, pageSize = 10, search = '', orderBy = 'created_at', orderDirection = 'desc', workflowStatus } = params;
+      const service = new PolicyService();
+      const supabase = service.getClient();
       
-      // Calculate offset
-      const offset = (page - 1) * pageSize;
-      
-      // Build query
-      let query = this.getClient()
+      const { data, error } = await supabase
         .from('policies')
-        .select('*', { count: 'exact' });
+        .insert({ 
+          ...policyData,
+          company_id: service.getCompanyId(),
+          created_by: service.getCurrentUserId(),
+        })
+        .select('*')
+        .single();
       
-      // Apply filters
-      if (search) {
-        query = query.or(`policy_number.ilike.%${search}%,policyholder_name.ilike.%${search}%,insurer_name.ilike.%${search}%`);
-      }
-      
-      if (workflowStatus) {
-        query = query.eq('workflow_status', workflowStatus);
-      }
-      
-      // Apply sorting and pagination
-      const { data, error, count } = await query
-        .order(orderBy, { ascending: orderDirection === 'asc' })
-        .range(offset, offset + pageSize - 1);
-        
-      if (error) {
-        throw error;
-      }
-      
-      return this.createResponse(true, { 
-        policies: data as Policy[], 
-        totalCount: count || 0 
-      });
+      if (error) throw error;
+      return data;
     } catch (error) {
-      const errorResponse = this.handleError(error);
-      return this.createResponse(false, undefined, errorResponse);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error creating policy: ${errorMessage}`);
     }
   }
   
   /**
-   * Get a single policy by ID
+   * Get a policy by ID
    */
-  static async getPolicy(id: string): Promise<ServiceResponse<Policy>> {
+  static async getPolicy(policyId: string): Promise<Policy> {
     try {
-      const { data, error } = await this.getClient()
+      const service = new PolicyService();
+      const supabase = service.getClient();
+      
+      const { data, error } = await supabase
         .from('policies')
         .select('*')
-        .eq('id', id)
+        .eq('id', policyId)
         .single();
-        
-      if (error) {
-        throw error;
-      }
       
-      return this.createResponse(true, data as Policy);
+      if (error) throw error;
+      return data;
     } catch (error) {
-      const errorResponse = this.handleError(error);
-      return this.createResponse(false, undefined, errorResponse);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error retrieving policy: ${errorMessage}`);
     }
   }
-
+  
   /**
-   * Update policy workflow status
+   * Update a policy
    */
-  static async updatePolicyStatus(id: string, status: 'draft' | 'in_review' | 'ready' | 'complete'): Promise<ServiceResponse<Policy>> {
+  static async updatePolicy(policyId: string, policyData: Partial<Policy>): Promise<Policy> {
     try {
-      const { data, error } = await this.getClient()
+      const service = new PolicyService();
+      const supabase = service.getClient();
+      
+      const { data, error } = await supabase
         .from('policies')
         .update({
-          workflow_status: status,
+          ...policyData,
           updated_at: new Date().toISOString()
         })
-        .eq('id', id)
-        .select()
+        .eq('id', policyId)
+        .select('*')
         .single();
-        
-      if (error) {
-        throw error;
-      }
       
-      return this.createResponse(true, data as Policy);
+      if (error) throw error;
+      return data;
     } catch (error) {
-      const errorResponse = this.handleError(error);
-      return this.createResponse(false, undefined, errorResponse);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error updating policy: ${errorMessage}`);
     }
   }
-
+  
   /**
-   * Create a new policy
+   * Delete a policy
    */
-  static async createPolicy(policy: Policy): Promise<ServiceResponse<Policy>> {
+  static async deletePolicy(policyId: string): Promise<void> {
     try {
-      const { data, error } = await this.getClient()
-        .from('policies')
-        .insert([policy])
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return this.createResponse(true, data as Policy);
-    } catch (error) {
-      const errorResponse = this.handleError(error);
-      return this.createResponse(false, undefined, errorResponse);
-    }
-  }
-
-  /**
-   * Update an existing policy
-   */
-  static async updatePolicy(id: string, updates: Partial<Policy>): Promise<ServiceResponse<Policy>> {
-    try {
-      const { data, error } = await this.getClient()
-        .from('policies')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return this.createResponse(true, data as Policy);
-    } catch (error) {
-      const errorResponse = this.handleError(error);
-      return this.createResponse(false, undefined, errorResponse);
-    }
-  }
-
-  /**
-   * Delete a policy by ID
-   */
-  static async deletePolicy(id: string): Promise<ServiceResponse<null>> {
-    try {
-      const { error } = await this.getClient()
+      const service = new PolicyService();
+      const supabase = service.getClient();
+      
+      const { error } = await supabase
         .from('policies')
         .delete()
-        .eq('id', id);
-
-      if (error) {
-        throw error;
-      }
-
-      return this.createResponse(true, null);
+        .eq('id', policyId);
+      
+      if (error) throw error;
     } catch (error) {
-      const errorResponse = this.handleError(error);
-      return this.createResponse(false, undefined, errorResponse);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error deleting policy: ${errorMessage}`);
+    }
+  }
+  
+  /**
+   * Get policies with optional filtering
+   */
+  static async getPolicies(filters?: PolicyFilterParams): Promise<Policy[]> {
+    try {
+      const service = new PolicyService();
+      const supabase = service.getClient();
+      
+      let query = supabase
+        .from('policies')
+        .select('*')
+        .eq('company_id', service.getCompanyId());
+      
+      // Apply filters
+      if (filters?.status) {
+        query = query.eq('status', filters.status);
+      }
+      
+      if (filters?.clientId) {
+        query = query.eq('client_id', filters.clientId);
+      }
+      
+      if (filters?.insurerId) {
+        query = query.eq('insurer_id', filters.insurerId);
+      }
+      
+      if (filters?.policyType) {
+        query = query.eq('policy_type', filters.policyType);
+      }
+      
+      if (filters?.query) {
+        query = query.or(`policy_number.ilike.%${filters.query}%,policyholder_name.ilike.%${filters.query}%`);
+      }
+      
+      if (filters?.startDate) {
+        query = query.gte('start_date', filters.startDate);
+      }
+      
+      if (filters?.endDate) {
+        query = query.lte('expiry_date', filters.endDate);
+      }
+      
+      // Sort
+      if (filters?.sortBy) {
+        query = query.order(filters.sortBy, { 
+          ascending: filters.sortDirection !== 'desc'
+        });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+      
+      // Pagination
+      if (filters?.page && filters?.pageSize) {
+        const from = (filters.page - 1) * filters.pageSize;
+        const to = from + filters.pageSize - 1;
+        query = query.range(from, to);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Error retrieving policies: ${errorMessage}`);
     }
   }
 }

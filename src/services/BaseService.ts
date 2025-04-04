@@ -1,97 +1,67 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { createClient, PostgrestFilterBuilder } from "@supabase/supabase-js";
+import { useToast } from "@/components/ui/use-toast";
 
-/**
- * Error response structure
- */
-export interface ErrorResponse {
-  status: number;
-  message: string;
-  details?: unknown;
-}
-
-/**
- * Base service response structure
- */
 export interface ServiceResponse<T = any> {
   success: boolean;
   data?: T;
-  error?: ErrorResponse;
-  status?: number;
+  error?: string | Record<string, any>;
 }
 
-/**
- * Base abstract class for all API services
- * Provides common functionality and error handling
- */
-export abstract class BaseService {
-  /**
-   * Get Supabase client
-   */
-  protected getClient() {
-    return supabase;
+export class BaseService {
+  protected supabaseClient;
+  
+  constructor() {
+    this.supabaseClient = createClient(
+      import.meta.env.VITE_SUPABASE_URL || '',
+      import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+    );
   }
-
-  /**
-   * Standard error handler that normalizes error responses
-   */
-  protected handleError(error: any): ErrorResponse {
-    console.error("API Error:", error);
-
-    // Default error response
-    const errorResponse: ErrorResponse = {
-      status: 500,
-      message: error?.message || "An unknown error occurred",
-      details: error?.details || undefined
-    };
-
-    // Handle Supabase error
-    if (error?.code) {
-      switch (error.code) {
-        case "PGRST301":
-          errorResponse.status = 404;
-          errorResponse.message = "Resource not found";
-          break;
-        case "42501":
-          errorResponse.status = 403;
-          errorResponse.message = "Permission denied";
-          break;
-        case "23505":
-          errorResponse.status = 409; 
-          errorResponse.message = "Duplicate record";
-          break;
-        default:
-          errorResponse.status = 500;
-          errorResponse.message = error.message || "Database error";
-      }
-    }
-
-    return errorResponse;
+  
+  getClient() {
+    return this.supabaseClient;
   }
-
-  /**
-   * Create a standard response object
-   */
-  protected createResponse<T>(
-    success: boolean, 
-    data?: T, 
-    error?: ErrorResponse,
-    status?: number
-  ): ServiceResponse<T> {
+  
+  getCompanyId() {
+    // This should ideally come from a context or state
+    // For now, return a default or fetch from local storage
+    return localStorage.getItem('companyId') || 'default-company-id';
+  }
+  
+  getCurrentUserId() {
+    // This should ideally come from auth context
+    return localStorage.getItem('currentUserId') || 'default-user-id';
+  }
+  
+  createResponse<T>(success: boolean, data?: T, error?: string | Record<string, any>): ServiceResponse<T> {
     return {
       success,
       data,
-      error,
-      status: status || (error ? error.status : 200)
+      error
     };
   }
-
-  /**
-   * Show toast notification for error
-   */
-  protected showErrorToast(error: ErrorResponse) {
-    toast.error(error.message || "An error occurred");
+  
+  handleError(error: any): string {
+    console.error("Service error:", error);
+    
+    if (typeof error === 'string') {
+      return error;
+    }
+    
+    if (error?.message) {
+      return error.message;
+    }
+    
+    return "An unknown error occurred";
+  }
+  
+  showErrorToast(errorMessage: string) {
+    const { toast } = useToast();
+    
+    toast({
+      title: "Error",
+      description: errorMessage,
+      variant: "destructive",
+    });
   }
 }

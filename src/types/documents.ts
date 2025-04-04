@@ -20,13 +20,16 @@ export interface Document {
   category: DocumentCategory;
   
   // Add missing properties
+  file_url?: string;
   mime_type?: string;
+  file_type?: string;
   is_latest_version?: boolean;
   original_document_id?: string | null;
   approval_status?: DocumentApprovalStatus;
   approved_by?: string;
   approved_at?: string;
   approval_notes?: string;
+  company_id?: string;
 }
 
 export interface DocumentVersion {

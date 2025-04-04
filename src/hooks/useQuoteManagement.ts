@@ -1,15 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { 
-  fetchQuotes, 
-  createQuote, 
-  sendQuote, 
-  updateQuoteStatus,
-  markQuoteForPolicyImport,
-  deleteQuote,
-  getQuoteById 
-} from '@/services/quoteService';
+import { QuoteService } from '@/services/quoteService';
 import { Quote, QuoteRequest, QuoteFilter, QuoteStatus } from '@/types/quotes';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -31,7 +23,7 @@ export const useQuoteManagement = (salesProcessId?: string) => {
         ? { ...filters, salesProcessId } 
         : filters;
         
-      const data = await fetchQuotes(finalFilters);
+      const data = await QuoteService.fetchQuotes(finalFilters);
       setQuotes(data);
     } catch (err) {
       setError(err as Error);
@@ -54,7 +46,7 @@ export const useQuoteManagement = (salesProcessId?: string) => {
         ? { ...quoteData, salesProcessId } 
         : quoteData;
         
-      const newQuote = await createQuote(finalData);
+      const newQuote = await QuoteService.createQuote(finalData);
       
       // Update local state
       setQuotes(prevQuotes => [...prevQuotes, newQuote]);
@@ -81,7 +73,7 @@ export const useQuoteManagement = (salesProcessId?: string) => {
       setIsLoading(true);
       setError(null);
       
-      const updatedQuote = await sendQuote(quoteId);
+      const updatedQuote = await QuoteService.sendQuote(quoteId);
       
       // Update local state
       setQuotes(prevQuotes => 
@@ -112,7 +104,7 @@ export const useQuoteManagement = (salesProcessId?: string) => {
       setIsLoading(true);
       setError(null);
       
-      const updatedQuote = await updateQuoteStatus(quoteId, status, notes);
+      const updatedQuote = await QuoteService.updateQuoteStatus(quoteId, status, notes);
       
       // Update local state
       setQuotes(prevQuotes => 
@@ -157,7 +149,7 @@ export const useQuoteManagement = (salesProcessId?: string) => {
       setIsLoading(true);
       setError(null);
       
-      const updatedQuote = await markQuoteForPolicyImport(quoteId);
+      const updatedQuote = await QuoteService.markQuoteForPolicyImport(quoteId);
       
       // Update local state
       setQuotes(prevQuotes => 
@@ -189,7 +181,7 @@ export const useQuoteManagement = (salesProcessId?: string) => {
     if (!salesProcessId) return null;
     
     try {
-      const allQuotes = await fetchQuotes({ salesProcessId });
+      const allQuotes = await QuoteService.fetchQuotes({ salesProcessId });
       const selected = allQuotes.find(quote => quote.status === 'selected');
       
       if (selected) {
@@ -208,6 +200,53 @@ export const useQuoteManagement = (salesProcessId?: string) => {
     const selected = await findSelectedQuote();
     return !!selected && selected.status === 'selected';
   }, [findSelectedQuote]);
+  
+  // Delete a quote
+  const deleteQuote = useCallback(async (quoteId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      await QuoteService.deleteQuote(quoteId);
+      
+      // Update local state
+      setQuotes(prevQuotes => prevQuotes.filter(quote => quote.id !== quoteId));
+      
+      if (selectedQuote?.id === quoteId) {
+        setSelectedQuote(null);
+      }
+      
+      toast.success(t("quoteDeleted"), {
+        description: t("quoteDeletedDescription")
+      });
+      
+      return true;
+    } catch (err) {
+      setError(err as Error);
+      toast.error(t("errorDeletingQuote"), {
+        description: (err as Error).message
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedQuote, t]);
+  
+  // Get a quote by ID
+  const getQuoteById = useCallback(async (quoteId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const quote = await QuoteService.getQuoteById(quoteId);
+      return quote;
+    } catch (err) {
+      setError(err as Error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   return {
     quotes,
@@ -221,6 +260,8 @@ export const useQuoteManagement = (salesProcessId?: string) => {
     prepareForPolicyImport,
     findSelectedQuote,
     checkPolicyImportEligibility,
-    setSelectedQuote
+    setSelectedQuote,
+    deleteQuote,
+    getQuoteById
   };
 };

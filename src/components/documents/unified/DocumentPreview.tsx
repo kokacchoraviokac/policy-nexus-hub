@@ -44,9 +44,9 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
         // Otherwise, get the URL from the file path
         if (document.file_path) {
           const service = new BaseService();
-          const supabase = service.getClient();
+          const supabaseClient = service.getClient();
           
-          const { data } = supabase
+          const { data } = supabaseClient
             .storage
             .from('documents')
             .getPublicUrl(document.file_path);
@@ -76,12 +76,12 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
     if (!previewUrl) return;
     
     // Create a temporary link and trigger download
-    const link = document.createElement('a');
-    link.href = previewUrl;
-    link.download = document?.document_name || 'document';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const downloadLink = window.document.createElement('a');
+    downloadLink.href = previewUrl;
+    downloadLink.download = document?.document_name || 'document';
+    window.document.body.appendChild(downloadLink);
+    downloadLink.click();
+    window.document.body.removeChild(downloadLink);
   };
   
   const renderPreview = () => {
@@ -114,7 +114,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
     }
     
     // Check file type to determine preview method
-    const fileType = document?.file_type || document?.mime_type || '';
+    const fileType = document?.mime_type || "";
     
     if (fileType.startsWith('image/')) {
       return (
@@ -170,7 +170,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           </div>
           <div>
             <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("fileType")}</h4>
-            <p>{document.file_type || document.mime_type || t("unknown")}</p>
+            <p>{document.mime_type || t("unknown")}</p>
           </div>
           {document.version && (
             <div>
