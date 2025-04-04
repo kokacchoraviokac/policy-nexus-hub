@@ -8,17 +8,21 @@ import AnalysisTabs from "./analysis/AnalysisTabs";
 import AnalysisTabsList from "./analysis/AnalysisTabsList";
 
 interface DocumentAnalysisPanelProps {
-  documentId: string;
-  documentUrl: string;
+  documentId?: string;
+  documentUrl?: string;
   documentType: string;
+  file?: File | null; // Add file prop
   onAnalysisComplete?: (result: any) => void;
+  onCategoryDetected?: (category: string) => void; // Add onCategoryDetected prop
 }
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   documentId,
   documentUrl,
   documentType,
-  onAnalysisComplete
+  file, // Add file prop
+  onAnalysisComplete,
+  onCategoryDetected
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("classify");
@@ -51,6 +55,11 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
             }),
             analysisType: "classification"
           };
+          
+          // Call onCategoryDetected if provided
+          if (onCategoryDetected) {
+            onCategoryDetected("invoice");
+          }
           break;
         case 'extract':
           mockResult = {

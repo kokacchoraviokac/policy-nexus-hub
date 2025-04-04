@@ -74,9 +74,10 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
               
               <DocumentAnalysisPanel 
                 file={selectedFile}
-                documentType="policy"
+                documentType="policy" 
                 onCategoryDetected={(category) => {
                   // Implement action on category detection if needed
+                  console.log("Category detected:", category);
                 }}
               />
             </div>

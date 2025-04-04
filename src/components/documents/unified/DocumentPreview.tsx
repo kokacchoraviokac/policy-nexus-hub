@@ -1,19 +1,11 @@
-
 import React, { useState, useEffect } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, X, Download, File, FileText } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { BaseService } from "@/services/BaseService";
 import { Document } from "@/types/documents";
-import { useDocumentDownload } from "@/hooks/useDocumentDownload";
-import { getDocumentTypeLabel } from "@/utils/documentUtils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Download, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface DocumentPreviewProps {
   document: Document | null;
@@ -21,92 +13,91 @@ interface DocumentPreviewProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const DocumentPreview: React.FC<DocumentPreviewProps> = ({
-  document,
-  open,
-  onOpenChange
+const DocumentPreview: React.FC<DocumentPreviewProps> = ({ 
+  document, 
+  open, 
+  onOpenChange 
 }) => {
-  const { t, formatDate } = useLanguage();
-  const { downloadDocument, isDownloading } = useDocumentDownload();
-  const [activeTab, setActiveTab] = useState<string>("preview");
+  const { t } = useLanguage();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("preview");
   
   useEffect(() => {
-    if (!document || !open) {
-      setPreviewUrl(null);
-      return;
-    }
-    
     const loadPreview = async () => {
-      setIsLoading(true);
-      setError(null);
+      if (!document) {
+        setError(t("noDocumentSelected"));
+        return;
+      }
       
       try {
-        // Get the file extension
-        const fileExt = document.file_path.split('.').pop()?.toLowerCase();
+        setIsLoading(true);
+        setError(null);
         
-        // Check if the file is previewable
-        const previewableTypes = ['pdf', 'jpg', 'jpeg', 'png', 'gif'];
-        
-        if (!fileExt || !previewableTypes.includes(fileExt)) {
-          setError(t("fileTypeNotPreviewable"));
-          setIsLoading(false);
+        // If the document already has a URL, use it
+        if (document.file_url) {
+          setPreviewUrl(document.file_url);
           return;
         }
         
-        // Get the file URL from Supabase storage
-        const { data, error } = await supabase.storage
-          .from('documents')
-          .createSignedUrl(document.file_path, 60); // 60 seconds expiry
+        // Otherwise, get the URL from the file path
+        if (document.file_path) {
+          const service = new BaseService();
+          const supabase = service.getClient();
           
-        if (error) {
-          throw error;
+          const { data } = supabase
+            .storage
+            .from('documents')
+            .getPublicUrl(document.file_path);
+            
+          if (data?.publicUrl) {
+            setPreviewUrl(data.publicUrl);
+          } else {
+            setError(t("errorLoadingPreview"));
+          }
+        } else {
+          setError(t("documentPathMissing"));
         }
-        
-        setPreviewUrl(data.signedUrl);
-      } catch (err: any) {
+      } catch (err) {
+        setError(t("errorLoadingPreview"));
         console.error("Error loading preview:", err);
-        setError(err.message || t("errorLoadingPreview"));
       } finally {
         setIsLoading(false);
       }
     };
     
-    loadPreview();
+    if (open && document) {
+      loadPreview();
+    }
   }, [document, open, t]);
   
-  if (!document) return null;
-  
   const handleDownload = () => {
-    if (document) {
-      downloadDocument(document);
-    }
+    if (!previewUrl) return;
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = previewUrl;
+    link.download = document?.document_name || 'document';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
-  const renderPreviewContent = () => {
+  const renderPreview = () => {
     if (isLoading) {
       return (
-        <div className="flex flex-col items-center justify-center h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground">{t("loadingPreview")}</p>
+        <div className="flex justify-center items-center p-12">
+          <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full border-t-transparent"></div>
         </div>
       );
     }
     
     if (error) {
       return (
-        <div className="flex flex-col items-center justify-center h-[400px]">
-          <File className="h-16 w-16 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium">{t("previewNotAvailable")}</p>
-          <p className="text-sm text-muted-foreground mt-2">{error}</p>
-          <Button 
-            variant="secondary" 
-            className="mt-4"
-            onClick={handleDownload}
-            disabled={isDownloading}
-          >
+        <div className="flex flex-col items-center justify-center p-12 text-center">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button variant="outline" onClick={handleDownload} disabled={!previewUrl}>
             <Download className="mr-2 h-4 w-4" />
             {t("downloadToView")}
           </Button>
@@ -116,141 +107,121 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({
     
     if (!previewUrl) {
       return (
-        <div className="flex flex-col items-center justify-center h-[400px]">
-          <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium">{t("noPreviewAvailable")}</p>
+        <div className="flex justify-center items-center p-12">
+          <p>{t("noPreviewAvailable")}</p>
         </div>
       );
     }
     
-    // Handle different file types
-    const fileExt = document.file_path.split('.').pop()?.toLowerCase();
+    // Check file type to determine preview method
+    const fileType = document?.file_type || document?.mime_type || '';
     
-    if (fileExt === 'pdf') {
+    if (fileType.startsWith('image/')) {
       return (
-        <iframe 
-          src={`${previewUrl}#toolbar=0`} 
-          className="w-full h-[600px] border-0" 
-          title={document.document_name}
-        />
-      );
-    }
-    
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt || '')) {
-      return (
-        <div className="flex justify-center py-4">
+        <div className="flex justify-center p-4">
           <img 
             src={previewUrl} 
-            alt={document.document_name} 
-            className="max-w-full max-h-[600px] object-contain"
+            alt={document?.document_name || 'Document preview'} 
+            className="max-w-full max-h-[70vh] object-contain"
           />
         </div>
       );
     }
     
+    if (fileType === 'application/pdf') {
+      return (
+        <iframe 
+          src={`${previewUrl}#toolbar=0`}
+          className="w-full h-[70vh] border-0" 
+          title={document?.document_name || 'PDF preview'}
+        />
+      );
+    }
+    
+    // For other file types, show download button
     return (
-      <div className="flex flex-col items-center justify-center h-[400px]">
-        <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-        <p className="text-lg font-medium">{t("previewNotAvailable")}</p>
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <p className="mb-4">{t("fileTypeNotPreviewable")}</p>
+        <Button onClick={handleDownload}>
+          <Download className="mr-2 h-4 w-4" />
+          {t("download")}
+        </Button>
       </div>
     );
   };
   
-  const renderDetailsContent = () => {
+  const renderDetails = () => {
+    if (!document) return null;
+    
     return (
-      <div className="space-y-4 p-4">
+      <div className="p-4 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">
-              {t("documentName")}
-            </h4>
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("documentName")}</h4>
             <p>{document.document_name}</p>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">
-              {t("documentType")}
-            </h4>
-            <p>{getDocumentTypeLabel(document.document_type)}</p>
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("documentType")}</h4>
+            <p>{document.document_type}</p>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">
-              {t("uploadedOn")}
-            </h4>
-            <p>{formatDate(document.created_at)}</p>
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("uploadedOn")}</h4>
+            <p>{new Date(document.created_at).toLocaleDateString()}</p>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">
-              {t("uploadedBy")}
-            </h4>
-            <p>{document.uploaded_by_name || t("unknownUser")}</p>
+            <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("fileType")}</h4>
+            <p>{document.file_type || document.mime_type || t("unknown")}</p>
           </div>
           {document.version && (
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">
-                {t("version")}
-              </h4>
-              <p>v{document.version}{document.is_latest_version ? ` (${t("latest")})` : ""}</p>
+              <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("version")}</h4>
+              <p>{document.version}</p>
             </div>
           )}
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">
-              {t("fileType")}
-            </h4>
-            <p>{document.mime_type || t("unknown")}</p>
-          </div>
+          {document.category && (
+            <div>
+              <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("category")}</h4>
+              <p>{document.category}</p>
+            </div>
+          )}
         </div>
         
-        {document.description && (
-          <div className="mt-4">
-            <h4 className="text-sm font-medium text-muted-foreground mb-1">
-              {t("description")}
-            </h4>
-            <p className="text-sm">{document.description}</p>
-          </div>
-        )}
+        <div className="pt-4">
+          <Button onClick={handleDownload} className="w-full">
+            <Download className="mr-2 h-4 w-4" />
+            {t("download")}
+          </Button>
+        </div>
       </div>
     );
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>{document.document_name}</span>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <DialogTitle className="text-xl">
+            {document?.document_name || t("documentPreview")}
           </DialogTitle>
+          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4" />
+          </Button>
         </DialogHeader>
         
-        <Tabs defaultValue="preview" value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="preview">{t("preview")}</TabsTrigger>
             <TabsTrigger value="details">{t("details")}</TabsTrigger>
           </TabsList>
-          <TabsContent value="preview" className="min-h-[400px]">
-            {renderPreviewContent()}
+          
+          <TabsContent value="preview" className="flex-1 overflow-auto">
+            {renderPreview()}
           </TabsContent>
+          
           <TabsContent value="details">
-            {renderDetailsContent()}
+            {renderDetails()}
           </TabsContent>
         </Tabs>
-        
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleDownload}
-            disabled={isDownloading}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {isDownloading ? t("downloading") : t("download")}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="mr-2 h-4 w-4" />
-            {t("close")}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -63,7 +63,8 @@ export const useDocumentUploadState = (props: UseDocumentUploadStateProps) => {
       });
       
       if (!result.success) {
-        throw new Error(result.error || t("documentUploadFailed"));
+        // Handle error as string regardless of its actual type
+        throw new Error(typeof result.error === 'string' ? result.error : t("documentUploadFailed"));
       }
       
       toast({

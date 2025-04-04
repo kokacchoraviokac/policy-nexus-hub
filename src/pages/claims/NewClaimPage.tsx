@@ -1,184 +1,343 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useClients } from '@/hooks/useClients';
+import { usePolicies } from '@/hooks/usePolicies';
+import { useClaimService } from '@/hooks/useClaimService';
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/layout/PageHeader';
 
-import React from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
-import ClaimDetailsForm, { ClaimFormValues } from "@/components/claims/forms/ClaimDetailsForm";
-import PolicySearchDialog from "@/components/claims/forms/PolicySearchDialog";
-import { usePolicySearch } from "@/hooks/claims/usePolicySearch";
-import { useClaimFormSubmit } from "@/hooks/claims/useClaimFormSubmit";
-import { toast } from "sonner";
+const formSchema = z.object({
+  client_id: z.string().min(1, { message: 'Client is required' }),
+  policy_id: z.string().min(1, { message: 'Policy is required' }),
+  claim_number: z.string().optional(),
+  incident_date: z.date({
+    required_error: 'Incident date is required',
+  }),
+  report_date: z.date({
+    required_error: 'Report date is required',
+  }),
+  description: z.string().min(1, { message: 'Description is required' }),
+  estimated_amount: z.string().optional(),
+  status: z.string().default('reported'),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 const NewClaimPage = () => {
-  const [searchParams] = useSearchParams();
-  const prefilledPolicyId = searchParams.get("policyId");
-  const navigate = useNavigate();
   const { t } = useLanguage();
-  
-  // Policy search dialog state and handlers
-  const { 
-    searchTerm, 
-    setSearchTerm, 
-    policies, 
-    isPoliciesLoading, 
-    isDialogOpen, 
-    openDialog, 
-    closeDialog 
-  } = usePolicySearch();
+  const navigate = useNavigate();
+  const { clients, isLoading: isLoadingClients } = useClients();
+  const { policies, isLoading: isLoadingPolicies } = usePolicies();
+  const { createClaim, isCreating } = useClaimService();
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
-  // Fetch current user for reported_by field
-  const { data: currentUser } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) throw error;
-      return user;
-    }
-  });
-
-  // Fetch company ID
-  const { data: userProfile } = useQuery({
-    queryKey: ['user-profile', currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser?.id) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', currentUser.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      client_id: '',
+      policy_id: '',
+      claim_number: '',
+      description: '',
+      estimated_amount: '',
+      status: 'in_processing', // Fixed from "in processing" to "in_processing"
     },
-    enabled: !!currentUser?.id
   });
 
-  // Form submission logic
-  const { createClaim, isSubmitting } = useClaimFormSubmit({ 
-    currentUser, 
-    userProfile,
-    onSuccess: () => {
-      toast.success(t("claimCreated"), {
-        description: t("claimCreatedDescription")
+  const filteredPolicies = selectedClientId
+    ? policies.filter(policy => policy.client_id === selectedClientId)
+    : policies;
+
+  const onSubmit = async (data: FormValues) => {
+    try {
+      const result = await createClaim({
+        ...data,
+        estimated_amount: data.estimated_amount ? parseFloat(data.estimated_amount) : undefined,
       });
-      navigate("/claims");
-    } 
-  });
-
-  // Default form values
-  const defaultValues: ClaimFormValues = {
-    policy_id: prefilledPolicyId || "",
-    claim_number: "",
-    damage_description: "",
-    incident_date: new Date().toISOString().split("T")[0],
-    claimed_amount: 0,
-    deductible: 0,
-    status: "in processing",
-    notes: "",
-  };
-
-  // If policy ID is provided, fetch policy details
-  const { data: selectedPolicy } = useQuery({
-    queryKey: ['policy-for-claim', defaultValues.policy_id],
-    queryFn: async () => {
-      const policyId = defaultValues.policy_id;
-      if (!policyId) return null;
       
-      const { data, error } = await supabase
-        .from('policies')
-        .select('*')
-        .eq('id', policyId)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!defaultValues.policy_id
-  });
-
-  const handlePolicySelect = (policyId: string) => {
-    defaultValues.policy_id = policyId;
-    closeDialog();
-    toast.info(t("policySelected"), {
-      description: t("policySelectedDescription")
-    });
+      if (result.success && result.data) {
+        navigate(`/claims/${result.data.id}`);
+      }
+    } catch (error) {
+      console.error('Failed to create claim:', error);
+    }
   };
 
-  const handleCancel = () => {
-    toast.info(t("claimCancelled"), {
-      description: t("claimCancelledDescription")
-    });
-    navigate(-1);
-  };
-
-  const onSubmit = (values: ClaimFormValues) => {
-    createClaim(values);
+  const handleClientChange = (clientId: string) => {
+    setSelectedClientId(clientId);
+    form.setValue('client_id', clientId);
+    form.setValue('policy_id', ''); // Reset policy when client changes
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Back button */}
-      <Button
-        variant="outline"
-        size="sm"
-        className="hover:bg-primary/10 hover:text-primary transition-colors"
-        onClick={() => navigate(-1)}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        {t("back")}
-      </Button>
-
-      {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold">{t("createNewClaim")}</h1>
-        <p className="text-muted-foreground">{t("createNewClaimDescription")}</p>
-      </div>
-
-      {/* Claim form */}
-      <Card className="max-w-4xl border hover:shadow-md transition-all duration-200">
+    <>
+      <PageHeader title={t('newClaim')} />
+      
+      <Card className="max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle>{t("claimDetails")}</CardTitle>
-          <CardDescription>{t("enterClaimInformation")}</CardDescription>
+          <CardTitle>{t('claimDetails')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <ClaimDetailsForm
-            defaultValues={defaultValues}
-            selectedPolicy={selectedPolicy}
-            onSubmit={onSubmit}
-            onCancel={handleCancel}
-            isSubmitting={isSubmitting}
-            isFormDisabled={!currentUser || !userProfile}
-            openPolicySearch={() => {
-              openDialog();
-              toast.info(t("searchingForPolicy"), {
-                description: t("searchingForPolicyDescription")
-              });
-            }}
-          />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="client_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('client')}</FormLabel>
+                      <Select
+                        disabled={isLoadingClients}
+                        onValueChange={(value) => handleClientChange(value)}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('selectClient')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {clients.map((client) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="policy_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('policy')}</FormLabel>
+                      <Select
+                        disabled={isLoadingPolicies || !selectedClientId}
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('selectPolicy')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {filteredPolicies.map((policy) => (
+                            <SelectItem key={policy.id} value={policy.id}>
+                              {policy.policy_number} - {policy.product_name || policy.policy_type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="claim_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('claimNumber')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder={t('enterClaimNumber')} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('status')}</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('selectStatus')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="reported">{t('reported')}</SelectItem>
+                          <SelectItem value="in_processing">{t('inProcessing')}</SelectItem>
+                          <SelectItem value="accepted">{t('accepted')}</SelectItem>
+                          <SelectItem value="partially_accepted">{t('partiallyAccepted')}</SelectItem>
+                          <SelectItem value="rejected">{t('rejected')}</SelectItem>
+                          <SelectItem value="appealed">{t('appealed')}</SelectItem>
+                          <SelectItem value="withdrawn">{t('withdrawn')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="incident_date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>{t('incidentDate')}</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>{t('selectDate')}</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="report_date"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>{t('reportDate')}</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>{t('selectDate')}</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="estimated_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('estimatedAmount')}</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('description')}</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={t('enterClaimDescription')}
+                        className="min-h-[120px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate('/claims')}
+                >
+                  {t('cancel')}
+                </Button>
+                <Button type="submit" disabled={isCreating}>
+                  {isCreating ? t('creating') : t('createClaim')}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
-
-      {/* Policy search dialog */}
-      <PolicySearchDialog
-        open={isDialogOpen}
-        onOpenChange={closeDialog}
-        searchTerm={searchTerm}
-        onSearchTermChange={setSearchTerm}
-        isLoading={isPoliciesLoading}
-        policies={policies}
-        onPolicySelect={handlePolicySelect}
-      />
-    </div>
+    </>
   );
 };
 

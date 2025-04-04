@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Plus, FileText, ArrowRight, RefreshCw } from "lucide-react";
 import { SalesProcess } from "@/types/salesProcess";
+import { Quote, QuoteRequest } from "@/types/quotes";
 import { useQuoteManagement } from "@/hooks/useQuoteManagement";
 import AddQuoteDialog from "@/components/sales/processes/AddQuoteDialog";
 import ImportPolicyFromQuoteDialog from "@/components/sales/processes/ImportPolicyFromQuoteDialog";
@@ -53,7 +54,19 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
   }, [loadQuotes, findSelectedQuote]);
 
   const handleAddQuote = async (quoteData: any) => {
-    await addQuote(quoteData);
+    // Convert the data to match the QuoteRequest interface
+    const quoteRequest: QuoteRequest = {
+      salesProcessId: process.id,
+      insurerName: quoteData.insurerName,
+      coverageDetails: quoteData.coverageDetails,
+      requestedAmount: quoteData.amount,
+      currency: quoteData.currency || 'EUR',
+      notes: quoteData.notes,
+      coverageStartDate: quoteData.coverageStartDate,
+      coverageEndDate: quoteData.coverageEndDate
+    };
+    
+    await addQuote(quoteRequest);
   };
 
   const handleSelectQuote = async (quoteId: string) => {
@@ -88,7 +101,7 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
   };
   
   // Check if the sales process is eligible for policy import
-  const isPolicyImportReady = process.stage === "concluded" && process.status === "completed" && selectedQuote;
+  const isPolicyImportReady = process.stage === "concluded" && process.status === "completed" && !!selectedQuote;
   
   if (error) {
     return (
@@ -157,7 +170,14 @@ const QuoteManagementPanel: React.FC<QuoteManagementPanelProps> = ({
           open={importPolicyOpen}
           onOpenChange={setImportPolicyOpen}
           process={process}
-          quote={selectedQuote}
+          quote={{
+            id: selectedQuote.id,
+            insurer: selectedQuote.insurerName,
+            amount: selectedQuote.amount,
+            coverage: selectedQuote.coverageDetails,
+            status: selectedQuote.status,
+            date: selectedQuote.createdAt
+          }}
         />
       )}
     </div>
