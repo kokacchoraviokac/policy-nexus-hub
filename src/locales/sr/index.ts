@@ -10,6 +10,7 @@ import policyTranslations from './policies/index';
 import finances from './finances.json';
 import claims from './claims.json';
 import modules from './modules.json';
+import quotes from '../en/quotes.json'; // Use English quotes as fallback
 
 // Merge all translation objects
 const translations = {
@@ -23,7 +24,8 @@ const translations = {
   ...policyTranslations,
   ...finances,
   ...claims,
-  ...modules
+  ...modules,
+  quotes
 };
 
 export default translations;
