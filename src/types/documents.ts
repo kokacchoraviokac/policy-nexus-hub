@@ -1,5 +1,5 @@
 
-export type DocumentCategory = 'policy' | 'claim' | 'client' | 'invoice' | 'other' | 'claim_evidence' | 'medical' | 'legal' | 'financial' | 'lien' | 'notification' | 'correspondence';
+export type DocumentCategory = 'policy' | 'claim' | 'client' | 'invoice' | 'other' | 'claim_evidence' | 'medical' | 'legal' | 'financial' | 'lien' | 'notification' | 'correspondence' | 'discovery' | 'quote' | 'proposal' | 'contract' | 'closeout';
 
 export type DocumentApprovalStatus = 'pending' | 'approved' | 'rejected' | 'needs_review';
 
@@ -11,13 +11,15 @@ export interface Document {
   file_path: string;
   entity_type: EntityType;
   entity_id: string;
-  uploaded_by_id: string;
-  uploaded_by_name: string;
+  uploaded_by: string;
+  uploaded_by_id?: string;
+  uploaded_by_name?: string;
   description?: string;
   version?: number;
   status?: string;
   tags?: string[];
   category: DocumentCategory;
+  company_id: string;
   
   // Add missing properties
   mime_type?: string;
@@ -61,3 +63,51 @@ export interface DocumentApprovalInfo {
 }
 
 export type EntityType = 'policy' | 'claim' | 'client' | 'invoice' | 'addendum' | 'sales_process' | 'agent' | 'insurer';
+
+export interface DocumentSearchParams {
+  searchTerm?: string;
+  entityType?: EntityType;
+  entityId?: string;
+  category?: string;
+  documentType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  status?: DocumentApprovalStatus;
+}
+
+export interface DocumentPreviewProps {
+  document: Document;
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export interface DocumentListProps {
+  documents: Document[];
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  onDelete: (document: string) => void;
+  isDeleting: boolean;
+  showUploadButton?: boolean;
+  onUploadClick?: () => void;
+  filterCategory?: string;
+  onUploadVersion?: (document: Document) => void;
+  onApprove?: (document: Document, status: DocumentApprovalStatus, notes?: string) => void;
+}
+
+export interface DocumentUploadDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entityType: EntityType;
+  entityId: string;
+  selectedDocument?: Document;
+  onUploadComplete?: () => void;
+  defaultCategory?: string;
+  salesStage?: string;
+  additionalData?: Record<string, any>;
+  onSuccess?: () => void;
+}
+
+export interface DocumentSearchProps {
+  filterStatus?: string;
+}

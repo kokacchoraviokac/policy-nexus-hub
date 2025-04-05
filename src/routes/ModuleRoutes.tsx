@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { DashboardRoutes } from "./DashboardRoutes";
 import { PolicyRoutes } from "./PolicyRoutes";
 import { SalesRoutes } from "./SalesRoutes";
@@ -11,14 +12,14 @@ import { AgentRoutes } from "./AgentRoutes";
 import { documentRoutes } from "./documentRoutes";
 
 export const ModuleRoutes = [
-  ...DashboardRoutes,
-  ...PolicyRoutes,
-  ...SalesRoutes,
-  ...ClaimsRoutes,
-  ...FinancesRoutes,
-  ...CodebookRoutes,
-  ...AgentRoutes,
-  ...ReportsRoutes,
-  ...SettingsRoutes,
-  ...documentRoutes  // Add document routes here
+  ...(Array.isArray(DashboardRoutes) ? DashboardRoutes : [DashboardRoutes]),
+  ...(Array.isArray(PolicyRoutes) ? PolicyRoutes : [PolicyRoutes]),
+  ...(Array.isArray(SalesRoutes) ? SalesRoutes : [SalesRoutes]),
+  ...(Array.isArray(ClaimsRoutes) ? ClaimsRoutes : [ClaimsRoutes]),
+  ...(Array.isArray(FinancesRoutes) ? FinancesRoutes : [FinancesRoutes]),
+  ...(Array.isArray(CodebookRoutes) ? CodebookRoutes : [CodebookRoutes]),
+  ...(Array.isArray(AgentRoutes) ? AgentRoutes : [AgentRoutes]),
+  ...(Array.isArray(ReportsRoutes) ? ReportsRoutes : [ReportsRoutes]),
+  ...(Array.isArray(SettingsRoutes) ? SettingsRoutes : [SettingsRoutes]),
+  ...(Array.isArray(documentRoutes) ? documentRoutes : [documentRoutes])
 ];

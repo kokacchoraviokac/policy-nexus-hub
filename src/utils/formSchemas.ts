@@ -39,7 +39,7 @@ export const currencySchema = () =>
   z.enum(["EUR", "USD", "GBP", "RSD", "MKD"]).default("EUR");
 
 export const dateSchema = (errorMessage = "Date is required") => 
-  z.date({ required_error: errorMessage });
+  z.coerce.date({ required_error: errorMessage });
 
 export const premiumSchema = (errorMessage = "Premium must be a positive number") => 
   z.coerce.number().positive({ message: errorMessage });
@@ -58,6 +58,17 @@ export const documentTypeSchema = () =>
 export const documentCategorySchema = () =>
   z.string().min(1, { message: "Document category is required" });
 
+// Claim specific schemas
+export const claimStatusSchema = () =>
+  z.enum(["in_processing", "reported", "accepted", "rejected", "partially_accepted", "appealed", "withdrawn"])
+    .default("in_processing");
+
+export const damageDescriptionSchema = (errorMessage = "Damage description is required") =>
+  z.string().min(1, { message: errorMessage });
+
+export const claimAmountSchema = (errorMessage = "Claimed amount must be a non-negative number") =>
+  z.coerce.number().min(0, { message: errorMessage });
+
 // Helper to create schemas for related models
 export function createModelSchema(type: string, options: { isRequired?: boolean, errorMessage?: string } = {}) {
   const { isRequired = false, errorMessage = `${type} is required` } = options;
@@ -68,7 +79,7 @@ export function createModelSchema(type: string, options: { isRequired?: boolean,
 }
 
 // Function to create a schema with translations
-export function createSchemaWithTranslations(baseSchema: z.ZodType<any>) {
+export function createSchemaWithTranslations<T extends z.ZodType<any, any, any>>(baseSchema: T) {
   return baseSchema.extend({
     translations: z.record(z.string()).optional().nullable(),
   });
@@ -86,17 +97,6 @@ export const policyStatusSchema = () =>
 
 export const workflowStatusSchema = () =>
   z.enum(["draft", "review", "approved", "rejected"]).default("draft");
-
-// Claim specific schemas
-export const claimStatusSchema = () =>
-  z.enum(["in_processing", "reported", "accepted", "rejected", "partially_accepted", "appealed", "withdrawn"])
-    .default("in_processing");
-
-export const damageDescriptionSchema = (errorMessage = "Damage description is required") =>
-  z.string().min(1, { message: errorMessage });
-
-export const claimAmountSchema = (errorMessage = "Claimed amount must be a non-negative number") =>
-  z.coerce.number().min(0, { message: errorMessage });
 
 // Invoice specific schemas
 export const invoiceNumberSchema = (errorMessage = "Invoice number is required") =>
