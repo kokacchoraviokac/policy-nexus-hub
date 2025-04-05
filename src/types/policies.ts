@@ -2,7 +2,7 @@
 // Define policy types
 export type PolicyType = 'external' | 'internal' | string;
 export type PolicyStatus = 'active' | 'expired' | 'cancelled' | 'pending' | string;
-export type CommissionType = 'automatic' | 'manual' | 'none';
+export type CommissionType = 'automatic' | 'manual' | 'none' | string;
 export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete' | string;
 export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'full' | string;
 
@@ -64,6 +64,9 @@ export interface Policy {
   notes?: string;
   created_at: string;
   updated_at: string;
+  documents_count?: number;
+  claims_count?: number;
+  addendums_count?: number;
 }
 
 export interface PolicyFilterParams {
@@ -82,6 +85,7 @@ export interface PolicyFilterParams {
   pageSize?: number;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
+  workflowStatus?: string;
 }
 
 export interface UnlinkedPaymentType {

@@ -1,53 +1,86 @@
 
+import { supabase } from "@/integrations/supabase/client";
 import { EntityType } from "@/types/documents";
+import { v4 as uuidv4 } from "uuid";
 
-// Define explicit table names for document tables
-export const DOCUMENT_TABLES = [
-  'policy_documents', 
-  'claim_documents', 
-  'sales_documents',
-  'client_documents',
-  'insurer_documents',
-  'agent_documents',
-  'invoice_documents',
-  'addendum_documents'
-] as const;
-
-// Export the document table type
-export type DocumentTableName = typeof DOCUMENT_TABLES[number];
+// Define the valid document table names
+export type DocumentTableName = 
+  | 'policy_documents' 
+  | 'claim_documents' 
+  | 'sales_documents'
+  | 'client_documents'
+  | 'insurer_documents'
+  | 'agent_documents'
+  | 'invoice_documents'
+  | 'addendum_documents';
 
 /**
- * Gets the appropriate document table name for a given entity type
+ * Get the corresponding document table name for an entity type
  */
 export function getDocumentTableName(entityType: EntityType): DocumentTableName {
-  switch (entityType) {
-    case 'policy':
-      return 'policy_documents';
-    case 'claim':
-      return 'claim_documents';
-    case 'sales_process':
-      return 'sales_documents';
-    case 'client':
-      return 'client_documents';
-    case 'insurer':
-      return 'insurer_documents';
-    case 'agent':
-      return 'agent_documents';
-    case 'invoice':
-      return 'invoice_documents';
-    case 'addendum':
-      return 'addendum_documents';
-    default:
-      // Type guard ensures this doesn't happen, but TypeScript wants a fallback
-      return 'policy_documents';
+  const tableMap: Record<EntityType, DocumentTableName> = {
+    'policy': 'policy_documents',
+    'claim': 'claim_documents',
+    'sales_process': 'sales_documents',
+    'client': 'client_documents',
+    'insurer': 'insurer_documents',
+    'agent': 'agent_documents',
+    'invoice': 'invoice_documents',
+    'addendum': 'addendum_documents'
+  };
+  
+  return tableMap[entityType];
+}
+
+/**
+ * Upload a document file to Supabase storage
+ */
+export async function uploadDocumentFile(file: File, entityType: EntityType, entityId: string) {
+  // Generate a unique filename
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${uuidv4()}.${fileExt}`;
+  const filePath = `documents/${entityType}/${entityId}/${fileName}`;
+  
+  // Upload the file to Supabase storage
+  const { data, error } = await supabase.storage
+    .from('documents')
+    .upload(filePath, file);
+    
+  if (error) {
+    throw error;
+  }
+  
+  return filePath;
+}
+
+/**
+ * Delete a document from storage
+ */
+export async function deleteDocumentFile(filePath: string) {
+  try {
+    const { error } = await supabase.storage
+      .from('documents')
+      .remove([filePath]);
+      
+    if (error) {
+      console.error('Error deleting file from storage:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Unexpected error deleting file:', error);
+    return false;
   }
 }
 
 /**
- * Generates a document storage path
+ * Construct a URL for a document file
  */
-export function generateDocumentPath(entityType: EntityType, entityId: string, fileName: string): string {
-  const safeFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const timestamp = Date.now();
-  return `${entityType}/${entityId}/${timestamp}_${safeFileName}`;
+export function getDocumentUrl(filePath: string): string {
+  const { data } = supabase.storage
+    .from('documents')
+    .getPublicUrl(filePath);
+    
+  return data.publicUrl;
 }

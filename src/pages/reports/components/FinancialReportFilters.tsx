@@ -38,6 +38,10 @@ const FinancialReportFiltersComponent: React.FC<FinancialReportFiltersProps> = (
     updateFilters({ [field]: e.target.value });
   };
   
+  const handleStatusChange = (value: string) => {
+    updateFilters({ status: value });
+  };
+  
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
@@ -47,7 +51,7 @@ const FinancialReportFiltersComponent: React.FC<FinancialReportFiltersProps> = (
             <Input
               id="dateFrom"
               type="date"
-              value={filters.dateFrom || ''}
+              value={typeof filters.dateFrom === 'string' ? filters.dateFrom : ''}
               onChange={handleDateChange('dateFrom')}
             />
           </div>
@@ -57,7 +61,7 @@ const FinancialReportFiltersComponent: React.FC<FinancialReportFiltersProps> = (
             <Input
               id="dateTo"
               type="date"
-              value={filters.dateTo || ''}
+              value={typeof filters.dateTo === 'string' ? filters.dateTo : ''}
               onChange={handleDateChange('dateTo')}
             />
           </div>
@@ -66,7 +70,7 @@ const FinancialReportFiltersComponent: React.FC<FinancialReportFiltersProps> = (
             <Label htmlFor="status">{t("status")}</Label>
             <Select 
               value={filters.status || ''} 
-              onValueChange={(value) => updateFilters({ status: value })}
+              onValueChange={handleStatusChange}
             >
               <SelectTrigger id="status">
                 <SelectValue placeholder={t("allStatuses")} />

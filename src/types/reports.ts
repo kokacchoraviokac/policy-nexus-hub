@@ -47,6 +47,10 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
+  totalPages?: number;
+  totalItems?: number;
+  pageSizeOptions?: number[];
+  className?: string;
   children?: React.ReactNode;
 }
 

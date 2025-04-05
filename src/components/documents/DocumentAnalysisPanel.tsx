@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Tag, AlertCircle, FileText } from "lucide-react";
-import { DocumentAnalysisPanelProps } from "@/types/documents";
+import { DocumentAnalysisPanelProps, DocumentCategory } from "@/types/documents";
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   document,
@@ -45,7 +45,7 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
         
         // Notify parent about detected category
         if (detectedCategories.length > 0 && onCategoryDetected) {
-          onCategoryDetected(detectedCategories[0]);
+          onCategoryDetected(detectedCategories[0] as DocumentCategory);
         }
         
         if (onAnalysisComplete) {

@@ -14,7 +14,7 @@ export type DocumentTableName =
   | 'addendum_documents';
 
 // Define a mapping for entity types to their document tables
-export const entityToDocumentTable: Record<string, DocumentTableName> = {
+export const entityToDocumentTable: Record<EntityType, DocumentTableName> = {
   'policy': 'policy_documents',
   'claim': 'claim_documents', 
   'sales_process': 'sales_documents',
@@ -36,7 +36,7 @@ export function isValidDocumentTable(tableName: string): tableName is DocumentTa
 }
 
 // Helper function to determine the appropriate document table based on entity type
-export function getDocumentTableForEntity(entityType: string): DocumentTableName {
+export function getDocumentTableForEntity(entityType: EntityType): DocumentTableName {
   // Only return valid document tables that exist in the database
   const tableName = entityToDocumentTable[entityType];
   if (tableName) return tableName;
@@ -47,7 +47,7 @@ export function getDocumentTableForEntity(entityType: string): DocumentTableName
 }
 
 // Helper for safely querying document tables
-export function queryDocuments(entityType: string) {
+export function queryDocuments(entityType: EntityType) {
   const tableName = getDocumentTableForEntity(entityType);
   return supabase.from(tableName) as any;
 }

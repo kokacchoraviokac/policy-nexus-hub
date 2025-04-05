@@ -20,7 +20,17 @@ export type DocumentCategory =
   | 'legal'
   | 'other'
   | 'proposal'
-  | 'quote';
+  | 'quote'
+  | 'medical'
+  | 'financial'
+  | 'lien'
+  | 'notification'
+  | 'discovery'
+  | 'closeout'
+  | 'claim_evidence'
+  | 'company'
+  | 'amendment'
+  | 'authorization';
 
 export type DocumentApprovalStatus = 
   | 'approved' 
@@ -51,6 +61,7 @@ export interface Document {
   approved_by?: string;
   approved_at?: string;
   approval_notes?: string;
+  tags?: string[];
 }
 
 export interface DocumentUploadStateProps {

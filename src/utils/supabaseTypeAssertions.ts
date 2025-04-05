@@ -1,55 +1,64 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EntityType } from "@/types/documents";
-import { DocumentTableName, getDocumentTableName } from "@/utils/documentUploadUtils";
+import { DocumentTableName } from "@/utils/supabaseQueryHelper";
 
 /**
- * Helper function to safely access document tables
- * This helps work around TypeScript's deep type instantiation issues
+ * Utility functions for making type-safe Supabase queries
+ * These functions provide type assertions that help avoid TypeScript errors
+ * when working with dynamic table names
  */
-export function fromDocumentTable(tableName: string) {
-  // Use type assertion to bypass TypeScript's limitations with dynamic table names
-  return supabase.from(tableName as any);
+
+/**
+ * Makes a query to a document table using type assertions
+ * to avoid TypeScript errors
+ */
+export function fromDocumentTable(tableName: DocumentTableName) {
+  return supabase.from(tableName) as any;
 }
 
 /**
- * Helper function to safely query document table based on entity type
+ * Makes a query to any table using type assertions
+ * to avoid TypeScript errors
  */
-export function queryDocumentsByEntity(entityType: EntityType, entityId: string) {
-  const tableName = getDocumentTableName(entityType);
-  const entityIdField = `${entityType}_id`.replace('sales_process', 'sales_process');
+export function fromTable(tableName: string) {
+  return supabase.from(tableName) as any;
+}
+
+/**
+ * Makes a query to a specific document table based on entity type
+ */
+export function fromEntityTable(entityType: string) {
+  let tableName: string;
   
-  // Create base query with type assertion
-  const query = fromDocumentTable(tableName);
+  switch (entityType) {
+    case 'policy':
+      tableName = 'policy_documents';
+      break;
+    case 'claim':
+      tableName = 'claim_documents';
+      break;
+    case 'sales_process':
+      tableName = 'sales_documents';
+      break;
+    case 'client':
+      tableName = 'client_documents';
+      break;
+    case 'insurer':
+      tableName = 'insurer_documents';
+      break;
+    case 'agent':
+      tableName = 'agent_documents';
+      break;
+    case 'invoice':
+      tableName = 'invoice_documents';
+      break;
+    case 'addendum':
+      tableName = 'addendum_documents';
+      break;
+    default:
+      console.warn(`Unknown entity type: ${entityType}, defaulting to policy_documents`);
+      tableName = 'policy_documents';
+  }
   
-  // Add entity filter with type assertion
-  return query.select('*').eq(entityIdField as any, entityId);
-}
-
-/**
- * Helper function to safely insert a document
- */
-export function insertDocument(tableName: string, data: any) {
-  return fromDocumentTable(tableName).insert(data);
-}
-
-/**
- * Helper function to safely update a document
- */
-export function updateDocument(tableName: string, id: string, data: any) {
-  return fromDocumentTable(tableName).update(data).eq('id', id);
-}
-
-/**
- * Helper function to safely delete a document
- */
-export function deleteDocument(tableName: string, id: string) {
-  return fromDocumentTable(tableName).delete().eq('id', id);
-}
-
-/**
- * Helper function for document type conversions to avoid TypeScript errors
- */
-export function convertToDocument(data: any) {
-  return data as any;
+  return supabase.from(tableName) as any;
 }

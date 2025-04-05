@@ -5,10 +5,9 @@ import { Loader2, FileX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import DocumentListItem from "./DocumentListItem";
+import DocumentListItem from "../DocumentListItem";
 import DocumentUploadDialog from "./DocumentUploadDialog";
-import { Document, EntityType, DocumentApprovalStatus } from "@/types/documents";
-import { useDocumentDownload } from "@/hooks/useDocumentDownload";
+import { Document, EntityType, DocumentCategory, DocumentApprovalStatus } from "@/types/documents";
 
 interface DocumentListProps {
   entityType: EntityType;
@@ -50,7 +49,6 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
-  const { downloadDocument, isDownloading } = useDocumentDownload();
   
   // Use provided props if available, otherwise fetch documents using the hook
   const { 
@@ -182,7 +180,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
         entityId={entityId}
         selectedDocument={selectedDocument}
         onUploadComplete={refetch}
-        defaultCategory={filterCategory}
+        defaultCategory={filterCategory as DocumentCategory}
         salesStage=""
       />
     </div>

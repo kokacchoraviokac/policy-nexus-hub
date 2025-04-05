@@ -1,6 +1,7 @@
 
-import { User, UserRole, AuthState, CustomPrivilege } from "@/types/auth";
+import { User, UserRole, AuthState, CustomPrivilege } from "@/types/auth/user";
 import { Session } from "@supabase/supabase-js";
+import { ResourceContext } from "@/types/auth/contextTypes";
 
 export interface AuthContextType {
   user: User | null;
@@ -16,26 +17,21 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   updateUserProfile: (profile: Partial<User>) => Promise<void>;
   
-  // Auth operations renamed from original context
+  // Auth operations 
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
   updateUser: (user: Partial<User>) => Promise<void>;
   hasPrivilege: (privilege: string) => boolean;
   hasPrivilegeWithContext: (
     privilege: string, 
-    context?: {
-      ownerId?: string;
-      currentUserId?: string;
-      companyId?: string;
-      currentUserCompanyId?: string;
-      resourceType?: string;
-      resourceValue?: any;
-      [key: string]: any;
-    }
+    context?: ResourceContext
   ) => boolean;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
   
   // Additional properties for custom privileges
   customPrivileges: CustomPrivilege[];
   initiatePasswordReset: (email: string) => Promise<boolean>;
   updatePassword: (newPassword: string) => Promise<boolean>;
+  refreshSession: () => Promise<void>;
+  permissions?: string[];
 }
