@@ -1,45 +1,108 @@
 
-import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, FileX, Plus } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { useDocuments } from "@/hooks/useDocuments";
+import { Loader2, FileX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Document } from "@/types/documents";
+import { useLanguage } from "@/contexts/LanguageContext";
 import DocumentListItem from "./DocumentListItem";
-import { useDocumentDownload } from "@/hooks/useDocumentDownload";
+import DocumentUploadDialog from "./DocumentUploadDialog";
+import { Document, EntityType, DocumentApprovalStatus } from "@/types/documents";
 
 interface DocumentListProps {
-  documents: Document[];
-  isLoading: boolean;
-  isError: boolean;
-  error: any;
-  onDelete: (document: Document) => void;
-  isDeleting: boolean;
-  showUploadButton?: boolean; 
+  entityType: EntityType;
+  entityId: string;
   onUploadClick?: () => void;
-  onUploadVersion?: (document: Document) => void;
+  showUploadButton?: boolean;
+  showApproval?: boolean;
   filterCategory?: string;
+  documents?: Document[];
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: Error;
+  onDelete?: (documentId: string | Document) => void;
+  isDeleting?: boolean;
+  onUploadVersion?: (document: Document) => void;
+  refetch?: () => void;
+  updateDocumentApproval?: (documentId: string, status: DocumentApprovalStatus, notes?: string) => Promise<void>;
 }
 
-const DocumentList: React.FC<DocumentListProps> = ({
-  documents,
-  isLoading,
-  isError,
-  error,
-  onDelete,
-  isDeleting,
-  showUploadButton = false,
+const DocumentList: React.FC<DocumentListProps> = ({ 
+  entityType, 
+  entityId,
   onUploadClick,
-  onUploadVersion,
-  filterCategory
+  showUploadButton = true,
+  showApproval = true,
+  filterCategory,
+  documents: providedDocuments,
+  isLoading: providedIsLoading,
+  isError: providedIsError,
+  error: providedError,
+  onDelete: providedOnDelete,
+  isDeleting: providedIsDeleting,
+  onUploadVersion: providedOnUploadVersion,
+  refetch: providedRefetch,
+  updateDocumentApproval
 }) => {
   const { t } = useLanguage();
-  const { downloadDocument, isDownloading } = useDocumentDownload();
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
   
-  // Filter documents by category if specified
-  const filteredDocuments = filterCategory 
-    ? documents.filter(doc => doc.category === filterCategory)
-    : documents;
+  // Use provided props if available, otherwise fetch documents using the hook
+  const { 
+    documents: fetchedDocuments, 
+    isLoading: isLoadingFetched, 
+    error: errorFetched, 
+    deleteDocument: deleteDocumentFetched, 
+    isDeletingDocument: isDeletingFetched,
+    refetch: refetchFetched
+  } = useDocuments(entityType, entityId);
+  
+  const documents = providedDocuments || fetchedDocuments;
+  const isLoading = providedIsLoading !== undefined ? providedIsLoading : isLoadingFetched;
+  const isError = providedIsError !== undefined ? providedIsError : !!errorFetched;
+  const error = providedError || errorFetched;
+  const isDeleting = providedIsDeleting !== undefined ? providedIsDeleting : isDeletingFetched;
+  const refetch = providedRefetch || refetchFetched;
+
+  // Custom delete document handler that manages both string IDs and Document objects
+  const handleDeleteDocument = (documentIdOrObject: string | Document) => {
+    if (providedOnDelete) {
+      providedOnDelete(documentIdOrObject);
+    } else if (deleteDocumentFetched) {
+      // Extract document ID if a Document object was passed
+      const documentId = typeof documentIdOrObject === 'string' 
+        ? documentIdOrObject 
+        : documentIdOrObject.id;
+      
+      deleteDocumentFetched(documentId);
+    }
+  };
+
+  // Handle document version upload
+  const handleUploadVersion = (document: Document) => {
+    if (providedOnUploadVersion) {
+      providedOnUploadVersion(document);
+    } else {
+      setSelectedDocument(document);
+      setUploadDialogOpen(true);
+    }
+  };
+
+  // Filter documents by category if filterCategory is provided
+  const filteredDocuments = useMemo(() => {
+    if (!filterCategory) return documents;
+    return documents.filter(doc => doc.category === filterCategory);
+  }, [documents, filterCategory]);
+
+  const handleUploadClick = () => {
+    if (onUploadClick) {
+      onUploadClick();
+    } else {
+      setSelectedDocument(undefined);
+      setUploadDialogOpen(true);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -57,7 +120,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
             <FileX className="h-10 w-10 text-destructive mb-2" />
             <h3 className="text-lg font-medium">{t("errorLoadingDocuments")}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {error?.message || t("pleaseTryAgainLater")}
+              {t("pleaseTryAgainLater")}
             </p>
           </div>
         </CardContent>
@@ -65,24 +128,19 @@ const DocumentList: React.FC<DocumentListProps> = ({
     );
   }
 
-  if (filteredDocuments.length === 0) {
+  if (!filteredDocuments || filteredDocuments.length === 0) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col items-center justify-center text-center">
-            <h3 className="text-lg font-medium">
-              {filterCategory ? t("noDocumentsInCategory") : t("noDocuments")}
-            </h3>
+            <h3 className="text-lg font-medium">{t("noDocuments")}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              {t("noDocumentsUploaded")}
+              {filterCategory 
+                ? t("noDocumentsInCategory", { category: filterCategory }) 
+                : t("noDocumentsUploaded")}
             </p>
-            {showUploadButton && onUploadClick && (
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={onUploadClick}
-              >
-                <Plus className="mr-2 h-4 w-4" />
+            {showUploadButton && (
+              <Button onClick={handleUploadClick} className="mt-4">
                 {t("uploadDocument")}
               </Button>
             )}
@@ -98,13 +156,27 @@ const DocumentList: React.FC<DocumentListProps> = ({
         <DocumentListItem 
           key={document.id} 
           document={document}
-          onDelete={() => onDelete(document)}
-          onDownload={() => downloadDocument(document)}
-          onUploadVersion={onUploadVersion ? () => onUploadVersion(document) : undefined}
+          onDelete={() => handleDeleteDocument(document)}
           isDeleting={isDeleting}
-          isDownloading={isDownloading}
+          showApproval={showApproval}
+          onUploadVersion={() => handleUploadVersion(document)}
         />
       ))}
+      {showUploadButton && (
+        <div className="mt-4 flex justify-end">
+          <Button onClick={handleUploadClick}>
+            {t("uploadDocument")}
+          </Button>
+        </div>
+      )}
+      
+      <DocumentUploadDialog 
+        open={uploadDialogOpen} 
+        onOpenChange={setUploadDialogOpen} 
+        entityType={entityType}
+        entityId={entityId}
+        selectedDocument={selectedDocument}
+      />
     </div>
   );
 };

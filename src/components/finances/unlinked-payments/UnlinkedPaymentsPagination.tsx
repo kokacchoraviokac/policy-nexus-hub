@@ -1,127 +1,65 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import React from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Button } from '@/components/ui/button';
 import { 
-  Pagination, 
-  PaginationLink, 
-  PaginationItem, 
-  PaginationContent,
-  PaginationPrevious, 
-  PaginationNext, 
-  PaginationEllipsis 
-} from "@/components/ui/pagination";
+  ChevronLeft,
+  ChevronRight, 
+  ChevronsLeft, 
+  ChevronsRight
+} from 'lucide-react';
+import { Pagination } from '@/components/ui/pagination';
 
-interface PaginationProps {
+interface UnlinkedPaymentsPaginationProps {
   currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
+  pageSize: number;
+  totalItems: number;
+  onPageChange: (newPage: number) => void;
+  onPageSizeChange: (newPageSize: number) => void;
 }
 
-const UnlinkedPaymentsPagination: React.FC<PaginationProps> = ({
+const UnlinkedPaymentsPagination: React.FC<UnlinkedPaymentsPaginationProps> = ({
   currentPage,
-  totalPages,
-  onPageChange
+  pageSize,
+  totalItems,
+  onPageChange,
+  onPageSizeChange
 }) => {
-  // Don't render pagination if there's only one page
-  if (totalPages <= 1) {
-    return null;
-  }
-
-  // Calculate page range to show
-  const getPageRange = () => {
-    const delta = 1; // Number of pages to show before and after current page
-    const range: number[] = [];
-    
-    for (
-      let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
-      i++
-    ) {
-      range.push(i);
-    }
-    
-    // Add first page if not already in range
-    if (range[0] > 2) {
-      range.unshift(-1); // -1 indicates ellipsis
-    }
-    if (range[0] !== 2 && range[0] !== -1) {
-      range.unshift(2);
-    }
-    
-    // Add last page if not already in range
-    if (range[range.length - 1] < totalPages - 1) {
-      range.push(-1); // -1 indicates ellipsis
-    }
-    if (range[range.length - 1] !== totalPages - 1 && range[range.length - 1] !== -1) {
-      range.push(totalPages - 1);
-    }
-    
-    return [1, ...range, totalPages];
-  };
+  const { t } = useLanguage();
   
-  // Ensure totalPages is at least 1
-  const pageCount = Math.max(1, totalPages);
-  const pageRange = totalPages > 1 ? getPageRange() : [1];
+  // Calculate total pages
+  const totalPages = Math.ceil(totalItems / pageSize);
+  
+  // Handle edge cases
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
   
   return (
-    <Pagination 
-      itemsCount={totalPages * 10} 
-      itemsPerPage={10} 
-      currentPage={currentPage} 
-      onPageChange={onPageChange}
-    >
-      <PaginationContent>
-        {currentPage > 1 && (
-          <PaginationItem>
-            <PaginationPrevious 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault();
-                onPageChange(currentPage - 1);
-              }} 
-            />
-          </PaginationItem>
+    <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 py-4">
+      <div className="text-sm text-muted-foreground">
+        {totalItems > 0 ? (
+          <>
+            {t('showing')} 
+            <strong> {(safeCurrentPage - 1) * pageSize + 1} </strong>
+            {t('to')} 
+            <strong> {Math.min(safeCurrentPage * pageSize, totalItems)} </strong>
+            {t('of')} 
+            <strong> {totalItems} </strong>
+            {t('entries')}
+          </>
+        ) : (
+          t('noRecordsToShow')
         )}
-        
-        {pageRange.map((page, index) => {
-          if (page === -1) {
-            return (
-              <PaginationItem key={`ellipsis-${index}`}>
-                <PaginationEllipsis />
-              </PaginationItem>
-            );
-          }
-          
-          return (
-            <PaginationItem key={page}>
-              <PaginationLink
-                href="#"
-                isActive={page === currentPage}
-                onClick={(e) => {
-                  e.preventDefault();
-                  onPageChange(page);
-                }}
-              >
-                {page}
-              </PaginationLink>
-            </PaginationItem>
-          );
-        })}
-        
-        {currentPage < pageCount && (
-          <PaginationItem>
-            <PaginationNext 
-              href="#" 
-              onClick={(e) => {
-                e.preventDefault();
-                onPageChange(currentPage + 1);
-              }} 
-            />
-          </PaginationItem>
-        )}
-      </PaginationContent>
-    </Pagination>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Pagination
+          itemsCount={totalItems}
+          itemsPerPage={pageSize}
+          currentPage={safeCurrentPage}
+          onPageChange={onPageChange}
+        />
+      </div>
+    </div>
   );
 };
 

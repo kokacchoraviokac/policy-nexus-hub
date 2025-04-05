@@ -66,13 +66,11 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
           documents={documents}
           isLoading={isLoading}
           isError={isError}
-          error={error}
+          error={error as Error}
           onDelete={handleDeleteDocument}
           isDeleting={isDeleting}
           showUploadButton={false}
           onUploadVersion={handleUploadVersion}
-          refetch={refreshDocuments}
-          updateDocumentApproval={updateDocumentApproval}
           entityType="policy"
           entityId={policyId}
         />
@@ -83,6 +81,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
           entityType="policy"
           entityId={policyId}
           selectedDocument={selectedDocument}
+          onUploadComplete={refreshDocuments}
         />
       </CardContent>
     </Card>

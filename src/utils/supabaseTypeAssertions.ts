@@ -1,24 +1,55 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentTableName } from "@/utils/documentUploadUtils";
+import { EntityType } from "@/types/documents";
+import { DocumentTableName, getDocumentTableName } from "@/utils/documentUploadUtils";
 
 /**
- * A wrapper for the supabase.from() function that helps with Typescript errors
- * by applying a type assertion. This is not as type-safe as proper schema types,
- * but helps avoid TypeScript errors in the codebase.
- * 
- * @param tableName The name of the table to query
- * @returns A PostgrestQueryBuilder for the specified table
+ * Helper function to safely access document tables
+ * This helps work around TypeScript's deep type instantiation issues
  */
-export function safeFrom(tableName: string) {
+export function fromDocumentTable(tableName: string) {
+  // Use type assertion to bypass TypeScript's limitations with dynamic table names
   return supabase.from(tableName as any);
 }
 
 /**
- * A wrapper specifically for document tables to ensure we're using
- * a consistent approach to accessing them
+ * Helper function to safely query document table based on entity type
  */
-export function fromDocumentTable(tableName: DocumentTableName) {
-  // This type assertion tells TypeScript to trust that this is a valid table name
-  return supabase.from(tableName as any);
+export function queryDocumentsByEntity(entityType: EntityType, entityId: string) {
+  const tableName = getDocumentTableName(entityType);
+  const entityIdField = `${entityType}_id`.replace('sales_process', 'sales_process');
+  
+  // Create base query with type assertion
+  const query = fromDocumentTable(tableName);
+  
+  // Add entity filter with type assertion
+  return query.select('*').eq(entityIdField as any, entityId);
+}
+
+/**
+ * Helper function to safely insert a document
+ */
+export function insertDocument(tableName: string, data: any) {
+  return fromDocumentTable(tableName).insert(data);
+}
+
+/**
+ * Helper function to safely update a document
+ */
+export function updateDocument(tableName: string, id: string, data: any) {
+  return fromDocumentTable(tableName).update(data).eq('id', id);
+}
+
+/**
+ * Helper function to safely delete a document
+ */
+export function deleteDocument(tableName: string, id: string) {
+  return fromDocumentTable(tableName).delete().eq('id', id);
+}
+
+/**
+ * Helper function for document type conversions to avoid TypeScript errors
+ */
+export function convertToDocument(data: any) {
+  return data as any;
 }

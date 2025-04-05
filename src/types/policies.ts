@@ -1,8 +1,31 @@
 
-export type PolicyStatus = 'active' | 'expired' | 'cancelled' | 'pending';
-export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'completed' | 'rejected';
-export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi_annual' | 'annual' | 'one_time';
-export type CommissionType = 'fixed' | 'percentage' | 'manual' | 'none';
+export type PolicyStatus = 
+  | 'active' 
+  | 'expired' 
+  | 'cancelled' 
+  | 'pending';
+
+export type WorkflowStatus = 
+  | 'draft' 
+  | 'in_review' 
+  | 'ready' 
+  | 'completed' 
+  | 'rejected'
+  | 'complete';  // Added this status value
+
+export type PaymentFrequency = 
+  | 'monthly' 
+  | 'quarterly' 
+  | 'semi_annual' 
+  | 'annual' 
+  | 'one_time';
+
+export type CommissionType = 
+  | 'fixed' 
+  | 'percentage' 
+  | 'manual' 
+  | 'none'
+  | 'automatic';  // Added this status value
 
 export interface Policy {
   id: string;
@@ -25,6 +48,7 @@ export interface Policy {
   policyholder_name: string;
   insured_id?: string;
   insured_name?: string;
+  client_name?: string;  // Added this property
   
   start_date: string;
   expiry_date: string;
@@ -33,6 +57,7 @@ export interface Policy {
   workflow_status: WorkflowStatus;
   
   premium: number;
+  premium_amount?: number;  // Added this property
   currency: string;
   payment_frequency: PaymentFrequency;
   
@@ -42,10 +67,6 @@ export interface Policy {
   
   assigned_to?: string;
   notes?: string;
-
-  // Added fields for compatibility with other component usage
-  premium_amount?: number;
-  client_name?: string;
 }
 
 export interface PolicyAddendum {
@@ -55,7 +76,7 @@ export interface PolicyAddendum {
   description: string;
   effective_date: string;
   premium_adjustment?: number;
-  lien_status?: boolean;
+  lien_status?: boolean;  // Changed to optional
   status: string;
   workflow_status: string;
   created_by?: string;
@@ -92,6 +113,9 @@ export interface PolicyFilterParams {
   sort_order?: 'asc' | 'desc';
   page?: number;
   limit?: number;
+  pageSize?: number;  // Added this property
+  orderBy?: string;   // Added this property
+  orderDirection?: 'asc' | 'desc';  // Added this property
 }
 
 export interface ValidationErrors {

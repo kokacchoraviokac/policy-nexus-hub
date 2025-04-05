@@ -5,6 +5,7 @@ import { fromDocumentTable } from "@/utils/supabaseTypeAssertions";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UseDocumentManagerProps {
   entityType: EntityType;
@@ -32,14 +33,16 @@ export function useDocumentManager({
     queryKey: ['documents', entityType, entityId],
     queryFn: async () => {
       try {
-        const { data, error } = await fromDocumentTable(tableName)
+        const { data, error } = await supabase
+          .from(tableName)
           .select('*')
           .eq(entityIdField, entityId)
           .order('created_at', { ascending: false });
         
         if (error) throw error;
         
-        return (data || []) as Document[];
+        // Use type assertion to handle the conversion safely
+        return (data || []) as unknown as Document[];
       } catch (err) {
         console.error(`Error fetching ${entityType} documents:`, err);
         throw err;
@@ -50,7 +53,8 @@ export function useDocumentManager({
   // Mutation to delete a document
   const deleteMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      const { error } = await fromDocumentTable(tableName)
+      const { error } = await supabase
+        .from(tableName)
         .delete()
         .eq('id', documentId);
       
@@ -84,7 +88,8 @@ export function useDocumentManager({
       status: DocumentApprovalStatus;
       notes?: string;
     }) => {
-      const { data, error } = await fromDocumentTable(tableName)
+      const { data, error } = await supabase
+        .from(tableName)
         .update({
           approval_status: status,
           approval_notes: notes,
@@ -95,7 +100,7 @@ export function useDocumentManager({
         .single();
       
       if (error) throw error;
-      return data as Document;
+      return data as unknown as Document;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });

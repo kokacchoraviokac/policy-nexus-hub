@@ -1,112 +1,107 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ServiceResponse } from "@/types/services";
-import { handleApiErrorMessage } from "./errorHandling";
 
 /**
- * A type-safe wrapper for Supabase queries
- * @param query Function to execute the Supabase query
- * @returns A service response with data or error
+ * Generic function to safely query any table with proper type assertions
+ * This helps avoid TypeScript's deep type instantiation errors
  */
-export async function executeSupabaseQuery<T>(
-  query: () => Promise<{ data: any; error: any }>
-): Promise<ServiceResponse<T>> {
-  try {
-    const { data, error } = await query();
-    
-    if (error) throw error;
-    
-    return { success: true, data: data as T };
-  } catch (error) {
-    console.error("Supabase query error:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error : new Error(handleApiErrorMessage(error)) 
-    };
-  }
+export function fromTable<T = any>(tableName: string) {
+  // Use type assertion to avoid TypeScript limitations
+  return supabase.from(tableName) as any;
 }
 
 /**
- * A helper for type-safe table operations
- * @param tableName The table to query
- * @returns An object with type-safe query methods
+ * Generic function to safely select data from a specified table
  */
-export function createTableHelper<T>(tableName: string) {
-  return {
-    getById: async (id: string): Promise<ServiceResponse<T>> => {
-      return executeSupabaseQuery<T>(async () => {
-        return supabase
-          .from(tableName)
-          .select('*')
-          .eq('id', id)
-          .single();
-      });
-    },
-    
-    getAll: async (options?: {
-      filters?: Record<string, any>;
-      orderBy?: string;
-      ascending?: boolean;
-      limit?: number;
-    }): Promise<ServiceResponse<T[]>> => {
-      return executeSupabaseQuery<T[]>(async () => {
-        let query = supabase.from(tableName).select('*');
-        
-        // Apply filters
-        if (options?.filters) {
-          Object.entries(options.filters).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-              query = query.eq(key, value);
-            }
-          });
-        }
-        
-        // Apply ordering
-        if (options?.orderBy) {
-          query = query.order(options.orderBy, { 
-            ascending: options.ascending ?? true 
-          });
-        }
-        
-        // Apply limit
-        if (options?.limit) {
-          query = query.limit(options.limit);
-        }
-        
-        return query;
-      });
-    },
-    
-    insert: async (data: Partial<T>): Promise<ServiceResponse<T>> => {
-      return executeSupabaseQuery<T>(async () => {
-        return supabase
-          .from(tableName)
-          .insert(data as any)
-          .select()
-          .single();
-      });
-    },
-    
-    update: async (id: string, data: Partial<T>): Promise<ServiceResponse<T>> => {
-      return executeSupabaseQuery<T>(async () => {
-        return supabase
-          .from(tableName)
-          .update(data as any)
-          .eq('id', id)
-          .select()
-          .single();
-      });
-    },
-    
-    delete: async (id: string): Promise<ServiceResponse<null>> => {
-      return executeSupabaseQuery<null>(async () => {
-        const { error } = await supabase
-          .from(tableName)
-          .delete()
-          .eq('id', id);
-          
-        return { data: null, error };
-      });
-    }
-  };
+export async function selectFromTable<T = any>(
+  tableName: string,
+  options: {
+    columns?: string;
+    eq?: { column: string; value: any };
+    order?: { column: string; ascending?: boolean };
+    limit?: number;
+    single?: boolean;
+  } = {}
+) {
+  // Create the base query
+  let query = fromTable(tableName).select(options.columns || '*');
+  
+  // Apply filter if provided
+  if (options.eq) {
+    query = query.eq(options.eq.column, options.eq.value);
+  }
+  
+  // Apply ordering if provided
+  if (options.order) {
+    query = query.order(options.order.column, {
+      ascending: options.order.ascending !== false
+    });
+  }
+  
+  // Apply limit if provided
+  if (options.limit) {
+    query = query.limit(options.limit);
+  }
+  
+  // Return single item if requested
+  if (options.single) {
+    return await query.single();
+  }
+  
+  return await query;
+}
+
+/**
+ * Generic function to safely insert data into a specified table
+ */
+export async function insertIntoTable<T = any>(
+  tableName: string,
+  data: T,
+  options: {
+    returning?: boolean;
+  } = { returning: true }
+) {
+  const query = fromTable(tableName).insert(data as any);
+  
+  if (options.returning) {
+    return await query.select();
+  }
+  
+  return await query;
+}
+
+/**
+ * Generic function to safely update data in a specified table
+ */
+export async function updateInTable<T = any>(
+  tableName: string,
+  data: Partial<T>,
+  options: {
+    eq: { column: string; value: any };
+    returning?: boolean;
+  }
+) {
+  const query = fromTable(tableName)
+    .update(data as any)
+    .eq(options.eq.column, options.eq.value);
+  
+  if (options.returning !== false) {
+    return await query.select();
+  }
+  
+  return await query;
+}
+
+/**
+ * Generic function to safely delete data from a specified table
+ */
+export async function deleteFromTable(
+  tableName: string,
+  options: {
+    eq: { column: string; value: any };
+  }
+) {
+  return await fromTable(tableName)
+    .delete()
+    .eq(options.eq.column, options.eq.value);
 }

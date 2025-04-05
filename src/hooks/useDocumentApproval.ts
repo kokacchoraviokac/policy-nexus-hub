@@ -39,7 +39,7 @@ export const useDocumentApproval = ({ onSuccess }: UseDocumentApprovalProps = {}
           approved_at: new Date().toISOString()
         };
         
-        // Update the document using type assertion to avoid TypeScript errors
+        // Use our safe wrapper for supabase queries
         const { data, error } = await fromDocumentTable(tableName)
           .update(updateData)
           .eq('id', documentId)
@@ -64,8 +64,8 @@ export const useDocumentApproval = ({ onSuccess }: UseDocumentApprovalProps = {}
       const statusMessages: Record<DocumentApprovalStatus, string> = {
         approved: t("documentApproved"),
         rejected: t("documentRejected"),
-        needs_review: t("documentMarkedForReview"),
-        pending: t("documentMarkedAsPending")
+        pending: t("documentMarkedAsPending"),
+        needs_review: t("documentMarkedForReview")
       };
       
       toast.success(statusMessages[variables.status] || t("documentStatusUpdated"));

@@ -51,7 +51,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       // Log the activity
       await logActivity({
         entity_type: document.entity_type,
-        entity_id: document.entity_id || "",
+        entity_id: document.entity_id,
         action: "update",
         details: {
           action_type: `document_${newStatus}`,

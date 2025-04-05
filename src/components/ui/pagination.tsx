@@ -1,159 +1,115 @@
 
-import * as React from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { ButtonProps, buttonVariants } from "@/components/ui/button";
+import React from "react";
+import { Button } from "@/components/ui/button";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
+import { cn } from "@/utils/cn";
 
 export interface PaginationProps {
   itemsCount: number;
   itemsPerPage: number;
   currentPage: number;
   onPageChange: (page: number) => void;
-  children?: React.ReactNode;
+  pageSize?: number;  // Added optional pageSize
+  onPageSizeChange?: (pageSize: number) => void;  // Added optional handler
+  className?: string;
+  showPageInfo?: boolean;
 }
 
-const Pagination = ({
+export function Pagination({
   itemsCount,
   itemsPerPage,
   currentPage,
   onPageChange,
-  children,
+  pageSize,
+  onPageSizeChange,
   className,
+  showPageInfo = true,
   ...props
-}: PaginationProps & React.HTMLAttributes<HTMLDivElement>) => {
-  const totalPages = Math.ceil(itemsCount / itemsPerPage);
-
+}: PaginationProps & React.HTMLAttributes<HTMLDivElement>) {
+  const pageCount = Math.ceil(itemsCount / itemsPerPage);
+  
+  // Handle cases where itemsCount is 0
+  const safePageCount = Math.max(1, pageCount);
+  
+  // Ensure currentPage is valid
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), safePageCount);
+  
+  // Calculate visible pages
+  const visiblePages = [];
+  const pagesToShow = 5;
+  
+  let startPage = Math.max(1, safeCurrentPage - Math.floor(pagesToShow / 2));
+  let endPage = Math.min(safePageCount, startPage + pagesToShow - 1);
+  
+  // Adjust start page if end page is maxed out
+  if (endPage === safePageCount) {
+    startPage = Math.max(1, endPage - pagesToShow + 1);
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    visiblePages.push(i);
+  }
+  
   return (
-    <nav
-      role="navigation"
-      aria-label="pagination"
-      className={cn("mx-auto flex w-full justify-center", className)}
-      {...props}
-    >
-      {children || (
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              onClick={() =>
-                currentPage > 1 && onPageChange(currentPage - 1)
-              }
-              disabled={currentPage === 1}
-            />
-          </PaginationItem>
-          
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-            <PaginationItem key={page}>
-              <PaginationLink
-                onClick={() => onPageChange(page)}
-                isActive={page === currentPage}
-              >
-                {page}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-          
-          <PaginationItem>
-            <PaginationNext
-              onClick={() =>
-                currentPage < totalPages && onPageChange(currentPage + 1)
-              }
-              disabled={currentPage === totalPages}
-            />
-          </PaginationItem>
-        </PaginationContent>
+    <div className={cn("flex flex-col sm:flex-row items-center gap-4 py-4", className)} {...props}>
+      {showPageInfo && pageCount > 0 && (
+        <div className="text-sm text-muted-foreground">
+          Showing {(safeCurrentPage - 1) * itemsPerPage + 1} to {Math.min(safeCurrentPage * itemsPerPage, itemsCount)} of {itemsCount} entries
+        </div>
       )}
-    </nav>
+      <div className="ml-auto flex items-center gap-1">
+        <Button
+          variant="outline"
+          className="h-8 w-8 p-0"
+          onClick={() => onPageChange(1)}
+          disabled={safeCurrentPage === 1}
+        >
+          <span className="sr-only">Go to first page</span>
+          <ChevronsLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          className="h-8 w-8 p-0"
+          onClick={() => onPageChange(safeCurrentPage - 1)}
+          disabled={safeCurrentPage === 1}
+        >
+          <span className="sr-only">Go to previous page</span>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        {visiblePages.map((page) => (
+          <Button
+            key={page}
+            variant={page === safeCurrentPage ? "default" : "outline"}
+            className="h-8 w-8 p-0"
+            onClick={() => onPageChange(page)}
+          >
+            <span>{page}</span>
+          </Button>
+        ))}
+        <Button
+          variant="outline"
+          className="h-8 w-8 p-0"
+          onClick={() => onPageChange(safeCurrentPage + 1)}
+          disabled={safeCurrentPage === safePageCount}
+        >
+          <span className="sr-only">Go to next page</span>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          className="h-8 w-8 p-0"
+          onClick={() => onPageChange(safePageCount)}
+          disabled={safeCurrentPage === safePageCount}
+        >
+          <span className="sr-only">Go to last page</span>
+          <ChevronsRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   );
-};
-
-const PaginationContent = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLUListElement>) => (
-  <ul
-    className={cn("flex flex-row items-center gap-1", className)}
-    {...props}
-  />
-);
-
-const PaginationItem = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLLIElement>) => (
-  <li className={cn("", className)} {...props} />
-);
-
-type PaginationLinkProps = {
-  isActive?: boolean;
-} & ButtonProps;
-
-const PaginationLink = ({
-  className,
-  isActive,
-  ...props
-}: PaginationLinkProps) => (
-  <button
-    aria-current={isActive ? "page" : undefined}
-    className={cn(
-      buttonVariants({
-        variant: isActive ? "outline" : "ghost",
-      }),
-      "h-9 w-9",
-      className
-    )}
-    {...props}
-  />
-);
-
-const PaginationPrevious = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink
-    aria-label="Go to previous page"
-    className={cn("gap-1 pr-2.5", className)}
-    {...props}
-  >
-    <ChevronLeft className="h-4 w-4" />
-    <span>Previous</span>
-  </PaginationLink>
-);
-
-const PaginationNext = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink
-    aria-label="Go to next page"
-    className={cn("gap-1 pl-2.5", className)}
-    {...props}
-  >
-    <span>Next</span>
-    <ChevronRight className="h-4 w-4" />
-  </PaginationLink>
-);
-
-const PaginationEllipsis = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLSpanElement>) => (
-  <span
-    aria-hidden
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
-    {...props}
-  >
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More pages</span>
-  </span>
-);
-
-export {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-};
+}
