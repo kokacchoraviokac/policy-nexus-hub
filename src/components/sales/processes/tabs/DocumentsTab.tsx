@@ -1,21 +1,19 @@
 
-import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { SalesProcess } from "@/types/salesProcess";
-import SalesProcessDocuments from "../../documents/SalesProcessDocuments";
+import React from 'react';
+import SalesProcessDocuments from '../../documents/SalesProcessDocuments';
+import { SalesProcessStage } from '@/types/sales';
 
 interface DocumentsTabProps {
-  process: SalesProcess;
+  salesProcessId: string;
+  currentStage: SalesProcessStage;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ process }) => {
-  const { t } = useLanguage();
-  
+const DocumentsTab: React.FC<DocumentsTabProps> = ({ salesProcessId, currentStage }) => {
   return (
-    <div className="pt-4">
-      <SalesProcessDocuments
-        salesProcessId={process.id}
-        currentStage={process.stage}
+    <div className="mt-4">
+      <SalesProcessDocuments 
+        salesProcessId={salesProcessId} 
+        currentStage={currentStage} 
       />
     </div>
   );

@@ -1,5 +1,5 @@
 
-export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
+export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent" | "invoice" | "addendum";
 
 export type DocumentCategory = 
   | "policy" 
@@ -7,6 +7,7 @@ export type DocumentCategory =
   | "invoice" 
   | "legal" 
   | "correspondence" 
+  | "client"
   | "other"
   | "discovery"
   | "quote"
@@ -40,11 +41,14 @@ export interface Document {
   tags?: string[];
   status?: string;
   approval_status?: DocumentApprovalStatus;
+  approval_notes?: string;
+  approved_by?: string;
+  approved_at?: string;
   uploaded_by_name?: string;
   uploaded_by_id?: string;
   file_url?: string;
-  file_type?: string;
   file_size?: number;
+  file_type?: string;
   metadata?: any;
   step?: string;
 }
@@ -56,6 +60,8 @@ export interface DocumentTableMapping {
   client: 'client_documents';
   insurer: 'insurer_documents';
   agent: 'agent_documents';
+  invoice: 'invoice_documents';
+  addendum: 'addendum_documents';
   [key: string]: string;
 }
 
@@ -68,6 +74,7 @@ export interface DocumentSearchParams {
   entityType?: EntityType;
   entityId?: string;
   status?: string;
+  filterStatus?: string;
 }
 
 export interface DocumentAnalysisPanelProps {
@@ -77,4 +84,15 @@ export interface DocumentAnalysisPanelProps {
   file?: File | null;
   onAnalysisComplete?: (result: any) => void;
   onCategoryDetected?: (category: string) => void;
+}
+
+export interface DocumentUploadRequest {
+  file: File;
+  documentName: string;
+  documentType: string;
+  category: string;
+  entityId: string;
+  entityType: EntityType;
+  originalDocumentId?: string | null;
+  currentVersion?: number;
 }

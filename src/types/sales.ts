@@ -1,26 +1,21 @@
 
-export type ProposalStatus = "draft" | "sent" | "viewed" | "accepted" | "rejected" | "expired";
+export type SalesProcessStage = 
+  | "discovery"
+  | "quote"
+  | "proposal"
+  | "contract"
+  | "closeout";
 
-export interface Proposal {
+export interface SalesProcess {
   id: string;
-  title: string;
-  clientName: string;
-  salesProcessId: string;
-  createdAt: string;
-  sentAt?: string;
-  viewedAt?: string;
-  expiresAt?: string;
-  status: ProposalStatus;
-  insurerName?: string;
-  coverageDetails?: string;
-  premium?: string;
-  notes?: string;
-  documents?: string[];
-}
-
-export interface UseProposalsDataProps {
-  salesProcessId?: string;
-  clientName?: string;
-  searchQuery?: string;
-  statusFilter?: string;
+  lead_id?: string;
+  company_id: string;
+  sales_number?: string;
+  current_step: SalesProcessStage;
+  status: string;
+  assigned_to?: string;
+  expected_close_date?: string;
+  estimated_value?: number;
+  created_at: string;
+  updated_at: string;
 }

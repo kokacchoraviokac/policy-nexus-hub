@@ -16,6 +16,12 @@ interface DocumentListProps {
   showUploadButton?: boolean;
   showApproval?: boolean;
   filterCategory?: string;
+  documents?: Document[];
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: Error;
+  onDelete?: (documentId: string | Document) => void;
+  isDeleting?: boolean;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ 
@@ -24,20 +30,34 @@ const DocumentList: React.FC<DocumentListProps> = ({
   onUploadClick,
   showUploadButton = true,
   showApproval = true,
-  filterCategory
+  filterCategory,
+  documents: providedDocuments,
+  isLoading: providedIsLoading,
+  isError: providedIsError,
+  error: providedError,
+  onDelete: providedOnDelete,
+  isDeleting: providedIsDeleting
 }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
   
+  // Use provided props if available, otherwise fetch documents using the hook
   const { 
-    documents, 
-    isLoading, 
-    error, 
-    deleteDocument, 
-    isDeletingDocument 
+    documents: fetchedDocuments, 
+    isLoading: isLoadingFetched, 
+    error: errorFetched, 
+    deleteDocument: deleteDocumentFetched, 
+    isDeletingDocument: isDeletingFetched
   } = useDocuments(entityType, entityId);
   
+  const documents = providedDocuments || fetchedDocuments;
+  const isLoading = providedIsLoading !== undefined ? providedIsLoading : isLoadingFetched;
+  const isError = providedIsError !== undefined ? providedIsError : !!errorFetched;
+  const error = providedError || errorFetched;
+  const deleteDocument = providedOnDelete || deleteDocumentFetched;
+  const isDeleting = providedIsDeleting !== undefined ? providedIsDeleting : isDeletingFetched;
+
   // Filter documents by category if filterCategory is provided
   const filteredDocuments = useMemo(() => {
     if (!filterCategory) return documents;
@@ -66,7 +86,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -110,10 +130,10 @@ const DocumentList: React.FC<DocumentListProps> = ({
         <DocumentListItem 
           key={document.id} 
           document={document}
-          onDelete={() => deleteDocument(document.id)}
-          isDeleting={isDeletingDocument}
+          onDelete={() => deleteDocument(document.id || document)}
+          isDeleting={isDeleting}
           showApproval={showApproval}
-          onUploadVersion={handleUploadVersion}
+          onUploadVersion={() => handleUploadVersion(document)}
         />
       ))}
       {showUploadButton && (

@@ -1,226 +1,225 @@
-import { BaseService, ServiceResponse } from "./BaseService";
-import { Document, DocumentCategory, EntityType, DocumentApprovalStatus } from "@/types/documents";
 
-/**
- * Document upload parameters
- */
-export interface DocumentUploadParams {
-  file: File;
-  documentName: string;
-  documentType: string;
-  category: DocumentCategory | string;
-  entityId: string;
-  entityType: EntityType;
-  originalDocumentId?: string | null;
-  currentVersion?: number;
-  additionalData?: Record<string, any>;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { Document, DocumentApprovalStatus, EntityType } from "@/types/documents";
+import { getDocumentTableName } from "@/utils/documentUploadUtils";
+import { ServiceResponse } from "@/types/services";
 
-/**
- * Document service responsible for all document operations
- */
-export class DocumentService extends BaseService {
+export class DocumentService {
   /**
-   * Upload a document
+   * Create a new document
    */
-  static async uploadDocument(params: DocumentUploadParams): Promise<ServiceResponse<Document>> {
+  static async createDocument(document: Partial<Document>): Promise<ServiceResponse<Document>> {
     try {
-      const { 
-        file, 
-        documentName, 
-        documentType, 
-        category, 
-        entityId, 
-        entityType,
-        originalDocumentId,
-        currentVersion = 0,
-        additionalData = {}
-      } = params;
-
-      // Generate a unique file path for this document
-      const fileExt = file.name.split('.').pop() || "";
-      const filePath = `${entityType}/${entityId}/${Date.now()}.${fileExt}`;
+      const tableName = getDocumentTableName(document.entity_type as EntityType);
       
-      // Create storage instance
-      const service = new DocumentService();
-      const supabase = service.getClient();
-      
-      // Upload the file to storage
-      const { data: storageData, error: storageError } = await supabase
-        .storage
-        .from('documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (storageError) {
-        throw storageError;
-      }
-
-      // Get public URL for the file
-      const { data: { publicUrl } } = supabase
-        .storage
-        .from('documents')
-        .getPublicUrl(filePath);
-      
-      // Prepare document database record
-      const isNewVersion = originalDocumentId && currentVersion > 0;
-      
-      const documentRecord = {
-        document_name: documentName,
-        document_type: documentType,
-        category,
-        file_path: filePath,
-        file_url: publicUrl,
-        file_size: file.size,
-        file_type: file.type,
-        entity_id: entityId,
-        entity_type: entityType,
-        version: isNewVersion ? currentVersion + 1 : 1,
-        original_document_id: isNewVersion ? originalDocumentId : null,
-        metadata: additionalData ? JSON.stringify(additionalData) : null,
-      };
-
-      // Save document record to database
+      // Use type assertion to prevent TypeScript errors about table names
       const { data, error } = await supabase
-        .from('documents')
-        .insert(documentRecord)
-        .select('*')
+        .from(tableName as any)
+        .insert({
+          document_name: document.document_name,
+          document_type: document.document_type,
+          category: document.category,
+          file_path: document.file_path,
+          uploaded_by: document.uploaded_by,
+          company_id: document.company_id,
+          // Include entity-specific ID field based on entity type
+          ...(document.entity_type === 'policy' && { policy_id: document.entity_id }),
+          ...(document.entity_type === 'claim' && { claim_id: document.entity_id }),
+          ...(document.entity_type === 'sales_process' && { sales_process_id: document.entity_id }),
+          is_latest_version: true,
+          version: 1
+        })
+        .select()
         .single();
-        
-      if (error) {
-        throw error;
-      }
       
-      return service.createResponse(true, data);
+      if (error) throw error;
+      
+      return {
+        success: true,
+        data: data as Document
+      };
     } catch (error) {
-      const service = new DocumentService();
-      const errorResponse = service.handleError(error);
-      service.showErrorToast(errorResponse);
-      return service.createResponse(false, undefined, errorResponse);
+      console.error("Error creating document:", error);
+      return {
+        success: false,
+        error: error as Error
+      };
     }
   }
-
+  
   /**
-   * Get documents for an entity
+   * Get all documents for a specific entity
    */
-  static async getDocuments(
-    entityType: EntityType, 
-    entityId: string
-  ): Promise<ServiceResponse<Document[]>> {
+  static async getDocuments(entityType: EntityType, entityId: string): Promise<ServiceResponse<Document[]>> {
     try {
-      const service = new DocumentService();
-      const supabase = service.getClient();
+      const tableName = getDocumentTableName(entityType);
+      let query;
       
-      const { data, error, status } = await supabase
-        .from('documents')
+      // Use type assertion to prevent TypeScript errors about table names
+      if (entityType === 'policy') {
+        query = supabase
+          .from(tableName as any)
+          .select('*')
+          .eq('policy_id', entityId);
+      } else if (entityType === 'claim') {
+        query = supabase
+          .from(tableName as any)
+          .select('*')
+          .eq('claim_id', entityId);
+      } else if (entityType === 'sales_process') {
+        query = supabase
+          .from(tableName as any)
+          .select('*')
+          .eq('sales_process_id', entityId);
+      } else {
+        // Error case - unsupported entity type
+        throw new Error(`Unsupported entity type: ${entityType}`);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return {
+        success: true,
+        data: (data || []) as Document[]
+      };
+    } catch (error) {
+      console.error("Error getting documents:", error);
+      return {
+        success: false,
+        error: error as Error
+      };
+    }
+  }
+  
+  /**
+   * Get a specific document by ID
+   */
+  static async getDocument(documentId: string, entityType: EntityType): Promise<ServiceResponse<Document>> {
+    try {
+      const tableName = getDocumentTableName(entityType);
+      
+      // Use type assertion to prevent TypeScript errors about table names
+      const { data, error } = await supabase
+        .from(tableName as any)
         .select('*')
-        .eq('entity_type', entityType)
-        .eq('entity_id', entityId)
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      return service.createResponse(true, data);
-    } catch (error) {
-      const service = new DocumentService();
-      const errorResponse = service.handleError(error);
-      return service.createResponse(false, undefined, errorResponse);
-    }
-  }
-
-  /**
-   * Delete a document
-   */
-  static async deleteDocument(documentId: string): Promise<ServiceResponse<void>> {
-    try {
-      const service = new DocumentService();
-      const supabase = service.getClient();
-      
-      // First get the document to know the file path
-      const { data: document, error: fetchError } = await supabase
-        .from('documents')
-        .select('file_path')
         .eq('id', documentId)
         .single();
       
-      if (fetchError) {
-        throw fetchError;
+      if (error) throw error;
+      
+      // Get signed URL for file if file_path exists
+      if (data && data.file_path) {
+        const { data: urlData, error: urlError } = await supabase
+          .storage
+          .from('documents')
+          .createSignedUrl(data.file_path, 60 * 60); // 1 hour expiry
+        
+        if (urlError) throw urlError;
+        
+        data.file_url = urlData.signedUrl;
       }
       
-      // Then delete from storage
-      if (document?.file_path) {
+      return {
+        success: true,
+        data: data as Document
+      };
+    } catch (error) {
+      console.error("Error getting document:", error);
+      return {
+        success: false,
+        error: error as Error
+      };
+    }
+  }
+  
+  /**
+   * Get all versions of a document
+   */
+  static async getDocumentVersions(documentId: string): Promise<ServiceResponse<Document[]>> {
+    try {
+      // First get the original document to determine the type and original ID
+      const { data: document, error } = await supabase
+        .from('documents_view')
+        .select('*')
+        .eq('id', documentId)
+        .single();
+      
+      if (error) throw error;
+      
+      const originalId = document.original_document_id || document.id;
+      const tableName = getDocumentTableName(document.entity_type as EntityType);
+      
+      // Use type assertion to prevent TypeScript errors about table names
+      const { data, error: versionsError } = await supabase
+        .from(tableName as any)
+        .select('*')
+        .or(`id.eq.${originalId},original_document_id.eq.${originalId}`)
+        .order('version', { ascending: false });
+      
+      if (versionsError) throw versionsError;
+      
+      return {
+        success: true,
+        data: (data || []) as Document[]
+      };
+    } catch (error) {
+      console.error("Error getting document versions:", error);
+      return {
+        success: false,
+        error: error as Error
+      };
+    }
+  }
+  
+  /**
+   * Delete a document
+   */
+  static async deleteDocument(documentId: string): Promise<ServiceResponse<boolean>> {
+    try {
+      // First get the document to determine which table to delete from
+      const { data: document, error: fetchError } = await supabase
+        .from('documents_view')
+        .select('*')
+        .eq('id', documentId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      const tableName = getDocumentTableName(document.entity_type as EntityType);
+      
+      // Delete the document record
+      const { error } = await supabase
+        .from(tableName as any)
+        .delete()
+        .eq('id', documentId);
+      
+      if (error) throw error;
+      
+      // Delete the file from storage if file_path exists
+      if (document.file_path) {
         const { error: storageError } = await supabase
           .storage
           .from('documents')
           .remove([document.file_path]);
         
         if (storageError) {
-          throw storageError;
+          console.warn("Failed to delete file from storage:", storageError);
+          // Continue anyway, since the database record is deleted
         }
       }
       
-      // Finally delete the record
-      const { error } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
-      
-      if (error) {
-        throw error;
-      }
-      
-      return service.createResponse(true);
+      return {
+        success: true,
+        data: true
+      };
     } catch (error) {
-      const service = new DocumentService();
-      const errorResponse = service.handleError(error);
-      service.showErrorToast(errorResponse);
-      return service.createResponse(false, undefined, errorResponse);
-    }
-  }
-
-  /**
-   * Get document versions
-   */
-  static async getDocumentVersions(
-    documentId: string
-  ): Promise<ServiceResponse<Document[]>> {
-    try {
-      const service = new DocumentService();
-      const supabase = service.getClient();
-      
-      // Get the original document ID (either the document's original_document_id or its own ID if it's the original)
-      const { data: document, error: fetchError } = await supabase
-        .from('documents')
-        .select('id, original_document_id')
-        .eq('id', documentId)
-        .single();
-      
-      if (fetchError) {
-        throw fetchError;
-      }
-      
-      const originalId = document?.original_document_id || document?.id;
-      
-      // Get all versions of this document (including the original)
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .or(`id.eq.${originalId},original_document_id.eq.${originalId}`)
-        .order('version', { ascending: false });
-      
-      if (error) {
-        throw error;
-      }
-      
-      return service.createResponse(true, data);
-    } catch (error) {
-      const service = new DocumentService();
-      const errorResponse = service.handleError(error);
-      return service.createResponse(false, undefined, errorResponse);
+      console.error("Error deleting document:", error);
+      return {
+        success: false,
+        error: error as Error
+      };
     }
   }
   
@@ -233,56 +232,44 @@ export class DocumentService extends BaseService {
     notes?: string
   ): Promise<ServiceResponse<Document>> {
     try {
-      const service = new DocumentService();
-      const supabase = service.getClient();
-      
-      // First get the document to determine the correct table
+      // First get the document to determine which table to update
       const { data: document, error: fetchError } = await supabase
-        .from('documents')
-        .select('entity_type, id')
+        .from('documents_view')
+        .select('*')
         .eq('id', documentId)
         .single();
       
-      if (fetchError) {
-        throw fetchError;
-      }
+      if (fetchError) throw fetchError;
       
-      if (!document) {
-        throw new Error('Document not found');
-      }
+      const tableName = getDocumentTableName(document.entity_type as EntityType);
       
-      // Get current user for approval tracking
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      // Prepare update data
-      const updateData = {
-        approval_status: status,
-        approval_notes: notes,
-        approved_by: user.id,
-        approved_at: new Date().toISOString()
-      };
-      
-      // Update the document
+      // Update the document with approval information
       const { data, error } = await supabase
-        .from('documents')
-        .update(updateData)
+        .from(tableName as any)
+        .update({
+          approval_status: status,
+          approval_notes: notes,
+          approved_by: (await supabase.auth.getUser()).data.user?.id,
+          approved_at: new Date().toISOString()
+        } as any)
         .eq('id', documentId)
         .select()
         .single();
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      return service.createResponse(true, data);
+      return {
+        success: true,
+        data: data as Document
+      };
     } catch (error) {
-      const service = new DocumentService();
-      const errorResponse = service.handleError(error);
-      service.showErrorToast(errorResponse);
-      return service.createResponse(false, undefined, errorResponse);
+      console.error("Error updating document status:", error);
+      return {
+        success: false,
+        error: error as Error
+      };
     }
   }
 }
+
+export default DocumentService;

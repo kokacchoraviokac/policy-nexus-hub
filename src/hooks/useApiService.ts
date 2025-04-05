@@ -8,6 +8,12 @@ export interface ErrorResponse {
   details?: any;
 }
 
+export interface ServiceOptions {
+  successMessage?: string;
+  errorMessage?: string;
+  invalidateQueryKeys?: any[][];
+}
+
 export const useApiService = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -36,11 +42,42 @@ export const useApiService = () => {
     return new Error(errorMessage);
   }, [t, toast]);
 
+  const executeService = useCallback(async <T>(
+    serviceCall: () => Promise<T>,
+    options?: ServiceOptions
+  ): Promise<T | null> => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const result = await serviceCall();
+      
+      if (options?.successMessage) {
+        toast({
+          title: t("success"),
+          description: options.successMessage
+        });
+      }
+      
+      return result;
+    } catch (err) {
+      const errMessage = typeof err === 'object' && err !== null && 'message' in err 
+        ? (err as Error).message 
+        : options?.errorMessage || t("operationFailed");
+      
+      handleApiError(errMessage);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [handleApiError, t, toast]);
+
   return {
     isLoading,
     setIsLoading,
     error,
     setError,
-    handleApiError
+    handleApiError,
+    executeService
   };
 };

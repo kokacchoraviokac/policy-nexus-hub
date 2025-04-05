@@ -1,58 +1,87 @@
 
-import { FinancialReportData, FinancialTransaction } from '@/types/reports';
+import { FinancialReportFilters, FinancialReportData } from "@/types/reports";
 
-// Helper functions for financial reports
-export const formatCurrency = (amount: number, currency = 'EUR'): string => {
+export interface FinancialTransaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  reference: string;
+  status: string;
+}
+
+export const getFilterQuery = (filters: FinancialReportFilters): string => {
+  const conditions = [];
+  
+  if (filters.dateFrom) {
+    conditions.push(`date >= '${filters.dateFrom}'`);
+  }
+  
+  if (filters.dateTo) {
+    conditions.push(`date <= '${filters.dateTo}'`);
+  }
+  
+  if (filters.insurerId) {
+    conditions.push(`insurer_id = '${filters.insurerId}'`);
+  }
+  
+  if (filters.clientId) {
+    conditions.push(`client_id = '${filters.clientId}'`);
+  }
+  
+  if (filters.agentId) {
+    conditions.push(`agent_id = '${filters.agentId}'`);
+  }
+  
+  if (filters.type) {
+    conditions.push(`type = '${filters.type}'`);
+  }
+  
+  if (filters.status) {
+    conditions.push(`status = '${filters.status}'`);
+  }
+  
+  return conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+};
+
+export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency: 'EUR'
   }).format(amount);
 };
 
-export const groupTransactionsByDate = (
-  transactions: FinancialTransaction[]
-): Record<string, FinancialTransaction[]> => {
-  return transactions.reduce((acc, transaction) => {
-    const date = transaction.date.split('T')[0]; // Get just the date part
-    if (!acc[date]) {
-      acc[date] = [];
+export const summarizeTransactions = (data: FinancialReportData[]): {
+  totalAmount: number;
+  pendingAmount: number;
+  completedAmount: number;
+} => {
+  let totalAmount = 0;
+  let pendingAmount = 0;
+  let completedAmount = 0;
+  
+  for (const item of data) {
+    totalAmount += item.amount;
+    
+    if (item.status === 'pending') {
+      pendingAmount += item.amount;
+    } else if (item.status === 'completed') {
+      completedAmount += item.amount;
     }
-    acc[date].push(transaction);
-    return acc;
-  }, {} as Record<string, FinancialTransaction[]>);
-};
-
-export const calculateTotals = (
-  data: FinancialReportData[]
-): { income: number; expenses: number; balance: number } => {
-  let income = 0;
-  let expenses = 0;
-
-  data.forEach((item) => {
-    const amount = item.amount;
-    if (amount > 0) {
-      income += amount;
-    } else {
-      expenses += Math.abs(amount);
-    }
-  });
-
+  }
+  
   return {
-    income,
-    expenses,
-    balance: income - expenses,
+    totalAmount,
+    pendingAmount,
+    completedAmount
   };
 };
 
-export const categorizeTransactions = (
-  data: FinancialReportData[]
-): Record<string, number> => {
-  return data.reduce((acc, item) => {
-    const type = item.type || 'Other';
-    if (!acc[type]) {
-      acc[type] = 0;
-    }
-    acc[type] += Math.abs(item.amount);
-    return acc;
-  }, {} as Record<string, number>);
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 };
