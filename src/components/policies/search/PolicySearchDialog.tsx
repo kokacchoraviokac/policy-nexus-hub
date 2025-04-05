@@ -18,8 +18,6 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { formatDateToLocal } from "@/utils/dateUtils";
-import LoadingState from "@/components/ui/loading-state";
 import { usePolicySearch } from "@/hooks/usePolicySearch";
 
 export interface Policy {
@@ -30,17 +28,17 @@ export interface Policy {
   expiry_date: string;
 }
 
-interface PolicySearchDialogProps {
+export interface PolicySearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPolicySelect: (policy: Policy) => void;
+  onSelect: (policy: Policy) => void;
   searchTerm?: string;
 }
 
 const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
   open,
   onOpenChange,
-  onPolicySelect,
+  onSelect,
   searchTerm: initialSearchTerm = ""
 }) => {
   const { t } = useLanguage();
@@ -59,6 +57,12 @@ const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
     if (e.target.value.length >= 3) {
       search(e.target.value);
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   };
 
   return (
@@ -81,7 +85,9 @@ const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
         
         <div className="max-h-[400px] overflow-y-auto">
           {isLoading ? (
-            <LoadingState>{t("searchingPolicies")}</LoadingState>
+            <div className="flex justify-center p-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
           ) : policies.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p>{t("noPoliciesFound")}</p>
@@ -103,12 +109,12 @@ const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
                     <TableCell className="font-medium">{policy.policy_number}</TableCell>
                     <TableCell>{policy.policyholder_name}</TableCell>
                     <TableCell>{policy.insurer_name}</TableCell>
-                    <TableCell>{formatDateToLocal(policy.expiry_date)}</TableCell>
+                    <TableCell>{formatDate(policy.expiry_date)}</TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onPolicySelect(policy)}
+                        onClick={() => onSelect(policy)}
                       >
                         {t("select")}
                       </Button>

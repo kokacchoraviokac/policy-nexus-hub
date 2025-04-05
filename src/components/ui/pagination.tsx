@@ -1,8 +1,8 @@
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 
 export interface PaginationProps extends React.HTMLAttributes<HTMLElement> {
   itemsCount: number;
@@ -11,126 +11,107 @@ export interface PaginationProps extends React.HTMLAttributes<HTMLElement> {
   onPageChange: (page: number) => void;
 }
 
-export function Pagination({
+const Pagination = ({
+  className,
   itemsCount,
   itemsPerPage,
   currentPage,
   onPageChange,
+  ...props
+}: PaginationProps) => (
+  <nav
+    className={cn("mx-auto flex w-full justify-center", className)}
+    {...props}
+  />
+);
+
+const PaginationContent = ({
   className,
   ...props
-}: PaginationProps) {
-  const totalPages = Math.ceil(itemsCount / itemsPerPage);
-  
-  const renderPageNumbers = () => {
-    let pages = [];
-    
-    // Always show first page
-    pages.push(
-      <Button
-        key="page-1"
-        variant={currentPage === 1 ? "default" : "outline"}
-        size="icon"
-        onClick={() => onPageChange(1)}
-        className="h-8 w-8"
-      >
-        1
-      </Button>
-    );
-    
-    // Handle ellipsis and middle pages
-    if (totalPages <= 7) {
-      // Show all pages if 7 or fewer
-      for (let i = 2; i < totalPages; i++) {
-        pages.push(
-          <Button
-            key={`page-${i}`}
-            variant={currentPage === i ? "default" : "outline"}
-            size="icon"
-            onClick={() => onPageChange(i)}
-            className="h-8 w-8"
-          >
-            {i}
-          </Button>
-        );
-      }
-    } else {
-      // Complex pagination with ellipsis
-      if (currentPage > 3) {
-        pages.push(
-          <span key="ellipsis-1" className="px-2">
-            ...
-          </span>
-        );
-      }
-      
-      // Calculate range of visible pages
-      const rangeStart = Math.max(2, currentPage - 1);
-      const rangeEnd = Math.min(totalPages - 1, currentPage + 1);
-      
-      for (let i = rangeStart; i <= rangeEnd; i++) {
-        pages.push(
-          <Button
-            key={`page-${i}`}
-            variant={currentPage === i ? "default" : "outline"}
-            size="icon"
-            onClick={() => onPageChange(i)}
-            className="h-8 w-8"
-          >
-            {i}
-          </Button>
-        );
-      }
-      
-      if (currentPage < totalPages - 2) {
-        pages.push(
-          <span key="ellipsis-2" className="px-2">
-            ...
-          </span>
-        );
-      }
-    }
-    
-    // Always show last page if more than 1 page
-    if (totalPages > 1) {
-      pages.push(
-        <Button
-          key={`page-${totalPages}`}
-          variant={currentPage === totalPages ? "default" : "outline"}
-          size="icon"
-          onClick={() => onPageChange(totalPages)}
-          className="h-8 w-8"
-        >
-          {totalPages}
-        </Button>
-      );
-    }
-    
-    return pages;
-  };
-  
-  return (
-    <div className={cn("flex items-center space-x-2", className)} {...props}>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-        disabled={currentPage === 1}
-        className="h-8 w-8"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      
-      {renderPageNumbers()}
-      
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
-        disabled={currentPage === totalPages || totalPages === 0}
-        className="h-8 w-8"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-}
+}: React.HTMLAttributes<HTMLUListElement>) => (
+  <ul
+    className={cn("flex flex-row items-center gap-1", className)}
+    {...props}
+  />
+);
+
+const PaginationItem = ({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLLIElement>) => (
+  <li className={cn("", className)} {...props} />
+);
+
+const PaginationLink = ({
+  className,
+  isActive = false,
+  ...props
+}: React.ComponentProps<"a"> & {
+  isActive?: boolean;
+}) => (
+  <a
+    aria-current={isActive ? "page" : undefined}
+    className={cn(
+      buttonVariants({
+        variant: isActive ? "default" : "outline",
+        size: "sm",
+      }),
+      className
+    )}
+    {...props}
+  />
+);
+
+const PaginationPrevious = ({
+  className,
+  ...props
+}: React.ComponentProps<"a">) => (
+  <a
+    aria-label="Go to previous page"
+    size="sm"
+    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1 pl-2.5", className)}
+    {...props}
+  >
+    <ChevronLeft className="h-4 w-4" />
+    <span>Previous</span>
+  </a>
+);
+
+const PaginationNext = ({
+  className,
+  ...props
+}: React.ComponentProps<"a">) => (
+  <a
+    aria-label="Go to next page"
+    size="sm"
+    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1 pr-2.5", className)}
+    {...props}
+  >
+    <span>Next</span>
+    <ChevronRight className="h-4 w-4" />
+  </a>
+);
+
+const PaginationEllipsis = ({
+  className,
+  ...props
+}: React.ComponentProps<"span">) => (
+  <span
+    aria-hidden
+    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    {...props}
+  >
+    <MoreHorizontal className="h-4 w-4" />
+    <span className="sr-only">More pages</span>
+  </span>
+);
+
+export {
+  Pagination,
+  PaginationContent,
+  PaginationLink,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+};

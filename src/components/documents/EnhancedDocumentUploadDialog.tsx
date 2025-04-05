@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Sparkles } from "lucide-react";
 import { EntityType } from "@/types/documents";
-import DocumentUploadDialog from "./DocumentUploadDialog";
+import DocumentUploadDialog from "./unified/DocumentUploadDialog";
 import DocumentAnalysisPanel from "./DocumentAnalysisPanel";
 
 interface EnhancedDocumentUploadDialogProps {
@@ -73,13 +73,11 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
               />
               
               {selectedFile && (
-                <DocumentAnalysisPanel 
-                  documentId="temp-id" // Temporary ID for analysis
-                  documentUrl="temp-url" // Temporary URL for analysis
-                  documentType={selectedFile?.type || ""}
+                <DocumentAnalysisPanel
                   file={selectedFile}
+                  documentType={selectedFile?.type || ""}
                   onCategoryDetected={(category) => {
-                    // Implement action on category detection if needed
+                    // Handle category detection
                   }}
                 />
               )}

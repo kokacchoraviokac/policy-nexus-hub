@@ -34,6 +34,14 @@ export type DocumentCategory =
   | 'certificate'
   | 'agreement'
   | 'license'
+  | 'lien'
+  | 'notification'
+  | 'claim_evidence'
+  | 'medical'
+  | 'legal'
+  | 'correspondence'
+  | 'discovery'
+  | 'closeout'
   | 'other';
 
 // Main Document interface
@@ -104,8 +112,13 @@ export interface DocumentUploadRequest {
 
 // For DocumentAnalysisPanel
 export interface DocumentAnalysisPanelProps {
-  document: Document;
-  onClose: () => void;
+  document?: Document;
+  documentId?: string;
+  documentUrl?: string;
+  documentType?: string;
+  file?: File;
+  onAnalysisComplete?: (result: any) => void;
+  onCategoryDetected?: (category: any) => void;
 }
 
 // Type for document search hook props

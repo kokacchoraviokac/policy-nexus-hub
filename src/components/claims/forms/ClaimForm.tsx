@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth/AuthContext';
 import ClaimDetailsForm from './ClaimDetailsForm';
-import PolicySearchDialog from '@/components/policies/search/PolicySearchDialog';
+import PolicySearchDialog, { Policy } from '@/components/policies/search/PolicySearchDialog';
 
 const ClaimForm: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const ClaimForm: React.FC = () => {
     notes: ''
   };
   
-  const handleSelectPolicy = (policy: any) => {
+  const handleSelectPolicy = (policy: Policy) => {
     setSelectedPolicy(policy);
     setPolicySearchOpen(false);
   };
