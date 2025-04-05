@@ -1,9 +1,10 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
-
-export type UserRole = "super_admin" | "admin" | "employee" | "agent";
+import { AuthContextType } from "./types";
+import { UserRole, CustomPrivilege } from "@/types/auth";
 
 interface UserProfile {
   id: string;
@@ -14,21 +15,28 @@ interface UserProfile {
   company_id?: string;
 }
 
-export interface AuthContextType {
-  user: User | null;
-  userProfile: UserProfile | null;
-  role: UserRole | null;
-  companyId: string | null;
-  isInitialized: boolean;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  signUp: (email: string, password: string) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  updateUserProfile: (profile: Partial<UserProfile>) => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create the context with default values
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  userProfile: null,
+  role: null,
+  companyId: null,
+  isInitialized: false,
+  isLoading: false,
+  isAuthenticated: false,
+  signUp: async () => {},
+  signIn: async () => {},
+  signOut: async () => {},
+  updateUserProfile: async () => {},
+  login: async () => ({ error: null }),
+  logout: async () => {},
+  updateUser: async () => {},
+  hasPrivilege: () => false,
+  hasPrivilegeWithContext: () => false,
+  customPrivileges: [],
+  initiatePasswordReset: async () => false,
+  updatePassword: async () => false
+});
 
 interface AuthProviderProps {
   children: React.ReactNode;

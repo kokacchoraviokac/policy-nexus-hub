@@ -1,5 +1,20 @@
 
-export type EntityType = 
+export type DocumentType = 
+  | 'policy'
+  | 'addendum'
+  | 'claim'
+  | 'invoice'
+  | 'lien'
+  | 'contract'
+  | 'image'
+  | 'other';
+
+export type DocumentApprovalStatus = 
+  | 'pending'
+  | 'approved'
+  | 'rejected';
+
+export type EntityType =
   | 'policy'
   | 'claim'
   | 'sales_process'
@@ -9,96 +24,50 @@ export type EntityType =
   | 'invoice'
   | 'addendum';
 
-export type DocumentCategory = 
-  | 'policy'
-  | 'claim'
-  | 'invoice'
-  | 'amendment'
-  | 'contract'
-  | 'identification'
-  | 'authorization'
-  | 'other';
-
-export type DocumentApprovalStatus = 
-  | 'pending'
-  | 'approved'
-  | 'rejected'
-  | 'needs_review';
-
 export interface Document {
   id: string;
   document_name: string;
   document_type: string;
   file_path: string;
   entity_type: EntityType;
-  entity_id: string; // Added this property
-  category?: DocumentCategory;
-  company_id?: string;
+  entity_id: string;
+  uploaded_by: string;
   created_at: string;
   updated_at?: string;
-  is_latest_version?: boolean;
-  version?: number;
-  original_document_id?: string;
   mime_type?: string;
+  category?: string;
+  version?: number;
+  is_latest_version?: boolean;
+  original_document_id?: string;
   approval_status?: DocumentApprovalStatus;
   approval_notes?: string;
   approved_by?: string;
   approved_at?: string;
-  uploaded_by?: string;
-  uploaded_by_name?: string;
+  company_id: string;
   description?: string; // Added this property
-  
-  // Entity-specific IDs
-  policy_id?: string;
-  claim_id?: string;
-  sales_process_id?: string;
-  client_id?: string;
-  insurer_id?: string;
-  agent_id?: string;
-  invoice_id?: string;
-  addendum_id?: string;
-  
-  // Additional fields for sales processes
-  step?: string;
 }
 
-export interface DocumentAnalysisPanelProps {
-  document?: Document;
-  documentId?: string;
-  documentUrl?: string;
-  documentType?: string;
-  file?: File;
-  onAnalysisComplete?: () => void;
-  onCategoryDetected?: (category: string) => void;
-}
-
-export interface DocumentUploadRequest {
-  documentName: string;
-  documentType: string;
-  category: DocumentCategory;
-  file: File;
+export interface DocumentListProps {
+  documents: Document[];
+  isLoading: boolean;
+  isError: boolean;
+  error?: Error | null;
+  onDelete?: (document: Document) => void;
+  isDeleting?: boolean;
+  showUploadButton?: boolean;
+  onUploadVersion?: (document: Document) => void;
   entityType: EntityType;
   entityId: string;
-  originalDocumentId?: string;
-  currentVersion?: number;
+  refetch?: () => void;
+  updateDocumentApproval?: (documentId: string, status: DocumentApprovalStatus, notes?: string) => Promise<void>;
+}
+
+export interface DocumentUploadDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entityType: EntityType;
+  entityId: string;
+  onUploadComplete: () => void;
+  defaultCategory?: string;
   salesStage?: string;
-}
-
-export interface DocumentSearchParams {
-  searchTerm?: string;
-  documentType?: string;
-  category?: string;
-  entityType?: EntityType;
-  entityId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface UseDocumentSearchProps {
-  entityType?: EntityType;
-  entityId?: string;
-  defaultParams?: Partial<DocumentSearchParams>;
-  searchTerm?: string; // Add this property
 }

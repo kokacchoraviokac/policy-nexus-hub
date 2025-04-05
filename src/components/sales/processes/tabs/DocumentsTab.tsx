@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import SalesProcessDocuments from '@/components/sales/documents/SalesProcessDocuments';
 import { SalesProcess } from '@/types/sales';
 
-interface DocumentsTabProps {
+export interface DocumentsTabProps {
   salesProcess: SalesProcess;
   salesStage: string;
 }

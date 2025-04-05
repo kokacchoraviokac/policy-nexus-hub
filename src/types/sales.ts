@@ -25,6 +25,11 @@ export interface Proposal {
   expires_at?: string;
   accepted_at?: string;
   rejected_at?: string;
+  // Added aliased properties for compatibility
+  clientName?: string;
+  coverageDetails?: string;
+  createdAt?: string;
+  insurerName?: string;
 }
 
 export interface SalesProcess {
@@ -45,6 +50,8 @@ export interface SalesProcess {
 export interface UseProposalsDataProps {
   sales_process_id?: string;
   status?: ProposalStatus;
+  salesProcessId?: string; // Alias for sales_process_id
+  searchQuery?: string; // Added for search functionality
 }
 
 export interface SalesProcessDocumentsProps {
