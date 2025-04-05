@@ -1,90 +1,78 @@
 
 import { z } from "zod";
 
-// Base schemas
-export const nameSchema = (errorMessage = "Name is required") =>
-  z.string().min(1, { message: errorMessage }).max(100);
+// Basic schemas
+export const nameSchema = z.object({
+  name: z.string().min(1, "Name is required")
+});
 
-export const emailSchema = (errorMessage = "Invalid email format") =>
-  z.string().email({ message: errorMessage });
+export const emailSchema = z.object({
+  email: z.string().email("Invalid email format")
+});
 
-export const passwordSchema = (errorMessage = "Password must be at least 6 characters") =>
-  z.string().min(6, { message: errorMessage });
+export const passwordSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters")
+});
 
-export const confirmPasswordSchema = (errorMessage = "Passwords must match") =>
-  z.string().min(1, { message: errorMessage });
+export const confirmPasswordSchema = z.object({
+  confirmPassword: z.string()
+}).refine((data) => data.confirmPassword === passwordSchema.shape.password, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
+});
 
-export const phoneSchema = (errorMessage = "Phone number is required") =>
-  z.string().min(1, { message: errorMessage });
+export const phoneSchema = z.string().optional();
 
-export const addressSchema = (errorMessage = "Address is required") =>
-  z.string().min(1, { message: errorMessage });
+export const addressSchema = z.string().optional();
 
-export const citySchema = (errorMessage = "City is required") =>
-  z.string().min(1, { message: errorMessage });
+export const citySchema = z.string().optional();
 
-export const postalCodeSchema = (errorMessage = "Postal code is required") =>
-  z.string().min(1, { message: errorMessage });
+export const postalCodeSchema = z.string().optional();
 
-export const countrySchema = (errorMessage = "Country is required") =>
-  z.string().min(1, { message: errorMessage });
+export const countrySchema = z.string().optional();
 
-export const taxIdSchema = (errorMessage = "Tax ID is required") =>
-  z.string().min(1, { message: errorMessage });
+export const taxIdSchema = z.string().optional();
 
-export const registrationNumberSchema = (errorMessage = "Registration number is required") =>
-  z.string().min(1, { message: errorMessage });
+export const registrationNumberSchema = z.string().optional();
 
-export const notesSchema = () =>
-  z.string().optional();
+export const notesSchema = z.string().optional();
 
-export const isActiveSchema = () =>
-  z.boolean().default(true);
+export const isActiveSchema = z.boolean().default(true);
 
-export const currencySchema = (errorMessage = "Currency is required") =>
-  z.string().min(1, { message: errorMessage });
+export const currencySchema = z.string().min(1, "Currency is required");
 
-export const dateSchema = (errorMessage = "Date is required") =>
-  z.string().min(1, { message: errorMessage });
+export const dateSchema = z.string().optional();
 
-export const premiumSchema = (errorMessage = "Premium must be greater than 0") =>
-  z.number().min(0.01, { message: errorMessage });
+export const premiumSchema = z.number().nonnegative("Premium must be a positive number");
 
-export const percentageSchema = (errorMessage = "Percentage must be between 0 and 100") =>
-  z.number().min(0, { message: "Percentage must be at least 0" }).max(100, { message: "Percentage cannot exceed 100" });
+export const percentageSchema = z.number().min(0).max(100, "Percentage must be between 0 and 100");
 
-export const claimStatusSchema = (errorMessage = "Status is required") =>
-  z.enum(["in_processing", "reported", "accepted", "partially_accepted", "rejected", "appealed", "withdrawn"], { 
-    errorMap: () => ({ message: errorMessage }) 
-  });
+export const policyNumberSchema = z.string().min(1, "Policy number is required");
 
-export const damageDescriptionSchema = (errorMessage = "Damage description is required") =>
-  z.string().min(1, { message: errorMessage });
+export const claimStatusSchema = z.enum([
+  "in_processing", 
+  "reported", 
+  "accepted", 
+  "rejected", 
+  "partially_accepted", 
+  "appealed", 
+  "withdrawn"
+]);
 
-export const claimAmountSchema = (errorMessage = "Claim amount must be greater than 0") =>
-  z.number().min(0.01, { message: errorMessage });
+export const damageDescriptionSchema = z.string().min(1, "Damage description is required");
 
-// Helper function to create model-related schema (for foreign keys)
-export function createModelSchema(modelName: string, options: { 
-  isRequired?: boolean; 
-  errorMessage?: string;
-}) {
-  const schema = z.string().refine(val => !options.isRequired || val.length > 0, {
-    message: options.errorMessage || `${modelName} is required`
-  });
-  
-  return schema;
-}
+export const claimAmountSchema = z.number().positive("Claim amount must be a positive number");
 
-// Complex schema creator with generic type support
-export function createZodSchema<T extends z.ZodType>(baseSchema: T) {
-  return {
-    extend: (extendSchema: z.ZodObject<any>) => {
-      // This is a simple implementation that merges schemas
-      return z.object({
-        ...baseSchema.shape,
-        ...extendSchema.shape
-      });
-    }
-  };
-}
+// Factory function for creating model schemas
+export const createModelSchema = <T extends z.ZodType<any, any>>(
+  baseSchema: T,
+  additionalFields: z.ZodRawShape = {}
+) => {
+  return baseSchema.extend(additionalFields);
+};
+
+// Extract schema types
+export type NameSchema = z.infer<typeof nameSchema>;
+export type EmailSchema = z.infer<typeof emailSchema>;
+export type PasswordSchema = z.infer<typeof passwordSchema>;
+export type ConfirmPasswordSchema = z.infer<typeof confirmPasswordSchema>;

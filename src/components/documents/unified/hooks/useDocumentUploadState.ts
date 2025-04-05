@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { DocumentCategory, EntityType } from "@/types/documents";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DocumentService } from "@/services/DocumentService";
 
@@ -63,7 +63,11 @@ export const useDocumentUploadState = (props: UseDocumentUploadStateProps) => {
       });
       
       if (!result.success) {
-        throw new Error(result.error || t("documentUploadFailed"));
+        const errorMessage = typeof result.error === 'string' 
+          ? result.error 
+          : t("documentUploadFailed");
+          
+        throw new Error(errorMessage);
       }
       
       toast({

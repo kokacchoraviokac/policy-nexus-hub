@@ -1,150 +1,163 @@
 
-import { useState, useCallback } from 'react';
-import { Policy } from '@/types/policies';
-import { useAuthStore } from '@/stores/authStore';
-import { parseCsv } from '@/utils/policies/policyImportUtils';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Policy } from "@/types/policies";
+import { getUser } from "@/stores/authStore";
+import Papa from "papaparse";
 
-// To handle validation errors by row
-interface ValidationErrors {
-  [key: number]: string[];
+export type ValidationErrors = Record<number, string[]>;
+
+export interface CsvRow {
+  policy_number: string;
+  policy_type: string;
+  insurer_id: string;
+  insurer_name: string;
+  product_id: string;
+  product_name: string;
+  client_id: string;
+  policyholder_name: string;
+  insured_name: string;
+  start_date: string;
+  expiry_date: string;
+  premium: string;
+  currency: string;
+  payment_frequency: string;
+  commission_type: string;
+  commission_percentage: string;
+  notes: string;
 }
 
-export const usePolicyImport = () => {
-  const { t } = useLanguage();
-  const { toast } = useToast();
+const usePolicyImport = () => {
   const [importedPolicies, setImportedPolicies] = useState<Partial<Policy>[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [isImporting, setIsImporting] = useState(false);
-  const { user, companyId } = useAuthStore();
-  
+
+  // Convert validation errors to required format for components
+  const invalidPolicies: number[] = Object.keys(validationErrors).map(key => parseInt(key, 10));
+
   const handleFileSelect = async (file: File) => {
-    if (!file || !companyId) return;
-    
     setIsImporting(true);
     
     try {
-      const { policies, errors } = await parseCsv(file);
-      
-      if (errors && Object.keys(errors).length > 0) {
-        setValidationErrors(errors);
-      }
-      
-      // Map the parsed data to Policy objects
-      const mappedPolicies = policies.map(item => ({
-        policy_number: item.policy_number,
-        policy_type: item.policy_type || 'standard',
-        insurer_id: item.insurer_id || null,
-        insurer_name: item.insurer_name,
-        product_id: item.product_id || null, // Use product_id consistently
-        product_name: item.product_name || null,
-        client_id: item.client_id || null,
-        policyholder_name: item.policyholder_name,
-        insured_id: item.insured_id || null,
-        insured_name: item.insured_name || item.policyholder_name,
-        start_date: item.start_date,
-        expiry_date: item.expiry_date,
-        premium: parseFloat(item.premium || '0'),
-        currency: item.currency || 'EUR',
-        payment_frequency: item.payment_frequency || null,
-        commission_type: item.commission_type || 'manual',
-        commission_percentage: item.commission_percentage ? parseFloat(item.commission_percentage) : null,
-        commission_amount: null, // Will be calculated later
-        status: 'active',
-        workflow_status: 'in_review',
-        notes: item.notes || null,
-        company_id: companyId,
-        created_by: user?.id || null
-      }));
-      
-      setImportedPolicies(mappedPolicies);
-      
-      toast({
-        title: t('importProcessed'),
-        description: t('policiesReadyForReview', { count: mappedPolicies.length })
+      // Read and parse CSV file
+      const text = await file.text();
+      Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const { data, errors } = results;
+          
+          if (errors.length > 0) {
+            console.error("CSV parsing errors:", errors);
+            return;
+          }
+          
+          // Validate and transform the data
+          const { parsedPolicies, errors: validationErrors } = validateAndTransformPolicies(data as CsvRow[]);
+          
+          setImportedPolicies(parsedPolicies);
+          setValidationErrors(validationErrors);
+        },
+        error: (error) => {
+          console.error("CSV parsing error:", error);
+        }
       });
     } catch (error) {
-      console.error('Error processing CSV:', error);
-      toast({
-        title: t('importError'),
-        description: typeof error === 'string' ? error : (error as Error).message,
-        variant: 'destructive'
-      });
+      console.error("Error reading file:", error);
     } finally {
       setIsImporting(false);
     }
   };
   
-  const parseCSVFile = async (file: File) => {
-    return handleFileSelect(file);
+  const validateAndTransformPolicies = (rows: CsvRow[]): { 
+    parsedPolicies: Partial<Policy>[]; 
+    errors: ValidationErrors;
+  } => {
+    const parsedPolicies: Partial<Policy>[] = [];
+    const errors: ValidationErrors = {};
+    
+    rows.forEach((row, index) => {
+      const rowErrors: string[] = [];
+      
+      // Validate required fields
+      if (!row.policy_number) rowErrors.push("Policy number is required");
+      if (!row.policyholder_name) rowErrors.push("Policyholder name is required");
+      if (!row.insurer_name) rowErrors.push("Insurer name is required");
+      if (!row.start_date) rowErrors.push("Start date is required");
+      if (!row.expiry_date) rowErrors.push("Expiry date is required");
+      if (!row.premium) rowErrors.push("Premium is required");
+      
+      // Transform to policy object
+      const policy: Partial<Policy> = {
+        policy_number: row.policy_number,
+        policy_type: row.policy_type,
+        insurer_id: row.insurer_id,
+        insurer_name: row.insurer_name,
+        product_id: row.product_id || null,
+        product_name: row.product_name || null,
+        client_id: row.client_id,
+        policyholder_name: row.policyholder_name,
+        insured_name: row.insured_name || null,
+        start_date: row.start_date,
+        expiry_date: row.expiry_date,
+        premium: parseFloat(row.premium) || 0,
+        currency: row.currency || "EUR",
+        payment_frequency: row.payment_frequency || null,
+        commission_type: row.commission_type || null,
+        commission_percentage: row.commission_percentage ? parseFloat(row.commission_percentage) : null,
+        commission_amount: 0, // Will be calculated based on percentage
+        notes: row.notes || null,
+        status: "active",
+        workflow_status: "review"
+      };
+      
+      // Calculate commission amount if percentage is provided
+      if (policy.commission_percentage && policy.premium) {
+        policy.commission_amount = (policy.commission_percentage / 100) * policy.premium;
+      }
+      
+      parsedPolicies.push(policy);
+      
+      if (rowErrors.length > 0) {
+        errors[index] = rowErrors;
+      }
+    });
+    
+    return { parsedPolicies, errors };
   };
   
-  const handleFileDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles && acceptedFiles.length > 0) {
-      handleFileSelect(acceptedFiles[0]);
-    }
-  };
-  
-  const savePolicies = async () => {
+  const savePolicies = async (): Promise<boolean> => {
     if (importedPolicies.length === 0) return false;
     
     setIsImporting(true);
     
     try {
-      // Filter out policies with validation errors
-      const validPolicies = importedPolicies.filter((_, index) => 
-        !validationErrors[index] || validationErrors[index].length === 0
-      );
+      const user = getUser();
       
-      if (validPolicies.length === 0) {
-        toast({
-          title: t('noValidPolicies'),
-          description: t('pleaseFixValidationErrors'),
-          variant: 'destructive'
-        });
-        return false;
-      }
+      // Prepare policies with required fields
+      const policiesToSave = importedPolicies.map(policy => ({
+        ...policy,
+        company_id: user.company_id,
+        created_by: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
       
-      // Calculate commission amount for policies with percentage
-      const policiesWithCommissions = validPolicies.map(policy => {
-        let commissionAmount = null;
-        if (policy.commission_percentage && policy.premium) {
-          commissionAmount = (policy.premium * policy.commission_percentage) / 100;
+      // Insert policies one by one to handle errors better
+      for (const policy of policiesToSave) {
+        const { error } = await supabase
+          .from('policies')
+          .insert(policy);
+          
+        if (error) {
+          console.error("Error saving policy:", error);
+          return false;
         }
-        return {
-          ...policy,
-          commission_amount: commissionAmount
-        };
-      });
-      
-      // Save policies to database
-      const { data, error } = await supabase
-        .from('policies')
-        .insert(policiesWithCommissions);
-      
-      if (error) {
-        throw error;
       }
-      
-      toast({
-        title: t('importSuccess'),
-        description: t('policiesSuccessfullyImported', { count: validPolicies.length })
-      });
-      
-      // Clear the imported data
-      setImportedPolicies([]);
-      setValidationErrors({});
       
       return true;
     } catch (error) {
-      console.error('Error saving policies:', error);
-      toast({
-        title: t('importError'),
-        description: typeof error === 'string' ? error : (error as Error).message,
-        variant: 'destructive'
-      });
+      console.error("Error saving policies:", error);
       return false;
     } finally {
       setIsImporting(false);
@@ -156,29 +169,24 @@ export const usePolicyImport = () => {
     setValidationErrors({});
   };
   
+  const handleFileDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles.length > 0) {
+      handleFileSelect(acceptedFiles[0]);
+    }
+  };
+  
   const downloadTemplate = () => {
-    // Generate a template CSV for policy import
-    const headers = [
-      'policy_number', 'policy_type', 'insurer_name', 'product_name', 'product_id',
-      'policyholder_name', 'insured_name', 'start_date', 'expiry_date',
-      'premium', 'currency', 'payment_frequency', 'commission_type', 
-      'commission_percentage', 'notes'
-    ];
-    
     const csvContent = [
-      headers.join(','),
-      'POL-12345,standard,Example Insurance Co,Car Insurance,PROD-001,John Doe,John Doe,2023-01-01,2024-01-01,1000,EUR,annual,manual,10,Example policy',
-      'POL-67890,special,Another Insurer,Home Insurance,PROD-002,Jane Smith,Jane Smith,2023-02-15,2024-02-15,1500,USD,monthly,automatic,12,Second example'
-    ].join('\n');
+      "policy_number,policy_type,insurer_name,policyholder_name,insured_name,start_date,expiry_date,premium,currency,payment_frequency,commission_type,commission_percentage,notes",
+      "POL-001,Life,Insurer Co,John Doe,Jane Doe,2023-01-01,2024-01-01,1000,EUR,annual,percentage,10,Sample policy"
+    ].join("\n");
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'policy_import_template.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'policy_import_template.csv');
+    a.click();
   };
   
   return {
@@ -190,7 +198,8 @@ export const usePolicyImport = () => {
     savePolicies,
     clearImportData,
     downloadTemplate,
-    parseCSVFile,
-    invalidPolicies: Object.keys(validationErrors).map(k => parseInt(k))
+    invalidPolicies
   };
 };
+
+export { usePolicyImport };

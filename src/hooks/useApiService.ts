@@ -1,68 +1,46 @@
 
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { ServiceResponse } from "@/services/BaseService";
-import { toast } from "sonner";
+import { useState, useCallback } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-/**
- * Generic hook for handling API service calls with loading states and error handling
- */
-export function useApiService() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const queryClient = useQueryClient();
+export interface ErrorResponse {
+  message: string;
+  details?: any;
+}
+
+export const useApiService = () => {
+  const { toast } = useToast();
   const { t } = useLanguage();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  /**
-   * Execute a service call and handle loading/error states
-   */
-  const executeService = async <T>(
-    serviceCall: () => Promise<ServiceResponse<T>>,
-    options?: {
-      successMessage?: string;
-      errorMessage?: string;
-      invalidateQueryKeys?: string[][];
+  const handleApiError = useCallback((error: string | Record<string, any>) => {
+    let errorMessage: string;
+    
+    if (typeof error === "string") {
+      errorMessage = error;
+    } else if (error && typeof error === "object" && "message" in error) {
+      errorMessage = error.message as string;
+    } else {
+      errorMessage = t("unknownError");
     }
-  ): Promise<T | null> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await serviceCall();
-
-      if (!response.success) {
-        throw response.error?.message || t("unknownError");
-      }
-
-      if (options?.successMessage) {
-        toast.success(options.successMessage);
-      }
-
-      // Invalidate queries if specified
-      if (options?.invalidateQueryKeys) {
-        for (const queryKey of options.invalidateQueryKeys) {
-          queryClient.invalidateQueries({ queryKey });
-        }
-      }
-
-      return response.data || null;
-    } catch (err: any) {
-      const errorMessage = options?.errorMessage || err?.message || t("unknownError");
-      setError(errorMessage);
-
-      // Toast the error message unless explicitly disabled
-      toast.error(errorMessage);
-      
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    
+    setError(new Error(errorMessage));
+    
+    toast({
+      title: t("error"),
+      description: errorMessage,
+      variant: "destructive"
+    });
+    
+    return new Error(errorMessage);
+  }, [t, toast]);
 
   return {
     isLoading,
+    setIsLoading,
     error,
-    executeService
+    setError,
+    handleApiError
   };
-}
+};

@@ -72,13 +72,17 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
                 onFileSelected={handleFileSelected}
               />
               
-              <DocumentAnalysisPanel 
-                file={selectedFile}
-                documentType="policy"
-                onCategoryDetected={(category) => {
-                  // Implement action on category detection if needed
-                }}
-              />
+              {selectedFile && (
+                <DocumentAnalysisPanel 
+                  documentId="temp-id" // Temporary ID for analysis
+                  documentUrl="temp-url" // Temporary URL for analysis
+                  documentType={selectedFile?.type || ""}
+                  file={selectedFile}
+                  onCategoryDetected={(category) => {
+                    // Implement action on category detection if needed
+                  }}
+                />
+              )}
             </div>
           </TabsContent>
         </Tabs>

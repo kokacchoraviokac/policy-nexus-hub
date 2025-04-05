@@ -6,19 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
 import AnalysisTabs from "./analysis/AnalysisTabs";
 import AnalysisTabsList from "./analysis/AnalysisTabsList";
-
-interface DocumentAnalysisPanelProps {
-  documentId: string;
-  documentUrl: string;
-  documentType: string;
-  file?: File | null; // Make file optional
-  onAnalysisComplete?: (result: any) => void;
-  onCategoryDetected?: (category: string) => void;
-}
+import { DocumentAnalysisPanelProps } from "@/types/documents";
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
-  documentId,
-  documentUrl,
+  documentId = "",  // Provide default value
+  documentUrl = "", // Provide default value
   documentType,
   file,
   onAnalysisComplete,

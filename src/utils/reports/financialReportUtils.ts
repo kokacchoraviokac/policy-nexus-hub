@@ -1,92 +1,58 @@
 
-import { Transaction } from "@/hooks/reports/useFinancialReport";
+import { FinancialReportData, FinancialTransaction } from '@/types/reports';
 
-// Define the FinancialTransaction type for use in the report components
-export interface FinancialTransaction {
-  id: string;
-  date: string;
-  description: string;
-  type: string;
-  category: string;
-  amount: number;
-  status: string;
-  reference?: string;
-  currency: string;
-}
-
-// Define the FinancialReportFilters interface
-export interface FinancialReportFilters {
-  startDate?: Date;
-  endDate?: Date;
-  transactionType?: string;
-  category?: string;
-  searchTerm?: string;
-}
-
-/**
- * Exports financial transactions to CSV format and triggers a download
- */
-export const exportFinancialReportToCsv = (data: Transaction[], filename = "financial-report.csv") => {
-  // Define CSV headers
-  const headers = [
-    "Date",
-    "Description",
-    "Type",
-    "Category",
-    "Amount",
-    "Status",
-    "Reference"
-  ];
-  
-  // Map transaction data to CSV rows
-  const rows = data.map(transaction => [
-    transaction.date,
-    transaction.description,
-    transaction.type,
-    transaction.category,
-    transaction.amount.toString(),
-    transaction.status,
-    transaction.reference || ""
-  ]);
-  
-  // Combine headers and rows
-  const csvContent = [
-    headers.join(","),
-    ...rows.map(row => row.map(cell => 
-      // Escape special characters and wrap in quotes if needed
-      cell.includes(",") || cell.includes("\"") || cell.includes("\n") 
-        ? `"${cell.replace(/"/g, '""')}"` 
-        : cell
-    ).join(","))
-  ].join("\n");
-  
-  // Create a blob and download link
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  
-  // Create a link element and trigger download
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", filename);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  // Clean up the URL object
-  setTimeout(() => URL.revokeObjectURL(url), 100);
+// Helper functions for financial reports
+export const formatCurrency = (amount: number, currency = 'EUR'): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(amount);
 };
 
-// Convert Transaction from useFinancialReport to FinancialTransaction
-export const mapToFinancialTransaction = (transaction: Transaction): FinancialTransaction => {
+export const groupTransactionsByDate = (
+  transactions: FinancialTransaction[]
+): Record<string, FinancialTransaction[]> => {
+  return transactions.reduce((acc, transaction) => {
+    const date = transaction.date.split('T')[0]; // Get just the date part
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(transaction);
+    return acc;
+  }, {} as Record<string, FinancialTransaction[]>);
+};
+
+export const calculateTotals = (
+  data: FinancialReportData[]
+): { income: number; expenses: number; balance: number } => {
+  let income = 0;
+  let expenses = 0;
+
+  data.forEach((item) => {
+    const amount = item.amount;
+    if (amount > 0) {
+      income += amount;
+    } else {
+      expenses += Math.abs(amount);
+    }
+  });
+
   return {
-    id: transaction.id,
-    date: transaction.date,
-    description: transaction.description,
-    type: transaction.type,
-    category: transaction.category,
-    amount: transaction.amount,
-    status: transaction.status,
-    reference: transaction.reference,
-    currency: "EUR" // Default currency, can be adjusted as needed
+    income,
+    expenses,
+    balance: income - expenses,
   };
+};
+
+export const categorizeTransactions = (
+  data: FinancialReportData[]
+): Record<string, number> => {
+  return data.reduce((acc, item) => {
+    const type = item.type || 'Other';
+    if (!acc[type]) {
+      acc[type] = 0;
+    }
+    acc[type] += Math.abs(item.amount);
+    return acc;
+  }, {} as Record<string, number>);
 };

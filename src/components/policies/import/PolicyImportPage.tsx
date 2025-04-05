@@ -10,22 +10,36 @@ import PolicyImportFileUpload from "./PolicyImportFileUpload";
 import PolicyImportReview from "./PolicyImportReview";
 import PolicyImportInstructions from "./PolicyImportInstructions";
 import { useNavigate } from "react-router-dom";
+import { Policy } from "@/types/policies";
+
+interface InvalidPolicy {
+  policy: Partial<Policy>;
+  errors: string[];
+}
 
 const PolicyImportPage: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("upload");
   const { 
-    isImporting, 
     importedPolicies, 
-    invalidPolicies, 
-    parseCSVFile, 
-    savePolicies, 
-    clearImportData 
+    validationErrors, 
+    handleFileSelect, 
+    isImporting, 
+    savePolicies,
+    clearImportData
   } = usePolicyImport();
 
+  // Convert validation errors to the expected format
+  const invalidPolicies: InvalidPolicy[] = Object.entries(validationErrors).map(
+    ([index, errors]) => ({
+      policy: importedPolicies[parseInt(index, 10)] || {},
+      errors
+    })
+  );
+
   const handleFileUpload = async (file: File) => {
-    await parseCSVFile(file);
+    await handleFileSelect(file);
     // If we have valid policies, switch to the review tab
     if (importedPolicies.length > 0) {
       setActiveTab("review");

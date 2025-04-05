@@ -35,7 +35,7 @@ export interface PolicyAddendum {
   effective_date: string;
   description: string;
   premium_adjustment?: number;
-  lien_status?: boolean; // Make this optional to fix type error
+  lien_status: boolean; // Changed from optional to required
   status: string;
   workflow_status: string;
   policy_id: string;
