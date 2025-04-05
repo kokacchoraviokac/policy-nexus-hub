@@ -1,26 +1,40 @@
 
-export type EntityType = "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent" | "invoice" | "addendum";
+// Define the types of entities a document can be associated with
+export type EntityType = 
+  | 'policy'
+  | 'claim'
+  | 'sales_process'
+  | 'client'
+  | 'insurer'
+  | 'agent';
 
-export type DocumentCategory = 
-  | "policy" 
-  | "claim" 
-  | "invoice" 
-  | "legal" 
-  | "correspondence" 
-  | "client"
-  | "other"
-  | "discovery"
-  | "quote"
-  | "proposal"
-  | "contract"
-  | "closeout";
-
+// Document approval status options
 export type DocumentApprovalStatus = 
-  | "pending" 
-  | "approved" 
-  | "rejected" 
-  | "needs_review";
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'needs_review';
 
+// Document category options
+export type DocumentCategory = 
+  | 'policy'
+  | 'claim'
+  | 'quote'
+  | 'proposal'
+  | 'contract'
+  | 'invoice'
+  | 'amendment'
+  | 'authorization'
+  | 'identification'
+  | 'financial'
+  | 'report'
+  | 'evidence'
+  | 'certificate'
+  | 'agreement'
+  | 'license'
+  | 'other';
+
+// Main Document interface
 export interface Document {
   id: string;
   document_name: string;
@@ -28,71 +42,48 @@ export interface Document {
   file_path: string;
   entity_type: EntityType;
   entity_id: string;
+  
+  // User info
   uploaded_by: string;
+  uploaded_by_id?: string;
+  uploaded_by_name?: string;
   company_id: string;
-  category?: DocumentCategory;
+  
+  // Metadata
   created_at: string;
-  updated_at?: string;
+  category?: DocumentCategory | string;
+  description?: string;
+  status?: string;
+  tags?: string[];
+  
+  // Version control
   version?: number;
   is_latest_version?: boolean;
   original_document_id?: string | null;
-  mime_type?: string;
-  description?: string;
-  tags?: string[];
-  status?: string;
+  
+  // Technical details
+  mime_type?: string | null;
+  file_size?: number;
+  file_extension?: string;
+  
+  // Approval information
   approval_status?: DocumentApprovalStatus;
   approval_notes?: string;
   approved_by?: string;
   approved_at?: string;
-  uploaded_by_name?: string;
-  uploaded_by_id?: string;
-  file_url?: string;
-  file_size?: number;
-  file_type?: string;
-  metadata?: any;
-  step?: string;
 }
 
-export interface DocumentTableMapping {
-  policy: 'policy_documents';
-  claim: 'claim_documents';
-  sales_process: 'sales_documents';
-  client: 'client_documents';
-  insurer: 'insurer_documents';
-  agent: 'agent_documents';
-  invoice: 'invoice_documents';
-  addendum: 'addendum_documents';
-  [key: string]: string;
-}
-
+// Type for document search parameters
 export interface DocumentSearchParams {
   searchTerm?: string;
-  category?: string;
+  page?: number;
+  pageSize?: number;
   documentType?: string;
-  dateFrom?: string;
-  dateTo?: string;
+  category?: string;
   entityType?: EntityType;
   entityId?: string;
   status?: string;
-  filterStatus?: string;
-}
-
-export interface DocumentAnalysisPanelProps {
-  documentId: string;
-  documentUrl: string;
-  documentType: string;
-  file?: File | null;
-  onAnalysisComplete?: (result: any) => void;
-  onCategoryDetected?: (category: string) => void;
-}
-
-export interface DocumentUploadRequest {
-  file: File;
-  documentName: string;
-  documentType: string;
-  category: string;
-  entityId: string;
-  entityType: EntityType;
-  originalDocumentId?: string | null;
-  currentVersion?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  uploadedBy?: string;
 }

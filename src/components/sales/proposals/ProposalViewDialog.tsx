@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -36,7 +37,7 @@ const ProposalViewDialog: React.FC<ProposalViewDialogProps> = ({
           <div className="flex justify-between items-center">
             <div className="flex items-center text-sm text-muted-foreground">
               <Calendar className="h-4 w-4 mr-1" />
-              {formatDateTime(proposal.createdAt)}
+              {formatDateTime(proposal.created_at)}
             </div>
             <Badge className="ml-2">{t(proposal.status)}</Badge>
           </div>
@@ -46,7 +47,7 @@ const ProposalViewDialog: React.FC<ProposalViewDialogProps> = ({
               <div className="text-sm font-medium">{t("clientDetails")}</div>
               <div className="flex items-center text-sm">
                 <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                {proposal.clientName}
+                {proposal.client_name}
               </div>
             </div>
             
@@ -86,11 +87,11 @@ const ProposalViewDialog: React.FC<ProposalViewDialogProps> = ({
             </div>
           )}
           
-          {proposal.documents && proposal.documents.length > 0 && (
+          {proposal.document_ids && proposal.document_ids.length > 0 && (
             <div className="space-y-2">
               <div className="text-sm font-medium">{t("attachedDocuments")}</div>
               <div className="space-y-1">
-                {proposal.documents.map((doc, index) => (
+                {proposal.document_ids.map((doc, index) => (
                   <div key={index} className="flex items-center text-sm">
                     <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
                     <span>{doc}</span>
@@ -100,21 +101,21 @@ const ProposalViewDialog: React.FC<ProposalViewDialogProps> = ({
             </div>
           )}
           
-          {proposal.sentAt && (
+          {proposal.sent_at && (
             <div className="text-sm text-muted-foreground">
-              {t("sentAt")}: {formatDateTime(proposal.sentAt)}
+              {t("sentAt")}: {formatDateTime(proposal.sent_at)}
             </div>
           )}
           
-          {proposal.viewedAt && (
+          {proposal.viewed_at && (
             <div className="text-sm text-muted-foreground">
-              {t("viewedAt")}: {formatDateTime(proposal.viewedAt)}
+              {t("viewedAt")}: {formatDateTime(proposal.viewed_at)}
             </div>
           )}
           
-          {proposal.expiresAt && (
+          {proposal.expires_at && (
             <div className="text-sm text-muted-foreground">
-              {t("expiresAt")}: {formatDateTime(proposal.expiresAt)}
+              {t("expiresAt")}: {formatDateTime(proposal.expires_at)}
             </div>
           )}
         </div>

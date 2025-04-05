@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCompanies } from '@/hooks/useCompanies';
-import { useInvitations, Invitation } from '@/hooks/useInvitations';
+import { useInvitations } from '@/hooks/useInvitations';
 import { useCreateInvitation } from '@/hooks/useCreateInvitation';
-import { DataTable } from '@/components/ui/data-table';
+import DataTable from '@/components/ui/data-table';
 import { columns } from './invitations/InvitationColumns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,41 +13,40 @@ import { useToast } from '@/hooks/use-toast';
 import { createInviteFormSchema } from './invitations/CreateInvitationForm';
 import CreateInvitationForm from './invitations/CreateInvitationForm';
 import { useAuth } from '@/contexts/auth/AuthContext';
-import Pagination from '@/components/ui/pagination';
+import { Pagination } from '@/components/ui/pagination';
 
 const InvitationManagement: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(10);
   
-  const { user, userProfile } = useAuth();
-  const isSuperAdmin = userProfile?.role === 'super_admin';
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'super_admin';
   
-  const { companies, isLoading: isLoadingCompanies } = useCompanies();
+  const { companies, loading: isLoadingCompanies } = useCompanies();
   const { 
     invitations, 
-    isLoading: isLoadingInvitations,
-    refetch: refetchInvitations,
-    totalInvitations 
-  } = useInvitations({ 
-    page: currentPage,
-    pageSize: itemsPerPage
-  });
+    loading: isLoadingInvitations,
+    getInvitations
+  } = useInvitations();
+  
+  // Mock these values until they are properly implemented
+  const totalInvitations = invitations.length;
   
   const { createInvitation, isSubmitting } = useCreateInvitation();
   
   const handleCreateInvitation = async (data: any) => {
     try {
       await createInvitation({
-        email: data.email as string,
-        role: data.role as string,
-        company_id: data.company_id as string
+        email: data.email,
+        role: data.role,
+        company_id: data.company_id
       });
       
       setDialogOpen(false);
-      refetchInvitations();
+      getInvitations();
       
       toast({
         title: t('invitationSent'),
@@ -85,7 +84,7 @@ const InvitationManagement: React.FC = () => {
             <CreateInvitationForm
               companies={companies || []}
               isSuperAdmin={isSuperAdmin}
-              defaultCompanyId={userProfile?.company_id}
+              defaultCompanyId={user?.company_id}
               isSubmitting={isSubmitting}
               onSubmit={handleCreateInvitation}
             />

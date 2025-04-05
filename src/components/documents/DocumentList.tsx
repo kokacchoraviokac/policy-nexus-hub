@@ -20,7 +20,7 @@ interface DocumentListProps {
   isLoading?: boolean;
   isError?: boolean;
   error?: Error;
-  onDelete?: (documentId: Document) => void;
+  onDelete?: (documentId: string | Document) => void;
   isDeleting?: boolean;
 }
 
@@ -58,11 +58,16 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const isDeleting = providedIsDeleting !== undefined ? providedIsDeleting : isDeletingFetched;
 
   // Custom delete document handler that manages both string IDs and Document objects
-  const handleDeleteDocument = (document: Document) => {
+  const handleDeleteDocument = (documentIdOrObject: string | Document) => {
     if (providedOnDelete) {
-      providedOnDelete(document);
+      providedOnDelete(documentIdOrObject);
     } else if (deleteDocumentFetched) {
-      deleteDocumentFetched(document.id);
+      // Extract document ID if a Document object was passed
+      const documentId = typeof documentIdOrObject === 'string' 
+        ? documentIdOrObject 
+        : documentIdOrObject.id;
+      
+      deleteDocumentFetched(documentId);
     }
   };
 

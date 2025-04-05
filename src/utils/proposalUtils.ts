@@ -1,74 +1,91 @@
 
 import { Proposal, ProposalStatus } from "@/types/sales";
+import { formatDateToLocal } from "./dateUtils";
 
-/**
- * Filters proposals based on search criteria
- */
+export const getProposalStatusColor = (status: ProposalStatus): string => {
+  const colors = {
+    draft: "bg-gray-100 text-gray-800 border-gray-200",
+    sent: "bg-blue-100 text-blue-800 border-blue-200",
+    viewed: "bg-purple-100 text-purple-800 border-purple-200",
+    accepted: "bg-green-100 text-green-800 border-green-200",
+    rejected: "bg-red-100 text-red-800 border-red-200",
+    expired: "bg-amber-100 text-amber-800 border-amber-200"
+  };
+  
+  return colors[status] || colors.draft;
+};
+
+export const getSalesProcessFromProposal = (proposal: Proposal): string => {
+  return proposal.sales_process_id || "N/A";
+};
+
+export const formatProposalAmount = (proposal: Proposal): string => {
+  if (!proposal.total_value) return "N/A";
+  
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: proposal.currency || 'EUR'
+  }).format(proposal.total_value);
+};
+
+export const getProposalDisplayInfo = (proposal: Proposal): string => {
+  const clientInfo = proposal.client_name || "N/A";
+  const insurerInfo = proposal.insurerName ? ` - ${proposal.insurerName}` : "";
+  
+  return `${clientInfo}${insurerInfo}`;
+};
+
+export const getSortedProposals = (proposals: Proposal[], sortBy: keyof Proposal = "created_at", sortOrder: "asc" | "desc" = "desc"): Proposal[] => {
+  return [...proposals].sort((a, b) => {
+    const valueA = a[sortBy] || "";
+    const valueB = b[sortBy] || "";
+    
+    if (typeof valueA === "string" && typeof valueB === "string") {
+      if (sortOrder === "asc") {
+        return valueA.localeCompare(valueB);
+      } else {
+        return valueB.localeCompare(valueA);
+      }
+    }
+    
+    if (typeof valueA === "number" && typeof valueB === "number") {
+      if (sortOrder === "asc") {
+        return valueA - valueB;
+      } else {
+        return valueB - valueA;
+      }
+    }
+    
+    return 0;
+  });
+};
+
 export const filterProposals = (
-  proposals: Proposal[], 
-  salesProcessId?: string, 
-  clientName?: string,
-  searchQuery?: string, 
-  statusFilter?: string
+  proposals: Proposal[],
+  { statusFilter = "", clientNameFilter = "", searchQuery = "" }: { statusFilter?: string; clientNameFilter?: string; searchQuery?: string }
 ): Proposal[] => {
-  return proposals.filter(proposal => {
-    // Apply sales process filter if provided
-    if (salesProcessId && proposal.salesProcessId !== salesProcessId) {
+  return proposals.filter((proposal) => {
+    // Status filter
+    if (statusFilter && proposal.status !== statusFilter) {
       return false;
     }
     
-    // Apply client name filter if provided
-    if (clientName && proposal.clientName !== clientName) {
+    // Client name filter
+    if (clientNameFilter && !proposal.client_name.toLowerCase().includes(clientNameFilter.toLowerCase())) {
       return false;
     }
     
-    // Apply status filter
-    if (statusFilter !== "all" && proposal.status !== statusFilter) {
-      return false;
-    }
-    
-    // Apply search query
+    // Search query (checks title, description, and reference)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      return (
-        proposal.title.toLowerCase().includes(query) ||
-        proposal.clientName.toLowerCase().includes(query) ||
-        (proposal.insurerName && proposal.insurerName.toLowerCase().includes(query))
-      );
+      const matchesTitle = proposal.title.toLowerCase().includes(query);
+      const matchesDescription = proposal.description?.toLowerCase().includes(query) || false;
+      
+      if (!matchesTitle && !matchesDescription) {
+        return false;
+      }
     }
     
     return true;
   });
-};
-
-/**
- * Calculates proposal stats by status
- */
-export const calculateProposalStats = (proposals: Proposal[]): Record<string, number> => {
-  return proposals.reduce((acc, proposal) => {
-    acc[proposal.status] = (acc[proposal.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-};
-
-/**
- * Updates proposal with new status and relevant timestamps
- */
-export const getUpdatedProposalWithStatus = (
-  proposal: Proposal, 
-  status: ProposalStatus
-): Proposal => {
-  return {
-    ...proposal,
-    status,
-    // Set additional timestamps based on status
-    ...(status === "sent" ? { sentAt: new Date().toISOString() } : {}),
-    ...(status === "viewed" ? { viewedAt: new Date().toISOString() } : {}),
-    ...(["accepted", "rejected"].includes(status) ? { 
-      expiresAt: undefined 
-    } : {}),
-    ...(status === "expired" ? { 
-      expiresAt: new Date().toISOString() 
-    } : {})
-  };
 };

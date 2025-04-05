@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Search, Eye, Download, Calendar, FileText, File } from "lucide-react";
-import { InputWithIcon } from "@/components/ui/input-with-icon";
+import { Input } from "@/components/ui/input";
 import { 
   Select, 
   SelectContent, 
@@ -28,22 +28,22 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Document } from "@/types/documents";
+import { Document, EntityType } from "@/types/documents";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
 import { useDocumentDownload } from "@/hooks/useDocumentDownload";
 import { DocumentViewDialog } from "../DocumentViewDialog";
-import Pagination from "@/components/ui/pagination";
-import EmptyState from "@/components/ui/empty-state";
+import { Pagination } from "@/components/ui/pagination";
 import LoadingState from "@/components/ui/loading-state";
 import { formatDateToLocal } from "@/utils/dateUtils";
 
 interface DocumentSearchProps {
   title?: string;
   showTableHeader?: boolean;
-  filterEntity?: string;
+  filterEntity?: EntityType;
   filterEntityId?: string;
   onDocumentSelected?: (document: Document) => void;
   selectable?: boolean;
+  filterStatus?: string;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -54,9 +54,10 @@ export const DocumentSearch = ({
   filterEntity,
   filterEntityId,
   onDocumentSelected,
-  selectable = false
+  selectable = false,
+  filterStatus
 }: DocumentSearchProps) => {
-  const { t, formatDateTime } = useLanguage();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
@@ -69,8 +70,9 @@ export const DocumentSearch = ({
   const { 
     documents, 
     isLoading, 
-    totalPages, 
-    totalDocuments 
+    error,
+    searchDocuments,
+    refresh
   } = useDocumentSearch({
     searchTerm,
     page: currentPage,
@@ -78,8 +80,13 @@ export const DocumentSearch = ({
     documentType: selectedDocumentType,
     category: selectedCategory,
     entityType: filterEntity,
-    entityId: filterEntityId
+    entityId: filterEntityId,
+    status: filterStatus
   });
+  
+  // Calculate these manually since they're not provided by the hook
+  const totalPages = Math.ceil((documents?.length || 0) / ITEMS_PER_PAGE);
+  const totalDocuments = documents?.length || 0;
   
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -127,7 +134,8 @@ export const DocumentSearch = ({
             <span className="font-medium">{document.document_name}</span>
           </div>
         );
-      }
+      },
+      key: "name"
     },
     {
       accessorKey: "document_type",
@@ -135,7 +143,8 @@ export const DocumentSearch = ({
       cell: ({ row }: { row: any }) => {
         const document: Document = row.original;
         return <span>{t(document.document_type)}</span>;
-      }
+      },
+      key: "type"
     },
     {
       accessorKey: "category",
@@ -145,7 +154,8 @@ export const DocumentSearch = ({
         return document.category ? (
           <Badge variant="outline">{t(document.category)}</Badge>
         ) : null;
-      }
+      },
+      key: "category"
     },
     {
       accessorKey: "created_at",
@@ -158,7 +168,8 @@ export const DocumentSearch = ({
             <span>{formatDateToLocal(document.created_at)}</span>
           </div>
         );
-      }
+      },
+      key: "date"
     },
     {
       id: "actions",
@@ -183,9 +194,10 @@ export const DocumentSearch = ({
             </Button>
           </div>
         );
-      }
+      },
+      key: "actions"
     }
-  ], [selectable, t, isDownloading, downloadDocument]);
+  ], [selectable, t, isDownloading, downloadDocument, handleSelectDocument]);
 
   return (
     <Card>
@@ -201,13 +213,15 @@ export const DocumentSearch = ({
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-grow">
-              <InputWithIcon
-                placeholder={t("searchDocuments")}
-                value={searchTerm}
-                onChange={handleSearch}
-                className="w-full"
-                leftIcon={<Search className="h-4 w-4" />}
-              />
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t("searchDocuments")}
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="w-full pl-8"
+                />
+              </div>
             </div>
             <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
               <SelectTrigger className="w-full sm:w-[140px]">
@@ -241,11 +255,11 @@ export const DocumentSearch = ({
           {isLoading ? (
             <LoadingState>{t("loadingDocuments")}</LoadingState>
           ) : documents.length === 0 ? (
-            <EmptyState 
-              icon={<File className="h-12 w-12 text-muted-foreground" />}
-              title={t("noDocumentsFound")}
-              description={t("tryDifferentSearchOrFilters")}
-            />
+            <div className="text-center p-8">
+              <File className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-1">{t("noDocumentsFound")}</h3>
+              <p className="text-sm text-muted-foreground">{t("tryDifferentSearchOrFilters")}</p>
+            </div>
           ) : (
             <>
               <div className="rounded-md border">

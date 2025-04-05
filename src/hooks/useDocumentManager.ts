@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Document, EntityType } from "@/types/documents";
+import { Document, EntityType, DocumentApprovalStatus } from "@/types/documents";
 import { DocumentService } from "@/services/DocumentService";
 import { useApiService } from "./useApiService";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -19,7 +19,7 @@ export const useDocumentManager = ({ entityType, entityId }: UseDocumentManagerP
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const { executeService } = useApiService();
+  const { handleApiError } = useApiService();
 
   // Fetch documents
   const {
@@ -31,62 +31,82 @@ export const useDocumentManager = ({ entityType, entityId }: UseDocumentManagerP
   } = useQuery({
     queryKey: ['documents', entityType, entityId],
     queryFn: async () => {
-      const response = await DocumentService.getDocuments(entityType, entityId);
-      if (!response.success) {
-        throw new Error(response.error?.message || "Failed to fetch documents");
+      try {
+        const response = await DocumentService.getDocuments(entityType, entityId);
+        if (!response.success) {
+          throw response.error || new Error("Failed to fetch documents");
+        }
+        return response.data || [];
+      } catch (err) {
+        const error = handleApiError(err as any);
+        throw error;
       }
-      return response.data || [];
     },
     enabled: !!entityId,
   });
 
   // Delete document mutation
   const deleteDocumentMutation = useMutation({
-    mutationFn: async (document: Document) => {
-      return executeService(
-        () => DocumentService.deleteDocument(document.id),
-        {
-          successMessage: t("documentDeletedSuccessfully"),
-          errorMessage: t("errorDeletingDocument"),
-          invalidateQueryKeys: [['documents', entityType, entityId]]
+    mutationFn: async (documentId: string) => {
+      try {
+        const response = await DocumentService.deleteDocument(documentId, entityType);
+        if (!response.success) {
+          throw response.error || new Error("Failed to delete document");
         }
-      );
+        return response.data;
+      } catch (err) {
+        const error = handleApiError(err as any);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(t("documentDeletedSuccessfully"));
+      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
+    },
+    onError: (error: Error) => {
+      toast.error(t("errorDeletingDocument"));
+      console.error("Error deleting document:", error);
     }
   });
 
-  const deleteDocument = (document: Document) => {
-    deleteDocumentMutation.mutate(document);
-  };
-
   // Fetch document versions
   const getDocumentVersions = async (documentId: string) => {
-    return executeService(
-      () => DocumentService.getDocumentVersions(documentId),
-      {
-        errorMessage: t("errorFetchingDocumentVersions")
+    try {
+      const response = await DocumentService.getDocumentVersions(documentId, entityType);
+      if (!response.success) {
+        toast.error(t("errorFetchingDocumentVersions"));
+        throw response.error || new Error("Failed to fetch document versions");
       }
-    );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching document versions:", error);
+      return [];
+    }
   };
 
   // Update document approval status
   const updateDocumentApproval = async (
     documentId: string, 
-    status: string, 
+    status: DocumentApprovalStatus, 
     notes?: string
   ) => {
     try {
-      // Implementation will depend on how your DocumentService is structured
-      // This is a placeholder implementation
-      const result = await executeService(
-        () => DocumentService.updateDocumentStatus(documentId, status, notes),
-        {
-          successMessage: t("documentStatusUpdateSuccess"),
-          errorMessage: t("errorUpdatingDocumentStatus"),
-          invalidateQueryKeys: [['documents', entityType, entityId]]
-        }
+      const response = await DocumentService.updateDocumentApproval(
+        documentId,
+        entityType,
+        status,
+        notes || "",
+        "user-id" // Replace with actual user ID
       );
       
-      return result;
+      if (!response.success) {
+        toast.error(t("errorUpdatingDocumentStatus"));
+        throw response.error || new Error("Failed to update document status");
+      }
+      
+      toast.success(t("documentStatusUpdateSuccess"));
+      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
+      return response.data;
     } catch (error) {
       console.error("Error updating document approval:", error);
       return null;
@@ -101,9 +121,9 @@ export const useDocumentManager = ({ entityType, entityId }: UseDocumentManagerP
     refetch,
     selectedDocument,
     setSelectedDocument,
-    deleteDocument,
+    deleteDocument: deleteDocumentMutation.mutate,
     getDocumentVersions,
-    isDeleting: deleteDocumentMutation.isPending,
+    isDeletingDocument: deleteDocumentMutation.isPending,
     updateDocumentApproval
   };
 };

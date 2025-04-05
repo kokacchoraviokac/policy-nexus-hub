@@ -11,12 +11,16 @@ export class DocumentService {
     try {
       const tableName = getDocumentTableName(documentData.entity_type as EntityType);
       
-      // @ts-ignore - Supabase table might not exist in type definition
-      const { data, error } = await supabase.from(tableName).insert(documentData).select().single();
+      // Use type assertion to handle the table name
+      const { data, error } = await supabase
+        .from(tableName as any)
+        .insert(documentData)
+        .select()
+        .single();
       
       if (error) throw error;
       
-      return { success: true, data: data as Document };
+      return { success: true, data: data as unknown as Document };
     } catch (error) {
       console.error("Error creating document:", error);
       return { 
@@ -31,12 +35,16 @@ export class DocumentService {
     try {
       const tableName = getDocumentTableName(entityType);
       
-      // @ts-ignore - Supabase table might not exist in type definition
-      const { data, error } = await supabase.from(tableName).select('*').eq('id', documentId).single();
+      // Use type assertion to handle the table name
+      const { data, error } = await supabase
+        .from(tableName as any)
+        .select('*')
+        .eq('id', documentId)
+        .single();
       
       if (error) throw error;
       
-      return { success: true, data: data as Document };
+      return { success: true, data: data as unknown as Document };
     } catch (error) {
       console.error("Error retrieving document:", error);
       return { 
@@ -52,22 +60,24 @@ export class DocumentService {
       const tableName = getDocumentTableName(entityType);
       const entityIdColumn = `${entityType}_id`;
       
+      // Create the base query with type assertion
       const query = supabase
-        // @ts-ignore - Supabase table might not exist in type definition
-        .from(tableName)
-        .select('*')
-        .eq(entityIdColumn, entityId);
+        .from(tableName as any)
+        .select('*');
+      
+      // Add entity ID filter
+      const filteredQuery = query.eq(entityIdColumn, entityId);
       
       // If we're looking for non-addendum policy documents
       if (entityType === 'policy' && entityIdColumn === 'policy_id') {
-        query.is('addendum_id', null);
+        filteredQuery.is('addendum_id', null);
       }
       
-      const { data, error } = await query;
+      const { data, error } = await filteredQuery;
       
       if (error) throw error;
       
-      return { success: true, data: data as Document[] };
+      return { success: true, data: data as unknown as Document[] };
     } catch (error) {
       console.error("Error retrieving documents:", error);
       return { 
@@ -83,9 +93,8 @@ export class DocumentService {
       const tableName = getDocumentTableName(entityType);
       
       // First, we need to get the document to know its storage path
-      // @ts-ignore - Supabase table might not exist in type definition
       const { data: document, error: fetchError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('file_path')
         .eq('id', documentId)
         .single();
@@ -104,10 +113,9 @@ export class DocumentService {
         }
       }
       
-      // Delete from database
-      // @ts-ignore - Supabase table might not exist in type definition
+      // Delete from database with type assertion
       const { error: deleteError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq('id', documentId);
         
@@ -129,9 +137,8 @@ export class DocumentService {
       const tableName = getDocumentTableName(entityType);
       
       // First get the original document ID
-      // @ts-ignore - Supabase table might not exist in type definition
       const { data: document, error: fetchError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('original_document_id, id')
         .eq('id', documentId)
         .single();
@@ -140,17 +147,16 @@ export class DocumentService {
       
       const originalId = document.original_document_id || document.id;
       
-      // Then get all versions
-      // @ts-ignore - Supabase table might not exist in type definition
+      // Then get all versions with type assertion
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .or(`id.eq.${originalId},original_document_id.eq.${originalId}`)
         .order('version', { ascending: true });
         
       if (error) throw error;
       
-      return { success: true, data: data as Document[] };
+      return { success: true, data: data as unknown as Document[] };
     } catch (error) {
       console.error("Error retrieving document versions:", error);
       return { 
@@ -178,17 +184,17 @@ export class DocumentService {
         approved_at: new Date().toISOString()
       };
       
-      // @ts-ignore - Supabase table might not exist in type definition
+      // Use type assertion for the update operation
       const { data, error } = await supabase
-        .from(tableName)
-        .update(updateData)
+        .from(tableName as any)
+        .update(updateData as any)
         .eq('id', documentId)
         .select()
         .single();
         
       if (error) throw error;
       
-      return { success: true, data: data as Document };
+      return { success: true, data: data as unknown as Document };
     } catch (error) {
       console.error("Error updating document approval:", error);
       return { 
@@ -207,6 +213,7 @@ export class DocumentService {
       category?: string;
       page?: number;
       pageSize?: number;
+      status?: string;
     }
   ): Promise<ServiceResponse<{ documents: Document[], totalCount: number }>> {
     try {
@@ -216,32 +223,34 @@ export class DocumentService {
         entityId,
         documentType,
         category,
+        status,
         page = 1,
         pageSize = 10
       } = searchParams;
-      
-      // In a real implementation, this would be a stored procedure or a view
-      // that combines documents from all related tables
-      // For simplicity in this example, we'll just search in a specific table if provided
       
       let query;
       const startIndex = (page - 1) * pageSize;
       const endIndex = startIndex + pageSize - 1;
       
       if (entityType) {
+        // Use a specific table based on entity type
         const tableName = getDocumentTableName(entityType);
-        // @ts-ignore - Supabase table might not exist in type definition
-        query = supabase.from(tableName).select('*', { count: 'exact' });
+        
+        // Use type assertion for the query
+        query = supabase
+          .from(tableName as any)
+          .select('*', { count: 'exact' });
         
         if (entityId) {
           const entityIdColumn = `${entityType}_id`;
           query = query.eq(entityIdColumn, entityId);
         }
       } else {
-        // In a real implementation, we'd have a view that combines all document tables
-        // For this example, we'll just use a theoretical documents_view
-        // @ts-ignore - Supabase view might not exist in type definition
-        query = supabase.from('documents_view').select('*', { count: 'exact' });
+        // For simplicity, use policy_documents as a fallback
+        // In a real implementation, you would use a view that combines all document tables
+        query = supabase
+          .from('policy_documents')
+          .select('*', { count: 'exact' });
       }
       
       // Apply filters
@@ -257,6 +266,10 @@ export class DocumentService {
         query = query.eq('category', category);
       }
       
+      if (status) {
+        query = query.eq('status', status);
+      }
+      
       // Apply pagination
       query = query.range(startIndex, endIndex).order('created_at', { ascending: false });
       
@@ -268,7 +281,7 @@ export class DocumentService {
       return { 
         success: true, 
         data: { 
-          documents: data as Document[], 
+          documents: data as unknown as Document[], 
           totalCount: count || 0 
         } 
       };

@@ -70,17 +70,23 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
     };
 
     // Set the appropriate entity ID field based on the table
-    if (tableName === "policy_documents") {
+    if (entityType === 'policy') {
       documentData.policy_id = entityId;
-    } else if (tableName === "claim_documents") {
+    } else if (entityType === 'claim') {
       documentData.claim_id = entityId;
-    } else if (tableName === "sales_documents") {
+    } else if (entityType === 'sales_process') {
       documentData.sales_process_id = entityId;
+    } else if (entityType === 'client') {
+      documentData.client_id = entityId;
+    } else if (entityType === 'insurer') {
+      documentData.insurer_id = entityId;
+    } else if (entityType === 'agent') {
+      documentData.agent_id = entityId;
     }
 
-    // Insert the document record using the resolved table name
+    // Insert the document record using the resolved table name with type assertion
     const { data, error: dbError } = await supabase
-      .from(tableName)
+      .from(tableName as any)
       .insert(documentData)
       .select()
       .single();
@@ -99,7 +105,7 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
     // If this is a new version, update previous version
     if (originalDocumentId) {
       await supabase
-        .from(tableName)
+        .from(tableName as any)
         .update({ is_latest_version: false })
         .eq('id', originalDocumentId);
     }
