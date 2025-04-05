@@ -62,15 +62,15 @@ const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       const newProposal: Proposal = {
         id: `proposal-${Date.now()}`,
         title,
-        clientName,
-        salesProcessId,
-        createdAt: new Date().toISOString(),
+        client_name: clientName,
+        sales_process_id: salesProcessId,
+        created_at: new Date().toISOString(),
         status: "draft",
-        insurerName,
-        coverageDetails,
+        insurer_name: insurerName,
+        coverage_details: coverageDetails,
         premium,
         notes,
-        documents: []
+        document_ids: []
       };
       
       setSaving(false);
@@ -187,6 +187,8 @@ const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
         onOpenChange={setUploadDialogOpen}
         entityType={"sales_process" as EntityType}
         entityId={salesProcessId}
+        defaultCategory="proposal"
+        salesStage="proposal"
       />
     </>
   );

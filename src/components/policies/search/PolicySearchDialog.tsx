@@ -1,133 +1,138 @@
 
-import React, { useState, useEffect } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Loader2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table";
-import { usePolicySearch } from "@/hooks/usePolicySearch";
-
-export interface Policy {
-  id: string;
-  policy_number: string;
-  policyholder_name: string;
-  insurer_name: string;
-  expiry_date: string;
-}
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { formatDateToLocal } from '@/utils/dateUtils';
+import { Filter, Search } from 'lucide-react';
+import { Policy } from '@/types/policies';
+import { LoadingState } from '@/components/ui/loading-state';
 
 export interface PolicySearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (policy: Policy) => void;
-  searchTerm?: string;
 }
 
 const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
   open,
   onOpenChange,
-  onSelect,
-  searchTerm: initialSearchTerm = ""
+  onSelect
 }) => {
-  const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
-  
-  const { policies, isLoading, search } = usePolicySearch();
-  
-  useEffect(() => {
-    if (open && searchTerm) {
-      search(searchTerm);
-    }
-  }, [open, searchTerm, search]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [policies, setPolicies] = useState<Policy[]>([]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    if (e.target.value.length >= 3) {
-      search(e.target.value);
-    }
+  // Mock policy search - replace with actual API call
+  const handleSearch = () => {
+    setIsLoading(true);
+    
+    // Simulate API call with mock data
+    setTimeout(() => {
+      const mockPolicies: Policy[] = [
+        {
+          id: '1',
+          policy_number: 'POL-2023-001',
+          insurer_name: 'ABC Insurance',
+          client_name: 'John Doe',
+          start_date: '2023-01-01',
+          expiry_date: '2024-01-01',
+          premium_amount: 1200,
+          status: 'active',
+          created_at: '2022-12-15'
+        },
+        {
+          id: '2',
+          policy_number: 'POL-2023-002',
+          insurer_name: 'XYZ Insurance',
+          client_name: 'Jane Smith',
+          start_date: '2023-02-01',
+          expiry_date: '2024-02-01',
+          premium_amount: 950,
+          status: 'active',
+          created_at: '2023-01-20'
+        }
+      ];
+      
+      setPolicies(mockPolicies.filter(policy => 
+        policy.policy_number.includes(searchQuery) || 
+        policy.client_name.toLowerCase().includes(searchQuery.toLowerCase())
+      ));
+      
+      setIsLoading(false);
+    }, 500);
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+  const handleSelectPolicy = (policy: Policy) => {
+    onSelect(policy);
+    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{t("searchPolicy")}</DialogTitle>
+          <DialogTitle>Search Policies</DialogTitle>
         </DialogHeader>
         
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center space-x-2 mb-4">
           <Input
-            type="search"
-            placeholder={t("searchByPolicyOrPolicyholder")}
-            className="pl-8"
-            value={searchTerm}
-            onChange={handleSearchChange}
+            placeholder="Search by policy number or client name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
+          <Button onClick={handleSearch}>
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
         </div>
         
-        <div className="max-h-[400px] overflow-y-auto">
-          {isLoading ? (
-            <div className="flex justify-center p-4">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : policies.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>{t("noPoliciesFound")}</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("policyNumber")}</TableHead>
-                  <TableHead>{t("policyholder")}</TableHead>
-                  <TableHead>{t("insurer")}</TableHead>
-                  <TableHead>{t("expiryDate")}</TableHead>
-                  <TableHead className="text-right">{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {policies.map((policy) => (
-                  <TableRow key={policy.id}>
-                    <TableCell className="font-medium">{policy.policy_number}</TableCell>
-                    <TableCell>{policy.policyholder_name}</TableCell>
-                    <TableCell>{policy.insurer_name}</TableCell>
-                    <TableCell>{formatDate(policy.expiry_date)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onSelect(policy)}
-                      >
-                        {t("select")}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
+        {isLoading ? (
+          <LoadingState />
+        ) : (
+          <div className="border rounded-md">
+            {policies.length === 0 ? (
+              <div className="py-6 text-center text-muted-foreground">
+                No policies found
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="text-left p-2">Policy Number</th>
+                    <th className="text-left p-2">Client</th>
+                    <th className="text-left p-2">Insurer</th>
+                    <th className="text-left p-2">Expiry Date</th>
+                    <th className="p-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {policies.map((policy) => (
+                    <tr key={policy.id} className="border-t">
+                      <td className="p-2">{policy.policy_number}</td>
+                      <td className="p-2">{policy.client_name}</td>
+                      <td className="p-2">{policy.insurer_name}</td>
+                      <td className="p-2">{formatDateToLocal(policy.expiry_date)}</td>
+                      <td className="p-2 text-right">
+                        <Button size="sm" onClick={() => handleSelectPolicy(policy)}>
+                          Select
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
 };
+
+export { PolicySearchDialog };
+export type { Policy };
 
 export default PolicySearchDialog;

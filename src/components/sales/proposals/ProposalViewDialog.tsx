@@ -51,22 +51,22 @@ const ProposalViewDialog: React.FC<ProposalViewDialogProps> = ({
               </div>
             </div>
             
-            {proposal.insurerName && (
+            {proposal.insurer_name && (
               <div className="space-y-2">
                 <div className="text-sm font-medium">{t("insurerDetails")}</div>
                 <div className="flex items-center text-sm">
                   <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                  {proposal.insurerName}
+                  {proposal.insurer_name}
                 </div>
               </div>
             )}
           </div>
           
-          {proposal.coverageDetails && (
+          {proposal.coverage_details && (
             <div className="space-y-2">
               <div className="text-sm font-medium">{t("coverageDetails")}</div>
               <div className="text-sm rounded-md bg-muted p-3">
-                {proposal.coverageDetails}
+                {proposal.coverage_details}
               </div>
             </div>
           )}

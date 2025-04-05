@@ -6,9 +6,9 @@ export interface FinancialReportFilters {
   transactionType: string;
   category: string;
   status: string;
-  searchTerm?: string;
-  startDate?: string;
-  endDate?: string;
+  searchTerm: string;
+  startDate: string;
+  endDate: string;
 }
 
 export interface FinancialReportData {
@@ -22,18 +22,18 @@ export interface FinancialReportData {
   entity_id?: string;
   entity_type?: string;
   status: string;
-  category?: string;
+  category: string;
 }
 
 export interface FinancialTransaction {
   id: string;
   amount: number;
   date: string;
-  type?: string;
-  description?: string;
-  reference?: string;
-  category?: string;
-  currency?: string;
+  type: string;
+  description: string;
+  reference: string;
+  category: string;
+  currency: string;
   entity_id?: string;
   entity_type?: string;
   status?: string;

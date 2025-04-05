@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -92,8 +93,8 @@ const ProposalsList: React.FC<ProposalsListProps> = ({ proposals, onStatusChange
                       {proposal.title}
                     </div>
                   </TableCell>
-                  <TableCell>{proposal.clientName}</TableCell>
-                  <TableCell>{formatDateTime(proposal.createdAt)}</TableCell>
+                  <TableCell>{proposal.client_name}</TableCell>
+                  <TableCell>{formatDateTime(proposal.created_at)}</TableCell>
                   <TableCell>{getStatusBadge(proposal.status)}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">

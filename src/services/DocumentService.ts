@@ -3,23 +3,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentApprovalStatus, EntityType } from "@/types/documents";
 import { ServiceResponse } from "@/types/services";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
+import { useSupabaseTypedQueries } from "@/hooks/useSupabaseTypedQueries";
 
 export class DocumentService {
   // Create a document entry in the database
   static async createDocument(documentData: Partial<Document>): Promise<ServiceResponse<Document>> {
     try {
-      const tableName = getDocumentTableName(documentData.entity_type as EntityType);
+      if (!documentData.entity_type) {
+        throw new Error("Entity type is required for document creation");
+      }
       
-      // Use type assertion to handle the table name
+      const tableName = getDocumentTableName(documentData.entity_type);
+      
+      // Use type assertion with as any to bypass TypeScript's check
+      // since we're handling dynamic table names that TypeScript can't validate statically
       const { data, error } = await supabase
-        .from(tableName)
-        .insert(documentData)
+        .from(tableName as any)
+        .insert(documentData as any)
         .select()
         .single();
       
       if (error) throw error;
       
-      return { success: true, data: data as Document };
+      return { success: true, data: data as unknown as Document };
     } catch (error) {
       console.error("Error creating document:", error);
       return { 
@@ -34,16 +40,16 @@ export class DocumentService {
     try {
       const tableName = getDocumentTableName(entityType);
       
-      // Use type assertion to handle the table name
+      // Use type assertion to handle the dynamic table name
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .eq('id', documentId)
         .single();
       
       if (error) throw error;
       
-      return { success: true, data: data as Document };
+      return { success: true, data: data as unknown as Document };
     } catch (error) {
       console.error("Error retrieving document:", error);
       return { 
@@ -61,7 +67,7 @@ export class DocumentService {
       
       // Create the base query with type assertion
       const query = supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*');
       
       // Add entity ID filter
@@ -76,7 +82,7 @@ export class DocumentService {
       
       if (error) throw error;
       
-      return { success: true, data: data as Document[] };
+      return { success: true, data: data as unknown as Document[] };
     } catch (error) {
       console.error("Error retrieving documents:", error);
       return { 
@@ -93,7 +99,7 @@ export class DocumentService {
       
       // First, we need to get the document to know its storage path
       const { data: document, error: fetchError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('file_path')
         .eq('id', documentId)
         .single();
@@ -101,10 +107,10 @@ export class DocumentService {
       if (fetchError) throw fetchError;
       
       // Delete from storage if file_path exists
-      if (document && document.file_path) {
+      if (document && (document as any).file_path) {
         const { error: storageError } = await supabase.storage
           .from('documents')
-          .remove([document.file_path]);
+          .remove([(document as any).file_path]);
           
         if (storageError) {
           console.warn("Could not delete document from storage:", storageError);
@@ -114,7 +120,7 @@ export class DocumentService {
       
       // Delete from database with type assertion
       const { error: deleteError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq('id', documentId);
         
@@ -137,25 +143,26 @@ export class DocumentService {
       
       // First get the original document ID
       const { data: document, error: fetchError } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('original_document_id, id')
         .eq('id', documentId)
         .single();
       
       if (fetchError) throw fetchError;
       
-      const originalId = document.original_document_id || document.id;
+      // Use optional chaining and type assertion to handle potential undefined values
+      const originalId = (document as any)?.original_document_id || (document as any)?.id;
       
       // Then get all versions with type assertion
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .or(`id.eq.${originalId},original_document_id.eq.${originalId}`)
         .order('version', { ascending: true });
         
       if (error) throw error;
       
-      return { success: true, data: data as Document[] };
+      return { success: true, data: data as unknown as Document[] };
     } catch (error) {
       console.error("Error retrieving document versions:", error);
       return { 
@@ -185,15 +192,15 @@ export class DocumentService {
       
       // Use type assertion for the update operation
       const { data, error } = await supabase
-        .from(tableName)
-        .update(updateData)
+        .from(tableName as any)
+        .update(updateData as any)
         .eq('id', documentId)
         .select()
         .single();
         
       if (error) throw error;
       
-      return { success: true, data: data as Document };
+      return { success: true, data: data as unknown as Document };
     } catch (error) {
       console.error("Error updating document approval:", error);
       return { 
@@ -241,9 +248,9 @@ export class DocumentService {
       const tableName = getDocumentTableName(entityType);
       const entityIdColumn = `${entityType}_id`;
       
-      // Base query
+      // Build query using type assertion for table name
       const query = supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*', { count: 'exact' });
       
       // Apply filters
@@ -287,7 +294,7 @@ export class DocumentService {
       return { 
         success: true, 
         data: { 
-          documents: data as Document[], 
+          documents: data as unknown as Document[], 
           totalCount: count || 0 
         } 
       };

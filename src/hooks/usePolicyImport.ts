@@ -1,179 +1,182 @@
 
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/auth/AuthContext";
-import { v4 as uuidv4 } from "uuid";
+import { useState } from 'react';
+import { parse } from 'csv-parse/sync';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/auth/AuthContext';
+import { Policy } from '@/types/policies';
+import { toast } from '@/hooks/use-toast';
 
-interface Policy {
-  id?: string;
-  policy_number?: string;
-  company_id: string;
-  policy_type?: string;
-  start_date?: string;
-  expiry_date?: string;
-  premium?: number;
-  currency?: string;
-  commission_percentage?: number;
-  commission_amount?: number;
-  commission_type?: string;
-  status?: string;
-  workflow_status?: string;
-  insurer_id?: string;
-  insurer_name?: string;
-  client_id?: string;
-  policyholder_name?: string;
-  insured_id?: string;
-  insured_name?: string;
-  product_id?: string | null;
-  product_name?: string | null;
-  product_code?: string | null;
-  payment_frequency?: string;
-  assigned_to?: string | null;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-}
-
-interface ValidationError {
-  row: number;
-  field: string;
-  message: string;
-}
-
-interface ValidationErrors {
-  [key: number]: string[];
-}
+export type ValidationErrors = Record<number, string[]>;
 
 export const usePolicyImport = () => {
   const { user } = useAuth();
   const [importedPolicies, setImportedPolicies] = useState<Partial<Policy>[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [isImporting, setIsImporting] = useState(false);
-  const [importSuccess, setImportSuccess] = useState(false);
-  const [importError, setImportError] = useState<string | null>(null);
-  const [invalidPolicies, setInvalidPolicies] = useState<number[]>([]);
-  
-  // Select file and extract policies
+
+  // Calculate invalid policies based on validation errors
+  const invalidPolicies = Object.keys(validationErrors).map(index => {
+    return {
+      policy: importedPolicies[parseInt(index)],
+      errors: validationErrors[parseInt(index)]
+    };
+  });
+
+  const parseCSVFile = async (file: File): Promise<Partial<Policy>[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const csv = parse(e.target!.result as string, {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true
+          });
+          
+          // Transform the CSV data to match Policy type
+          const policies = csv.map((row: any): Partial<Policy> => ({
+            policy_number: row.policy_number,
+            insurer_name: row.insurer_name,
+            client_name: row.client_name,
+            start_date: row.start_date,
+            expiry_date: row.expiry_date,
+            premium_amount: parseFloat(row.premium_amount),
+            status: row.status || 'pending',
+            policy_type: row.policy_type || 'standard'
+          }));
+          
+          resolve(policies);
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      reader.onerror = () => {
+        reject(new Error('Error reading file'));
+      };
+      
+      reader.readAsText(file);
+    });
+  };
+
+  const validatePolicies = (policies: Partial<Policy>[]): ValidationErrors => {
+    const errors: ValidationErrors = {};
+    
+    policies.forEach((policy, index) => {
+      const policyErrors: string[] = [];
+      
+      if (!policy.policy_number) policyErrors.push('Policy number is required');
+      if (!policy.client_name) policyErrors.push('Client name is required');
+      if (!policy.insurer_name) policyErrors.push('Insurer name is required');
+      if (!policy.start_date) policyErrors.push('Start date is required');
+      if (!policy.expiry_date) policyErrors.push('Expiry date is required');
+      
+      if (policyErrors.length > 0) {
+        errors[index] = policyErrors;
+      }
+    });
+    
+    return errors;
+  };
+
   const handleFileSelect = async (file: File) => {
+    setIsImporting(true);
+    
     try {
-      // Parse file (this would be a real CSV parsing function in production)
-      const mockPolicies = Array(5).fill(0).map((_, i) => ({
-        policy_number: `POL-2023-${1000 + i}`,
-        policyholder_name: `Company ${i + 1}`,
-        insurer_name: `Insurer ${i % 3 + 1}`,
-        premium: 1000 + i * 100,
-        currency: "EUR",
-        start_date: "2023-01-01",
-        expiry_date: "2024-01-01"
-      }));
+      const policies = await parseCSVFile(file);
+      const errors = validatePolicies(policies);
       
-      // Set importedPolicies with parsed data
-      setImportedPolicies(mockPolicies);
-      
-      // Validate policies
-      const errors: ValidationErrors = {};
-      mockPolicies.forEach((policy, index) => {
-        if (!policy.policy_number) {
-          errors[index] = errors[index] || [];
-          errors[index].push("Policy number is required");
-        }
-        if (!policy.policyholder_name) {
-          errors[index] = errors[index] || [];
-          errors[index].push("Policyholder name is required");
-        }
-      });
-      
+      setImportedPolicies(policies);
       setValidationErrors(errors);
-      setInvalidPolicies(Object.keys(errors).map(Number));
-      
     } catch (error) {
-      console.error("Error selecting file:", error);
-      setImportError("Failed to parse policy data. Please check the file format.");
+      console.error('Error parsing file:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to parse the file. Please check the format and try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsImporting(false);
     }
   };
-  
-  // Handle file drop for react-dropzone
+
   const handleFileDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles && acceptedFiles.length > 0) {
+    if (acceptedFiles.length > 0) {
       handleFileSelect(acceptedFiles[0]);
     }
   };
-  
-  // Import policies to database
-  const importPolicies = async () => {
-    if (!user) return;
-    
+
+  const savePolicies = async (): Promise<boolean> => {
     setIsImporting(true);
-    setImportSuccess(false);
-    setImportError(null);
     
     try {
+      // Only insert policies that passed validation
       const validPolicies = importedPolicies.filter((_, index) => 
         !Object.keys(validationErrors).includes(index.toString())
       );
       
       if (validPolicies.length === 0) {
-        setImportError("No valid policies to import");
-        setIsImporting(false);
-        return;
+        toast({
+          title: 'No valid policies',
+          description: 'No valid policies to import. Please fix validation errors and try again.',
+          variant: 'destructive'
+        });
+        return false;
       }
       
-      const now = new Date().toISOString();
-      
-      // Prepare policies for import
+      // Prepare policies for insertion with required fields
       const policiesToInsert = validPolicies.map(policy => ({
         ...policy,
-        id: uuidv4(),
-        company_id: user.user_metadata.company_id,
-        created_by: user.id,
-        created_at: now,
-        updated_at: now,
-        status: 'active',
-        workflow_status: 'in_review',
-        // Add expiry_date if missing, required by database schema
-        expiry_date: policy.expiry_date || "2099-12-31",
+        company_id: user?.user_metadata?.company_id || 'default',
+        created_by: user?.id || 'system',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        workflow_status: 'pending_review'
       }));
       
-      // Insert policy directly (with type assertion and optional props)
-      for (const policy of policiesToInsert) {
-        // Prepare the policy object with required fields
-        const insertData = {
-          ...policy,
-          // Ensure required fields are present
-          workflow_status: policy.workflow_status || 'in_review'
-        };
-        
-        const { error } = await supabase
-          .from('policies')
-          .insert([insertData] as any);
-        
-        if (error) {
-          console.error("Error inserting policy:", error);
-          setImportError(`Error importing policies: ${error.message}`);
-          setIsImporting(false);
-          return;
-        }
+      // Use type assertion to fix TypeScript error
+      const { data, error } = await supabase
+        .from('policies')
+        .insert(policiesToInsert as any);
+      
+      if (error) {
+        throw error;
       }
       
-      setImportSuccess(true);
+      toast({
+        title: 'Policies imported',
+        description: `Successfully imported ${validPolicies.length} policies.`
+      });
+      
+      return true;
     } catch (error) {
-      console.error("Error importing policies:", error);
-      setImportError("Failed to import policies. Please try again.");
+      console.error('Error saving policies:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save policies. Please try again.',
+        variant: 'destructive'
+      });
+      return false;
     } finally {
       setIsImporting(false);
     }
   };
-  
+
+  const clearImportData = () => {
+    setImportedPolicies([]);
+    setValidationErrors({});
+  };
+
   return {
     importedPolicies,
     validationErrors,
     handleFileSelect,
     handleFileDrop,
-    importPolicies,
     isImporting,
-    importSuccess,
-    importError,
-    invalidPolicies
+    invalidPolicies,
+    parseCSVFile,
+    savePolicies,
+    clearImportData
   };
 };

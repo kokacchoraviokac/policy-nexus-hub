@@ -1,133 +1,127 @@
 
 import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Pagination,
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { 
+  Pagination, 
+  PaginationLink, 
+  PaginationItem, 
   PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis
+  PaginationPrevious, 
+  PaginationNext, 
+  PaginationEllipsis 
 } from "@/components/ui/pagination";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface UnlinkedPaymentsPaginationProps {
+interface PaginationProps {
   currentPage: number;
-  pageSize: number;
-  totalItems: number;
+  totalPages: number;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
 }
 
-const UnlinkedPaymentsPagination: React.FC<UnlinkedPaymentsPaginationProps> = ({
+const UnlinkedPaymentsPagination: React.FC<PaginationProps> = ({
   currentPage,
-  pageSize,
-  totalItems,
-  onPageChange,
-  onPageSizeChange
+  totalPages,
+  onPageChange
 }) => {
-  const { t } = useLanguage();
-  const totalPages = Math.ceil(totalItems / pageSize);
-  
-  // Generate an array of page numbers to display
-  const getPageNumbers = (): (number | string)[] => {
-    const pages: (number | string)[] = [];
-    
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      pages.push(1);
-      
-      if (currentPage > 3) {
-        pages.push("...");
-      }
-      
-      const start = Math.max(2, currentPage - 1);
-      const end = Math.min(totalPages - 1, currentPage + 1);
-      
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-      
-      if (currentPage < totalPages - 2) {
-        pages.push("...");
-      }
-      
-      pages.push(totalPages);
-    }
-    
-    return pages;
-  };
-  
-  if (totalItems === 0 || totalPages === 0) {
+  // Don't render pagination if there's only one page
+  if (totalPages <= 1) {
     return null;
   }
+
+  // Calculate page range to show
+  const getPageRange = () => {
+    const delta = 1; // Number of pages to show before and after current page
+    const range: number[] = [];
+    
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+    
+    // Add first page if not already in range
+    if (range[0] > 2) {
+      range.unshift(-1); // -1 indicates ellipsis
+    }
+    if (range[0] !== 2 && range[0] !== -1) {
+      range.unshift(2);
+    }
+    
+    // Add last page if not already in range
+    if (range[range.length - 1] < totalPages - 1) {
+      range.push(-1); // -1 indicates ellipsis
+    }
+    if (range[range.length - 1] !== totalPages - 1 && range[range.length - 1] !== -1) {
+      range.push(totalPages - 1);
+    }
+    
+    return [1, ...range, totalPages];
+  };
+  
+  // Ensure totalPages is at least 1
+  const pageCount = Math.max(1, totalPages);
+  const pageRange = totalPages > 1 ? getPageRange() : [1];
   
   return (
-    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-      <div className="text-sm text-muted-foreground">
-        {t("showing")} {Math.min((currentPage - 1) * pageSize + 1, totalItems)} - {Math.min(currentPage * pageSize, totalItems)} {t("of")} {totalItems} {t("items")}
-      </div>
-      
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{t("itemsPerPage")}</span>
-          <Select
-            value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
-          >
-            <SelectTrigger className="w-[70px] h-8">
-              <SelectValue placeholder={pageSize} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <Pagination 
+      itemsCount={totalPages * 10} 
+      itemsPerPage={10} 
+      currentPage={currentPage} 
+      onPageChange={onPageChange}
+    >
+      <PaginationContent>
+        {currentPage > 1 && (
+          <PaginationItem>
+            <PaginationPrevious 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange(currentPage - 1);
+              }} 
+            />
+          </PaginationItem>
+        )}
         
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                onClick={() => onPageChange(currentPage - 1)}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                aria-disabled={currentPage === 1}
-              />
-            </PaginationItem>
-            
-            {getPageNumbers().map((page, index) => (
-              <PaginationItem key={index}>
-                {typeof page === "number" ? (
-                  <PaginationLink
-                    onClick={() => onPageChange(page)}
-                    isActive={currentPage === page}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                ) : (
-                  <PaginationEllipsis />
-                )}
+        {pageRange.map((page, index) => {
+          if (page === -1) {
+            return (
+              <PaginationItem key={`ellipsis-${index}`}>
+                <PaginationEllipsis />
               </PaginationItem>
-            ))}
-            
-            <PaginationItem>
-              <PaginationNext 
-                onClick={() => onPageChange(currentPage + 1)}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                aria-disabled={currentPage === totalPages}
-              />
+            );
+          }
+          
+          return (
+            <PaginationItem key={page}>
+              <PaginationLink
+                href="#"
+                isActive={page === currentPage}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(page);
+                }}
+              >
+                {page}
+              </PaginationLink>
             </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    </div>
+          );
+        })}
+        
+        {currentPage < pageCount && (
+          <PaginationItem>
+            <PaginationNext 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                onPageChange(currentPage + 1);
+              }} 
+            />
+          </PaginationItem>
+        )}
+      </PaginationContent>
+    </Pagination>
   );
 };
 

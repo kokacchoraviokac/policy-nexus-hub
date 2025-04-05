@@ -1,78 +1,53 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './use-toast';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/auth/AuthContext';
 
-interface InvitationData {
+export interface CreateInvitationParams {
   email: string;
   role: string;
   company_id: string;
 }
 
-export const useCreateInvitation = () => {
+export function useCreateInvitation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-  const { t } = useLanguage();
-  const { user } = useAuth();
-
-  const createInvitation = async (data: InvitationData) => {
-    if (!user) {
-      throw new Error(t('notAuthenticated'));
-    }
-
+  
+  const createInvitation = async (params: CreateInvitationParams): Promise<string> => {
     setIsSubmitting(true);
+    
     try {
-      // Calculate expiry date (24 hours from now)
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24);
-
-      // Generate a random token
-      const token = Math.random().toString(36).substring(2, 15) + 
-                   Math.random().toString(36).substring(2, 15);
-
-      // Create invitation record
-      const { data: invitation, error } = await supabase
+      // Validate input
+      if (!params.email || !params.role || !params.company_id) {
+        throw new Error('Missing required parameters');
+      }
+      
+      // Call API to create invitation
+      const { data, error } = await supabase
         .from('invitations')
         .insert({
-          email: data.email,
-          role: data.role,
-          company_id: data.company_id,
-          token,
+          email: params.email,
+          role: params.role,
+          company_id: params.company_id,
           status: 'pending',
-          created_by: user.id,
-          expires_at: expiresAt.toISOString()
+          // Set expiry to 7 days from now
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         })
         .select()
         .single();
-
+      
       if (error) throw error;
-
-      // Here you'd typically send an email with the invitation link
-      // This would be handled by a server function in production
-      console.log('Invitation created:', invitation);
-
-      return invitation;
+      
+      // Return the new invitation ID
+      return data.id;
     } catch (error) {
       console.error('Error creating invitation:', error);
-      let errorMessage = t('errorCreatingInvitation');
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      toast({
-        title: t('error'),
-        description: errorMessage,
-        variant: 'destructive',
-      });
-      
       throw error;
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  return { createInvitation, isSubmitting };
-};
+  
+  return {
+    createInvitation,
+    isSubmitting
+  };
+}

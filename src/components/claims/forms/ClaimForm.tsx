@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/auth/AuthContext';
 import ClaimDetailsForm from './ClaimDetailsForm';
-import PolicySearchDialog, { Policy } from '@/components/policies/search/PolicySearchDialog';
+import PolicySearchDialog from '@/components/policies/search/PolicySearchDialog';
+import { Policy } from '@/types/policies';
 
 const ClaimForm: React.FC = () => {
   const navigate = useNavigate();

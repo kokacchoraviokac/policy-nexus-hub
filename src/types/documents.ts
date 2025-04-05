@@ -1,5 +1,4 @@
 
-// Define the types of entities a document can be associated with
 export type EntityType = 
   | 'policy'
   | 'claim'
@@ -10,122 +9,93 @@ export type EntityType =
   | 'invoice'
   | 'addendum';
 
-// Document approval status options
+export type DocumentCategory = 
+  | 'policy'
+  | 'claim'
+  | 'invoice'
+  | 'amendment'
+  | 'contract'
+  | 'identification'
+  | 'authorization'
+  | 'other';
+
 export type DocumentApprovalStatus = 
   | 'pending'
   | 'approved'
   | 'rejected'
   | 'needs_review';
 
-// Document category options
-export type DocumentCategory = 
-  | 'policy'
-  | 'claim'
-  | 'quote'
-  | 'proposal'
-  | 'contract'
-  | 'invoice'
-  | 'amendment'
-  | 'authorization'
-  | 'identification'
-  | 'financial'
-  | 'report'
-  | 'evidence'
-  | 'certificate'
-  | 'agreement'
-  | 'license'
-  | 'lien'
-  | 'notification'
-  | 'claim_evidence'
-  | 'medical'
-  | 'legal'
-  | 'correspondence'
-  | 'discovery'
-  | 'closeout'
-  | 'other';
-
-// Main Document interface
 export interface Document {
   id: string;
   document_name: string;
   document_type: string;
   file_path: string;
   entity_type: EntityType;
-  entity_id: string;
-  
-  // User info
-  uploaded_by: string;
-  uploaded_by_id?: string;
-  uploaded_by_name?: string;
-  company_id: string;
-  
-  // Metadata
+  category?: DocumentCategory;
+  company_id?: string;
   created_at: string;
-  category?: DocumentCategory | string;
-  description?: string;
-  status?: string;
-  tags?: string[];
-  
-  // Version control
-  version?: number;
+  updated_at?: string;
   is_latest_version?: boolean;
-  original_document_id?: string | null;
-  
-  // Technical details
-  mime_type?: string | null;
-  file_size?: number;
-  file_extension?: string;
-  
-  // Approval information
+  version?: number;
+  original_document_id?: string;
+  mime_type?: string;
   approval_status?: DocumentApprovalStatus;
   approval_notes?: string;
   approved_by?: string;
   approved_at?: string;
+  uploaded_by?: string;
+  uploaded_by_name?: string;
+  
+  // Entity-specific IDs
+  policy_id?: string;
+  claim_id?: string;
+  sales_process_id?: string;
+  client_id?: string;
+  insurer_id?: string;
+  agent_id?: string;
+  invoice_id?: string;
+  addendum_id?: string;
+  
+  // Additional fields for sales processes
+  step?: string;
 }
 
-// Type for document search parameters
-export interface DocumentSearchParams {
-  searchTerm?: string;
-  page?: number;
-  pageSize?: number;
-  documentType?: string;
-  category?: string;
-  entityType?: EntityType;
-  entityId?: string;
-  status?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  uploadedBy?: string;
-}
-
-// For DocumentUpload hook
-export interface DocumentUploadRequest {
-  documentName: string;
-  documentType: string;
-  category: string;
-  file: File;
-  entityId: string;
-  entityType: EntityType;
-  originalDocumentId?: string;
-  currentVersion?: number;
-}
-
-// For DocumentAnalysisPanel
 export interface DocumentAnalysisPanelProps {
   document?: Document;
   documentId?: string;
   documentUrl?: string;
   documentType?: string;
   file?: File;
-  onAnalysisComplete?: (result: any) => void;
-  onCategoryDetected?: (category: any) => void;
+  onAnalysisComplete?: () => void;
+  onCategoryDetected?: (category: string) => void;
 }
 
-// Type for document search hook props
+export interface DocumentUploadRequest {
+  documentName: string;
+  documentType: string;
+  category: DocumentCategory;
+  file: File;
+  entityType: EntityType;
+  entityId: string;
+  originalDocumentId?: string;
+  currentVersion?: number;
+  salesStage?: string;
+}
+
+export interface DocumentSearchParams {
+  searchTerm?: string;
+  documentType?: string;
+  category?: string;
+  entityType?: EntityType;
+  entityId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}
+
 export interface UseDocumentSearchProps {
   entityType?: EntityType;
   entityId?: string;
-  searchTerm?: string;
-  category?: string;
-  status?: string;
+  defaultParams?: Partial<DocumentSearchParams>;
 }

@@ -1,195 +1,124 @@
 
-import React, { useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs } from "@/components/ui/tabs";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Sparkles, Tag, AlertCircle, FileText } from "lucide-react";
 import { DocumentAnalysisPanelProps } from "@/types/documents";
 
-const AnalysisTabs = ({ activeTab, result, error }: { activeTab: string, result: any, error: string | null }) => {
-  const { t } = useLanguage();
-  
-  if (activeTab === "classify" && result) {
-    try {
-      const classification = typeof result.analysis === 'string' ? JSON.parse(result.analysis) : result.analysis;
-      return (
-        <div className="p-4 border rounded-lg mt-4">
-          <h4 className="font-medium mb-2">{t("categoryDetected")}</h4>
-          <p className="text-sm">{t("documentCategoryDetectedAs", { category: classification.documentType })}</p>
-          <p className="text-xs text-muted-foreground mt-2">Confidence: {Math.round(classification.confidence * 100)}%</p>
-        </div>
-      );
-    } catch (e) {
-      return <div className="text-sm text-destructive">{t("analysisError")}</div>;
-    }
-  }
-  
-  if (activeTab === "extract" && result) {
-    try {
-      const data = typeof result.analysis === 'string' ? JSON.parse(result.analysis) : result.analysis;
-      return (
-        <div className="p-4 border rounded-lg mt-4">
-          <h4 className="font-medium mb-2">{t("extractedData")}</h4>
-          <div className="text-sm space-y-2">
-            {Object.entries(data).map(([key, value]) => (
-              <div key={key} className="grid grid-cols-3">
-                <span className="font-medium">{key}:</span>
-                <span className="col-span-2">{String(value)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    } catch (e) {
-      return <div className="text-sm text-destructive">{t("textExtractionError")}</div>;
-    }
-  }
-  
-  if (activeTab === "summarize" && result) {
-    return (
-      <div className="p-4 border rounded-lg mt-4">
-        <h4 className="font-medium mb-2">{t("documentSummary")}</h4>
-        <p className="text-sm">{result.analysis}</p>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return <div className="text-sm text-destructive mt-4">{error}</div>;
-  }
-  
-  return null;
-};
-
-const AnalysisTabsList = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) => {
-  const { t } = useLanguage();
-  
-  return (
-    <div className="flex space-x-1 rounded-lg bg-muted p-1">
-      <button
-        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md ${
-          activeTab === "classify" ? "bg-white shadow" : "text-muted-foreground"
-        }`}
-        onClick={() => setActiveTab("classify")}
-      >
-        {t("classify")}
-      </button>
-      <button
-        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md ${
-          activeTab === "extract" ? "bg-white shadow" : "text-muted-foreground"
-        }`}
-        onClick={() => setActiveTab("extract")}
-      >
-        {t("extract")}
-      </button>
-      <button
-        className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md ${
-          activeTab === "summarize" ? "bg-white shadow" : "text-muted-foreground"
-        }`}
-        onClick={() => setActiveTab("summarize")}
-      >
-        {t("summarize")}
-      </button>
-    </div>
-  );
-};
-
-const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = (props) => {
-  const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState("classify");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<{
-    success: boolean;
-    analysis: string;
-    analysisType?: string;
-  } | null>(null);
+const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
+  document,
+  documentId,
+  documentUrl,
+  documentType,
+  file,
+  onAnalysisComplete,
+  onCategoryDetected
+}) => {
+  const [analyzing, setAnalyzing] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   
-  const handleAnalyze = async () => {
-    setIsProcessing(true);
-    setError(null);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+  // Simulate document analysis
+  useEffect(() => {
+    if (file) {
+      setAnalyzing(true);
+      setError(null);
       
-      // Mock result based on selected tab
-      let mockResult;
-      switch (activeTab) {
-        case 'classify':
-          mockResult = {
-            success: true,
-            analysis: JSON.stringify({
-              documentType: "invoice",
-              confidence: 0.92,
-              possibleTypes: ["invoice", "receipt", "statement"]
-            }),
-            analysisType: "classification"
-          };
-          
-          if (props.onCategoryDetected) {
-            props.onCategoryDetected("invoice");
-          }
-          break;
-        case 'extract':
-          mockResult = {
-            success: true,
-            analysis: JSON.stringify({
-              invoiceNumber: "INV-2023-00123",
-              date: "2023-05-15",
-              totalAmount: 1250.50,
-              currency: "USD",
-              vendor: "Acme Corp"
-            }),
-            analysisType: "extraction"
-          };
-          break;
-        case 'summarize':
-          mockResult = {
-            success: true,
-            analysis: "This document is an invoice from Acme Corp dated May 15, 2023 for services rendered. The total amount is $1,250.50 with payment terms of Net 30 days.",
-            analysisType: "summary"
-          };
-          break;
-        default:
-          mockResult = {
-            success: false,
-            analysis: "Unknown analysis type",
-            analysisType: "unknown"
-          };
-      }
+      // Mock analysis process
+      const timer = setTimeout(() => {
+        setAnalyzing(false);
+        setCompleted(true);
+        
+        // Mock detection result based on file type
+        let detectedCategories: string[] = [];
+        
+        if (file.type.includes('pdf')) {
+          detectedCategories = ['policy', 'invoice'];
+        } else if (file.type.includes('image')) {
+          detectedCategories = ['identification', 'other'];
+        } else if (file.type.includes('word')) {
+          detectedCategories = ['contract', 'amendment'];
+        }
+        
+        setCategories(detectedCategories);
+        
+        // Notify parent about detected category
+        if (detectedCategories.length > 0 && onCategoryDetected) {
+          onCategoryDetected(detectedCategories[0]);
+        }
+        
+        if (onAnalysisComplete) {
+          onAnalysisComplete();
+        }
+      }, 2000);
       
-      setResult(mockResult);
-      
-      if (props.onAnalysisComplete) {
-        props.onAnalysisComplete(mockResult);
-      }
-      
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
-      setResult(null);
-    } finally {
-      setIsProcessing(false);
+      return () => clearTimeout(timer);
     }
-  };
-
+  }, [file, onCategoryDetected, onAnalysisComplete]);
+  
   return (
     <Card>
-      <CardContent className="p-6">
-        <h3 className="text-lg font-medium mb-4">{t("documentAnalysis")}</h3>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <AnalysisTabsList activeTab={activeTab} setActiveTab={setActiveTab} />
-          <AnalysisTabs activeTab={activeTab} result={result} error={error} />
-          
-          <div className="mt-6">
-            <Button 
-              onClick={handleAnalyze}
-              disabled={isProcessing}
-            >
-              {isProcessing ? t("analyzing") : t("analyze")}
-            </Button>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex items-center">
+          <Sparkles className="mr-2 h-4 w-4" />
+          Document Analysis
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {file ? (
+          <>
+            <div className="text-sm mb-4">
+              <div className="font-medium">File:</div>
+              <div className="flex items-center text-muted-foreground">
+                <FileText className="h-4 w-4 mr-1" />
+                {file.name}
+              </div>
+            </div>
+            
+            {analyzing ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-pulse flex items-center">
+                  <Sparkles className="mr-2 h-4 w-4 text-blue-500" />
+                  <p>Analyzing document...</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center text-destructive py-4">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                {error}
+              </div>
+            ) : completed ? (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium mb-1">
+                    <Tag className="h-4 w-4 inline mr-1" />
+                    Detected Categories:
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
+                        <Badge 
+                          key={category} 
+                          variant="outline" 
+                          className="bg-blue-50"
+                        >
+                          {category}
+                        </Badge>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No categories detected</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <div className="text-sm text-muted-foreground py-4 text-center">
+            Upload a document to start analysis
           </div>
-        </Tabs>
+        )}
       </CardContent>
     </Card>
   );

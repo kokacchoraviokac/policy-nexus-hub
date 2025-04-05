@@ -66,3 +66,14 @@ export function getUpdatedProposalWithStatus(
   
   return { ...proposal, ...updates };
 }
+
+/**
+ * Filter proposals by status
+ */
+export function filterProposals(proposals: Proposal[], status?: ProposalStatus): Proposal[] {
+  if (!status || status === 'all') {
+    return proposals;
+  }
+  
+  return proposals.filter(proposal => proposal.status === status);
+}

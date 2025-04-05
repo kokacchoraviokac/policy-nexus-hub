@@ -1,6 +1,7 @@
 
 import { EntityType } from '@/types/documents';
 
+// Define acceptable document table names in Supabase
 export type DocumentTableName = 
   | 'policy_documents'
   | 'claim_documents'

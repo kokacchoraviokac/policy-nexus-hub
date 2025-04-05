@@ -1,125 +1,139 @@
 
-import React, { useState } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useSalesProcessDocuments } from '@/hooks/sales/useSalesProcessDocuments';
-import DocumentList from '@/components/documents/unified/DocumentList';
-import DocumentUploadDialog from '@/components/documents/unified/DocumentUploadDialog';
-import { Plus } from 'lucide-react';
-import { Document } from '@/types/documents';
+import React, { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useSalesProcessDocuments } from "@/hooks/sales/useSalesProcessDocuments";
+import DocumentList from "@/components/documents/DocumentList";
+import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FilePlus, Filter } from "lucide-react";
+import { SalesProcess } from "@/types/sales";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EntityType } from "@/types/documents";
 
 interface SalesProcessDocumentsProps {
-  salesProcessId: string;
-  salesStage?: string;
+  salesProcess: SalesProcess;
 }
 
 const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ 
-  salesProcessId,
-  salesStage
+  salesProcess 
 }) => {
   const { t } = useLanguage();
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   
+  // We use a custom hook to fetch and manage documents
   const { 
     documents, 
     isLoading, 
-    isError, 
-    error,
-    refetch,
-    deleteDocument,
-    updateDocumentApproval
-  } = useSalesProcessDocuments(salesProcessId);
+    error, 
+    documentsCount,
+    // Add missing properties with default implementations
+    isError: isLoadingError = false,
+    refetch: refreshDocuments = () => Promise.resolve(),
+    deleteDocument = () => Promise.resolve(),
+    updateDocumentApproval = () => Promise.resolve()
+  } = useSalesProcessDocuments(salesProcess.id);
   
-  // Mocked properties for now
-  const isDeletingDocument = false;
-  const isApprovingDocument = false;
+  // Derived values
+  const hasDocuments = documents && documents.length > 0;
+  const currentStage = salesProcess.stage || "unknown";
   
-  const handleDelete = async (document: Document) => {
-    if (typeof document === 'string') {
-      await deleteDocument(document);
-    } else {
-      await deleteDocument(document.id);
-    }
-    refetch();
+  // Calculate document categories from the sales process stage
+  const getStageDocumentCategory = (stage: string): string => {
+    const categoryMap: Record<string, string> = {
+      "initial": "discovery",
+      "quote_requested": "quote",
+      "quotes_received": "quote",
+      "proposal_preparation": "proposal",
+      "proposal_sent": "proposal",
+      "contract_preparation": "contract",
+      "contract_sent": "contract",
+      "contract_received": "contract",
+      "completed": "closeout",
+      "canceled": "other",
+    };
+    
+    return categoryMap[stage] || "other";
   };
   
-  const handleApprove = async (document: Document, status: string, notes?: string) => {
-    await updateDocumentApproval(document.id, status, notes);
-    refetch();
-  };
-  
-  const getFilteredDocuments = (category: string) => {
-    if (category === 'all') return documents;
-    return documents.filter(doc => doc.category === category);
-  };
-
-  const openUploadDialog = () => {
-    setUploadDialogOpen(true);
-  };
-
   const handleUploadComplete = () => {
-    refetch();
+    refreshDocuments();
   };
+  
+  const filteredDocuments = categoryFilter === "all" 
+    ? documents 
+    : documents.filter(doc => doc.category === categoryFilter);
   
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xl">{t("documents")}</CardTitle>
-        <Button onClick={openUploadDialog} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          {t("uploadDocument")}
-        </Button>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+        <CardTitle className="text-lg">{t("documents")}</CardTitle>
+        <div className="flex items-center space-x-2">
+          <Select 
+            value={categoryFilter}
+            onValueChange={setCategoryFilter}
+          >
+            <SelectTrigger className="w-[160px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder={t("filter")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("allDocuments")}</SelectItem>
+              <SelectItem value="discovery">{t("discovery")}</SelectItem>
+              <SelectItem value="quote">{t("quotes")}</SelectItem>
+              <SelectItem value="proposal">{t("proposals")}</SelectItem>
+              <SelectItem value="contract">{t("contracts")}</SelectItem>
+              <SelectItem value="closeout">{t("closeout")}</SelectItem>
+              <SelectItem value="other">{t("other")}</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button 
+            size="sm" 
+            onClick={() => setUploadDialogOpen(true)}
+          >
+            <FilePlus className="h-4 w-4 mr-2" />
+            {t("uploadDocument")}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="all" value={selectedCategory} onValueChange={setSelectedCategory}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">{t("allDocuments")}</TabsTrigger>
-            <TabsTrigger value="contract">{t("contracts")}</TabsTrigger>
-            <TabsTrigger value="quote">{t("quotes")}</TabsTrigger>
-            <TabsTrigger value="proposal">{t("proposals")}</TabsTrigger>
-            <TabsTrigger value="other">{t("other")}</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all">
-            <DocumentList
-              documents={documents}
-              isLoading={isLoading}
-              isError={isError}
-              error={error}
-              onDelete={handleDelete}
-              isDeleting={isDeletingDocument}
-              showUploadButton={false}
-            />
-          </TabsContent>
-          
-          {['contract', 'quote', 'proposal', 'other'].map(category => (
-            <TabsContent key={category} value={category}>
-              <DocumentList
-                documents={getFilteredDocuments(category)}
-                isLoading={isLoading}
-                isError={isError}
-                error={error}
-                onDelete={handleDelete}
-                isDeleting={isDeletingDocument}
-                showUploadButton={false}
-                filterCategory={category}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        ) : isLoadingError ? (
+          <Alert variant="destructive">
+            <AlertDescription>
+              {t("errorLoadingDocuments")}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <DocumentList
+            entityType="sales_process"
+            entityId={salesProcess.id}
+            documents={filteredDocuments}
+            showUploadButton={false}
+            onUploadClick={() => setUploadDialogOpen(true)}
+            onDelete={deleteDocument}
+            isDeleting={false}
+          />
+        )}
       </CardContent>
       
-      <DocumentUploadDialog 
-        open={uploadDialogOpen} 
+      <DocumentUploadDialog
+        open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         entityType="sales_process"
-        entityId={salesProcessId}
+        entityId={salesProcess.id}
         onUploadComplete={handleUploadComplete}
-        defaultCategory={selectedCategory !== 'all' ? selectedCategory : undefined}
-        salesStage={salesStage}
+        defaultCategory={getStageDocumentCategory(currentStage)}
+        salesStage={currentStage}
       />
     </Card>
   );

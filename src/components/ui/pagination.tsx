@@ -42,13 +42,15 @@ const PaginationItem = ({
   <li className={cn("", className)} {...props} />
 );
 
+interface PaginationLinkProps extends React.ComponentProps<"a"> {
+  isActive?: boolean;
+}
+
 const PaginationLink = ({
   className,
   isActive = false,
   ...props
-}: React.ComponentProps<"a"> & {
-  isActive?: boolean;
-}) => (
+}: PaginationLinkProps) => (
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
@@ -68,7 +70,6 @@ const PaginationPrevious = ({
 }: React.ComponentProps<"a">) => (
   <a
     aria-label="Go to previous page"
-    size="sm"
     className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1 pl-2.5", className)}
     {...props}
   >
@@ -83,7 +84,6 @@ const PaginationNext = ({
 }: React.ComponentProps<"a">) => (
   <a
     aria-label="Go to next page"
-    size="sm"
     className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1 pr-2.5", className)}
     {...props}
   >
@@ -109,8 +109,8 @@ const PaginationEllipsis = ({
 export {
   Pagination,
   PaginationContent,
-  PaginationLink,
   PaginationItem,
+  PaginationLink,
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
