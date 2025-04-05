@@ -1,6 +1,6 @@
 
-import { User, UserRole } from './user';
-import { Session } from '@supabase/supabase-js';
+import { User, UserRole, AuthState, CustomPrivilege } from "@/types/auth/user";
+import { Session } from "@supabase/supabase-js";
 
 export interface ResourceContext {
   ownerId?: string;
@@ -22,7 +22,7 @@ export interface AuthContextType {
   role: UserRole | null;
   companyId: string | null;
   permissions: string[];
-  customPrivileges: any[];
+  customPrivileges: CustomPrivilege[];
   
   // Authentication methods
   signIn: (email: string, password: string) => Promise<{ error: any }>;

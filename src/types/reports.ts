@@ -47,6 +47,7 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
+  children?: React.ReactNode;
 }
 
 export interface ProposalStats {

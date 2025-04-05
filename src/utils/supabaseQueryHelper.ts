@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { PostgrestQueryBuilder } from '@supabase/postgrest-js';
+import { EntityType } from "@/types/documents";
 
 // Define the valid document table names
 export type DocumentTableName = 
@@ -27,7 +27,7 @@ export const entityToDocumentTable: Record<string, DocumentTableName> = {
 
 // Helper function to safely query document tables
 export function queryDocumentTable(tableName: DocumentTableName) {
-  return supabase.from(tableName);
+  return supabase.from(tableName) as any;
 }
 
 // Type guard for DocumentTableName
@@ -49,17 +49,17 @@ export function getDocumentTableForEntity(entityType: string): DocumentTableName
 // Helper for safely querying document tables
 export function queryDocuments(entityType: string) {
   const tableName = getDocumentTableForEntity(entityType);
-  return supabase.from(tableName);
+  return supabase.from(tableName) as any;
 }
 
 // Helper for safely casting objects to Document type
 export function castToDocument(data: any) {
-  return data;
+  return data as any;
 }
 
 // Safe Supabase table query
 export function safeSupabaseQuery(tableName: string) {
-  return supabase.from(tableName);
+  return supabase.from(tableName) as any;
 }
 
 // Helper function for document queries with any table

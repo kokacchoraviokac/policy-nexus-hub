@@ -1,5 +1,5 @@
 
-import { Document, DocumentCategory, EntityType } from "@/types/documents";
+import { Document, DocumentCategory, EntityType, DocumentApprovalStatus } from "@/types/documents";
 import { FileText, Clipboard, File, Receipt, Info } from "lucide-react";
 import React from "react";
 
@@ -87,5 +87,21 @@ export const documentCategories = [
   { value: 'claim', label: 'Claim' },
   { value: 'client', label: 'Client' },
   { value: 'invoice', label: 'Invoice' },
+  { value: 'proposal', label: 'Proposal' },
+  { value: 'quote', label: 'Quote' },
   { value: 'other', label: 'Other' }
 ];
+
+export const getApprovalStatusBadgeVariant = (status: DocumentApprovalStatus) => {
+  switch (status) {
+    case 'approved':
+      return 'success';
+    case 'rejected':
+      return 'destructive';
+    case 'needs_review':
+      return 'warning';
+    case 'pending':
+    default:
+      return 'outline';
+  }
+};

@@ -18,7 +18,15 @@ export type DocumentCategory =
   | 'correspondence'
   | 'report'
   | 'legal'
-  | 'other';
+  | 'other'
+  | 'proposal'
+  | 'quote';
+
+export type DocumentApprovalStatus = 
+  | 'approved' 
+  | 'rejected' 
+  | 'pending' 
+  | 'needs_review';
 
 export interface Document {
   id: string;
@@ -37,9 +45,12 @@ export interface Document {
   original_document_id?: string | null;
   is_latest_version?: boolean;
   mime_type?: string;
-  category?: string;
+  category?: DocumentCategory;
   status?: string;
-  approval_status?: string;
+  approval_status?: DocumentApprovalStatus;
+  approved_by?: string;
+  approved_at?: string;
+  approval_notes?: string;
 }
 
 export interface DocumentUploadStateProps {
@@ -84,4 +95,25 @@ export interface DocumentUploadDialogProps {
   defaultCategory?: DocumentCategory;
   salesStage?: string;
   selectedDocument?: Document;
+}
+
+export interface DocumentAnalysisPanelProps {
+  document?: Document;
+  documentId?: string;
+  documentUrl?: string;
+  documentType?: string;
+  file?: File;
+  onAnalysisComplete?: () => void;
+  onCategoryDetected?: (category: DocumentCategory) => void;
+}
+
+export interface DocumentUploadRequest {
+  document_name: string;
+  document_type: string;
+  entity_type: EntityType;
+  entity_id: string;
+  description?: string;
+  tags?: string[];
+  category: DocumentCategory;
+  file: File;
 }

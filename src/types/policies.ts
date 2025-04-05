@@ -4,7 +4,7 @@ export type PolicyType = 'external' | 'internal' | string;
 export type PolicyStatus = 'active' | 'expired' | 'cancelled' | 'pending' | string;
 export type CommissionType = 'automatic' | 'manual' | 'none';
 export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete' | string;
-export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'full';
+export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'full' | string;
 
 // Basic interfaces for related entities
 export interface Insurer {
