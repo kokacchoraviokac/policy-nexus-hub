@@ -31,6 +31,7 @@ export interface Document {
   document_type: string;
   file_path: string;
   entity_type: EntityType;
+  entity_id: string; // Added this property
   category?: DocumentCategory;
   company_id?: string;
   created_at: string;
@@ -45,6 +46,7 @@ export interface Document {
   approved_at?: string;
   uploaded_by?: string;
   uploaded_by_name?: string;
+  description?: string; // Added this property
   
   // Entity-specific IDs
   policy_id?: string;
@@ -98,4 +100,5 @@ export interface UseDocumentSearchProps {
   entityType?: EntityType;
   entityId?: string;
   defaultParams?: Partial<DocumentSearchParams>;
+  searchTerm?: string; // Add this property
 }

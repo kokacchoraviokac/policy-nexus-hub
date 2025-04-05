@@ -23,6 +23,7 @@ const InvitationManagement: React.FC = () => {
   const [itemsPerPage] = useState(10);
   
   const { user } = useAuth();
+  // Update this to compare against the defined UserRole type
   const isSuperAdmin = user?.role === 'super_admin';
   
   const { companies, loading: isLoadingCompanies } = useCompanies();
@@ -84,7 +85,7 @@ const InvitationManagement: React.FC = () => {
             <CreateInvitationForm
               companies={companies || []}
               isSuperAdmin={isSuperAdmin}
-              defaultCompanyId={user?.company_id}
+              defaultCompanyId={user?.companyId}
               isSubmitting={isSubmitting}
               onSubmit={handleCreateInvitation}
             />

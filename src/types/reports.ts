@@ -6,9 +6,9 @@ export interface FinancialReportFilters {
   transactionType: string;
   category: string;
   status: string;
-  searchTerm: string;
-  startDate: string;
-  endDate: string;
+  searchTerm: string; // Added this property
+  startDate: string; // Added this property
+  endDate: string; // Added this property
 }
 
 export interface FinancialReportData {
@@ -23,6 +23,7 @@ export interface FinancialReportData {
   entity_type?: string;
   status: string;
   category: string;
+  transactions: FinancialTransaction[]; // Added this property
 }
 
 export interface FinancialTransaction {

@@ -1,20 +1,24 @@
 
 import React from 'react';
-import SalesProcessDocuments from '../../documents/SalesProcessDocuments';
+import { Card, CardContent } from '@/components/ui/card';
+import SalesProcessDocuments from '@/components/sales/documents/SalesProcessDocuments';
 import { SalesProcess } from '@/types/sales';
 
 interface DocumentsTabProps {
-  process: SalesProcess;
+  salesProcess: SalesProcess;
+  salesStage: string;
 }
 
-const DocumentsTab: React.FC<DocumentsTabProps> = ({ process }) => {
+const DocumentsTab: React.FC<DocumentsTabProps> = ({ salesProcess, salesStage }) => {
   return (
-    <div className="mt-4">
-      <SalesProcessDocuments 
-        salesProcessId={process.id} 
-        salesStage={process.current_step}
-      />
-    </div>
+    <Card>
+      <CardContent className="pt-6">
+        <SalesProcessDocuments 
+          salesProcess={salesProcess}
+          salesStage={salesStage}
+        />
+      </CardContent>
+    </Card>
   );
 };
 

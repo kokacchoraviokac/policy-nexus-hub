@@ -1,355 +1,213 @@
-
-import React, { useState, useMemo, ChangeEvent } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Search, Eye, Download, Calendar, FileText, File } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Document, EntityType } from "@/types/documents";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, Calendar, FileText, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Document, DocumentCategory, EntityType } from "@/types/documents";
 import { useDocumentSearch } from "@/hooks/useDocumentSearch";
-import { useDocumentDownload } from "@/hooks/useDocumentDownload";
-import { DocumentViewDialog } from "../DocumentViewDialog";
 import { Pagination } from "@/components/ui/pagination";
-import LoadingState from "@/components/ui/loading-state";
-import { formatDateToLocal } from "@/utils/dateUtils";
+import { LoadingState } from "@/components/ui/loading-state";
 
 interface DocumentSearchProps {
-  title?: string;
-  showTableHeader?: boolean;
-  filterEntity?: EntityType;
-  filterEntityId?: string;
-  onDocumentSelected?: (document: Document) => void;
-  selectable?: boolean;
-  filterStatus?: string;
+  entityType?: EntityType;
+  entityId?: string;
 }
 
-const ITEMS_PER_PAGE = 10;
-
-export const DocumentSearch = ({
-  title = "Document Search",
-  showTableHeader = true,
-  filterEntity,
-  filterEntityId,
-  onDocumentSelected,
-  selectable = false,
-  filterStatus
-}: DocumentSearchProps) => {
-  const { t } = useLanguage();
+const DocumentSearch: React.FC<DocumentSearchProps> = ({ entityType, entityId }) => {
+  const { t, formatDate } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  
-  const { downloadDocument, isDownloading } = useDocumentDownload();
+  const [category, setCategory] = useState<DocumentCategory | "">("");
+  const [documentType, setDocumentType] = useState("");
+  const [dateFrom, setDateFrom] = useState<Date | null>(null);
+  const [dateTo, setDateTo] = useState<Date | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   
   const { 
     documents, 
     isLoading, 
-    error,
-    searchDocuments,
-    refresh
-  } = useDocumentSearch({
-    searchTerm,
-    page: currentPage,
-    pageSize: ITEMS_PER_PAGE,
-    documentType: selectedDocumentType,
-    category: selectedCategory,
-    entityType: filterEntity,
-    entityId: filterEntityId,
-    status: filterStatus
-  });
+    error, 
+    searchDocuments 
+  } = useDocumentSearch({ entityType, entityId });
   
-  // Calculate these manually since they're not provided by the hook
-  const totalPages = Math.ceil((documents?.length || 0) / ITEMS_PER_PAGE);
-  const totalDocuments = documents?.length || 0;
+  useEffect(() => {
+    searchDocuments({
+      searchTerm,
+      category,
+      documentType,
+      dateFrom,
+      dateTo
+    });
+  }, [searchTerm, category, documentType, dateFrom, dateTo, searchDocuments]);
   
-  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on new search
+  const handleSearch = () => {
+    searchDocuments({
+      searchTerm,
+      category,
+      documentType,
+      dateFrom,
+      dateTo
+    });
   };
   
-  const handleViewDocument = (document: Document) => {
-    setSelectedDocument(document);
-    setIsViewDialogOpen(true);
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setCategory("");
+    setDocumentType("");
+    setDateFrom(null);
+    setDateTo(null);
+    
+    searchDocuments({});
   };
   
-  const handleSelectDocument = (document: Document) => {
-    if (onDocumentSelected) {
-      onDocumentSelected(document);
-    }
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
   
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(1); // Reset to first page when page size changes
   };
   
-  const columns = useMemo(() => [
-    {
-      id: "select",
-      cell: ({ row }: { row: any }) => {
-        if (!selectable) return null;
-        return (
-          <div className="flex items-center">
-            <Checkbox 
-              checked={false} 
-              onCheckedChange={() => handleSelectDocument(row.original)}
-            />
+  if (isLoading) {
+    return <LoadingState text={t("searchingDocuments")} />;
+  }
+  
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center text-center">
+            <AlertCircle className="h-10 w-10 text-destructive mb-2" />
+            <h3 className="text-lg font-medium">{t("errorSearchingDocuments")}</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("pleaseTryAgainLater")}
+            </p>
           </div>
-        );
-      }
-    },
-    {
-      accessorKey: "document_name",
-      header: t("documentName"),
-      cell: ({ row }: { row: any }) => {
-        const document: Document = row.original;
-        return (
-          <div className="flex items-center space-x-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{document.document_name}</span>
-          </div>
-        );
-      },
-      key: "name"
-    },
-    {
-      accessorKey: "document_type",
-      header: t("type"),
-      cell: ({ row }: { row: any }) => {
-        const document: Document = row.original;
-        return <span>{t(document.document_type)}</span>;
-      },
-      key: "type"
-    },
-    {
-      accessorKey: "category",
-      header: t("category"),
-      cell: ({ row }: { row: any }) => {
-        const document: Document = row.original;
-        return document.category ? (
-          <Badge variant="outline">{t(document.category)}</Badge>
-        ) : null;
-      },
-      key: "category"
-    },
-    {
-      accessorKey: "created_at",
-      header: t("uploadedOn"),
-      cell: ({ row }: { row: any }) => {
-        const document: Document = row.original;
-        return (
-          <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>{formatDateToLocal(document.created_at)}</span>
-          </div>
-        );
-      },
-      key: "date"
-    },
-    {
-      id: "actions",
-      cell: ({ row }: { row: any }) => {
-        const document: Document = row.original;
-        return (
-          <div className="flex items-center space-x-2">
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              onClick={() => handleViewDocument(document)}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              onClick={() => downloadDocument(document)}
-              disabled={isDownloading}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
-      key: "actions"
-    }
-  ], [selectable, t, isDownloading, downloadDocument, handleSelectDocument]);
-
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
-    <Card>
-      {showTableHeader && (
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>
-            {t("searchDocumentsDescription")}
-          </CardDescription>
-        </CardHeader>
-      )}
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-grow">
+    <div className="space-y-4">
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input
+                type="search"
+                placeholder={t("searchDocuments")}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              
+              <Select onValueChange={(value) => setDocumentType(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("selectDocumentType")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t("allDocumentTypes")}</SelectItem>
+                  <SelectItem value="pdf">{t("pdfDocument")}</SelectItem>
+                  <SelectItem value="word">{t("wordDocument")}</SelectItem>
+                  {/* Add more document types as needed */}
+                </SelectContent>
+              </Select>
+              
+              <Select onValueChange={(value) => setCategory(value as DocumentCategory)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("selectCategory")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t("allCategories")}</SelectItem>
+                  <SelectItem value="policy">{t("policy")}</SelectItem>
+                  <SelectItem value="claim">{t("claim")}</SelectItem>
+                  {/* Add more categories as needed */}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder={t("searchDocuments")}
-                  value={searchTerm}
-                  onChange={handleSearch}
-                  className="w-full pl-8"
+                  type="date"
+                  placeholder={t("dateFrom")}
+                  value={dateFrom ? formatDate(dateFrom) : ""}
+                  onChange={(e) => setDateFrom(e.target.value ? new Date(e.target.value) : null)}
                 />
-              </div>
-            </div>
-            <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
-              <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder={t("type")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">{t("allTypes")}</SelectItem>
-                <SelectItem value="policy">{t("policy")}</SelectItem>
-                <SelectItem value="invoice">{t("invoice")}</SelectItem>
-                <SelectItem value="contract">{t("contract")}</SelectItem>
-                <SelectItem value="report">{t("report")}</SelectItem>
-                <SelectItem value="other">{t("other")}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder={t("category")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">{t("allCategories")}</SelectItem>
-                <SelectItem value="policy">{t("policy")}</SelectItem>
-                <SelectItem value="client">{t("client")}</SelectItem>
-                <SelectItem value="invoice">{t("invoice")}</SelectItem>
-                <SelectItem value="contract">{t("contract")}</SelectItem>
-                <SelectItem value="report">{t("report")}</SelectItem>
-                <SelectItem value="other">{t("other")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {isLoading ? (
-            <LoadingState>{t("loadingDocuments")}</LoadingState>
-          ) : documents.length === 0 ? (
-            <div className="text-center p-8">
-              <File className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-1">{t("noDocumentsFound")}</h3>
-              <p className="text-sm text-muted-foreground">{t("tryDifferentSearchOrFilters")}</p>
-            </div>
-          ) : (
-            <>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {selectable && <TableHead style={{ width: 40 }}></TableHead>}
-                      <TableHead>{t("documentName")}</TableHead>
-                      <TableHead>{t("type")}</TableHead>
-                      <TableHead>{t("category")}</TableHead>
-                      <TableHead>{t("uploadedOn")}</TableHead>
-                      <TableHead style={{ width: 100 }}>{t("actions")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {documents.map((document) => (
-                      <TableRow key={document.id}>
-                        {selectable && (
-                          <TableCell>
-                            <Checkbox 
-                              checked={false} 
-                              onCheckedChange={() => handleSelectDocument(document)}
-                            />
-                          </TableCell>
-                        )}
-                        <TableCell className="font-medium">
-                          <div className="flex items-center space-x-2">
-                            <FileText className="h-4 w-4 text-muted-foreground" />
-                            <span>{document.document_name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{t(document.document_type || "other")}</TableCell>
-                        <TableCell>
-                          {document.category && (
-                            <Badge variant="outline">{t(document.category)}</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                            <span>{formatDateToLocal(document.created_at)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => handleViewDocument(document)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => downloadDocument(document)}
-                              disabled={isDownloading}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <Calendar className="absolute top-2 right-2 h-4 w-4 text-muted-foreground" />
               </div>
               
-              {totalPages > 1 && (
-                <div className="flex items-center justify-end gap-2 py-2">
-                  <Pagination
-                    itemsCount={totalDocuments}
-                    itemsPerPage={ITEMS_PER_PAGE}
-                    currentPage={currentPage}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </CardContent>
+              <div className="relative">
+                <Input
+                  type="date"
+                  placeholder={t("dateTo")}
+                  value={dateTo ? formatDate(dateTo) : ""}
+                  onChange={(e) => setDateTo(e.target.value ? new Date(e.target.value) : null)}
+                />
+                <Calendar className="absolute top-2 right-2 h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button variant="ghost" onClick={handleClearFilters}>
+                {t("clearFilters")}
+              </Button>
+              <Button onClick={handleSearch}>
+                <Search className="h-4 w-4 mr-2" />
+                {t("search")}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
-      {selectedDocument && (
-        <DocumentViewDialog
-          document={selectedDocument}
-          open={isViewDialogOpen}
-          onOpenChange={setIsViewDialogOpen}
+      {documents.length === 0 ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center text-center">
+              <FileText className="h-10 w-10 text-muted-foreground mb-2" />
+              <h3 className="text-lg font-medium">{t("noDocumentsFound")}</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("tryAdjustingSearch")}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {documents.map((document) => (
+            <Card key={document.id}>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <FileText className="h-8 w-8 text-primary" />
+                  <div>
+                    <h4 className="font-medium">{document.document_name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {t(document.document_type)} • {formatDate(document.created_at)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      {documents.length > 0 && (
+        <Pagination
+          itemsCount={documents.length}
+          itemsPerPage={pageSize}
+          currentPage={page}
+          onPageChange={handlePageChange}
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
         />
       )}
-    </Card>
+    </div>
   );
 };
+
+export default DocumentSearch;

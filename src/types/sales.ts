@@ -5,7 +5,8 @@ export type ProposalStatus =
   | 'viewed'
   | 'accepted'
   | 'rejected'
-  | 'expired';
+  | 'expired'
+  | 'all'; // Added 'all' for filtering
 
 export interface Proposal {
   id: string;
@@ -39,4 +40,14 @@ export interface SalesProcess {
   client_name?: string;
   responsible_person?: string;
   responsible_person_id?: string;
+}
+
+export interface UseProposalsDataProps {
+  sales_process_id?: string;
+  status?: ProposalStatus;
+}
+
+export interface SalesProcessDocumentsProps {
+  salesProcess: SalesProcess;
+  salesStage: string;
 }

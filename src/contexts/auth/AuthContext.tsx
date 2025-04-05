@@ -1,17 +1,40 @@
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { User } from "@supabase/supabase-js";
 
-import React, { createContext, useContext } from "react";
-import { AuthContextType } from "./types";
+export type UserRole = "super_admin" | "admin" | "employee" | "agent";
 
-// Create the context with a default undefined value
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar_url?: string;
+  company_id?: string;
+}
 
-// Auth context provider props
+export interface AuthContextType {
+  user: User | null;
+  userProfile: UserProfile | null;
+  role: UserRole | null;
+  companyId: string | null;
+  isInitialized: boolean;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  signUp: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateUserProfile: (profile: Partial<UserProfile>) => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 interface AuthProviderProps {
   children: React.ReactNode;
   value: AuthContextType;
 }
 
-// Auth context provider component
 export const AuthContextProvider: React.FC<AuthProviderProps> = ({ 
   children,
   value
@@ -23,7 +46,6 @@ export const AuthContextProvider: React.FC<AuthProviderProps> = ({
   );
 };
 
-// Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   

@@ -1,143 +1,175 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { usePolicyImport } from "@/hooks/usePolicyImport";
-import { useImportSourceText } from "@/hooks/policies/useImportSourceText";
-import ImportStepIndicator from "@/components/policies/import/ImportStepIndicator";
-import PolicyImportHeader from "@/components/policies/import/PolicyImportHeader";
-import PolicyImportStepContent from "@/components/policies/import/PolicyImportStepContent";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronsLeft, Import, FileText, Check, X } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { usePolicyImport } from '@/hooks/usePolicyImport';
+import PageHeader from '@/components/layout/PageHeader';
+import PolicyImportReview from '@/components/policies/import/PolicyImportReview';
+import PolicyImportInstructions from '@/components/policies/import/PolicyImportInstructions';
 
-const PolicyImportPage = () => {
+const PolicyImportPage: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const [activeStep, setActiveStep] = useState<"instructions" | "upload" | "review" | "importing" | "complete">("instructions");
-  const [importProgress, setImportProgress] = useState(0);
+  const [tab, setTab] = useState('upload');
   
   const { 
-    isImporting, 
     importedPolicies, 
-    invalidPolicies, 
-    parseCSVFile, 
-    savePolicies, 
+    validationErrors,
+    handleFileSelect,
+    handleFileDrop,
+    savePolicies,
     clearImportData,
-    salesProcessData
+    isImporting,
+    isValidating,
+    importSuccess,
+    invalidPolicies
   } = usePolicyImport();
   
-  const importSourceText = useImportSourceText(salesProcessData);
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    onDrop: handleFileDrop,
+    accept: {
+      'text/csv': ['.csv'],
+      'application/vnd.ms-excel': ['.csv'],
+      'text/plain': ['.csv', '.txt'],
+    },
+    maxFiles: 1
+  });
   
-  useEffect(() => {
-    // If we have data from sales process and importedPolicies exist, go directly to review
-    if (salesProcessData && importedPolicies.length > 0) {
-      setActiveStep("review");
-    }
-  }, [salesProcessData, importedPolicies]);
-  
-  const handleBackToWorkflow = () => {
-    navigate("/policies/workflow");
+  const goBack = () => {
+    navigate('/policies');
   };
   
-  const handleFileUpload = async (file: File) => {
-    await parseCSVFile(file);
-    if (importedPolicies.length > 0) {
-      setActiveStep("review");
-    }
-  };
-  
-  const handleImportComplete = async () => {
-    setActiveStep("importing");
-    
-    const progressInterval = setInterval(() => {
-      setImportProgress(prev => {
-        const newProgress = prev + 5;
-        if (newProgress >= 90) {
-          clearInterval(progressInterval);
-        }
-        return newProgress >= 90 ? 90 : newProgress;
-      });
-    }, 200);
-    
-    const success = await savePolicies();
-    clearInterval(progressInterval);
-    setImportProgress(100);
-    
-    setTimeout(() => {
-      setActiveStep("complete");
-      if (success) {
-        toast({
-          title: t("importSuccess"),
-          description: t("policiesImportedSuccessfully"),
-        });
-      }
-    }, 500);
-  };
-  
-  const handleGoToWorkflow = () => {
-    clearImportData();
-    navigate("/policies/workflow");
-  };
-  
-  const handleBack = () => {
-    if (activeStep === "review") {
-      if (salesProcessData) {
-        navigate(`/sales/processes`);
-      } else {
-        setActiveStep("upload");
-      }
-    } else if (activeStep === "upload") {
-      setActiveStep("instructions");
-    } else if (activeStep === "complete") {
-      clearImportData();
-      setActiveStep("instructions");
+  const handleSavePolicies = async () => {
+    const success = await savePolicies!();
+    if (success) {
+      setTab('complete');
     }
   };
   
-  const handleNext = () => {
-    if (activeStep === "instructions") {
-      setActiveStep("upload");
-    }
+  const startNewImport = () => {
+    clearImportData!();
+    setTab('upload');
   };
   
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <PolicyImportHeader 
-        title={importSourceText.title}
-        description={importSourceText.description}
-        onBackToWorkflow={handleBackToWorkflow}
+    <div>
+      <PageHeader 
+        title={t('importPolicies')} 
+        description={t('importPoliciesDescription')}
+        action={
+          <Button variant="outline" onClick={goBack}>
+            <ChevronsLeft className="mr-2 h-4 w-4" />
+            {t('backToPolicies')}
+          </Button>
+        }
       />
       
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>
-            {importSourceText.title}
-          </CardTitle>
-          <CardDescription>
-            {importSourceText.description}
-          </CardDescription>
-          
-          <ImportStepIndicator activeStep={activeStep} />
-        </CardHeader>
-        <CardContent className="pt-6">
-          <PolicyImportStepContent
-            activeStep={activeStep}
-            importProgress={importProgress}
-            importedPolicies={importedPolicies}
-            invalidPolicies={invalidPolicies}
-            salesProcessData={salesProcessData}
-            isImporting={isImporting}
-            onFileUpload={handleFileUpload}
-            onBack={handleBack}
-            onImport={handleImportComplete}
-            onNext={handleNext}
-            onGoToWorkflow={handleGoToWorkflow}
-            importSourceText={importSourceText}
+      <Tabs value={tab} onValueChange={setTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="upload">{t('upload')}</TabsTrigger>
+          <TabsTrigger 
+            value="review" 
+            disabled={importedPolicies.length === 0}
+          >
+            {t('review')}
+          </TabsTrigger>
+          <TabsTrigger 
+            value="complete" 
+            disabled={!importSuccess}
+          >
+            {t('complete')}
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="upload">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('uploadPolicyCsv')}</CardTitle>
+              <CardDescription>
+                {t('dropFileOrClickToUpload')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div 
+                {...getRootProps()} 
+                className={`border-2 border-dashed rounded-md p-10 text-center transition-colors ${
+                  isDragActive ? 'border-primary bg-primary/10' : 'border-muted-foreground/20'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <FileText size={48} className="text-muted-foreground" />
+                  {isDragActive ? (
+                    <p>{t('dropTheFilesHere')}</p>
+                  ) : (
+                    <p>
+                      {t('dragAndDropCsvOrClick')}
+                    </p>
+                  )}
+                  <Button variant="outline">
+                    {t('selectFile')}
+                  </Button>
+                </div>
+              </div>
+              
+              <PolicyImportInstructions className="mt-6" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="review">
+          <PolicyImportReview 
+            policies={importedPolicies}
+            errors={validationErrors}
+            invalidPolicies={invalidPolicies || []}
+            onSubmit={handleSavePolicies}
+            isSubmitting={isImporting}
           />
-        </CardContent>
-      </Card>
+        </TabsContent>
+        
+        <TabsContent value="complete">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-500" />
+                {t('importComplete')}
+              </CardTitle>
+              <CardDescription>
+                {t('policiesImportedSuccessfully')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between py-2 border-b">
+                  <div>{t('successfullyImported')}</div>
+                  <div className="font-semibold">{importedPolicies.length - (invalidPolicies?.length || 0)}</div>
+                </div>
+                <div className="flex justify-between py-2 border-b">
+                  <div className="flex items-center gap-1">
+                    <X className="h-4 w-4 text-destructive" />
+                    {t('failedToImport')}
+                  </div>
+                  <div className="font-semibold">{invalidPolicies?.length || 0}</div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end gap-2">
+              <Button onClick={goBack}>
+                {t('viewPolicies')}
+              </Button>
+              <Button variant="outline" onClick={startNewImport}>
+                <Import className="mr-2 h-4 w-4" />
+                {t('importMore')}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

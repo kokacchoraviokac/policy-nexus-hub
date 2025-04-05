@@ -26,7 +26,8 @@ export function useSupabaseTypedQueries() {
     };
     
     // Use the valid table name to create a properly typed query
-    return supabase.from(validTableNames[tableName]);
+    // Using type assertion to let TypeScript know this is a valid table name
+    return supabase.from(validTableNames[tableName] as any);
   };
   
   return {

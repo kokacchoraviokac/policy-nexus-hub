@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface CreateInvitationParams {
   email: string;
@@ -20,6 +21,9 @@ export function useCreateInvitation() {
         throw new Error('Missing required parameters');
       }
       
+      // Generate a token for the invitation
+      const token = uuidv4();
+      
       // Call API to create invitation
       const { data, error } = await supabase
         .from('invitations')
@@ -28,6 +32,7 @@ export function useCreateInvitation() {
           role: params.role,
           company_id: params.company_id,
           status: 'pending',
+          token: token, // Add the token
           // Set expiry to 7 days from now
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         })

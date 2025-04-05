@@ -1,108 +1,126 @@
 
-import { useState, useEffect, useMemo } from "react";
-import { toast } from "sonner";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Proposal, ProposalStatus, UseProposalsDataProps } from "@/types/sales";
-import { filterProposals, calculateProposalStats, getUpdatedProposalWithStatus } from "@/utils/proposalUtils";
-import { fetchProposals, createProposal as apiCreateProposal, updateProposalStatus as apiUpdateProposalStatus, deleteProposal as apiDeleteProposal } from "@/services/proposalService";
+import { useState, useEffect, useCallback } from 'react';
+import { Proposal, ProposalStatus, UseProposalsDataProps } from '@/types/sales';
+import { ProposalStats } from '@/types/reports';
+import * as proposalService from '@/services/proposalService';
 
-export const useProposalsData = ({
-  salesProcessId,
-  clientName,
-  searchQuery = "",
-  statusFilter = "all"
-}: UseProposalsDataProps = {}) => {
-  const { t } = useLanguage();
+export function useProposalsData({ sales_process_id, status }: UseProposalsDataProps = {}) {
+  const [loading, setLoading] = useState(true);
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<ProposalStats>({
+    total: 0,
+    accepted: 0,
+    rejected: 0,
+    pending: 0,
+    draft: 0,
+    sent: 0,
+    viewed: 0
+  });
   const [error, setError] = useState<Error | null>(null);
-
-  // Initial fetch
-  useEffect(() => {
-    const getProposals = async () => {
-      setIsLoading(true);
-      try {
-        const data = await fetchProposals();
-        setProposals(data);
-        setError(null);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
+  
+  // Calculate statistics based on current proposals
+  const calculateStats = (proposals: Proposal[]): ProposalStats => {
+    const newStats: ProposalStats = {
+      total: proposals.length,
+      accepted: 0,
+      rejected: 0,
+      pending: 0,
+      draft: 0,
+      sent: 0,
+      viewed: 0
     };
-
-    getProposals();
-  }, []);
-
-  // Filtered proposals
-  const filteredProposals = useMemo(() => {
-    return filterProposals(proposals, salesProcessId, clientName, searchQuery, statusFilter);
-  }, [proposals, searchQuery, statusFilter, salesProcessId, clientName]);
-
-  // Create a new proposal
-  const createProposal = (proposal: Proposal) => {
-    apiCreateProposal(proposal).then(newProposal => {
-      setProposals(prevProposals => [newProposal, ...prevProposals]);
+    
+    proposals.forEach(proposal => {
+      if (proposal.status === 'accepted') {
+        newStats.accepted++;
+      } else if (proposal.status === 'rejected') {
+        newStats.rejected++;
+      } else if (proposal.status === 'draft') {
+        newStats.draft!++;
+        newStats.pending++;
+      } else if (proposal.status === 'sent') {
+        newStats.sent!++;
+        newStats.pending++;
+      } else if (proposal.status === 'viewed') {
+        newStats.viewed!++;
+        newStats.pending++;
+      } else if (proposal.status === 'expired') {
+        newStats.pending++;
+      }
     });
-    return proposal;
+    
+    return newStats;
   };
-
-  // Update proposal status
-  const updateProposalStatus = (proposalId: string, status: ProposalStatus) => {
-    apiUpdateProposalStatus(proposalId, status).then(() => {
-      setProposals(prevProposals => 
-        prevProposals.map(proposal => 
-          proposal.id === proposalId
-            ? getUpdatedProposalWithStatus(proposal, status)
-            : proposal
-        )
+  
+  // Fetch proposals
+  const fetchProposals = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await proposalService.getProposals(sales_process_id, status);
+      setProposals(data);
+      setStats(calculateStats(data));
+    } catch (err) {
+      console.error('Error fetching proposals:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch proposals'));
+    } finally {
+      setLoading(false);
+    }
+  }, [sales_process_id, status]);
+  
+  // Update a proposal
+  const updateProposal = async (proposalId: string, updates: Partial<Proposal>) => {
+    try {
+      const updated = await proposalService.updateProposal(proposalId, updates);
+      
+      setProposals(prev => 
+        prev.map(p => p.id === proposalId ? updated : p)
       );
-    });
+      
+      setStats(calculateStats(
+        proposals.map(p => p.id === proposalId ? updated : p)
+      ));
+      
+      return updated;
+    } catch (err) {
+      console.error('Error updating proposal:', err);
+      throw err;
+    }
   };
-
-  // Delete a proposal
-  const deleteProposal = (proposalId: string) => {
-    apiDeleteProposal(proposalId).then(() => {
-      setProposals(prevProposals => prevProposals.filter(prop => prop.id !== proposalId));
-      toast.success(t("proposalDeleted"), {
-        description: t("proposalDeletedDescription")
-      });
-    });
+  
+  // Update proposal status
+  const updateProposalStatus = async (proposalId: string, newStatus: ProposalStatus) => {
+    try {
+      const updated = await proposalService.updateProposalStatus(proposalId, newStatus);
+      
+      setProposals(prev => 
+        prev.map(p => p.id === proposalId ? updated : p)
+      );
+      
+      setStats(calculateStats(
+        proposals.map(p => p.id === proposalId ? updated : p)
+      ));
+      
+      return updated;
+    } catch (err) {
+      console.error('Error updating proposal status:', err);
+      throw err;
+    }
   };
-
-  // Calculate totals by status
-  const proposalsByStatus = useMemo(() => {
-    return calculateProposalStats(proposals);
-  }, [proposals]);
-
-  // Refresh function to fetch proposals again
-  const refresh = () => {
-    const getProposals = async () => {
-      setIsLoading(true);
-      try {
-        const data = await fetchProposals();
-        setProposals(data);
-        setError(null);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getProposals();
-  };
-
+  
+  // Load proposals on component mount and when dependencies change
+  useEffect(() => {
+    fetchProposals();
+  }, [fetchProposals]);
+  
   return {
-    proposals: filteredProposals,
-    isLoading,
+    proposals,
+    stats,
+    loading,
     error,
-    refresh,
-    createProposal,
-    updateProposalStatus,
-    deleteProposal,
-    totalProposals: proposals.length,
-    proposalsByStatus
+    refreshProposals: fetchProposals,
+    updateProposal,
+    updateProposalStatus
   };
-};
+}

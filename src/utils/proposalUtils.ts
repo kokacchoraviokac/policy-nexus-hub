@@ -22,13 +22,13 @@ export function calculateProposalStats(proposals: Proposal[]): ProposalStats {
     } else if (proposal.status === 'rejected') {
       stats.rejected++;
     } else if (proposal.status === 'draft') {
-      stats.draft++;
+      stats.draft!++;
       stats.pending++;
     } else if (proposal.status === 'sent') {
-      stats.sent++;
+      stats.sent!++;
       stats.pending++;
     } else if (proposal.status === 'viewed') {
-      stats.viewed++;
+      stats.viewed!++;
       stats.pending++;
     } else if (proposal.status === 'expired') {
       stats.pending++;
