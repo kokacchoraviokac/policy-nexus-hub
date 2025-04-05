@@ -1,51 +1,43 @@
 
-import { User, UserRole, AuthState, CustomPrivilege } from "@/types/auth/user";
-import { Session } from "@supabase/supabase-js";
+import { User } from "./userTypes";
 
-export interface ResourceContext {
-  ownerId?: string;
-  currentUserId?: string;
-  companyId?: string;
-  currentUserCompanyId?: string;
-  resourceType?: string;
-  resourceValue?: any;
-  [key: string]: any;
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  session: any; // Session information
 }
 
 export interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  // Additional methods
+  login?: (email: string, password: string) => Promise<void>;
+  logout?: () => Promise<void>;
+  updateUser?: (data: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isInitialized: boolean;
-  userProfile: any | null;
-  role: UserRole | null;
-  companyId: string | null;
-  permissions: string[];
-  customPrivileges: CustomPrivilege[];
-  
-  // Authentication methods
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
-  signOut: () => Promise<void>;
-  login: (email: string, password: string) => Promise<{ error: any }>;
-  logout: () => Promise<void>;
-  
-  // User management methods
-  updateUser: (data: Partial<User>) => Promise<void>;
-  updateUserProfile: (profile: Partial<User>) => Promise<void>;
-  
-  // Password management
-  initiatePasswordReset: (email: string) => Promise<{ error: any }>;
-  updatePassword: (newPassword: string) => Promise<{ error: any }>;
-  
-  // Privilege checks
+  session: any;
   hasPrivilege: (privilege: string) => boolean;
-  hasRole: (role: UserRole | UserRole[]) => boolean;
-  hasPrivilegeWithContext: (
-    privilege: string, 
-    context?: ResourceContext
-  ) => boolean;
-  
-  refreshSession: () => Promise<void>;
+  hasPrivilegeWithContext: (privilege: string, resourceContext?: ResourceContext) => boolean;
+}
+
+export interface ResourceContext {
+  resourceType?: string;
+  resourceId?: string;
+  companyId?: string;
+  ownerId?: string;
+}
+
+export interface UserPrivilege {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface RolePrivilege {
+  role: string;
+  privileges: UserPrivilege[];
 }

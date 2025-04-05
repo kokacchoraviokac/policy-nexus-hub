@@ -1,79 +1,55 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { EntityType, DocumentTableName } from "@/types/documents";
-import { v4 as uuidv4 } from "uuid";
 
-// Map entity types to their corresponding document tables
+// Map entity types to their corresponding document table names
 export const entityToDocumentTable: Record<EntityType, DocumentTableName> = {
-  policy: 'policy_documents',
-  claim: 'claim_documents',
-  sales_process: 'sales_documents',
-  client: 'client_documents',
-  insurer: 'insurer_documents',
-  agent: 'agent_documents',
-  invoice: 'invoice_documents',
-  addendum: 'addendum_documents'
+  policy: "policy_documents",
+  claim: "claim_documents",
+  sales_process: "sales_documents",
+  client: "client_documents",
+  insurer: "insurer_documents",
+  agent: "agent_documents",
+  invoice: "invoice_documents",
+  addendum: "addendum_documents"
 };
 
 /**
- * Get the corresponding document table name for an entity type
+ * Get the document table name for a specific entity type
  */
 export function getDocumentTableName(entityType: EntityType): DocumentTableName {
   return entityToDocumentTable[entityType];
 }
 
-// Re-export the DocumentTableName type for convenience
-export { DocumentTableName };
-
 /**
- * Upload a document file to Supabase storage
+ * Get entity type from document table name
  */
-export async function uploadDocumentFile(file: File, entityType: EntityType, entityId: string) {
-  // Generate a unique filename
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${uuidv4()}.${fileExt}`;
-  const filePath = `documents/${entityType}/${entityId}/${fileName}`;
+export function getEntityTypeFromTable(tableName: DocumentTableName): EntityType {
+  const entries = Object.entries(entityToDocumentTable);
+  const match = entries.find(([_entityType, docTableName]) => docTableName === tableName);
   
-  // Upload the file to Supabase storage
-  const { data, error } = await supabase.storage
-    .from('documents')
-    .upload(filePath, file);
-    
-  if (error) {
-    throw error;
+  if (!match) {
+    // Default to policy as fallback
+    console.warn(`No entity type found for table: ${tableName}, defaulting to 'policy'`);
+    return "policy";
   }
   
-  return filePath;
+  return match[0] as EntityType;
 }
 
 /**
- * Delete a document from storage
+ * Utility interface for document upload options
  */
-export async function deleteDocumentFile(filePath: string) {
-  try {
-    const { error } = await supabase.storage
-      .from('documents')
-      .remove([filePath]);
-      
-    if (error) {
-      console.error('Error deleting file from storage:', error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Unexpected error deleting file:', error);
-    return false;
-  }
+export interface DocumentUploadOptions {
+  file: File;
+  documentName: string;
+  documentType: string;
+  category: string;
+  entityType: EntityType;
+  entityId: string;
+  originalDocumentId?: string | null;
+  currentVersion?: number;
+  salesStage?: string;
+  description?: string;
 }
 
-/**
- * Construct a URL for a document file
- */
-export function getDocumentUrl(filePath: string): string {
-  const { data } = supabase.storage
-    .from('documents')
-    .getPublicUrl(filePath);
-    
-  return data.publicUrl;
-}
+export type { DocumentTableName };

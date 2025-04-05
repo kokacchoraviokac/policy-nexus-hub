@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentTableName } from "@/types/documents";
 
 /**
  * A safer wrapper for Supabase queries that works with dynamic table names

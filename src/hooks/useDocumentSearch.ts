@@ -1,259 +1,194 @@
 
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Document, EntityType, DocumentSearchParams } from "@/types/documents";
-import { fromEntityTable } from "@/utils/supabaseTypeAssertions";
-import { getDocumentTableForEntity } from "@/utils/supabaseQueryHelper";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Document, EntityType, DocumentCategory, DocumentSearchParams } from "@/types/documents";
+import { useToast } from "@/hooks/use-toast";
+import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 export interface UseDocumentSearchProps {
-  entityType?: EntityType;
+  entityType?: EntityType | EntityType[];
   entityId?: string;
   initialSearchParams?: DocumentSearchParams;
+  page?: number;
   pageSize?: number;
 }
 
 export const useDocumentSearch = ({
   entityType,
   entityId,
-  initialSearchParams,
+  initialSearchParams = {},
+  page = 1,
   pageSize = 10
-}: UseDocumentSearchProps) => {
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchParams, setSearchParams] = useState<DocumentSearchParams>(initialSearchParams || {});
-  const [currentPage, setCurrentPage] = useState(1);
-  const queryClient = useQueryClient();
+}: UseDocumentSearchProps = {}) => {
+  const [searchParams, setSearchParams] = useState<DocumentSearchParams>(initialSearchParams);
+  const { toast } = useToast();
   
-  const queryKey = ['document-search', entityType, entityId, searchParams, currentPage, pageSize];
-  
-  const { 
-    data, 
-    isLoading: isLoadingDocuments,
-    error,
-    refetch
-  } = useQuery({
-    queryKey,
-    queryFn: async () => {
-      try {
-        setIsSearching(true);
-        
-        // If no search params and we have entity constraints, use regular document fetching
-        if (
-          entityType && 
-          entityId && 
-          !searchParams.searchTerm && 
-          !searchParams.category && 
-          !searchParams.documentType && 
-          !searchParams.dateFrom && 
-          !searchParams.dateTo
-        ) {
-          // Use the entity-specific document table
-          const query = fromEntityTable(entityType);
-          
-          // Apply entity ID filter based on the entity type
-          let filteredQuery = query;
-          if (entityType === 'policy') {
-            filteredQuery = query.eq('policy_id', entityId);
-          } else if (entityType === 'claim') {
-            filteredQuery = query.eq('claim_id', entityId);
-          } else if (entityType === 'sales_process') {
-            filteredQuery = query.eq('sales_process_id', entityId);
-          } else if (entityType === 'client') {
-            filteredQuery = query.eq('client_id', entityId);
-          } else if (entityType === 'agent') {
-            filteredQuery = query.eq('agent_id', entityId);
-          } else if (entityType === 'invoice') {
-            filteredQuery = query.eq('invoice_id', entityId);
-          } else if (entityType === 'insurer') {
-            filteredQuery = query.eq('insurer_id', entityId);
-          } else if (entityType === 'addendum') {
-            filteredQuery = query.eq('addendum_id', entityId);
-          }
-          
-          // Add pagination
-          const from = (currentPage - 1) * pageSize;
-          const to = from + pageSize - 1;
-          
-          // Get count for pagination
-          const countQuery = filteredQuery.count();
-          const { count, error: countError } = await countQuery;
-          
-          if (countError) throw countError;
-          
-          // Get the actual documents with pagination
-          const { data, error: fetchError } = await filteredQuery
-            .order('created_at', { ascending: false })
-            .range(from, to);
-          
-          if (fetchError) throw fetchError;
-          
-          return {
-            documents: mapToDocuments(data, entityType),
-            totalCount: count || 0
-          };
-        }
-        
-        // Simplified implementation for search - uses a single entity type
-        if (entityType) {
-          const query = fromEntityTable(entityType);
-          
-          // Apply filters based on search params
-          let filteredQuery = query;
-          
-          // Apply entity ID filter if provided
-          if (entityId) {
-            if (entityType === 'policy') {
-              filteredQuery = filteredQuery.eq('policy_id', entityId);
-            } else if (entityType === 'claim') {
-              filteredQuery = filteredQuery.eq('claim_id', entityId);
-            } else if (entityType === 'sales_process') {
-              filteredQuery = filteredQuery.eq('sales_process_id', entityId);
-            } else if (entityType === 'client') {
-              filteredQuery = filteredQuery.eq('client_id', entityId);
-            } else if (entityType === 'agent') {
-              filteredQuery = filteredQuery.eq('agent_id', entityId);
-            } else if (entityType === 'invoice') {
-              filteredQuery = filteredQuery.eq('invoice_id', entityId);
-            } else if (entityType === 'insurer') {
-              filteredQuery = filteredQuery.eq('insurer_id', entityId);
-            } else if (entityType === 'addendum') {
-              filteredQuery = filteredQuery.eq('addendum_id', entityId);
-            }
-          }
-          
-          // Apply search text if provided
-          if (searchParams.searchTerm) {
-            filteredQuery = filteredQuery.ilike('document_name', `%${searchParams.searchTerm}%`);
-          }
-          
-          // Apply category filter if provided
-          if (searchParams.category) {
-            filteredQuery = filteredQuery.eq('category', searchParams.category);
-          }
-          
-          // Apply document type filter if provided
-          if (searchParams.documentType) {
-            filteredQuery = filteredQuery.eq('document_type', searchParams.documentType);
-          }
-          
-          // Apply date filters if provided
-          if (searchParams.dateFrom) {
-            filteredQuery = filteredQuery.gte('created_at', new Date(searchParams.dateFrom).toISOString());
-          }
-          
-          if (searchParams.dateTo) {
-            // Add 1 day to include the entire day
-            const nextDay = new Date(searchParams.dateTo);
-            nextDay.setDate(nextDay.getDate() + 1);
-            filteredQuery = filteredQuery.lt('created_at', nextDay.toISOString());
-          }
-          
-          // Add pagination
-          const from = (currentPage - 1) * pageSize;
-          const to = from + pageSize - 1;
-          
-          // Get count for pagination
-          const countQuery = filteredQuery.count();
-          const { count, error: countError } = await countQuery;
-          
-          if (countError) throw countError;
-          
-          // Get the actual documents with pagination
-          const { data, error: fetchError } = await filteredQuery
-            .order('created_at', { ascending: false })
-            .range(from, to);
-          
-          if (fetchError) throw fetchError;
-          
-          return {
-            documents: mapToDocuments(data, entityType),
-            totalCount: count || 0
-          };
-        }
-        
-        // Return empty array if no entity type provided
+  const fetchDocuments = async () => {
+    try {
+      // If no entity type is specified, we don't know which table to query
+      if (!entityType) {
         return { documents: [], totalCount: 0 };
-        
-      } finally {
-        setIsSearching(false);
       }
-    },
-    enabled: !!entityType
+      
+      // Handle array of entity types
+      const entityTypes = Array.isArray(entityType) ? entityType : [entityType];
+      
+      let allDocuments: Document[] = [];
+      let totalCount = 0;
+      
+      // Query each entity type's document table
+      for (const type of entityTypes) {
+        const tableName = getDocumentTableName(type);
+        
+        // Create a base query with type assertion to avoid TypeScript errors
+        let query = supabase.from(tableName as any).select('*');
+        
+        // Apply entity ID filter if provided
+        if (entityId) {
+          const idColumn = `${type}_id`;
+          query = query.eq(idColumn, entityId) as any;
+        }
+        
+        // Apply search parameters
+        if (searchParams.searchTerm) {
+          query = (query as any).ilike('document_name', `%${searchParams.searchTerm}%`);
+        }
+        
+        if (searchParams.documentType) {
+          query = (query as any).eq('document_type', searchParams.documentType);
+        }
+        
+        if (searchParams.category) {
+          query = (query as any).eq('category', searchParams.category);
+        }
+        
+        if (searchParams.uploadedAfter) {
+          query = (query as any).gte('created_at', searchParams.uploadedAfter);
+        }
+        
+        if (searchParams.uploadedBefore) {
+          query = (query as any).lt('created_at', searchParams.uploadedBefore);
+        }
+        
+        // Fetch count first
+        const countQuery = structuredClone(query);
+        const { count: entityCount, error: countError } = await (countQuery as any).count();
+        
+        if (countError) {
+          console.error(`Error counting documents for ${type}:`, countError);
+          continue;
+        }
+        
+        totalCount += entityCount || 0;
+        
+        // Apply pagination and sorting
+        query = (query as any).order(
+          searchParams.sortBy || 'created_at',
+          { 
+            ascending: searchParams.sortDirection === 'asc'
+          }
+        );
+        
+        // Calculate pagination
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        
+        query = (query as any).range(from, to);
+        
+        // Execute the query
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error(`Error fetching documents for ${type}:`, error);
+          continue;
+        }
+        
+        if (data && data.length > 0) {
+          // Transform the data into our Document type and add entity_type
+          const transformedData = data.map((doc: any) => ({
+            id: doc.id,
+            document_name: doc.document_name,
+            document_type: doc.document_type,
+            created_at: doc.created_at,
+            file_path: doc.file_path,
+            entity_type: type,
+            entity_id: doc[`${type}_id`] || entityId || '',
+            uploaded_by: doc.uploaded_by,
+            company_id: doc.company_id,
+            description: doc.description,
+            category: doc.category,
+            version: doc.version,
+            is_latest_version: doc.is_latest_version,
+            mime_type: doc.mime_type,
+            original_document_id: doc.original_document_id,
+            uploaded_by_name: doc.uploaded_by_name,
+            updated_at: doc.updated_at || doc.created_at,
+            approval_status: doc.approval_status,
+            approved_by: doc.approved_by,
+            approved_at: doc.approved_at,
+            approval_notes: doc.approval_notes
+          })) as Document[];
+          
+          allDocuments = [...allDocuments, ...transformedData];
+        }
+      }
+      
+      // If we're querying multiple entity types, we need to sort and paginate the combined results
+      if (entityTypes.length > 1) {
+        // Sort the combined results
+        allDocuments.sort((a, b) => {
+          const field = searchParams.sortBy || 'created_at';
+          const aValue = (a as any)[field];
+          const bValue = (b as any)[field];
+          
+          if (searchParams.sortDirection === 'asc') {
+            return aValue > bValue ? 1 : -1;
+          } else {
+            return aValue < bValue ? 1 : -1;
+          }
+        });
+        
+        // Apply pagination to the combined results
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize;
+        allDocuments = allDocuments.slice(from, to);
+      }
+      
+      return { documents: allDocuments, totalCount };
+    } catch (error) {
+      console.error("Error in document search:", error);
+      toast({
+        title: "Error searching documents",
+        description: "There was an error searching for documents. Please try again.",
+        variant: "destructive",
+      });
+      return { documents: [], totalCount: 0 };
+    }
+  };
+  
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['documents', 'search', entityType, entityId, searchParams, page, pageSize],
+    queryFn: fetchDocuments,
   });
   
   const searchDocuments = (params: DocumentSearchParams) => {
     setSearchParams(params);
-    setCurrentPage(1); // Reset to first page on new search
-    queryClient.invalidateQueries({ queryKey: ['document-search', entityType, entityId] });
   };
   
-  // Simple function to trigger a search without params
+  // Add a shorthand search function
   const search = () => {
-    queryClient.invalidateQueries({ queryKey: ['document-search', entityType, entityId] });
+    refetch();
   };
-  
-  // Add pagination handling
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-  
-  // Add isError property for consistency
-  const isError = !!error;
   
   return {
     documents: data?.documents || [],
-    isLoading: isLoadingDocuments || isSearching,
-    error,
-    isError,
     totalCount: data?.totalCount || 0,
+    isLoading,
+    error: error as Error,
     searchDocuments,
+    refresh: refetch,
     search,
-    currentPage,
-    pageSize,
-    handlePageChange,
-    refresh: refetch
+    isError: !!error
   };
 };
-
-// Helper function to map database records to Document type
-function mapToDocuments(data: any[], entityType: EntityType): Document[] {
-  return (data || []).map(item => {
-    let entityId = "";
-    
-    if (entityType === 'policy' && item.policy_id) {
-      entityId = item.policy_id;
-    } else if (entityType === 'claim' && item.claim_id) {
-      entityId = item.claim_id;
-    } else if (entityType === 'sales_process' && item.sales_process_id) {
-      entityId = item.sales_process_id;
-    } else if (entityType === 'client' && item.client_id) {
-      entityId = item.client_id;
-    } else if (entityType === 'agent' && item.agent_id) {
-      entityId = item.agent_id;
-    } else if (entityType === 'invoice' && item.invoice_id) {
-      entityId = item.invoice_id;
-    } else if (entityType === 'insurer' && item.insurer_id) {
-      entityId = item.insurer_id;
-    } else if (entityType === 'addendum' && item.addendum_id) {
-      entityId = item.addendum_id;
-    }
-    
-    return {
-      id: item.id,
-      document_name: item.document_name,
-      document_type: item.document_type,
-      created_at: item.created_at,
-      file_path: item.file_path,
-      entity_type: entityType,
-      entity_id: entityId,
-      uploaded_by: item.uploaded_by,
-      company_id: item.company_id || "",
-      description: item.description || "",
-      version: item.version || 1,
-      status: item.status || "active",
-      category: item.category || "other",
-      mime_type: item.mime_type || "",
-      is_latest_version: item.is_latest_version === undefined ? true : item.is_latest_version,
-      original_document_id: item.original_document_id || null,
-    } as Document;
-  });
-}

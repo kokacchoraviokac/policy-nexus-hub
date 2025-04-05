@@ -1,81 +1,214 @@
-import { useState } from 'react';
-import { parse } from 'csv-parse/sync';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/auth/AuthContext';
-import { Policy } from '@/types/policies';
-import { toast } from '@/hooks/use-toast';
 
-export type ValidationErrors = Record<number, string[]>;
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Policy, ValidationErrors, PolicyStatus, WorkflowStatus } from "@/types/policies";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { formatDate } from "@/utils/dateUtils";
 
 export const usePolicyImport = () => {
-  const { user } = useAuth();
   const [importedPolicies, setImportedPolicies] = useState<Partial<Policy>[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [isImporting, setIsImporting] = useState(false);
+  const { toast } = useToast();
+  const { t } = useLanguage();
 
-  // Calculate invalid policies based on validation errors
-  const invalidPolicies = Object.keys(validationErrors).map(index => {
-    return {
-      policy: importedPolicies[parseInt(index)],
-      errors: validationErrors[parseInt(index)]
-    };
-  });
-
-  const parseCSVFile = async (file: File): Promise<Partial<Policy>[]> => {
+  const handleFileSelect = async (file: File) => {
+    setIsImporting(true);
+    
+    try {
+      // Read file as text
+      const fileContent = await readFileAsText(file);
+      let policies: Partial<Policy>[] = [];
+      
+      // Determine file type by extension and parse accordingly
+      if (file.name.endsWith('.csv')) {
+        policies = parseCSV(fileContent);
+      } else if (file.name.endsWith('.json')) {
+        policies = parseJSON(fileContent);
+      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        toast({
+          title: t("unsupportedFormat"),
+          description: t("excelFormatNotSupported"),
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      } else {
+        toast({
+          title: t("unsupportedFormat"),
+          description: t("supportedFormatsMessage"),
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      }
+      
+      // Add default values to policies
+      policies = policies.map(policy => ({
+        ...policy,
+        status: (policy.status as PolicyStatus) || 'active',
+        workflow_status: (policy.workflow_status as WorkflowStatus) || 'imported',
+        created_at: formatDate(new Date()) || new Date().toISOString(),
+        updated_at: formatDate(new Date()) || new Date().toISOString()
+      }));
+      
+      // Validate policies
+      const errors = validatePolicies(policies);
+      
+      setImportedPolicies(policies);
+      setValidationErrors(errors);
+      
+      if (Object.keys(errors).length > 0) {
+        toast({
+          title: t("importWithErrors"),
+          description: t("importWithErrorsMessage", { count: Object.keys(errors).length }),
+          variant: "warning",
+        });
+      } else {
+        toast({
+          title: t("importSuccess"),
+          description: t("policiesReadyForImport", { count: policies.length }),
+        });
+      }
+    } catch (error) {
+      console.error("Error processing import file:", error);
+      toast({
+        title: t("importError"),
+        description: t("importErrorMessage"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+  
+  // Helper to read file as text
+  const readFileAsText = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        try {
-          const csv = parse(e.target!.result as string, {
-            columns: true,
-            skip_empty_lines: true,
-            trim: true
-          });
-          
-          // Transform the CSV data to match Policy type
-          const policies = csv.map((row: any): Partial<Policy> => ({
-            policy_number: row.policy_number || '',
-            insurer_name: row.insurer_name || '',
-            client_name: row.client_name || '',
-            policyholder_name: row.policyholder_name || '',
-            status: row.status as PolicyStatus || 'active',
-            start_date: formatDate(row.start_date),
-            expiry_date: formatDate(row.expiry_date),
-            premium: Number(row.premium) || 0,
-            premium_amount: Number(row.premium) || 0,
-            policy_type: (row.policy_type as PolicyType) || 'external',
-            currency: row.currency || 'EUR',
-            product_name: row.product_name || '',
-            workflow_status: (row.workflow_status as WorkflowStatus) || 'draft'
-          }));
-          
-          resolve(policies);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      
-      reader.onerror = () => {
-        reject(new Error('Error reading file'));
-      };
-      
+      reader.onload = (event) => resolve(event.target?.result as string);
+      reader.onerror = (error) => reject(error);
       reader.readAsText(file);
     });
   };
-
+  
+  // Parse CSV to policy objects
+  const parseCSV = (content: string): Partial<Policy>[] => {
+    const lines = content.split('\n');
+    if (lines.length <= 1) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim());
+    const policies: Partial<Policy>[] = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      
+      const values = lines[i].split(',').map(v => v.trim());
+      const policy: Partial<Policy> = {};
+      
+      headers.forEach((header, index) => {
+        const value = values[index];
+        if (value === undefined) return;
+        
+        // Map CSV headers to policy properties
+        switch (header.toLowerCase()) {
+          case 'policy number':
+          case 'policynumber':
+            policy.policy_number = value;
+            break;
+          case 'policyholder':
+          case 'policyholder name':
+            policy.policyholder_name = value;
+            break;
+          case 'insurer':
+          case 'insurer name':
+            policy.insurer_name = value;
+            break;
+          case 'start date':
+          case 'startdate':
+            policy.start_date = value;
+            break;
+          case 'expiry date':
+          case 'expirydate':
+            policy.expiry_date = value;
+            break;
+          case 'premium':
+            policy.premium = parseFloat(value);
+            break;
+          case 'currency':
+            policy.currency = value;
+            break;
+          case 'status':
+            policy.status = value;
+            break;
+          default:
+            // Handle other fields based on your Policy interface
+            (policy as any)[header] = value;
+        }
+      });
+      
+      policies.push(policy);
+    }
+    
+    return policies;
+  };
+  
+  // Parse JSON to policy objects
+  const parseJSON = (content: string): Partial<Policy>[] => {
+    try {
+      const data = JSON.parse(content);
+      
+      // Handle array of policies
+      if (Array.isArray(data)) {
+        return data as Partial<Policy>[];
+      }
+      
+      // Handle single policy object
+      if (typeof data === 'object' && data !== null) {
+        return [data as Partial<Policy>];
+      }
+      
+      return [];
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      throw new Error("Invalid JSON format");
+    }
+  };
+  
+  // Validate policies
   const validatePolicies = (policies: Partial<Policy>[]): ValidationErrors => {
     const errors: ValidationErrors = {};
     
     policies.forEach((policy, index) => {
       const policyErrors: string[] = [];
       
-      if (!policy.policy_number) policyErrors.push('Policy number is required');
-      if (!policy.client_name) policyErrors.push('Client name is required');
-      if (!policy.insurer_name) policyErrors.push('Insurer name is required');
-      if (!policy.start_date) policyErrors.push('Start date is required');
-      if (!policy.expiry_date) policyErrors.push('Expiry date is required');
+      // Required fields
+      if (!policy.policy_number) {
+        policyErrors.push("Policy number is required");
+      }
       
+      if (!policy.policyholder_name) {
+        policyErrors.push("Policyholder name is required");
+      }
+      
+      if (!policy.insurer_name) {
+        policyErrors.push("Insurer name is required");
+      }
+      
+      if (!policy.start_date) {
+        policyErrors.push("Start date is required");
+      }
+      
+      if (!policy.expiry_date) {
+        policyErrors.push("Expiry date is required");
+      }
+      
+      if (!policy.premium && policy.premium !== 0) {
+        policyErrors.push("Premium is required");
+      }
+      
+      // Add the errors if any
       if (policyErrors.length > 0) {
         errors[index] = policyErrors;
       }
@@ -83,103 +216,100 @@ export const usePolicyImport = () => {
     
     return errors;
   };
-
-  const handleFileSelect = async (file: File) => {
-    setIsImporting(true);
-    
-    try {
-      const policies = await parseCSVFile(file);
-      const errors = validatePolicies(policies);
-      
-      setImportedPolicies(policies);
-      setValidationErrors(errors);
-    } catch (error) {
-      console.error('Error parsing file:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to parse the file. Please check the format and try again.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
-  const handleFileDrop = (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      handleFileSelect(acceptedFiles[0]);
-    }
-  };
-
+  
+  // Save policies to database
   const savePolicies = async (): Promise<boolean> => {
     setIsImporting(true);
     
     try {
-      // Only insert policies that passed validation
-      const validPolicies = importedPolicies.filter((_, index) => 
-        !Object.keys(validationErrors).includes(index.toString())
-      );
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (validPolicies.length === 0) {
+      if (!user) {
         toast({
-          title: 'No valid policies',
-          description: 'No valid policies to import. Please fix validation errors and try again.',
-          variant: 'destructive'
+          title: t("authError"),
+          description: t("notLoggedIn"),
+          variant: "destructive",
         });
         return false;
       }
       
-      // Prepare policies for insertion with required fields
-      const policiesToInsert = validPolicies.map(policy => ({
+      // Get user's company ID from metadata
+      const companyId = user.user_metadata.company_id;
+      
+      if (!companyId) {
+        toast({
+          title: t("missingCompanyId"),
+          description: t("contactAdmin"),
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      // Add company_id to each policy
+      const policiesToSave = importedPolicies.map(policy => ({
         ...policy,
-        company_id: user?.user_metadata?.company_id || 'default',
-        created_by: user?.id || 'system',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        workflow_status: 'pending_review'
+        company_id: companyId,
+        created_by: user.id
       }));
       
-      // Use type assertion to fix TypeScript error
+      // Insert policies into the database
       const { data, error } = await supabase
         .from('policies')
-        .insert(policiesToInsert as any);
+        .insert(policiesToSave)
+        .select();
       
       if (error) {
-        throw error;
+        console.error("Error saving policies:", error);
+        toast({
+          title: t("saveFailed"),
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
       }
       
       toast({
-        title: 'Policies imported',
-        description: `Successfully imported ${validPolicies.length} policies.`
+        title: t("importSuccessful"),
+        description: t("policiesImported", { count: data.length }),
       });
+      
+      // Clear imported data
+      setImportedPolicies([]);
+      setValidationErrors({});
       
       return true;
     } catch (error) {
-      console.error('Error saving policies:', error);
+      console.error("Error saving policies:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to save policies. Please try again.',
-        variant: 'destructive'
+        title: t("saveFailed"),
+        description: t("unexpectedError"),
+        variant: "destructive",
       });
       return false;
     } finally {
       setIsImporting(false);
     }
   };
-
+  
+  // Handle file drop
+  const handleFileDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    handleFileSelect(acceptedFiles[0]);
+  };
+  
+  // Clear imported data
   const clearImportData = () => {
     setImportedPolicies([]);
     setValidationErrors({});
   };
-
+  
   return {
     importedPolicies,
     validationErrors,
     handleFileSelect,
     handleFileDrop,
     isImporting,
-    invalidPolicies,
-    parseCSVFile,
     savePolicies,
     clearImportData
   };

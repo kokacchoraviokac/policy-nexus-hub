@@ -24,6 +24,24 @@ export type DocumentCategory =
   | 'discovery'
   | 'closeout';
 
+// Export the approval status type
+export type DocumentApprovalStatus =
+  | 'approved'
+  | 'rejected'
+  | 'pending'
+  | 'needs_review';
+
+// Search parameters for document search functionality
+export interface DocumentSearchParams {
+  searchTerm?: string;
+  documentType?: string;
+  category?: DocumentCategory;
+  uploadedAfter?: string;
+  uploadedBefore?: string;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+}
+
 export interface Document {
   id: string;
   document_name: string;
@@ -32,6 +50,7 @@ export interface Document {
   entity_type?: EntityType;
   entity_id?: string;
   uploaded_by: string;
+  uploaded_by_name?: string;
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -40,6 +59,11 @@ export interface Document {
   mime_type?: string;
   is_latest_version?: boolean;
   category?: DocumentCategory;
+  description?: string;
+  approval_status?: DocumentApprovalStatus;
+  approved_by?: string;
+  approved_at?: string;
+  approval_notes?: string;
 }
 
 export const DOCUMENT_TABLES = [
@@ -66,4 +90,14 @@ export interface DocumentUploadDialogProps {
   defaultCategory?: DocumentCategory;
   salesStage?: string;
   selectedDocument?: Document;
+}
+
+export interface DocumentAnalysisPanelProps {
+  document?: Document;
+  documentId?: string;
+  documentUrl?: string;
+  documentType?: string;
+  file?: File;
+  onAnalysisComplete?: () => void;
+  onCategoryDetected?: (category: DocumentCategory) => void;
 }

@@ -1,5 +1,5 @@
 
-import { EntityType } from "@/types/documents";
+import { EntityType, DocumentTableName, DOCUMENT_TABLES } from "@/types/documents";
 
 // Map entity types to their corresponding document table names
 export const entityToDocumentTable: Record<EntityType, DocumentTableName> = {
@@ -12,17 +12,6 @@ export const entityToDocumentTable: Record<EntityType, DocumentTableName> = {
   invoice: "invoice_documents",
   addendum: "addendum_documents"
 };
-
-// Define the allowed document table names
-export type DocumentTableName = 
-  | "policy_documents"
-  | "claim_documents"
-  | "sales_documents"
-  | "client_documents"
-  | "insurer_documents"
-  | "agent_documents"
-  | "invoice_documents"
-  | "addendum_documents";
 
 /**
  * Get the document table name for a specific entity type
@@ -45,4 +34,27 @@ export function getEntityTypeFromTable(tableName: DocumentTableName): EntityType
   }
   
   return match[0] as EntityType;
+}
+
+/**
+ * Get document table for entity - used for document searches
+ */
+export function getDocumentTableForEntity(entityType: EntityType): DocumentTableName {
+  return entityToDocumentTable[entityType];
+}
+
+/**
+ * Helper to query documents by entity type
+ */
+export function queryDocuments(entityType: EntityType) {
+  const tableName = getDocumentTableName(entityType);
+  return fromTable(tableName);
+}
+
+/**
+ * Helper for safe Supabase queries with dynamic table names
+ */
+export function fromTable(tableName: string) {
+  // We need to use type assertion to handle dynamic table names
+  return (window as any).supabase.from(tableName);
 }
