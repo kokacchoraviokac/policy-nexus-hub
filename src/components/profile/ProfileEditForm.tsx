@@ -1,170 +1,132 @@
-import React, { useState } from "react";
-import { User } from "@/types/auth";
+
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { toast } from "sonner";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useAuth } from "@/contexts/auth/AuthContext";
+import { User, UserRole } from "@/types/auth/user";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileEditFormProps {
   user: User;
-  updateUser: (data: Partial<User>) => Promise<void>;
+  onSubmit: (updatedUser: Partial<User>) => Promise<void>;
+  isSubmitting: boolean;
 }
 
-const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email"),
-  role: z.enum(["superAdmin", "admin", "employee", "agent"] as const),
-  avatar: z.string().optional(),
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
-
-const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, updateUser }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: user?.name || "",
-      email: user?.email || "",
-      role: user?.role || "employee",
-      avatar: user?.avatar || "",
-    },
+const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
+  user,
+  onSubmit,
+  isSubmitting,
+}) => {
+  const { t } = useLanguage();
+  const { hasRole } = useAuth();
+  const { toast } = useToast();
+  
+  const [formData, setFormData] = useState<Partial<User>>({
+    name: user.name || "",
+    email: user.email || "",
+    role: user.role || "employee" as UserRole,
   });
 
-  const onSubmit = async (values: ProfileFormValues) => {
-    setIsSubmitting(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRoleChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, role: value as UserRole }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
-      await updateUser({
-        name: values.name,
-        avatar: values.avatar,
+      await onSubmit(formData);
+      toast({
+        title: t("profileUpdated"),
+        description: t("profileUpdateSuccess"),
       });
-      toast.success("Profile updated successfully");
     } catch (error) {
-      toast.error("Failed to update profile");
-      console.error("Update profile error:", error);
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error updating profile:", error);
+      toast({
+        title: t("profileUpdateFailed"),
+        description: t("profileUpdateError"),
+        variant: "destructive",
+      });
     }
   };
 
-  const getRoleLabel = (role: ProfileFormValues["role"]) => {
-    switch (role) {
-      case "superAdmin":
-        return "Super Admin";
-      case "admin":
-        return "Admin";
-      case "employee":
-        return "Employee";
-      case "agent":
-        return "Agent";
-      default:
-        return "User";
-    }
-  };
+  // Check if the role field should be editable
+  const isRoleEditable = hasRole(["superAdmin", "admin"]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Edit Profile</CardTitle>
-        <CardDescription>
-          Update your personal information
-        </CardDescription>
+        <CardTitle>{t("editProfile")}</CardTitle>
+        <CardDescription>{t("updateYourProfileInformation")}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">{t("name")}</Label>
+            <Input
+              id="name"
               name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              value={formData.name}
+              onChange={handleChange}
+              placeholder={t("enterYourName")}
             />
-            
-            <FormField
-              control={form.control}
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="email">{t("email")}</Label>
+            <Input
+              id="email"
               name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled />
-                  </FormControl>
-                  <FormDescription>
-                    Email cannot be changed
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder={t("enterYourEmail")}
+              disabled // Email should typically not be editable directly
             />
-            
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={(value) => form.setValue('role', value as UserRole)}
-                      defaultValue={form.getValues('role')}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={t("selectRole")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="superAdmin">{t("superAdmin")}</SelectItem>
-                        <SelectItem value="admin">{t("admin")}</SelectItem>
-                        <SelectItem value="employee">{t("employee")}</SelectItem>
-                        <SelectItem value="agent">{t("agent")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormDescription>
-                    Your role is assigned by an administrator
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="avatar"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Avatar URL</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="https://example.com/avatar.png" />
-                  </FormControl>
-                  <FormDescription>
-                    Enter a URL for your profile picture
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || !form.formState.isDirty}
+            <p className="text-sm text-muted-foreground">
+              {t("emailChangeRestriction")}
+            </p>
+          </div>
+          
+          {isRoleEditable && (
+            <div className="grid gap-2">
+              <Label htmlFor="role">{t("role")}</Label>
+              <Select
+                value={formData.role}
+                onValueChange={handleRoleChange}
+                disabled={!isRoleEditable}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("selectRole")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="superAdmin">{t("superAdmin")}</SelectItem>
+                  <SelectItem value="admin">{t("admin")}</SelectItem>
+                  <SelectItem value="employee">{t("employee")}</SelectItem>
+                  <SelectItem value="agent">{t("agent")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          <div className="flex justify-end space-x-2">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? t("saving") : t("saveChanges")}
             </Button>
-          </form>
-        </Form>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

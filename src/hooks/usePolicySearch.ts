@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth/AuthContext';
@@ -19,7 +20,7 @@ export const usePolicySearch = () => {
       const { data, error } = await supabase
         .from('policies')
         .select('*')
-        .eq('company_id', user?.companyId)
+        .eq('company_id', user.companyId)
         .or(`policy_number.ilike.%${searchTerm}%,policyholder_name.ilike.%${searchTerm}%,insurer_name.ilike.%${searchTerm}%`)
         .order('start_date', { ascending: false })
         .limit(20);

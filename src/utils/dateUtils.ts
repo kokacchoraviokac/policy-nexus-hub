@@ -1,92 +1,87 @@
 
 /**
- * Format a date string to local date format
- * @param dateString The date string to format
- * @param locale The locale to use for formatting
- * @returns A formatted date string
+ * Formats a date string or Date object to a localized date string
+ * @param date - The date to format
+ * @param options - Intl.DateTimeFormatOptions for customizing the format
+ * @returns The formatted date string
  */
-export const formatDateToLocal = (
-  dateString: string | Date | null | undefined,
-  locale = 'en-US'
-): string => {
-  if (!dateString) return '';
-  
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-  
-  return date.toLocaleDateString(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
-
-/**
- * Format a date string to include time
- * @param dateString The date string to format
- * @param locale The locale to use for formatting
- * @returns A formatted date and time string
- */
-export const formatDateTimeToLocal = (
-  dateString: string | Date | null | undefined,
-  locale = 'en-US'
-): string => {
-  if (!dateString) return '';
-  
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-  
-  return date.toLocaleDateString(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-/**
- * Get a relative time string (e.g., "2 days ago")
- * @param dateString The date string to format
- * @returns A relative time string
- */
-export const getRelativeTimeString = (dateString: string | Date | null | undefined): string => {
-  if (!dateString) return '';
-  
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-  
-  const diffInSeconds = Math.floor(diffInMs / 1000);
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-  
-  if (diffInDays > 30) {
-    return formatDateToLocal(date);
-  } else if (diffInDays > 0) {
-    return rtf.format(-diffInDays, 'day');
-  } else if (diffInHours > 0) {
-    return rtf.format(-diffInHours, 'hour');
-  } else if (diffInMinutes > 0) {
-    return rtf.format(-diffInMinutes, 'minute');
-  } else {
-    return rtf.format(-diffInSeconds, 'second');
+export function formatDate(
+  date: string | Date,
+  options: Intl.DateTimeFormatOptions = { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
   }
-};
+): string {
+  if (!date) return '';
+  
+  const dateObject = typeof date === 'string' ? new Date(date) : date;
+  
+  // Check if the date is valid
+  if (isNaN(dateObject.getTime())) {
+    console.warn(`Invalid date: ${date}`);
+    return '';
+  }
+  
+  return new Intl.DateTimeFormat('en-US', options).format(dateObject);
+}
 
 /**
- * Calculate date range (e.g., last 7 days, last 30 days)
- * @param days Number of days to go back
- * @returns Object with start and end dates
+ * Parses a date string into a Date object
+ * @param dateString - The date string to parse
+ * @returns A Date object
  */
-export const getDateRange = (days: number) => {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(end.getDate() - days);
+export function parseDate(dateString: string): Date | null {
+  if (!dateString) return null;
   
-  return {
-    startDate: start.toISOString().split('T')[0],
-    endDate: end.toISOString().split('T')[0]
-  };
-};
+  const parsedDate = new Date(dateString);
+  
+  // Check if the date is valid
+  if (isNaN(parsedDate.getTime())) {
+    console.warn(`Invalid date string: ${dateString}`);
+    return null;
+  }
+  
+  return parsedDate;
+}
+
+/**
+ * Checks if a date is between two other dates
+ * @param date - The date to check
+ * @param startDate - The start date
+ * @param endDate - The end date
+ * @returns True if the date is between the start and end dates
+ */
+export function isDateBetween(
+  date: Date | string,
+  startDate: Date | string,
+  endDate: Date | string
+): boolean {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const startObj = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const endObj = typeof endDate === 'string' ? new Date(endDate) : endDate;
+  
+  return dateObj >= startObj && dateObj <= endObj;
+}
+
+/**
+ * Gets the start of a day
+ * @param date - The date
+ * @returns A new Date object set to the start of the day
+ */
+export function startOfDay(date: Date | string): Date {
+  const dateObj = typeof date === 'string' ? new Date(date) : new Date(date);
+  dateObj.setHours(0, 0, 0, 0);
+  return dateObj;
+}
+
+/**
+ * Gets the end of a day
+ * @param date - The date
+ * @returns A new Date object set to the end of the day
+ */
+export function endOfDay(date: Date | string): Date {
+  const dateObj = typeof date === 'string' ? new Date(date) : new Date(date);
+  dateObj.setHours(23, 59, 59, 999);
+  return dateObj;
+}

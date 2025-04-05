@@ -6,19 +6,29 @@ import { PostgrestQueryBuilder } from '@supabase/postgrest-js';
 export type DocumentTableName = 
   | 'policy_documents' 
   | 'claim_documents' 
-  | 'sales_documents';
+  | 'sales_documents'
+  | 'client_documents'
+  | 'insurer_documents'
+  | 'agent_documents'
+  | 'invoice_documents'
+  | 'addendum_documents';
 
 // Define a mapping for entity types to their document tables
 export const entityToDocumentTable: Record<string, DocumentTableName> = {
   'policy': 'policy_documents',
   'claim': 'claim_documents', 
-  'sales_process': 'sales_documents'
+  'sales_process': 'sales_documents',
+  'client': 'client_documents',
+  'insurer': 'insurer_documents',
+  'agent': 'agent_documents',
+  'invoice': 'invoice_documents',
+  'addendum': 'addendum_documents'
 };
 
 // Helper function to safely query document tables
 export function queryDocumentTable(tableName: DocumentTableName) {
-  // This is a type-safe way to query these specific tables
-  return supabase.from(tableName);
+  // Use type assertion to bypass TypeScript's strict checks for dynamic table names
+  return supabase.from(tableName as any);
 }
 
 // Type guard for DocumentTableName
@@ -40,10 +50,17 @@ export function getDocumentTableForEntity(entityType: string): DocumentTableName
 // Helper for safely querying document tables
 export function queryDocuments(entityType: string) {
   const tableName = getDocumentTableForEntity(entityType);
-  return supabase.from(tableName);
+  // Use type assertion to bypass TypeScript's strict checks for dynamic table names
+  return supabase.from(tableName as any);
 }
 
 // Helper for safely casting objects to Document type
 export function castToDocument(data: any) {
   return data;
+}
+
+// Safe Supabase table query
+export function safeSupabaseQuery(tableName: string) {
+  // Use type assertion to bypass TypeScript's strict checking
+  return supabase.from(tableName as any);
 }

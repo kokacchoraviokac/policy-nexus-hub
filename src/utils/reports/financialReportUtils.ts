@@ -1,123 +1,156 @@
 
-// Financial report filter types
-export interface FinancialReportFilters {
-  dateRange: [Date | null, Date | null];
-  entityType: string[];
-  status: string[];
-  amount: [number | null, number | null];
-  transactionType: string[];
-  category: string[];
-  searchTerm: string;
-  startDate: Date | null;
-  endDate: Date | null;
-}
+import { FinancialReportData, FinancialReportFilters, FinancialTransaction } from "@/types/reports";
 
-// Default filter values
+// Create default filter values
 export const defaultFinancialFilters: FinancialReportFilters = {
-  dateRange: [null, null],
+  dateFrom: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+  dateTo: new Date(),
   entityType: [],
-  status: [],
-  amount: [null, null],
   transactionType: [],
   category: [],
   searchTerm: "",
-  startDate: null,
-  endDate: null
+  status: ""
 };
 
-// Mock data for testing financial reports
-export interface FinancialTransaction {
-  id: string;
-  date: string;
-  type: string;
-  description: string;
-  reference: string;
-  amount: number;
-  currency: string;
-  entity_id?: string;
-  entity_type?: string;
-  status: string;
-  category: string;
-}
-
-export interface FinancialReportData {
-  id: string;
-  date: string;
-  type: string;
-  description: string;
-  reference: string;
-  amount: number;
-  currency: string;
-  entity_id?: string;
-  entity_type?: string;
-  status: string;
-  category: string;
-  transactions: FinancialTransaction[];
-}
-
-// Helper to format currency
-export const formatCurrency = (amount: number, currency: string = "EUR") => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2
-  }).format(amount);
-};
-
-// Mock financial transactions for demo purposes
-export const mockFinancialTransactions: FinancialTransaction[] = [
+// Dummy data for financial report (will be replaced with API calls)
+export const financialReportData: FinancialReportData[] = [
   {
     id: "1",
-    date: "2025-03-01",
-    type: "payment",
-    description: "Premium payment",
-    reference: "INV-2023-001",
-    amount: 1250.00,
+    date: "2023-04-01",
+    type: "income",
+    description: "Commission payment",
+    reference: "INV-001",
+    amount: 2500,
     currency: "EUR",
     entity_id: "policy-123",
     entity_type: "policy",
     status: "completed",
-    category: "income"
+    category: "commission",
+    transactions: [
+      {
+        id: "t1",
+        date: "2023-04-01",
+        type: "income",
+        description: "Policy commission",
+        reference: "INV-001-1",
+        amount: 1500,
+        currency: "EUR",
+        status: "completed",
+        category: "commission"
+      },
+      {
+        id: "t2",
+        date: "2023-04-01",
+        type: "income",
+        description: "Bonus commission",
+        reference: "INV-001-2",
+        amount: 1000,
+        currency: "EUR",
+        status: "completed",
+        category: "commission"
+      }
+    ]
   },
   {
     id: "2",
-    date: "2025-02-15",
-    type: "commission",
-    description: "Commission payout",
-    reference: "COM-2023-001",
-    amount: 125.00,
+    date: "2023-04-15",
+    type: "expense",
+    description: "Agent payout",
+    reference: "EXP-001",
+    amount: 1000,
     currency: "EUR",
-    entity_id: "agent-456",
+    entity_id: "agent-123",
     entity_type: "agent",
     status: "completed",
-    category: "expense"
+    category: "payout",
+    transactions: [
+      {
+        id: "t3",
+        date: "2023-04-15",
+        type: "expense",
+        description: "Agent commission payout",
+        reference: "EXP-001-1",
+        amount: 1000,
+        currency: "EUR",
+        status: "completed",
+        category: "payout"
+      }
+    ]
+  },
+  {
+    id: "3",
+    date: "2023-04-20",
+    type: "income",
+    description: "Premium payment",
+    reference: "INV-002",
+    amount: 5000,
+    currency: "EUR",
+    entity_id: "policy-456",
+    entity_type: "policy",
+    status: "completed",
+    category: "premium",
+    transactions: [
+      {
+        id: "t4",
+        date: "2023-04-20",
+        type: "income",
+        description: "Annual premium",
+        reference: "INV-002-1",
+        amount: 5000,
+        currency: "EUR",
+        status: "completed",
+        category: "premium"
+      }
+    ]
   }
 ];
 
-// Mock report data
-export const mockFinancialReportData: FinancialReportData[] = [
-  {
-    id: "report-1",
-    date: "2025-03-01",
-    type: "payment",
-    description: "Premium payments summary",
-    reference: "",
-    amount: 1250.00,
-    currency: "EUR",
-    status: "completed",
-    category: "income",
-    transactions: mockFinancialTransactions.filter(t => t.type === "payment")
-  },
-  {
-    id: "report-2",
-    date: "2025-02-15",
-    type: "commission",
-    description: "Commission payouts summary",
-    reference: "",
-    amount: 125.00,
-    currency: "EUR",
-    status: "completed",
-    category: "expense",
-    transactions: mockFinancialTransactions.filter(t => t.type === "commission")
-  }
-];
+// This function would be replaced with an actual API call
+export const fetchFinancialReports = (filters: FinancialReportFilters): Promise<FinancialReportData[]> => {
+  return new Promise((resolve) => {
+    // Filter the mock data based on filters
+    setTimeout(() => {
+      let filteredData = [...financialReportData];
+      
+      // Apply date filters
+      if (filters.dateFrom) {
+        const fromDate = new Date(filters.dateFrom);
+        filteredData = filteredData.filter(item => new Date(item.date) >= fromDate);
+      }
+      
+      if (filters.dateTo) {
+        const toDate = new Date(filters.dateTo);
+        filteredData = filteredData.filter(item => new Date(item.date) <= toDate);
+      }
+      
+      // Apply entity type filter
+      if (filters.entityType && filters.entityType.length > 0) {
+        filteredData = filteredData.filter(item => 
+          filters.entityType.includes(item.entity_type || ''));
+      }
+      
+      // Apply transaction type filter
+      if (filters.transactionType && filters.transactionType.length > 0) {
+        filteredData = filteredData.filter(item => 
+          filters.transactionType.includes(item.type));
+      }
+      
+      // Apply category filter
+      if (filters.category && filters.category.length > 0) {
+        filteredData = filteredData.filter(item => 
+          filters.category.includes(item.category));
+      }
+      
+      // Apply search term
+      if (filters.searchTerm) {
+        const searchLower = filters.searchTerm.toLowerCase();
+        filteredData = filteredData.filter(item => 
+          item.description.toLowerCase().includes(searchLower) ||
+          item.reference.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      resolve(filteredData);
+    }, 500);
+  });
+};

@@ -11,16 +11,18 @@ interface UseDocumentUploadStateProps {
   onSuccess?: () => void;
   originalDocumentId?: string | null;
   currentVersion?: number;
+  defaultCategory?: DocumentCategory;
+  selectedDocument?: any;
 }
 
 export const useDocumentUploadState = (props: UseDocumentUploadStateProps) => {
-  const { entityType, entityId, onSuccess, originalDocumentId, currentVersion } = props;
+  const { entityType, entityId, onSuccess, originalDocumentId, currentVersion, defaultCategory } = props;
   const { toast } = useToast();
   const { t } = useLanguage();
   
   const [documentName, setDocumentName] = useState("");
   const [documentType, setDocumentType] = useState("");
-  const [documentCategory, setDocumentCategory] = useState("");
+  const [documentCategory, setDocumentCategory] = useState(defaultCategory || "");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   

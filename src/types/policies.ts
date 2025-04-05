@@ -1,7 +1,4 @@
 
-// Import types
-import { UserRole } from './auth';
-
 // Define policy types
 export type PolicyType = 'external' | 'internal';
 export type PolicyStatus = 'active' | 'expired' | 'cancelled' | 'pending';
@@ -9,13 +6,12 @@ export type CommissionType = 'automatic' | 'manual' | 'none';
 export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
 export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'full';
 
-// Create a basic Insurer type
+// Basic interfaces for related entities
 export interface Insurer {
   id: string;
   name: string;
 }
 
-// Create a basic Client type
 export interface Client {
   id: string;
   name: string;
@@ -28,7 +24,7 @@ export interface PolicyAddendum {
   effective_date: string;
   description: string;
   premium_adjustment?: number;
-  lien_status?: boolean;
+  lien_status: boolean; // Changed from optional to required
   status: string;
   workflow_status: string;
   created_at: string;
@@ -44,7 +40,7 @@ export interface Policy {
   policy_type: PolicyType;
   policyholder_name: string;
   client_id?: string;
-  client_name?: string; // Added client_name for interface support
+  client_name?: string; // Added client_name for compatibility
   insurer_id?: string;
   insurer_name: string;
   product_id?: string;

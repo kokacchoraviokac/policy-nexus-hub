@@ -144,6 +144,7 @@ export function transformToDocuments(documents: DocumentDbRow[], entityType: 'po
       entityId = doc.sales_process_id;
     }
     
+    // Use type assertion to ensure compatibility with Document interface
     return {
       id: doc.id,
       document_name: doc.document_name,
@@ -152,14 +153,15 @@ export function transformToDocuments(documents: DocumentDbRow[], entityType: 'po
       file_path: doc.file_path,
       entity_type: entityType,
       entity_id: entityId || "",
-      uploaded_by_id: doc.uploaded_by,
+      uploaded_by: doc.uploaded_by,
+      company_id: "", // This will be filled in by the database trigger
       uploaded_by_name: "Unknown User", // This could be fetched separately if needed
       version: doc.version || 1,
       is_latest_version: doc.is_latest_version || false,
       original_document_id: doc.original_document_id || null,
       category: doc.category || "other",
       mime_type: doc.mime_type || null,
-      status: "active"
+      updated_at: doc.created_at // Default to created_at if updated_at is not available
     } as Document;
   });
 }

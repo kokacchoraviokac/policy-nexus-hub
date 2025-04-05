@@ -35,6 +35,7 @@ export interface FinancialReportFilters {
   transactionType: string[];
   category: string[];
   searchTerm: string;
+  status?: string;
 }
 
 export interface PaginationProps {
@@ -45,3 +46,24 @@ export interface PaginationProps {
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
 }
+
+export interface ProposalStats {
+  totalCount: number;
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+}
+
+export interface Proposal {
+  id: string;
+  title: string;
+  clientId: string;
+  clientName: string;
+  createdAt: string;
+  status: string;
+  amount: number;
+  currency: string;
+  salesProcessId?: string;
+}
+
+export type ProposalStatus = 'pending' | 'approved' | 'rejected';

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -18,13 +19,18 @@ const ProposalsTab: React.FC<ProposalsTabProps> = ({ process }) => {
   const { 
     proposals, 
     stats,
-    loading: isLoading,
+    loading,
     error,
-    createProposal
+    refreshProposals,
+    updateProposal,
+    updateProposalStatus
   } = useProposalsData({
-    salesProcessId: process.id,
-    clientName: process.client_name
+    salesProcessId: process.id
   });
+  
+  const handleProposalCreated = () => {
+    refreshProposals();
+  };
   
   return (
     <div className="pt-4">
@@ -36,7 +42,7 @@ const ProposalsTab: React.FC<ProposalsTabProps> = ({ process }) => {
         </Button>
       </div>
       
-      {isLoading ? (
+      {loading ? (
         <div className="flex justify-center items-center h-48">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -62,8 +68,8 @@ const ProposalsTab: React.FC<ProposalsTabProps> = ({ process }) => {
         open={createProposalDialogOpen}
         onOpenChange={setCreateProposalDialogOpen}
         salesProcessId={process.id}
-        clientName={process.client_name}
-        onProposalCreated={createProposal}
+        clientName={process.client_name || ""}
+        onProposalCreated={handleProposalCreated}
       />
     </div>
   );
