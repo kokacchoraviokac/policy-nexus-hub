@@ -1,19 +1,19 @@
 
 export type EntityType = 
-  | 'policy' 
-  | 'claim' 
-  | 'sales_process' 
-  | 'client' 
-  | 'insurer' 
-  | 'agent' 
-  | 'invoice' 
+  | 'policy'
+  | 'claim'
+  | 'sales_process'
+  | 'client'
+  | 'insurer'
+  | 'agent'
+  | 'invoice'
   | 'addendum';
 
 export type DocumentCategory = 
-  | 'policy' 
-  | 'claim' 
-  | 'contract' 
-  | 'invoice' 
+  | 'policy'
+  | 'claim'
+  | 'contract'
+  | 'invoice'
   | 'identification'
   | 'correspondence'
   | 'report'
@@ -21,79 +21,39 @@ export type DocumentCategory =
   | 'other'
   | 'proposal'
   | 'quote'
-  | 'medical'
-  | 'financial'
-  | 'lien'
-  | 'notification'
   | 'discovery'
-  | 'closeout'
-  | 'claim_evidence'
-  | 'company'
-  | 'amendment'
-  | 'authorization';
-
-export type DocumentApprovalStatus = 
-  | 'approved' 
-  | 'rejected' 
-  | 'pending' 
-  | 'needs_review';
+  | 'closeout';
 
 export interface Document {
   id: string;
   document_name: string;
   document_type: string;
-  created_at: string;
   file_path: string;
-  entity_type: EntityType;
-  entity_id: string;
+  entity_type?: EntityType;
+  entity_id?: string;
   uploaded_by: string;
-  uploaded_by_id?: string;
-  uploaded_by_name?: string;
+  created_at: string;
+  updated_at: string;
   company_id: string;
-  description?: string;
   version?: number;
-  original_document_id?: string | null;
-  is_latest_version?: boolean;
+  original_document_id?: string;
   mime_type?: string;
+  is_latest_version?: boolean;
   category?: DocumentCategory;
-  status?: string;
-  approval_status?: DocumentApprovalStatus;
-  approved_by?: string;
-  approved_at?: string;
-  approval_notes?: string;
-  tags?: string[];
 }
 
-export interface DocumentUploadStateProps {
-  entityId: string;
-  entityType: EntityType;
-  defaultCategory?: DocumentCategory;
-  selectedDocument?: Document;
-  onSuccess?: () => void;
-}
+export const DOCUMENT_TABLES = [
+  'policy_documents',
+  'claim_documents',
+  'sales_documents',
+  'client_documents',
+  'insurer_documents',
+  'agent_documents',
+  'invoice_documents',
+  'addendum_documents'
+] as const;
 
-export interface DocumentSearchParams {
-  entityType?: EntityType | EntityType[];
-  entityId?: string;
-  searchTerm?: string;
-  category?: string;
-  documentType?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  uploadedBy?: string;
-  page?: number;
-  pageSize?: number;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-}
-
-export interface UseDocumentSearchProps {
-  entityType?: EntityType | EntityType[];
-  entityId?: string;
-  initialSearchParams?: DocumentSearchParams;
-  page?: number;
-  pageSize?: number;
-}
+export type DocumentTableName = typeof DOCUMENT_TABLES[number];
 
 export interface DocumentUploadDialogProps {
   open: boolean;
@@ -101,30 +61,9 @@ export interface DocumentUploadDialogProps {
   entityType: EntityType;
   entityId: string;
   onUploadComplete?: () => void;
-  onFileSelected?: (file: File | null) => void;
   embedMode?: boolean;
+  onFileSelected?: (file: File | null) => void;
   defaultCategory?: DocumentCategory;
   salesStage?: string;
   selectedDocument?: Document;
-}
-
-export interface DocumentAnalysisPanelProps {
-  document?: Document;
-  documentId?: string;
-  documentUrl?: string;
-  documentType?: string;
-  file?: File;
-  onAnalysisComplete?: () => void;
-  onCategoryDetected?: (category: DocumentCategory) => void;
-}
-
-export interface DocumentUploadRequest {
-  document_name: string;
-  document_type: string;
-  entity_type: EntityType;
-  entity_id: string;
-  description?: string;
-  tags?: string[];
-  category: DocumentCategory;
-  file: File;
 }

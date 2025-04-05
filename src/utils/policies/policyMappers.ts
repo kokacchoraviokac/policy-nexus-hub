@@ -1,6 +1,9 @@
 
 import { Policy } from "@/types/policies";
 
+/**
+ * Interface for policies in the workflow
+ */
 export interface WorkflowPolicy {
   id: string;
   policyNumber: string;
@@ -10,15 +13,15 @@ export interface WorkflowPolicy {
   expiryDate: string;
   premium: number;
   currency: string;
-  status: string;
   workflowStatus: string;
-  lastUpdated: string;
+  status?: string;
+  missingFields?: string[];
 }
 
 /**
- * Map Policy objects to WorkflowPolicy objects for display in the workflow UI
+ * Convert policy objects to workflow policy format
  */
-export const policiesToWorkflowPolicies = (policies: Policy[]): WorkflowPolicy[] => {
+export function policiesToWorkflowPolicies(policies: Policy[]): WorkflowPolicy[] {
   return policies.map(policy => ({
     id: policy.id,
     policyNumber: policy.policy_number,
@@ -27,38 +30,25 @@ export const policiesToWorkflowPolicies = (policies: Policy[]): WorkflowPolicy[]
     startDate: policy.start_date,
     expiryDate: policy.expiry_date,
     premium: policy.premium,
-    currency: policy.currency,
-    status: policy.status,
+    currency: policy.currency || "EUR",
     workflowStatus: policy.workflow_status,
-    lastUpdated: policy.updated_at
+    status: policy.status,
+    missingFields: getMissingFields(policy)
   }));
-};
+}
 
 /**
- * Group policies by their workflow status
+ * Determine which required fields are missing from a policy
  */
-export const groupPoliciesByWorkflowStatus = (policies: Policy[]) => {
-  return policies.reduce((groups, policy) => {
-    const status = policy.workflow_status;
-    if (!groups[status]) {
-      groups[status] = [];
-    }
-    groups[status].push(policy);
-    return groups;
-  }, {} as Record<string, Policy[]>);
-};
-
-/**
- * Calculate policy statistics by workflow status
- */
-export const calculatePolicyWorkflowStats = (policies: Policy[]) => {
-  const grouped = groupPoliciesByWorkflowStatus(policies);
+function getMissingFields(policy: Policy): string[] {
+  const missingFields: string[] = [];
   
-  return {
-    draft: grouped.draft?.length || 0,
-    in_review: grouped.in_review?.length || 0,
-    ready: grouped.ready?.length || 0,
-    complete: grouped.complete?.length || 0,
-    total: policies.length
-  };
-};
+  if (!policy.policy_number) missingFields.push("policyNumber");
+  if (!policy.policyholder_name) missingFields.push("policyholderName");
+  if (!policy.insurer_name) missingFields.push("insurerName");
+  if (!policy.start_date) missingFields.push("startDate");
+  if (!policy.expiry_date) missingFields.push("expiryDate");
+  if (!policy.premium) missingFields.push("premium");
+  
+  return missingFields;
+}

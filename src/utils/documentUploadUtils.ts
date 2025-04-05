@@ -1,8 +1,19 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EntityType } from "@/types/documents";
+import { EntityType, DocumentTableName } from "@/types/documents";
 import { v4 as uuidv4 } from "uuid";
-import { DocumentTableName, entityToDocumentTable } from "@/utils/supabaseQueryHelper";
+
+// Map entity types to their corresponding document tables
+export const entityToDocumentTable: Record<EntityType, DocumentTableName> = {
+  policy: 'policy_documents',
+  claim: 'claim_documents',
+  sales_process: 'sales_documents',
+  client: 'client_documents',
+  insurer: 'insurer_documents',
+  agent: 'agent_documents',
+  invoice: 'invoice_documents',
+  addendum: 'addendum_documents'
+};
 
 /**
  * Get the corresponding document table name for an entity type
@@ -12,7 +23,7 @@ export function getDocumentTableName(entityType: EntityType): DocumentTableName 
 }
 
 // Re-export the DocumentTableName type for convenience
-export type { DocumentTableName };
+export { DocumentTableName };
 
 /**
  * Upload a document file to Supabase storage

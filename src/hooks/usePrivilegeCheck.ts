@@ -1,71 +1,57 @@
 
-import { User, UserRole, CustomPrivilege } from "@/types/auth";
-import { checkPrivilege, checkPrivilegeWithContext } from "@/utils/authUtils";
+import { useContext } from 'react';
+import { AuthContext } from '@/contexts/auth/AuthContext';
+import { ResourceContext } from '@/types/auth/contextTypes';
 
-export function usePrivilegeCheck(
-  user: User | null,
-  isAuthenticated: boolean,
-  customPrivileges: CustomPrivilege[]
-) {
-  // Function to check if user has a specific privilege
-  const hasPrivilege = (privilege: string) => {
-    if (!user || !isAuthenticated) {
-      console.log("No authenticated user found in hasPrivilege check");
+export function usePrivilegeCheck() {
+  const context = useContext(AuthContext);
+  
+  if (!context) {
+    throw new Error('usePrivilegeCheck must be used within an AuthProvider');
+  }
+  
+  /**
+   * Check if the current user has the specified privilege
+   */
+  const checkPrivilege = (privilege: string): boolean => {
+    if (!context.user) {
       return false;
     }
     
-    console.log(`Checking privilege '${privilege}' for user with role '${user.role}'`);
+    // If the privilege is an array, convert it to a string
+    const privilegeToCheck = Array.isArray(privilege) ? privilege[0] : privilege;
     
-    // First check role-based privileges
-    if (checkPrivilege(user.role, privilege)) {
-      console.log(`Role-based privilege '${privilege}' granted for role '${user.role}'`);
-      return true;
-    }
-    
-    // Then check custom privileges
-    const hasCustomPrivilege = customPrivileges.some(cp => cp.privilege === privilege);
-    if (hasCustomPrivilege) {
-      console.log(`Custom privilege '${privilege}' found`);
-    }
-    
-    return hasCustomPrivilege;
+    return context.hasPrivilege(privilegeToCheck);
   };
   
-  // Enhanced function to check privileges with context
-  const hasPrivilegeWithContext = (
-    privilege: string,
-    context?: {
-      ownerId?: string;
-      currentUserId?: string;
-      companyId?: string;
-      currentUserCompanyId?: string;
-      resourceType?: string;
-      resourceValue?: any;
-      [key: string]: any;
-    }
-  ) => {
-    if (!user || !isAuthenticated) {
+  /**
+   * Check if the current user has the specified privilege with context
+   */
+  const checkPrivilegeWithContext = (privilege: string, resourceContext?: ResourceContext): boolean => {
+    if (!context.user) {
       return false;
     }
     
-    // Add user context if not provided
-    const contextWithDefaults = {
-      currentUserId: user.id,
-      currentUserCompanyId: user.companyId,
-      ...context
-    };
+    // If the privilege is an array, convert it to a string
+    const privilegeToCheck = Array.isArray(privilege) ? privilege[0] : privilege;
     
-    // Check role-based privileges first
-    if (checkPrivilegeWithContext(user.role, privilege, contextWithDefaults)) {
-      return true;
+    return context.hasPrivilegeWithContext(privilegeToCheck, resourceContext);
+  };
+  
+  /**
+   * Check if the current user has any of the specified privileges
+   */
+  const checkAnyPrivilege = (privileges: string[]): boolean => {
+    if (!context.user || !privileges.length) {
+      return false;
     }
     
-    // Then check custom privileges
-    return customPrivileges.some(cp => cp.privilege === privilege);
+    return privileges.some(privilege => checkPrivilege(privilege));
   };
-
+  
   return {
-    hasPrivilege,
-    hasPrivilegeWithContext
+    checkPrivilege,
+    checkPrivilegeWithContext,
+    checkAnyPrivilege
   };
 }

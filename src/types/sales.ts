@@ -6,7 +6,9 @@ export type ProposalStatus =
   | 'accepted'
   | 'rejected'
   | 'expired'
-  | 'all'; // Added 'all' for filtering
+  | 'all'  // Added 'all' for filtering
+  | 'pending'
+  | 'approved'; // Added for compatibility
 
 export interface Proposal {
   id: string;
@@ -25,6 +27,7 @@ export interface Proposal {
   expires_at?: string;
   accepted_at?: string;
   rejected_at?: string;
+  
   // Added aliased properties for compatibility
   clientName?: string;
   coverageDetails?: string;
@@ -45,6 +48,7 @@ export interface SalesProcess {
   client_name?: string;
   responsible_person?: string;
   responsible_person_id?: string;
+  
   // Add other required fields for compatibility
   status?: string;
   expected_close_date?: string;
@@ -56,8 +60,24 @@ export interface UseProposalsDataProps {
   sales_process_id?: string;
   status?: ProposalStatus;
   salesProcessId?: string; // Alias for sales_process_id
-  searchQuery?: string; // Added for search functionality
-  statusFilter?: string; // Added for filtering by status
+  searchQuery?: string;    // Added for search functionality
+  statusFilter?: string;   // Added for filtering by status
+}
+
+export interface ProposalStats {
+  totalCount: number;
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+  
+  // Legacy properties for backward compatibility 
+  total?: number;
+  accepted?: number;
+  rejected?: number;
+  draft?: number;
+  pending?: number;
+  sent?: number;
+  viewed?: number;
 }
 
 export interface SalesProcessDocumentsProps {
