@@ -18,6 +18,8 @@ export interface User {
 export interface AuthState {
   session: Session | null;
   user: User | null;
+  isAuthenticated?: boolean;
+  isLoading?: boolean;
 }
 
 // Define CustomPrivilege interface

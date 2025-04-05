@@ -1,48 +1,29 @@
 
+// Import types
+import { UserRole } from './auth';
+
 // Define policy types
-import { UserRole } from "./auth";
-import { Insurer } from "./insurers";
-import { ClientInfo } from "./clients";
-
+export type PolicyType = 'external' | 'internal';
 export type PolicyStatus = 'active' | 'expired' | 'cancelled' | 'pending';
-export type PolicyType = 'life' | 'non-life';
-export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
-export type PaymentFrequency = 'one_time' | 'monthly' | 'quarterly' | 'semi_annual' | 'annual';
 export type CommissionType = 'automatic' | 'manual' | 'none';
+export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
+export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'full';
 
-export interface Policy {
+// Create a basic Insurer type to replace the import
+export interface Insurer {
   id: string;
-  company_id: string;
-  policy_number: string;
-  policy_type: PolicyType;
-  policyholder_name: string;
-  insurer_name: string;
-  start_date: string;
-  expiry_date: string;
-  premium: number;
-  currency: string;
-  status: PolicyStatus;
-  workflow_status: WorkflowStatus;
-  commission_percentage?: number;
-  commission_amount?: number;
-  commission_type?: CommissionType;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  assigned_to?: string;
-  client_id?: string;
-  insured_id?: string;
-  insurer_id?: string;
-  product_id?: string;
-  product_name?: string;
-  product_code?: string;
-  insured_name?: string;
-  payment_frequency?: PaymentFrequency;
-  notes?: string;
+  name: string;
+}
+
+// Create a basic Client type to replace the import
+export interface Client {
+  id: string;
+  name: string;
 }
 
 export interface PolicyAddendum {
   id: string;
+  policy_id: string;
   addendum_number: string;
   effective_date: string;
   description: string;
@@ -50,55 +31,76 @@ export interface PolicyAddendum {
   lien_status?: boolean;
   status: string;
   workflow_status: string;
-  policy_id: string;
+  created_at: string;
+  created_by?: string;
+  updated_at: string;
+  company_id: string;
+}
+
+export interface Policy {
+  id: string;
+  company_id: string;
+  policy_number: string;
+  policy_type: PolicyType;
+  policyholder_name: string;
+  client_id?: string;
+  client_name?: string; // Added client_name
+  insurer_id?: string;
+  insurer_name: string;
+  product_id?: string;
+  product_name?: string;
+  product_code?: string;
+  start_date: string;
+  expiry_date: string;
+  premium: number;
+  currency: string;
+  payment_frequency?: PaymentFrequency;
+  status: PolicyStatus;
+  commission_type?: CommissionType;
+  commission_percentage?: number;
+  commission_amount?: number;
+  assigned_to?: string;
+  created_by?: string;
+  insured_id?: string;
+  insured_name?: string;
+  workflow_status: WorkflowStatus;
+  notes?: string;
   created_at: string;
   updated_at: string;
-  created_by?: string;
-  company_id: string;
+}
+
+export interface PolicyFilterParams {
+  client_id?: string;
+  insurer_id?: string;
+  product_id?: string;
+  status?: PolicyStatus | string;
+  workflow_status?: WorkflowStatus | string;
+  assigned_to?: string;
+  start_date_from?: string;
+  start_date_to?: string;
+  expiry_date_from?: string;
+  expiry_date_to?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
 }
 
 export interface UnlinkedPaymentType {
   id: string;
   amount: number;
   payment_date: string;
-  payer_name?: string;
   reference?: string;
-  currency: string;
+  payer_name?: string;
   status: string;
   linked_policy_id?: string;
   linked_at?: string;
   linked_by?: string;
+  currency: string;
   company_id: string;
   created_at: string;
   updated_at: string;
-}
-
-export interface PolicyNote {
-  id: string;
-  content: string;
-  created_at: string;
-  created_by: string;
-  created_by_name?: string;
-  policy_id: string;
-}
-
-export interface PolicyFilterParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: PolicyStatus[];
-  workflowStatus?: WorkflowStatus[];
-  insurerId?: string;
-  clientId?: string;
-  startDate?: string;
-  endDate?: string;
-  assignedToMe?: boolean;
-  expiringSoon?: boolean;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  pageSize?: number;
-  orderBy?: string;
-  orderDirection?: 'asc' | 'desc';
 }
 
 export interface ValidationErrors {

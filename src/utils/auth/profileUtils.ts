@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole, rolePrivileges } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { MOCK_USERS } from "@/data/mockUsers";
 
@@ -24,18 +25,17 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
     }
 
     if (profile) {
-      // Validate role - ensure it's a valid role type
-      const role = profile.role as UserRole;
-      if (!Object.keys(rolePrivileges).includes(role)) {
-        console.warn(`User has invalid role "${role}", defaulting to "employee"`);
-        profile.role = 'employee';
-      }
+      // Validate role
+      const validRoles: UserRole[] = ['superAdmin', 'admin', 'employee', 'agent', 'client'];
+      const role = validRoles.includes(profile.role as UserRole) 
+        ? profile.role as UserRole 
+        : 'employee';
       
       return {
         id: userId,
         name: profile.name,
         email: profile.email,
-        role: profile.role as UserRole,
+        role: role,
         avatar: profile.avatar_url,
         companyId: profile.company_id,
       };

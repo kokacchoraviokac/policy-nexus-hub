@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -268,11 +269,11 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
                     <TableCell>
                       <Badge variant="outline">{privilege.privilege}</Badge>
                     </TableCell>
-                    <TableCell>{privilege.grantedBy}</TableCell>
-                    <TableCell>{new Date(privilege.grantedAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{privilege.granted_by}</TableCell>
+                    <TableCell>{new Date(privilege.granted_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      {privilege.expiresAt 
-                        ? new Date(privilege.expiresAt).toLocaleDateString()
+                      {privilege.expires_at 
+                        ? new Date(privilege.expires_at).toLocaleDateString()
                         : "Never"
                       }
                     </TableCell>

@@ -1,12 +1,9 @@
 
-// Re-export only specific types to avoid ambiguity
+// Re-export types using 'export type' to avoid isolatedModules issues
 export type { User, UserRole, AuthState } from './user';
+export type { CustomPrivilege } from './user';
 
-// Explicitly re-export CustomPrivilege to resolve ambiguity
-import { CustomPrivilege as OriginalCustomPrivilege } from './user';
-export type { OriginalCustomPrivilege as CustomPrivilege };
-
-// Export other types directly
+// Re-export other types
 export type * from './roles';
 export type * from './privileges';
 export type * from './contextTypes';

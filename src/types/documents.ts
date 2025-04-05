@@ -83,6 +83,8 @@ export interface DocumentListProps {
   refetch?: () => void;
   updateDocumentApproval?: (documentId: string, status: DocumentApprovalStatus, notes?: string) => Promise<void>;
   deleteDocument?: (documentId: string) => void;
+  onDownload?: (document: Document) => void;
+  isDownloading?: boolean;
 }
 
 export interface DocumentUploadDialogProps {
@@ -91,9 +93,11 @@ export interface DocumentUploadDialogProps {
   entityType: EntityType;
   entityId: string;
   onUploadComplete?: () => void;
-  defaultCategory?: string;
+  defaultCategory?: DocumentCategory;
   salesStage?: string;
   selectedDocument?: Document;
+  onFileSelected?: (file: File | null) => void;
+  embedMode?: boolean;
 }
 
 export interface DocumentUploadRequest {
@@ -115,4 +119,12 @@ export interface DocumentAnalysisPanelProps {
   file?: File;
   onAnalysisComplete?: () => void;
   onCategoryDetected?: (category: string) => void;
+}
+
+export interface UseDocumentUploadStateProps {
+  entityId: string;
+  entityType: EntityType;
+  onSuccess?: () => void;
+  selectedDocument?: Document;
+  defaultCategory?: DocumentCategory;
 }

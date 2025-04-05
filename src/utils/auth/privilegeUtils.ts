@@ -64,11 +64,12 @@ export const fetchUserCustomPrivileges = async (userId: string): Promise<CustomP
     
     return data.map(item => ({
       id: item.id,
-      userId: item.user_id,
+      user_id: item.user_id,
       privilege: item.privilege,
-      grantedBy: item.granted_by,
-      grantedAt: new Date(item.granted_at),
-      expiresAt: item.expires_at ? new Date(item.expires_at) : undefined
+      granted_by: item.granted_by,
+      granted_at: item.granted_at,
+      expires_at: item.expires_at || undefined,
+      context: item.context
     }));
   } catch (error) {
     console.error("Error in custom privileges fetch:", error);

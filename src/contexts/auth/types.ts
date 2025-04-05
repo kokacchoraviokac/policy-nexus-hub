@@ -1,11 +1,16 @@
 
 import { User, UserRole, AuthState, CustomPrivilege } from "@/types/auth";
+import { Session } from "@supabase/supabase-js";
 
-export interface AuthContextType extends AuthState {
+export interface AuthContextType {
+  user: User | null;
+  session?: Session | null;
   userProfile: User | null;
   role: UserRole | null;
   companyId: string | null;
   isInitialized: boolean;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
