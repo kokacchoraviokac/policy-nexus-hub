@@ -3,7 +3,7 @@ import { useState } from "react";
 import { DocumentCategory, EntityType } from "@/types/documents";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { DocumentService } from "@/services/DocumentService";
+import { uploadDocument } from "@/utils/documents";
 
 interface UseDocumentUploadStateProps {
   entityType: EntityType;
@@ -50,7 +50,7 @@ export const useDocumentUploadState = (props: UseDocumentUploadStateProps) => {
     setUploading(true);
     
     try {
-      const result = await DocumentService.uploadDocument({
+      const result = await uploadDocument({
         file,
         documentName,
         documentType,
@@ -59,7 +59,7 @@ export const useDocumentUploadState = (props: UseDocumentUploadStateProps) => {
         entityType,
         originalDocumentId,
         currentVersion,
-        additionalData
+        ...additionalData
       });
       
       if (!result.success) {

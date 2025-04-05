@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/stores/authStore';
+import { useAuth } from '@/contexts/auth/AuthContext';
 import ClaimDetailsForm from './ClaimDetailsForm';
 import PolicySearchDialog from '@/components/policies/search/PolicySearchDialog';
 

@@ -20,7 +20,7 @@ interface DocumentListProps {
   isLoading?: boolean;
   isError?: boolean;
   error?: Error;
-  onDelete?: (documentId: string | Document) => void;
+  onDelete?: (documentId: Document) => void;
   isDeleting?: boolean;
 }
 
@@ -55,8 +55,16 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const isLoading = providedIsLoading !== undefined ? providedIsLoading : isLoadingFetched;
   const isError = providedIsError !== undefined ? providedIsError : !!errorFetched;
   const error = providedError || errorFetched;
-  const deleteDocument = providedOnDelete || deleteDocumentFetched;
   const isDeleting = providedIsDeleting !== undefined ? providedIsDeleting : isDeletingFetched;
+
+  // Custom delete document handler that manages both string IDs and Document objects
+  const handleDeleteDocument = (document: Document) => {
+    if (providedOnDelete) {
+      providedOnDelete(document);
+    } else if (deleteDocumentFetched) {
+      deleteDocumentFetched(document.id);
+    }
+  };
 
   // Filter documents by category if filterCategory is provided
   const filteredDocuments = useMemo(() => {
@@ -130,7 +138,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
         <DocumentListItem 
           key={document.id} 
           document={document}
-          onDelete={() => deleteDocument(document.id || document)}
+          onDelete={() => handleDeleteDocument(document)}
           isDeleting={isDeleting}
           showApproval={showApproval}
           onUploadVersion={() => handleUploadVersion(document)}

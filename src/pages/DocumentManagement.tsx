@@ -1,86 +1,79 @@
 
-import React, { useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { PageHeader } from "@/components/ui/common";
-import { Button } from "@/components/ui/button";
-import { Upload, Filter, Search as SearchIcon } from "lucide-react";
-import DocumentSearch from "@/components/documents/search/DocumentSearch";
-import DocumentBatchUpload from "@/components/documents/unified/DocumentBatchUpload";
-import { EntityType } from "@/types/documents";
+import React, { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageHeader } from '@/components/ui/page-header';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { DocumentSearch } from '@/components/documents/search/DocumentSearch';
+import { DocumentUploadDialog } from '@/components/documents/unified/DocumentUploadDialog';
 
-const DocumentManagement: React.FC = () => {
+export default function DocumentManagement() {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<string>("search");
+  const [activeTab, setActiveTab] = useState('all');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto py-6 space-y-6">
       <PageHeader
-        title={t("documentManagement")}
-        subtitle={t("manageAllDocumentsInOnePlace")}
+        title={t('documentManagement')}
+        description={t('documentManagementDescription')}
+        actions={
+          <Button onClick={() => setUploadDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t('uploadDocument')}
+          </Button>
+        }
       />
       
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center mb-6">
-        <Tabs 
-          defaultValue={activeTab} 
-          value={activeTab} 
-          onValueChange={setActiveTab}
-          className="w-full sm:w-auto mt-4 sm:mt-0"
-        >
-          <TabsList>
-            <TabsTrigger value="search" className="flex items-center">
-              <SearchIcon className="h-4 w-4 mr-2" />
-              {t("search")}
-            </TabsTrigger>
-            <TabsTrigger value="approved" className="flex items-center">
-              <Filter className="h-4 w-4 mr-2" />
-              {t("approved")}
-            </TabsTrigger>
-            <TabsTrigger value="pending" className="flex items-center">
-              <Filter className="h-4 w-4 mr-2" />
-              {t("pending")}
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="search" className="mt-6">
-            <DocumentSearch />
-          </TabsContent>
-          
-          <TabsContent value="approved" className="mt-6">
-            <DocumentSearch filterStatus="approved" />
-          </TabsContent>
-          
-          <TabsContent value="pending" className="mt-6">
-            <DocumentSearch filterStatus="pending" />
-          </TabsContent>
-        </Tabs>
-        
-        <div>
-          <Button onClick={() => setUploadDialogOpen(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            {t("uploadDocuments")}
-          </Button>
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-6">
+              <TabsTrigger value="all">{t('allDocuments')}</TabsTrigger>
+              <TabsTrigger value="pending">{t('pendingApproval')}</TabsTrigger>
+              <TabsTrigger value="approved">{t('approved')}</TabsTrigger>
+              <TabsTrigger value="rejected">{t('rejected')}</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="all">
+              <DocumentSearch 
+                title={t('allDocuments')} 
+                showTableHeader={false}
+              />
+            </TabsContent>
+            
+            <TabsContent value="pending">
+              <DocumentSearch 
+                title={t('pendingApproval')} 
+                showTableHeader={false}
+              />
+            </TabsContent>
+            
+            <TabsContent value="approved">
+              <DocumentSearch 
+                title={t('approved')} 
+                showTableHeader={false}
+              />
+            </TabsContent>
+            
+            <TabsContent value="rejected">
+              <DocumentSearch 
+                title={t('rejected')} 
+                showTableHeader={false}
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
       
-      <DocumentBatchUpload
+      <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
-        entityType={"policy" as EntityType} // Default entity type
-        entityId={"0"} // Default ID, would be updated when a specific entity is selected
-        onSuccess={() => {
-          // Refresh document list after upload
-          setActiveTab("search");
-        }}
+        entityType="client"
+        entityId="temp-client-id"
       />
     </div>
   );
-};
-
-export default DocumentManagement;
+}

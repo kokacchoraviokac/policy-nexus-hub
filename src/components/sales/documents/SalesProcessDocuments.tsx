@@ -1,88 +1,84 @@
 
-import React, { useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { Document, EntityType } from "@/types/documents";
-import { useSalesProcessDocuments } from "@/hooks/sales/useSalesProcessDocuments";
-import DocumentList from "@/components/documents/DocumentList";
-import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
+import React, { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus } from 'lucide-react';
+import { useSalesProcessDocuments } from '@/hooks/sales/useSalesProcessDocuments';
+import DocumentList from '@/components/documents/DocumentList';
+import DocumentUploadDialog from '@/components/documents/unified/DocumentUploadDialog';
+import { Document } from '@/types/documents';
+import { useDocumentManager } from '@/hooks/useDocumentManager';
 
 interface SalesProcessDocumentsProps {
   salesProcessId: string;
-  currentStage?: string;
+  salesStage?: string;
+  title?: string;
+  showUploadButton?: boolean;
 }
 
 const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ 
   salesProcessId,
-  currentStage 
+  salesStage,
+  title = "Documents",
+  showUploadButton = true
 }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   
-  const {
-    documents,
+  const { 
+    documents, 
     isLoading,
     error,
     documentsCount
   } = useSalesProcessDocuments(salesProcessId);
   
-  // Define a function to handle document deletion
-  const handleDeleteDocument = async (documentId: string | Document) => {
-    // Implementation would go here
-    console.log("Delete document:", documentId);
-  };
+  const {
+    deleteDocument,
+    isDeletingDocument,
+    updateDocumentApproval,
+    isApprovingDocument
+  } = useDocumentManager();
   
-  // Add a mocked approval handler until we implement the real one
-  const handleApproveDocument = (document: any, status: any, notes: any) => {
-    console.log("Approve document:", document.id, status, notes);
-    return Promise.resolve();
-  };
-  
-  // Handle document upload completion
-  const handleUploadComplete = () => {
-    // Refresh documents list
-    console.log("Document upload complete");
+  const handleDocumentApproval = async (document: Document, status: string, notes: string) => {
+    await updateDocumentApproval(document.id, status as any, notes);
   };
   
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-xl font-medium">{t("documents")}</CardTitle>
-          <Button 
-            size="sm" 
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle>{title}</CardTitle>
+        {showUploadButton && (
+          <Button
             onClick={() => setUploadDialogOpen(true)}
+            variant="outline"
+            size="sm"
           >
-            <Plus className="h-4 w-4 mr-1" />
-            {t("upload")}
+            <Plus className="mr-2 h-4 w-4" />
+            {t("uploadDocument")}
           </Button>
-        </div>
+        )}
       </CardHeader>
-      
       <CardContent>
-        {/* Use DocumentList component to display documents */}
         <DocumentList
+          entityType="sales_process"
+          entityId={salesProcessId}
           documents={documents}
           isLoading={isLoading}
           isError={!!error}
-          error={error}
-          onDelete={handleDeleteDocument}
-          isDeleting={false}
+          error={error || undefined}
+          onDelete={deleteDocument}
+          isDeleting={isDeletingDocument}
           showUploadButton={false}
-          entityType="sales_process"
-          entityId={salesProcessId}
         />
         
-        {/* Upload dialog */}
         <DocumentUploadDialog
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
           entityType="sales_process"
           entityId={salesProcessId}
-          onUploadComplete={handleUploadComplete}
-          salesStage={currentStage}
+          onUploadComplete={() => {}}
+          salesStage={salesStage}
         />
       </CardContent>
     </Card>
