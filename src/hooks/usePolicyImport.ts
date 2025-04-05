@@ -1,249 +1,196 @@
 
-import { useState, useEffect } from "react";
-import { Policy } from "@/types/policies";
-import { parsePolicyCSV, validateImportedPolicies } from "@/utils/policies/importUtils";
-import { useSupabaseClient } from "@/hooks/useSupabaseClient";
-import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
-import { useLocation } from "react-router-dom";
+import { useState, useCallback } from 'react';
+import { Policy } from '@/types/policies';
+import { useAuthStore } from '@/stores/authStore';
+import { parseCsv } from '@/utils/policies/policyImportUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+// To handle validation errors by row
+interface ValidationErrors {
+  [key: number]: string[];
+}
 
 export const usePolicyImport = () => {
-  const [isImporting, setIsImporting] = useState(false);
+  const { t } = useLanguage();
+  const { toast } = useToast();
   const [importedPolicies, setImportedPolicies] = useState<Partial<Policy>[]>([]);
-  const [invalidPolicies, setInvalidPolicies] = useState<{ policy: Partial<Policy>; errors: string[] }[]>([]);
-  const [salesProcessData, setSalesProcessData] = useState<any>(null);
-  const supabase = useSupabaseClient();
-  const location = useLocation();
-
-  // Check for sales process ID in URL params
-  useEffect(() => {
-    const fetchSalesProcessData = async (salesId: string) => {
-      try {
-        setIsImporting(true);
-        // In a real app, this would fetch the sales process data from the API
-        console.log("Fetching sales process data for ID:", salesId);
-        
-        // Simulate an API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // For demo purposes, we'll create a mock policy based on the sales process
-        const mockPolicyFromSales: Partial<Policy> = {
-          policy_number: `POL-${salesId.substring(0, 5)}`,
-          policy_type: "Standard",
-          insurer_name: "Example Insurance Company",
-          product_name: "Business Insurance",
-          product_code: "BI-001",
-          policyholder_name: "Sales Client",
-          insured_name: "Sales Client",
-          start_date: new Date().toISOString().split('T')[0],
-          expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          premium: 1000,
-          currency: "EUR",
-          payment_frequency: "annual",
-          commission_type: "automatic",
-          commission_percentage: 10,
-          notes: `Imported from sales process ${salesId}`,
-          workflow_status: "draft",
-          status: "active"
-        };
-        
-        setSalesProcessData({
-          id: salesId,
-          policy: mockPolicyFromSales
-        });
-        
-        setImportedPolicies([mockPolicyFromSales]);
-        
-        toast.success("Sales process data loaded successfully", {
-          description: "Ready to import policy from sales process"
-        });
-      } catch (error: any) {
-        console.error("Error fetching sales process data:", error);
-        toast.error(`Error loading sales process data: ${error.message}`);
-      } finally {
-        setIsImporting(false);
-      }
-    };
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [isImporting, setIsImporting] = useState(false);
+  const { user, companyId } = useAuthStore();
+  
+  const handleFileSelect = async (file: File) => {
+    if (!file || !companyId) return;
     
-    const queryParams = new URLSearchParams(location.search);
-    const salesProcessId = queryParams.get("from_sales");
-    
-    if (salesProcessId) {
-      fetchSalesProcessData(salesProcessId);
-    }
-  }, [location]);
-
-  const parseCSVFile = async (file: File): Promise<void> => {
     setIsImporting(true);
     
     try {
-      const text = await file.text();
-      const policies = parsePolicyCSV(text);
+      const { policies, errors } = await parseCsv(file);
       
-      const { valid, invalid } = validateImportedPolicies(policies);
-      
-      setImportedPolicies(valid);
-      setInvalidPolicies(invalid);
-      
-      if (invalid.length > 0) {
-        toast.warning(`${invalid.length} policies have validation issues.`);
+      if (errors && Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
       }
       
-      if (valid.length > 0) {
-        toast.success(`Successfully parsed ${valid.length} policies.`);
-      } else {
-        toast.error("No valid policies found in the file.");
-      }
-    } catch (error: any) {
-      console.error("Error parsing CSV:", error);
-      toast.error(`Error parsing file: ${error.message}`);
+      // Map the parsed data to Policy objects
+      const mappedPolicies = policies.map(item => ({
+        policy_number: item.policy_number,
+        policy_type: item.policy_type || 'standard',
+        insurer_id: item.insurer_id || null,
+        insurer_name: item.insurer_name,
+        product_id: item.product_id || null, // Use product_id consistently
+        product_name: item.product_name || null,
+        client_id: item.client_id || null,
+        policyholder_name: item.policyholder_name,
+        insured_id: item.insured_id || null,
+        insured_name: item.insured_name || item.policyholder_name,
+        start_date: item.start_date,
+        expiry_date: item.expiry_date,
+        premium: parseFloat(item.premium || '0'),
+        currency: item.currency || 'EUR',
+        payment_frequency: item.payment_frequency || null,
+        commission_type: item.commission_type || 'manual',
+        commission_percentage: item.commission_percentage ? parseFloat(item.commission_percentage) : null,
+        commission_amount: null, // Will be calculated later
+        status: 'active',
+        workflow_status: 'in_review',
+        notes: item.notes || null,
+        company_id: companyId,
+        created_by: user?.id || null
+      }));
+      
+      setImportedPolicies(mappedPolicies);
+      
+      toast({
+        title: t('importProcessed'),
+        description: t('policiesReadyForReview', { count: mappedPolicies.length })
+      });
+    } catch (error) {
+      console.error('Error processing CSV:', error);
+      toast({
+        title: t('importError'),
+        description: typeof error === 'string' ? error : (error as Error).message,
+        variant: 'destructive'
+      });
     } finally {
       setIsImporting(false);
     }
   };
-
-  const savePolicies = async (): Promise<boolean> => {
-    if (importedPolicies.length === 0) {
-      toast.error("No valid policies to import.");
-      return false;
+  
+  const parseCSVFile = async (file: File) => {
+    return handleFileSelect(file);
+  };
+  
+  const handleFileDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles && acceptedFiles.length > 0) {
+      handleFileSelect(acceptedFiles[0]);
     }
+  };
+  
+  const savePolicies = async () => {
+    if (importedPolicies.length === 0) return false;
     
     setIsImporting(true);
     
     try {
-      // Get the user's data to get company_id
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("User authentication required");
+      // Filter out policies with validation errors
+      const validPolicies = importedPolicies.filter((_, index) => 
+        !validationErrors[index] || validationErrors[index].length === 0
+      );
+      
+      if (validPolicies.length === 0) {
+        toast({
+          title: t('noValidPolicies'),
+          description: t('pleaseFixValidationErrors'),
+          variant: 'destructive'
+        });
         return false;
       }
       
-      // Get the user's profile to get company_id
-      const { data: userProfile } = await supabase
-        .from("profiles")
-        .select("company_id")
-        .eq("id", user.id)
-        .single();
-      
-      if (!userProfile?.company_id) {
-        toast.error("Company ID not found");
-        return false;
-      }
-      
-      const companyId = userProfile.company_id;
-      
-      // Prepare policies with required fields for insertion
-      const policiesToInsert = importedPolicies.map(policy => {
-        const policyData = {
-          id: uuidv4(),
-          policy_number: policy.policy_number || '',
-          policy_type: policy.policy_type || 'Standard',
-          insurer_name: policy.insurer_name || '',
-          insurer_id: policy.insurer_id,
-          policyholder_name: policy.policyholder_name || '',
-          client_id: policy.client_id,
-          insured_name: policy.insured_name || policy.policyholder_name || '',
-          insured_id: policy.insured_id,
-          product_name: policy.product_name || '',
-          product_id: policy.product_id,
-          product_code: policy.product_code,
-          start_date: policy.start_date || new Date().toISOString().split('T')[0],
-          expiry_date: policy.expiry_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          premium: policy.premium || 0,
-          currency: policy.currency || 'EUR',
-          payment_frequency: policy.payment_frequency || 'annual',
-          commission_type: policy.commission_type || 'automatic',
-          commission_percentage: policy.commission_percentage,
-          commission_amount: policy.commission_amount,
-          notes: policy.notes,
-          status: 'active',
-          workflow_status: 'draft',
-          company_id: companyId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          created_by: user.id
-        };
-
-        // If we're importing from a sales process, add a reference to it
-        if (salesProcessData?.id) {
-          policyData.notes = `${policyData.notes || ''}\nImported from sales process ID: ${salesProcessData.id}`;
-          // In a real application, you might want to add a proper reference in a dedicated field
+      // Calculate commission amount for policies with percentage
+      const policiesWithCommissions = validPolicies.map(policy => {
+        let commissionAmount = null;
+        if (policy.commission_percentage && policy.premium) {
+          commissionAmount = (policy.premium * policy.commission_percentage) / 100;
         }
-
-        return policyData;
+        return {
+          ...policy,
+          commission_amount: commissionAmount
+        };
       });
       
-      // Insert policies into database one by one to avoid batch issues
-      let successCount = 0;
-      let errorCount = 0;
-      let errors: string[] = [];
+      // Save policies to database
+      const { data, error } = await supabase
+        .from('policies')
+        .insert(policiesWithCommissions);
       
-      for (const policy of policiesToInsert) {
-        const { data, error } = await supabase
-          .from("policies")
-          .insert(policy)
-          .select();
-        
-        if (error) {
-          console.error("Error saving policy:", error, policy);
-          errors.push(`Error saving policy ${policy.policy_number}: ${error.message}`);
-          errorCount++;
-        } else {
-          successCount++;
-          
-          // If we imported from a sales process, update the sales process status
-          if (salesProcessData?.id && successCount > 0) {
-            // In a real application, this would update the sales process to show a policy was created
-            console.log(`Updating sales process ${salesProcessData.id} status to link it with policy ${policy.id}`);
-            
-            // This would be the real implementation to update the sales process
-            // const { error: updateError } = await supabase
-            //   .from("sales_processes")
-            //   .update({ policy_id: policy.id, status: "converted" })
-            //   .eq("id", salesProcessData.id);
-            
-            // if (updateError) {
-            //   console.error("Error updating sales process:", updateError);
-            // }
-          }
-        }
+      if (error) {
+        throw error;
       }
       
-      if (successCount > 0) {
-        toast.success(`Successfully imported ${successCount} policies.`);
-        
-        if (errorCount > 0) {
-          toast.error(`Failed to import ${errorCount} policies due to database errors.`);
-          console.error("Import errors:", errors);
-        }
-        
-        return true;
-      } else {
-        toast.error("Failed to import any policies.");
-        return false;
-      }
-    } catch (error: any) {
-      console.error("Error saving policies:", error);
-      toast.error(`Error saving policies: ${error.message}`);
+      toast({
+        title: t('importSuccess'),
+        description: t('policiesSuccessfullyImported', { count: validPolicies.length })
+      });
+      
+      // Clear the imported data
+      setImportedPolicies([]);
+      setValidationErrors({});
+      
+      return true;
+    } catch (error) {
+      console.error('Error saving policies:', error);
+      toast({
+        title: t('importError'),
+        description: typeof error === 'string' ? error : (error as Error).message,
+        variant: 'destructive'
+      });
       return false;
     } finally {
       setIsImporting(false);
     }
   };
-
+  
   const clearImportData = () => {
     setImportedPolicies([]);
-    setInvalidPolicies([]);
-    setSalesProcessData(null);
+    setValidationErrors({});
   };
-
+  
+  const downloadTemplate = () => {
+    // Generate a template CSV for policy import
+    const headers = [
+      'policy_number', 'policy_type', 'insurer_name', 'product_name', 'product_id',
+      'policyholder_name', 'insured_name', 'start_date', 'expiry_date',
+      'premium', 'currency', 'payment_frequency', 'commission_type', 
+      'commission_percentage', 'notes'
+    ];
+    
+    const csvContent = [
+      headers.join(','),
+      'POL-12345,standard,Example Insurance Co,Car Insurance,PROD-001,John Doe,John Doe,2023-01-01,2024-01-01,1000,EUR,annual,manual,10,Example policy',
+      'POL-67890,special,Another Insurer,Home Insurance,PROD-002,Jane Smith,Jane Smith,2023-02-15,2024-02-15,1500,USD,monthly,automatic,12,Second example'
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'policy_import_template.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
   return {
-    isImporting,
     importedPolicies,
-    invalidPolicies,
-    parseCSVFile,
+    validationErrors,
+    handleFileSelect,
+    handleFileDrop,
+    isImporting,
     savePolicies,
     clearImportData,
-    salesProcessData
+    downloadTemplate,
+    parseCSVFile,
+    invalidPolicies: Object.keys(validationErrors).map(k => parseInt(k))
   };
 };

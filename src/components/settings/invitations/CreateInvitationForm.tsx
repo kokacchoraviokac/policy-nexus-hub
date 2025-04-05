@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { z } from 'zod';
 import { Company } from '@/hooks/useCompanies';
@@ -25,7 +24,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import useZodForm from '@/hooks/useZodForm';
-import { emailSchema, createModelSchema } from '@/utils/formSchemas';
+import { emailSchema } from '@/utils/formSchemas';
 
 interface CreateInvitationFormProps {
   companies: Company[];
@@ -35,15 +34,14 @@ interface CreateInvitationFormProps {
   onSubmit: (values: InviteFormValues) => Promise<void>;
 }
 
-const createInviteFormSchema = (t: (key: string) => string) => z.object({
-  email: emailSchema(t('invalidEmail')).refine(val => val !== "", {
-    message: t('emailRequired'),
-  }),
+// Export the schema so it can be imported elsewhere
+export const createInviteFormSchema = (t: (key: string) => string) => z.object({
+  email: emailSchema(t('invalidEmail')),
   role: z.enum(['admin', 'employee']),
-  company_id: createModelSchema('Company', { isRequired: true, errorMessage: t('companyRequired') }),
+  company_id: z.string().min(1, { message: t('companyRequired') }),
 });
 
-type InviteFormValues = z.infer<ReturnType<typeof createInviteFormSchema>>;
+export type InviteFormValues = z.infer<ReturnType<typeof createInviteFormSchema>>;
 
 const CreateInvitationForm: React.FC<CreateInvitationFormProps> = ({
   companies,

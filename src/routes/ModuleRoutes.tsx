@@ -11,15 +11,21 @@ import { ReportsRoutes } from "./ReportsRoutes";
 import { AgentRoutes } from "./AgentRoutes";
 import { documentRoutes } from "./documentRoutes";
 
+// Convert all route objects/elements to arrays to ensure consistency
+const ensureArray = (routes: any) => {
+  if (!routes) return [];
+  return Array.isArray(routes) ? routes : [routes];
+};
+
 export const ModuleRoutes = [
-  ...(Array.isArray(DashboardRoutes) ? DashboardRoutes : [DashboardRoutes]),
-  ...(Array.isArray(PolicyRoutes) ? PolicyRoutes : [PolicyRoutes]),
-  ...(Array.isArray(SalesRoutes) ? SalesRoutes : [SalesRoutes]),
-  ...(Array.isArray(ClaimsRoutes) ? ClaimsRoutes : [ClaimsRoutes]),
-  ...(Array.isArray(FinancesRoutes) ? FinancesRoutes : [FinancesRoutes]),
-  ...(Array.isArray(CodebookRoutes) ? CodebookRoutes : [CodebookRoutes]),
-  ...(Array.isArray(AgentRoutes) ? AgentRoutes : [AgentRoutes]),
-  ...(Array.isArray(ReportsRoutes) ? ReportsRoutes : [ReportsRoutes]),
-  ...(Array.isArray(SettingsRoutes) ? SettingsRoutes : [SettingsRoutes]),
-  ...(Array.isArray(documentRoutes) ? documentRoutes : [documentRoutes])
+  ...ensureArray(DashboardRoutes),
+  ...ensureArray(PolicyRoutes),
+  ...ensureArray(SalesRoutes),
+  ...ensureArray(ClaimsRoutes),
+  ...ensureArray(FinancesRoutes),
+  ...ensureArray(CodebookRoutes),
+  ...ensureArray(AgentRoutes),
+  ...ensureArray(ReportsRoutes),
+  ...ensureArray(SettingsRoutes),
+  ...ensureArray(documentRoutes)
 ];

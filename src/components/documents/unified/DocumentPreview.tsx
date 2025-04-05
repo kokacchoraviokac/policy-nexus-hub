@@ -14,6 +14,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Document } from "@/types/documents";
 import { useDocumentDownload } from "@/hooks/useDocumentDownload";
 import { getDocumentTypeLabel } from "@/utils/documentUtils";
+import { supabase } from "@/integrations/supabase/client"; // Import supabase
 
 interface DocumentPreviewProps {
   document: Document | null;

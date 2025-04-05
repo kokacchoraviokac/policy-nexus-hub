@@ -35,7 +35,7 @@ export interface PolicyAddendum {
   effective_date: string;
   description: string;
   premium_adjustment?: number;
-  lien_status?: boolean;
+  lien_status?: boolean; // Make this optional to fix type error
   status: string;
   workflow_status: string;
   policy_id: string;
@@ -59,4 +59,20 @@ export interface UnlinkedPaymentType {
   company_id: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface PolicyFilterParams {
+  page?: number; 
+  pageSize?: number;
+  search?: string;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
+  workflowStatus?: string;
+  status?: string;
+  client_id?: string;
+  insurer_id?: string;
+  date_from?: string;
+  date_to?: string;
+  expiry_from?: string;
+  expiry_to?: string;
 }

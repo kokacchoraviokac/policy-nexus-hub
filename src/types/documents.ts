@@ -21,7 +21,6 @@ export interface Document {
   category: DocumentCategory;
   company_id: string;
   
-  // Add missing properties
   mime_type?: string;
   is_latest_version?: boolean;
   original_document_id?: string | null;
@@ -73,12 +72,15 @@ export interface DocumentSearchParams {
   dateFrom?: string;
   dateTo?: string;
   status?: DocumentApprovalStatus;
+  filterStatus?: string; // Add this property to fix error
 }
 
 export interface DocumentPreviewProps {
   document: Document;
   isOpen?: boolean;
   onClose?: () => void;
+  open?: boolean; // Add this property
+  onOpenChange?: (open: boolean) => void; // Add this property
 }
 
 export interface DocumentListProps {
@@ -86,7 +88,7 @@ export interface DocumentListProps {
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
-  onDelete: (document: string) => void;
+  onDelete: (documentId: string) => void; // Changed to string type
   isDeleting: boolean;
   showUploadButton?: boolean;
   onUploadClick?: () => void;
@@ -106,8 +108,15 @@ export interface DocumentUploadDialogProps {
   salesStage?: string;
   additionalData?: Record<string, any>;
   onSuccess?: () => void;
+  embedMode?: boolean;
+  onFileSelected?: (file: File | null) => void;
 }
 
 export interface DocumentSearchProps {
   filterStatus?: string;
+}
+
+export interface SalesProcessDocumentsProps {
+  salesProcessId: string;
+  currentStage?: string; // Add currentStage property
 }

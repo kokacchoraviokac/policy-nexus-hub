@@ -1,177 +1,128 @@
+import { parse } from 'csv-parse';
 
-import { parse as parseCSV } from 'papaparse';
-import { Policy } from '@/types/policies';
-import { format } from 'date-fns';
-
-interface CSVRow {
+// Define a type for the CSV rows
+interface CsvRow {
   policy_number: string;
   policy_type: string;
+  insurer_id: string;
+  insurer_name: string;
+  product_id: string;
+  product_name: string;
+  client_id: string;
+  policyholder_name: string;
+  insured_name: string;
   start_date: string;
   expiry_date: string;
   premium: string;
   currency: string;
-  insurer_name: string;
-  policyholder_name: string;
-  product_name?: string;
-  product_id?: string;
-  commission_percentage?: string;
-  [key: string]: any;
+  payment_frequency: string;
+  commission_type: string;
+  commission_percentage: string;
+  notes: string;
 }
 
-export const parseCSVToPolicy = (file: File): Promise<Partial<Policy>[]> => {
-  return new Promise((resolve, reject) => {
-    parseCSV(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        if (results.errors && results.errors.length > 0) {
-          console.error('CSV parsing errors:', results.errors);
-          reject(new Error('Error parsing CSV file'));
-          return;
+// To handle validation errors by row
+interface ValidationErrors {
+  [key: number]: string[];
+}
+
+// Helper function to validate date format
+const isValidDate = (dateString: string): boolean => {
+  const pattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!pattern.test(dateString)) {
+    return false;
+  }
+
+  const date = new Date(dateString);
+  return !isNaN(date.getTime());
+};
+
+// Helper function to validate number format
+const isValidNumber = (numberString: string): boolean => {
+  return !isNaN(Number(numberString));
+};
+
+// Helper function to validate currency
+const isValidCurrency = (currencyString: string): boolean => {
+  const validCurrencies = ['EUR', 'USD', 'RSD', 'GBP', 'CHF'];
+  return validCurrencies.includes(currencyString);
+};
+
+// Helper function to validate payment frequency
+const isValidPaymentFrequency = (paymentFrequency: string): boolean => {
+  const validFrequencies = ['monthly', 'quarterly', 'biannually', 'annually', 'singlePayment'];
+  return validFrequencies.includes(paymentFrequency);
+};
+
+// Helper function to validate commission type
+const isValidCommissionType = (commissionType: string): boolean => {
+  const validCommissionTypes = ['automatic', 'manual', 'none'];
+  return validCommissionTypes.includes(commissionType);
+};
+
+// Fix duplicate property in policy creation
+export const parseCsv = async (file: File) => {
+  return new Promise<{ policies: CsvRow[]; errors: ValidationErrors }>((resolve, reject) => {
+    const errors: ValidationErrors = {};
+    const policies: CsvRow[] = [];
+    let row_number = 0;
+
+    file.text().then(text => {
+      parse(text, {
+        header: true,
+        skip_empty_lines: true,
+      })
+      .on("data", function (row: CsvRow) {
+        row_number++;
+        const rowErrors: string[] = [];
+
+        // Validate each field
+        if (!row.policy_number) {
+          rowErrors.push("Policy number is required");
+        }
+        if (!row.policy_type) {
+          rowErrors.push("Policy type is required");
+        }
+        if (!row.insurer_name) {
+          rowErrors.push("Insurer name is required");
+        }
+        if (!row.policyholder_name) {
+          rowErrors.push("Policyholder name is required");
+        }
+        if (!isValidDate(row.start_date)) {
+          rowErrors.push("Invalid start date format. Use YYYY-MM-DD");
+        }
+        if (!isValidDate(row.expiry_date)) {
+          rowErrors.push("Invalid expiry date format. Use YYYY-MM-DD");
+        }
+        if (!isValidNumber(row.premium)) {
+          rowErrors.push("Invalid premium format. Use a number");
+        }
+        if (!isValidCurrency(row.currency)) {
+          rowErrors.push("Invalid currency format. Use EUR, USD, RSD, GBP, or CHF");
+        }
+        if (row.payment_frequency && !isValidPaymentFrequency(row.payment_frequency)) {
+          rowErrors.push("Invalid payment frequency format. Use monthly, quarterly, biannually, annually, or singlePayment");
+        }
+        if (row.commission_type && !isValidCommissionType(row.commission_type)) {
+          rowErrors.push("Invalid commission type format. Use automatic, manual, or none");
+        }
+        if (row.commission_percentage && !isValidNumber(row.commission_percentage)) {
+          rowErrors.push("Invalid commission percentage format. Use a number");
         }
 
-        try {
-          const policies = (results.data as CSVRow[]).map(transformCSVRowToPolicy);
-          resolve(policies);
-        } catch (error) {
-          console.error('Error transforming CSV data:', error);
-          reject(error);
+        if (rowErrors.length > 0) {
+          errors[row_number - 1] = rowErrors;
         }
-      },
-      error: (error) => {
-        console.error('CSV parsing error:', error);
+
+        policies.push(row);
+      })
+      .on("end", () => {
+        resolve({ policies, errors });
+      })
+      .on("error", (error: any) => {
         reject(error);
-      }
+      });
     });
   });
-};
-
-export const transformCSVRowToPolicy = (row: CSVRow): Partial<Policy> => {
-  try {
-    // Cleanup and transform data
-    const startDate = parseDate(row.start_date);
-    const expiryDate = parseDate(row.expiry_date);
-    
-    if (!startDate || !expiryDate) {
-      throw new Error('Invalid date format in CSV');
-    }
-
-    const premium = parseFloat(row.premium) || 0;
-    const commissionPercentage = row.commission_percentage ? parseFloat(row.commission_percentage) : null;
-    
-    const policy: Partial<Policy> = {
-      policy_number: row.policy_number,
-      policy_type: row.policy_type || 'external',
-      start_date: formatDate(startDate),
-      expiry_date: formatDate(expiryDate),
-      premium,
-      currency: row.currency || 'EUR',
-      insurer_name: row.insurer_name,
-      policyholder_name: row.policyholder_name,
-      product_id: row.product_id || null,
-      product_name: row.product_name || null,
-      commission_percentage: commissionPercentage,
-      commission_amount: commissionPercentage ? (premium * commissionPercentage / 100) : null,
-      status: 'active',
-      workflow_status: 'draft',
-    };
-
-    return policy;
-  } catch (error) {
-    console.error('Error transforming row:', error, row);
-    throw error;
-  }
-};
-
-export const validatePolicy = (policy: Partial<Policy>): string[] => {
-  const errors: string[] = [];
-
-  if (!policy.policy_number) {
-    errors.push('Policy number is required');
-  }
-
-  if (!policy.start_date) {
-    errors.push('Start date is required');
-  }
-
-  if (!policy.expiry_date) {
-    errors.push('Expiry date is required');
-  }
-
-  if (!policy.insurer_name) {
-    errors.push('Insurer name is required');
-  }
-
-  if (!policy.policyholder_name) {
-    errors.push('Policyholder name is required');
-  }
-
-  if (policy.premium === undefined || policy.premium <= 0) {
-    errors.push('Premium must be greater than 0');
-  }
-
-  return errors;
-};
-
-export const generatePolicyTemplate = (): string => {
-  const headers = [
-    'policy_number',
-    'policy_type',
-    'start_date',
-    'expiry_date',
-    'premium',
-    'currency',
-    'insurer_name',
-    'policyholder_name',
-    'product_name',
-    'commission_percentage'
-  ];
-
-  const exampleRow = [
-    'POL-123456',
-    'external',
-    '2023-01-01',
-    '2024-01-01',
-    '1000',
-    'EUR',
-    'Example Insurance Co',
-    'Example Client',
-    'Car Insurance',
-    '15'
-  ];
-
-  return `${headers.join(',')}\n${exampleRow.join(',')}`;
-};
-
-const parseDate = (dateString: string): Date | null => {
-  // Try different date formats
-  const formats = [
-    new Date(dateString), // standard JS date parsing
-    // Add more date parsing strategies if needed
-  ];
-
-  for (const parsed of formats) {
-    if (!isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  }
-
-  return null;
-};
-
-const formatDate = (date: Date): string => {
-  return format(date, 'yyyy-MM-dd');
-};
-
-export const preparePolicyForSave = (policy: Partial<Policy>, companyId: string, userId: string): Partial<Policy> => {
-  return {
-    ...policy,
-    company_id: companyId,
-    created_by: userId,
-    commission_amount: policy.premium && policy.commission_percentage 
-      ? (policy.premium * policy.commission_percentage / 100) 
-      : 0,
-    workflow_status: 'draft',
-    status: 'active',
-  };
 };

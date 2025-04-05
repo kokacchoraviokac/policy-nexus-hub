@@ -11,14 +11,18 @@ interface DocumentAnalysisPanelProps {
   documentId: string;
   documentUrl: string;
   documentType: string;
+  file?: File | null; // Make file optional
   onAnalysisComplete?: (result: any) => void;
+  onCategoryDetected?: (category: string) => void;
 }
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   documentId,
   documentUrl,
   documentType,
-  onAnalysisComplete
+  file,
+  onAnalysisComplete,
+  onCategoryDetected
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("classify");
@@ -51,6 +55,10 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
             }),
             analysisType: "classification"
           };
+          
+          if (onCategoryDetected) {
+            onCategoryDetected("invoice");
+          }
           break;
         case 'extract':
           mockResult = {

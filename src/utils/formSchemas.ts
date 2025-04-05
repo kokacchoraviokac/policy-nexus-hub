@@ -1,107 +1,90 @@
 
 import { z } from "zod";
 
-// Common field schemas
-export const nameSchema = (errorMessage = "Name is required") => 
+// Base schemas
+export const nameSchema = (errorMessage = "Name is required") =>
+  z.string().min(1, { message: errorMessage }).max(100);
+
+export const emailSchema = (errorMessage = "Invalid email format") =>
+  z.string().email({ message: errorMessage });
+
+export const passwordSchema = (errorMessage = "Password must be at least 6 characters") =>
+  z.string().min(6, { message: errorMessage });
+
+export const confirmPasswordSchema = (errorMessage = "Passwords must match") =>
   z.string().min(1, { message: errorMessage });
 
-export const emailSchema = (errorMessage = "Invalid email address") => 
-  z.string().email({ message: errorMessage }).optional().or(z.literal(""));
+export const phoneSchema = (errorMessage = "Phone number is required") =>
+  z.string().min(1, { message: errorMessage });
 
-export const phoneSchema = () => 
-  z.string().optional().or(z.literal(""));
+export const addressSchema = (errorMessage = "Address is required") =>
+  z.string().min(1, { message: errorMessage });
 
-export const taxIdSchema = () => 
-  z.string().optional().or(z.literal(""));
+export const citySchema = (errorMessage = "City is required") =>
+  z.string().min(1, { message: errorMessage });
 
-export const registrationNumberSchema = () => 
-  z.string().optional().or(z.literal(""));
+export const postalCodeSchema = (errorMessage = "Postal code is required") =>
+  z.string().min(1, { message: errorMessage });
 
-export const addressSchema = () => 
-  z.string().optional().or(z.literal(""));
+export const countrySchema = (errorMessage = "Country is required") =>
+  z.string().min(1, { message: errorMessage });
 
-export const citySchema = () => 
-  z.string().optional().or(z.literal(""));
+export const taxIdSchema = (errorMessage = "Tax ID is required") =>
+  z.string().min(1, { message: errorMessage });
 
-export const postalCodeSchema = () => 
-  z.string().optional().or(z.literal(""));
+export const registrationNumberSchema = (errorMessage = "Registration number is required") =>
+  z.string().min(1, { message: errorMessage });
 
-export const countrySchema = () => 
-  z.string().optional().or(z.literal(""));
+export const notesSchema = () =>
+  z.string().optional();
 
-export const isActiveSchema = () => 
+export const isActiveSchema = () =>
   z.boolean().default(true);
 
-export const notesSchema = () => 
-  z.string().optional().or(z.literal(""));
-
-export const currencySchema = () => 
-  z.enum(["EUR", "USD", "GBP", "RSD", "MKD"]).default("EUR");
-
-export const dateSchema = (errorMessage = "Date is required") => 
-  z.coerce.date({ required_error: errorMessage });
-
-export const premiumSchema = (errorMessage = "Premium must be a positive number") => 
-  z.coerce.number().positive({ message: errorMessage });
-
-export const percentageSchema = (errorMessage = "Percentage must be between 0 and 100") => 
-  z.coerce.number().min(0, { message: "Percentage cannot be negative" })
-    .max(100, { message: "Percentage cannot exceed 100" });
-
-// Document schemas
-export const documentNameSchema = (errorMessage = "Document name is required") =>
+export const currencySchema = (errorMessage = "Currency is required") =>
   z.string().min(1, { message: errorMessage });
 
-export const documentTypeSchema = () =>
-  z.string().min(1, { message: "Document type is required" });
+export const dateSchema = (errorMessage = "Date is required") =>
+  z.string().min(1, { message: errorMessage });
 
-export const documentCategorySchema = () =>
-  z.string().min(1, { message: "Document category is required" });
+export const premiumSchema = (errorMessage = "Premium must be greater than 0") =>
+  z.number().min(0.01, { message: errorMessage });
 
-// Claim specific schemas
-export const claimStatusSchema = () =>
-  z.enum(["in_processing", "reported", "accepted", "rejected", "partially_accepted", "appealed", "withdrawn"])
-    .default("in_processing");
+export const percentageSchema = (errorMessage = "Percentage must be between 0 and 100") =>
+  z.number().min(0, { message: "Percentage must be at least 0" }).max(100, { message: "Percentage cannot exceed 100" });
+
+export const claimStatusSchema = (errorMessage = "Status is required") =>
+  z.enum(["in_processing", "reported", "accepted", "partially_accepted", "rejected", "appealed", "withdrawn"], { 
+    errorMap: () => ({ message: errorMessage }) 
+  });
 
 export const damageDescriptionSchema = (errorMessage = "Damage description is required") =>
   z.string().min(1, { message: errorMessage });
 
-export const claimAmountSchema = (errorMessage = "Claimed amount must be a non-negative number") =>
-  z.coerce.number().min(0, { message: errorMessage });
+export const claimAmountSchema = (errorMessage = "Claim amount must be greater than 0") =>
+  z.number().min(0.01, { message: errorMessage });
 
-// Helper to create schemas for related models
-export function createModelSchema(type: string, options: { isRequired?: boolean, errorMessage?: string } = {}) {
-  const { isRequired = false, errorMessage = `${type} is required` } = options;
-  
-  return isRequired 
-    ? z.string().min(1, { message: errorMessage })
-    : z.string().optional();
-}
-
-// Function to create a schema with translations
-export function createSchemaWithTranslations<T extends z.ZodType<any, any, any>>(baseSchema: T) {
-  return baseSchema.extend({
-    translations: z.record(z.string()).optional().nullable(),
+// Helper function to create model-related schema (for foreign keys)
+export function createModelSchema(modelName: string, options: { 
+  isRequired?: boolean; 
+  errorMessage?: string;
+}) {
+  const schema = z.string().refine(val => !options.isRequired || val.length > 0, {
+    message: options.errorMessage || `${modelName} is required`
   });
+  
+  return schema;
 }
 
-// Policy specific schemas
-export const policyNumberSchema = (errorMessage = "Policy number is required") =>
-  z.string().min(1, { message: errorMessage });
-
-export const policyTypeSchema = () =>
-  z.enum(["internal", "external"]);
-
-export const policyStatusSchema = () =>
-  z.enum(["active", "pending", "expired", "cancelled"]).default("active");
-
-export const workflowStatusSchema = () =>
-  z.enum(["draft", "review", "approved", "rejected"]).default("draft");
-
-// Invoice specific schemas
-export const invoiceNumberSchema = (errorMessage = "Invoice number is required") =>
-  z.string().min(1, { message: errorMessage });
-
-export const invoiceStatusSchema = () =>
-  z.enum(["draft", "issued", "paid", "partially_paid", "overdue", "cancelled"])
-    .default("draft");
+// Complex schema creator with generic type support
+export function createZodSchema<T extends z.ZodType>(baseSchema: T) {
+  return {
+    extend: (extendSchema: z.ZodObject<any>) => {
+      // This is a simple implementation that merges schemas
+      return z.object({
+        ...baseSchema.shape,
+        ...extendSchema.shape
+      });
+    }
+  };
+}

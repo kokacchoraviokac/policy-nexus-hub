@@ -1,123 +1,156 @@
 
-import { useState } from "react";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { PolicyReportFilters, PolicyReportData } from "@/utils/policies/policyReportUtils";
-import { toast } from "sonner";
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { utils, writeFileXLSX } from 'xlsx';
 
-export interface PolicyProductionReportResult {
-  policies: PolicyReportData[];
-  totalCount: number;
-  summary: {
-    totalPolicies: number;
-    totalPremium: number;
-    totalCommission: number;
-    averagePremium: number;
-    averageCommission: number;
-  };
+export interface PolicyReportData {
+  id: string;
+  policy_number: string;
+  policy_type: string;
+  insurer_name: string;
+  policyholder_name: string;
+  start_date: string;
+  expiry_date: string;
+  premium: number;
+  currency: string;
+  commission_amount: number | null;
+  status: string;
+  workflow_status: string;
 }
 
-export const usePolicyProductionReport = (filters: PolicyReportFilters): UseQueryResult<PolicyProductionReportResult> & {
-  isExporting: boolean;
-  setIsExporting: (value: boolean) => void;
-} => {
-  const [isExporting, setIsExporting] = useState(false);
+export interface PolicyReportFilters {
+  dateFrom: string;
+  dateTo: string;
+  expiryFrom?: string;
+  expiryTo?: string;
+  insurer_id?: string;
+  client_id?: string;
+  policy_type?: string;
+  currency?: string;
+  status?: string; // Add status field
+}
 
-  const query = useQuery({
-    queryKey: ['policy-production-report', filters],
-    queryFn: async () => {
-      try {
-        // Start building the query
-        let query = supabase
-          .from('policies')
-          .select(`
-            id,
-            policy_number,
-            policyholder_name,
-            insurer_name,
-            product_name,
-            start_date,
-            expiry_date,
-            premium,
-            currency,
-            commission_percentage,
-            commission_amount,
-            status
-          `, { count: 'exact' });
-        
-        // Apply filters
-        if (filters.clientId) {
-          query = query.eq('client_id', filters.clientId);
-        }
-        
-        if (filters.insurerId) {
-          query = query.eq('insurer_id', filters.insurerId);
-        }
-        
-        if (filters.productId) {
-          query = query.eq('product_id', filters.productId);
-        }
-        
-        if (filters.agentId) {
-          query = query.eq('assigned_to', filters.agentId);
-        }
-        
-        if (filters.startDate) {
-          query = query.gte('start_date', filters.startDate.toISOString().split('T')[0]);
-        }
-        
-        if (filters.endDate) {
-          query = query.lte('expiry_date', filters.endDate.toISOString().split('T')[0]);
-        }
-        
-        if (filters.status && filters.status !== 'all') {
-          query = query.eq('status', filters.status);
-        }
-        
-        // Order by expiry date (newest first)
-        query = query.order('expiry_date', { ascending: false });
-        
-        const { data, error, count } = await query;
-        
-        if (error) {
-          console.error("Error fetching policy report data:", error);
-          throw error;
-        }
-        
-        const policies = data as PolicyReportData[];
-        const totalCount = count || 0;
-        
-        // Calculate summary metrics
-        const totalPolicies = policies.length;
-        const totalPremium = policies.reduce((sum, policy) => sum + (policy.premium || 0), 0);
-        const totalCommission = policies.reduce((sum, policy) => sum + (policy.commission_amount || 0), 0);
-        const averagePremium = totalPolicies > 0 ? totalPremium / totalPolicies : 0;
-        const averageCommission = totalPolicies > 0 ? totalCommission / totalPolicies : 0;
-        
-        return {
-          policies,
-          totalCount,
-          summary: {
-            totalPolicies,
-            totalPremium,
-            totalCommission,
-            averagePremium,
-            averageCommission
-          }
-        };
-      } catch (error) {
-        console.error("Error in policy production report:", error);
-        toast.error("Failed to fetch policy production report");
-        throw error;
-      }
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false
+export const usePolicyProductionReport = () => {
+  const { toast } = useToast();
+  const { t } = useLanguage();
+  const [data, setData] = useState<PolicyReportData[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState<PolicyReportFilters>({
+    dateFrom: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    dateTo: new Date().toISOString().split('T')[0],
   });
 
+  const updateFilters = useCallback((newFilters: Partial<PolicyReportFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  }, []);
+
+  // Run the report with current filters
+  const runReport = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Base query
+      let query = supabase
+        .from('policies')
+        .select('*')
+        .gte('start_date', filters.dateFrom)
+        .lte('start_date', filters.dateTo);
+
+      // Apply additional filters if they exist
+      if (filters.expiryFrom) {
+        query = query.gte('expiry_date', filters.expiryFrom);
+      }
+      
+      if (filters.expiryTo) {
+        query = query.lte('expiry_date', filters.expiryTo);
+      }
+      
+      if (filters.insurer_id) {
+        query = query.eq('insurer_id', filters.insurer_id);
+      }
+      
+      if (filters.client_id) {
+        query = query.eq('client_id', filters.client_id);
+      }
+      
+      if (filters.policy_type) {
+        query = query.eq('policy_type', filters.policy_type);
+      }
+      
+      if (filters.currency) {
+        query = query.eq('currency', filters.currency);
+      }
+      
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+
+      // Execute the query
+      const { data, error } = await query.order('start_date', { ascending: false });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setData(data as PolicyReportData[]);
+    } catch (error) {
+      console.error('Error running policy report:', error);
+      toast({
+        title: t('reportError'),
+        description: typeof error === 'string' ? error : (error as Error).message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, toast, t]);
+
+  // Export data to Excel
+  const exportToExcel = useCallback(() => {
+    if (data.length === 0) {
+      toast({
+        title: t('noDataToExport'),
+        description: t('pleaseRunReportFirst'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Create worksheet
+      const ws = utils.json_to_sheet(data);
+      
+      // Create workbook
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, 'Policy Production Report');
+      
+      // Generate file name with current date
+      const fileName = `policy_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      // Write and download
+      writeFileXLSX(wb, fileName);
+      
+      toast({
+        title: t('exportSuccess'),
+        description: t('fileReadyForDownload'),
+      });
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: t('exportError'),
+        description: typeof error === 'string' ? error : (error as Error).message,
+        variant: 'destructive',
+      });
+    }
+  }, [data, toast, t]);
+
   return {
-    ...query,
-    isExporting,
-    setIsExporting
+    filters,
+    updateFilters,
+    runReport,
+    data,
+    loading,
+    exportToExcel,
   };
 };

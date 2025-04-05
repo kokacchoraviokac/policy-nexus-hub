@@ -1,11 +1,10 @@
 
-import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Policy } from "@/types/policies";
-import { formatDate, formatCurrency } from "@/utils/formatters";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Calendar, User, Building, CreditCard } from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Check, AlertTriangle, Clock, HelpCircle, CircleDollarSign, Calendar, User, Building } from 'lucide-react';
+import { Policy } from '@/types/policies';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { formatCurrency } from '@/utils/formatters';
 
 interface PolicyReviewOverviewProps {
   policy: Policy;
@@ -15,139 +14,136 @@ const PolicyReviewOverview: React.FC<PolicyReviewOverviewProps> = ({ policy }) =
   const { t } = useLanguage();
   
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="font-medium text-lg flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-blue-600" />
-          {t("basicInformation")}
-        </h3>
-        
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('policyOverview')}</CardTitle>
+      </CardHeader>
+      <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">{t("policyNumber")}</p>
-            <p className="font-medium">{policy.policy_number}</p>
+          {/* Policy Information */}
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 p-1.5 rounded-full">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">{t('policyInformation')}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {policy.policy_number} | {policy.policy_type}
+                </p>
+              </div>
+            </div>
+            
+            {/* Parties */}
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 p-1.5 rounded-full">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">{t('parties')}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {policy.policyholder_name} | {policy.insurer_name}
+                </p>
+              </div>
+            </div>
+            
+            {/* Product */}
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 p-1.5 rounded-full">
+                <Building className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">{t('product')}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {policy.product_name || t('notSpecified')} | {policy.product_id || t('noProductId')}
+                </p>
+              </div>
+            </div>
+            
+            {/* Financial Details */}
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 p-1.5 rounded-full">
+                <CircleDollarSign className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium">{t('financialDetails')}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {formatCurrency(policy.premium, policy.currency)} | {t(policy.payment_frequency || 'notSpecified')}
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("policyType")}</p>
-            <p className="font-medium">{policy.policy_type}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("startDate")}</p>
-            <p className="font-medium">{formatDate(policy.start_date)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("expiryDate")}</p>
-            <p className="font-medium">{formatDate(policy.expiry_date)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("status")}</p>
-            <Badge variant={policy.status === "active" ? "secondary" : "outline"}>
-              {t(policy.status)}
-            </Badge>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("workflowStatus")}</p>
-            <Badge variant="outline">{t(policy.workflow_status.replace('_', ''))}</Badge>
+          
+          {/* Checklist */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium">{t('reviewChecklist')}</h3>
+            
+            <div className="flex items-center gap-2">
+              {policy.policy_number ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              )}
+              <span className="text-sm">{t('policyNumberProvided')}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {policy.start_date && policy.expiry_date ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              )}
+              <span className="text-sm">{t('datesProvided')}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {policy.policyholder_name ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              )}
+              <span className="text-sm">{t('policyholderProvided')}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {policy.insurer_name ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              )}
+              <span className="text-sm">{t('insurerProvided')}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {policy.premium && policy.currency ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              )}
+              <span className="text-sm">{t('premiumProvided')}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {policy.commission_type ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Clock className="h-4 w-4 text-gray-400" />
+              )}
+              <span className="text-sm">{t('commissionDefined')}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {policy.product_name ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <HelpCircle className="h-4 w-4 text-gray-400" />
+              )}
+              <span className="text-sm">{t('productSpecified')}</span>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <Separator />
-      
-      <div className="space-y-4">
-        <h3 className="font-medium text-lg flex items-center gap-2">
-          <User className="h-5 w-5 text-blue-600" />
-          {t("parties")}
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">{t("policyholder")}</p>
-            <p className="font-medium">{policy.policyholder_name}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("insured")}</p>
-            <p className="font-medium">{policy.insured_name || policy.policyholder_name}</p>
-          </div>
-        </div>
-      </div>
-      
-      <Separator />
-      
-      <div className="space-y-4">
-        <h3 className="font-medium text-lg flex items-center gap-2">
-          <Building className="h-5 w-5 text-blue-600" />
-          {t("insurer")}
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">{t("insurerName")}</p>
-            <p className="font-medium">{policy.insurer_name}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("product")}</p>
-            <p className="font-medium">{policy.product_name || t("notSpecified")}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("productCode")}</p>
-            <p className="font-medium">{policy.product_code || t("notSpecified")}</p>
-          </div>
-        </div>
-      </div>
-      
-      <Separator />
-      
-      <div className="space-y-4">
-        <h3 className="font-medium text-lg flex items-center gap-2">
-          <CreditCard className="h-5 w-5 text-blue-600" />
-          {t("financialDetails")}
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground">{t("premium")}</p>
-            <p className="font-medium">{formatCurrency(policy.premium, policy.currency)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("currency")}</p>
-            <p className="font-medium">{policy.currency}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("paymentFrequency")}</p>
-            <p className="font-medium">{t(policy.payment_frequency || "notSpecified")}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("commissionPercentage")}</p>
-            <p className="font-medium">
-              {policy.commission_percentage ? `${policy.commission_percentage}%` : t("notSpecified")}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("commissionAmount")}</p>
-            <p className="font-medium">
-              {policy.commission_amount 
-                ? formatCurrency(policy.commission_amount, policy.currency) 
-                : t("notSpecified")}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{t("commissionType")}</p>
-            <p className="font-medium">{t(policy.commission_type || "notSpecified")}</p>
-          </div>
-        </div>
-      </div>
-      
-      {policy.notes && (
-        <>
-          <Separator />
-          <div className="space-y-2">
-            <h3 className="font-medium text-lg">{t("notes")}</h3>
-            <p className="text-sm">{policy.notes}</p>
-          </div>
-        </>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
