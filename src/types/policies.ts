@@ -9,13 +9,13 @@ export type CommissionType = 'automatic' | 'manual' | 'none';
 export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
 export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'full';
 
-// Create a basic Insurer type to replace the import
+// Create a basic Insurer type
 export interface Insurer {
   id: string;
   name: string;
 }
 
-// Create a basic Client type to replace the import
+// Create a basic Client type
 export interface Client {
   id: string;
   name: string;
@@ -44,7 +44,7 @@ export interface Policy {
   policy_type: PolicyType;
   policyholder_name: string;
   client_id?: string;
-  client_name?: string; // Added client_name
+  client_name?: string; // Added client_name for interface support
   insurer_id?: string;
   insurer_name: string;
   product_id?: string;
@@ -53,6 +53,7 @@ export interface Policy {
   start_date: string;
   expiry_date: string;
   premium: number;
+  premium_amount?: number; // Added for compatibility
   currency: string;
   payment_frequency?: PaymentFrequency;
   status: PolicyStatus;

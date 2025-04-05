@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -18,9 +17,10 @@ const ProposalsTab: React.FC<ProposalsTabProps> = ({ process }) => {
   
   const { 
     proposals, 
-    isLoading, 
-    createProposal,
-    updateProposalStatus
+    stats,
+    loading: isLoading,
+    error,
+    createProposal
   } = useProposalsData({
     salesProcessId: process.id,
     clientName: process.client_name

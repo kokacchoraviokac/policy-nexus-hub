@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Document, EntityType } from "@/types/documents";
 import { supabase } from "@/integrations/supabase/client";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
+import { queryDocuments } from "@/utils/supabaseQueryHelper";
 
 interface DocumentSearchParams {
   searchTerm?: string;
@@ -50,9 +51,7 @@ export const useDocumentSearch = ({
         ) {
           const tableName = getDocumentTableName(entityType);
           
-          let query = supabase
-            .from(tableName)
-            .select('*');
+          let query = queryDocuments(tableName);
           
           // Apply entity ID filter based on the table
           if (tableName === 'policy_documents') {
@@ -86,7 +85,7 @@ export const useDocumentSearch = ({
             continue;
           }
           
-          let query = supabase.from(table).select('*');
+          let query = queryDocuments(table);
           
           // Apply entity ID filter if provided
           if (entityType && entityId) {

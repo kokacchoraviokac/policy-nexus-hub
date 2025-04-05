@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { User } from "@/types/auth";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface ProfileEditFormProps {
   user: User;
@@ -18,7 +18,7 @@ interface ProfileEditFormProps {
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
-  role: z.enum(["superAdmin", "admin", "employee"] as const),
+  role: z.enum(["superAdmin", "admin", "employee", "agent"] as const),
   avatar: z.string().optional(),
 });
 
@@ -61,6 +61,8 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, updateUser }) =
         return "Admin";
       case "employee":
         return "Employee";
+      case "agent":
+        return "Agent";
       default:
         return "User";
     }
@@ -115,7 +117,20 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, updateUser }) =
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <FormControl>
-                    <Input {...field} disabled value={getRoleLabel(field.value)} />
+                    <Select
+                      onValueChange={(value) => form.setValue('role', value as UserRole)}
+                      defaultValue={form.getValues('role')}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={t("selectRole")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="superAdmin">{t("superAdmin")}</SelectItem>
+                        <SelectItem value="admin">{t("admin")}</SelectItem>
+                        <SelectItem value="employee">{t("employee")}</SelectItem>
+                        <SelectItem value="agent">{t("agent")}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormDescription>
                     Your role is assigned by an administrator

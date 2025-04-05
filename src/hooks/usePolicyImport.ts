@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { parse } from 'csv-parse/sync';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,14 +35,19 @@ export const usePolicyImport = () => {
           
           // Transform the CSV data to match Policy type
           const policies = csv.map((row: any): Partial<Policy> => ({
-            policy_number: row.policy_number,
-            insurer_name: row.insurer_name,
-            client_name: row.client_name,
-            start_date: row.start_date,
-            expiry_date: row.expiry_date,
-            premium_amount: parseFloat(row.premium_amount),
-            status: row.status || 'pending',
-            policy_type: row.policy_type || 'standard'
+            policy_number: row.policy_number || '',
+            insurer_name: row.insurer_name || '',
+            client_name: row.client_name || '',
+            policyholder_name: row.policyholder_name || '',
+            status: row.status as PolicyStatus || 'active',
+            start_date: formatDate(row.start_date),
+            expiry_date: formatDate(row.expiry_date),
+            premium: Number(row.premium) || 0,
+            premium_amount: Number(row.premium) || 0,
+            policy_type: (row.policy_type as PolicyType) || 'external',
+            currency: row.currency || 'EUR',
+            product_name: row.product_name || '',
+            workflow_status: (row.workflow_status as WorkflowStatus) || 'draft'
           }));
           
           resolve(policies);

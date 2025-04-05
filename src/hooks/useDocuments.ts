@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -6,8 +5,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Document, EntityType } from "@/types/documents";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { getDocumentTableName, DocumentTableName } from "@/utils/documentUploadUtils";
+import { queryDocuments } from "@/utils/supabaseQueryHelper";
 
-// Update the function signature to accept two parameters
 export const useDocuments = (entityType: EntityType, entityId: string) => {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -16,9 +15,30 @@ export const useDocuments = (entityType: EntityType, entityId: string) => {
   
   const tableName = getDocumentTableName(entityType);
   
-  // Fetch all documents for the given entity
+  const transformDocument = (doc: any): Document => {
+    return {
+      id: doc.id,
+      document_name: doc.document_name,
+      document_type: doc.document_type,
+      file_path: doc.file_path,
+      entity_type: doc.entity_type,
+      entity_id: doc.entity_id,
+      uploaded_by: doc.uploaded_by_id || doc.uploaded_by,
+      uploaded_by_name: doc.uploaded_by_name,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at,
+      mime_type: doc.mime_type,
+      category: doc.category,
+      version: doc.version,
+      is_latest_version: doc.is_latest_version,
+      original_document_id: doc.original_document_id,
+      approval_status: doc.approval_status,
+      company_id: doc.company_id,
+      description: doc.description,
+    } as Document;
+  };
+
   const fetchDocuments = async (): Promise<Document[]> => {
-    // Handle each document table type with its specific entity ID field
     let query;
     if (tableName === "policy_documents") {
       query = supabase
@@ -36,50 +56,16 @@ export const useDocuments = (entityType: EntityType, entityId: string) => {
         .select("*")
         .eq("sales_process_id", entityId);
     } else {
-      // This should not happen with our current implementation
       throw new Error(`Unsupported document table: ${tableName}`);
     }
     
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await queryDocuments(entityType).select('*');
 
     if (error) throw error;
 
-    // Map the data to our Document type based on the table type
-    return (data || []).map((item: any) => {
-      let mappedEntityId = "";
-      
-      if (tableName === "policy_documents") {
-        mappedEntityId = item.policy_id;
-      } else if (tableName === "claim_documents") {
-        mappedEntityId = item.claim_id;
-      } else if (tableName === "sales_documents") {
-        mappedEntityId = item.sales_process_id;
-      }
-      
-      return {
-        id: item.id,
-        document_name: item.document_name,
-        document_type: item.document_type,
-        created_at: item.created_at,
-        file_path: item.file_path,
-        entity_type: entityType,
-        entity_id: mappedEntityId,
-        uploaded_by_id: item.uploaded_by,
-        uploaded_by_name: "", // We'll populate this if needed
-        description: item.description || "",
-        version: item.version || 1,
-        status: item.status || "active",
-        tags: item.tags || [],
-        category: item.category || "other",
-        mime_type: item.mime_type || "",
-        is_latest_version: item.is_latest_version || true,
-        original_document_id: item.original_document_id || null,
-        approval_status: item.approval_status || "pending"
-      } as Document;
-    });
+    return (data || []).map(transformDocument);
   };
 
-  // Delete document mutation - use the correct table based on entity type
   const deleteDocument = async (documentId: string) => {
     const { error } = await supabase
       .from(tableName)
@@ -90,13 +76,11 @@ export const useDocuments = (entityType: EntityType, entityId: string) => {
     return { success: true };
   };
 
-  // Use react-query for data fetching
   const documentsQuery = useQuery({
     queryKey: ["documents", entityType, entityId],
     queryFn: fetchDocuments,
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: deleteDocument,
     onSuccess: () => {

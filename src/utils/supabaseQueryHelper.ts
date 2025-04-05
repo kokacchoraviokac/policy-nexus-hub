@@ -9,11 +9,11 @@ export type DocumentTableName =
   | 'sales_documents';
 
 // Define a mapping for entity types to their document tables
-export const entityToDocumentTable = {
+export const entityToDocumentTable: Record<string, DocumentTableName> = {
   'policy': 'policy_documents',
   'claim': 'claim_documents', 
   'sales_process': 'sales_documents'
-} as const;
+};
 
 // Helper function to safely query document tables
 export function queryDocumentTable(tableName: DocumentTableName) {
@@ -21,16 +21,26 @@ export function queryDocumentTable(tableName: DocumentTableName) {
   return supabase.from(tableName);
 }
 
+// Type guard for DocumentTableName
+export function isValidDocumentTable(tableName: string): tableName is DocumentTableName {
+  return Object.values(entityToDocumentTable).includes(tableName as DocumentTableName);
+}
+
 // Helper function to determine the appropriate document table based on entity type
 export function getDocumentTableForEntity(entityType: string): DocumentTableName {
   // Only return valid document tables that exist in the database
-  if (entityType === 'policy') return 'policy_documents';
-  if (entityType === 'claim') return 'claim_documents';
-  if (entityType === 'sales_process') return 'sales_documents';
+  const tableName = entityToDocumentTable[entityType];
+  if (tableName) return tableName;
   
   // Default fallback - should be avoided but prevents runtime errors
   console.warn(`Warning: Using default document table for unknown entity type: ${entityType}`);
   return 'policy_documents';
+}
+
+// Helper for safely querying document tables
+export function queryDocuments(entityType: string) {
+  const tableName = getDocumentTableForEntity(entityType);
+  return supabase.from(tableName);
 }
 
 // Helper for safely casting objects to Document type

@@ -2,7 +2,7 @@
 import { Session } from "@supabase/supabase-js";
 
 // Define UserRole
-export type UserRole = 'superAdmin' | 'admin' | 'employee' | 'agent' | 'client';
+export type UserRole = 'superAdmin' | 'admin' | 'employee' | 'agent' | 'client' | 'super_admin';
 
 // Define User interface
 export interface User {
@@ -11,7 +11,9 @@ export interface User {
   name: string;
   role: UserRole;
   companyId?: string;
+  company_id?: string; // For backward compatibility
   avatar?: string;
+  user_metadata?: Record<string, any>; // Added for compatibility
 }
 
 // Define AuthState interface

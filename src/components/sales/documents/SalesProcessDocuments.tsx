@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSalesProcessDocuments } from '@/hooks/sales/useSalesProcessDocuments';
 import { Button } from '@/components/ui/button';
@@ -41,14 +40,13 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
   
   const isError = !!error;
   
-  const handleUpdateApproval = async (docId: string, status: DocumentApprovalStatus, notes?: string) => {
-    try {
-      await updateDocumentApproval(docId, status, notes);
-      return Promise.resolve();
-    } catch (error) {
-      console.error("Error updating approval status:", error);
-      return Promise.reject(error);
-    }
+  const updateApproval = async (docId: string, status: DocumentApprovalStatus, notes?: string) => {
+    await updateDocumentApproval(docId, status, notes);
+    refreshDocuments();
+  };
+
+  const refresh = () => {
+    refreshDocuments();
   };
 
   return (
@@ -81,7 +79,7 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
             deleteDocument(docId.id);
           }
         }}
-        updateDocumentApproval={handleUpdateApproval}
+        updateDocumentApproval={updateApproval}
         entityType="sales_process"
         entityId={salesProcess.id}
         showUploadButton={false}

@@ -1,14 +1,16 @@
 
-// Financial report types
-export interface FinancialReportFilters {
-  dateFrom: string;
-  dateTo: string;
-  transactionType: string;
-  category: string;
+export interface FinancialTransaction {
+  id: string;
+  date: string;
+  type: string;
+  description: string;
+  reference: string;
+  amount: number;
+  currency: string;
+  entity_id?: string;
+  entity_type?: string;
   status: string;
-  searchTerm: string; // Added this property
-  startDate: string; // Added this property
-  endDate: string; // Added this property
+  category: string;
 }
 
 export interface FinancialReportData {
@@ -23,35 +25,23 @@ export interface FinancialReportData {
   entity_type?: string;
   status: string;
   category: string;
-  transactions: FinancialTransaction[]; // Added this property
+  transactions: FinancialTransaction[];
 }
 
-export interface FinancialTransaction {
-  id: string;
-  amount: number;
-  date: string;
-  type: string;
-  description: string;
-  reference: string;
-  category: string;
-  currency: string;
-  entity_id?: string;
-  entity_type?: string;
-  status?: string;
+export interface FinancialReportFilters {
+  dateFrom: string | Date;
+  dateTo: string | Date;
+  entityType: string[];
+  transactionType: string[];
+  category: string[];
+  searchTerm: string;
 }
 
-export interface FinancialReportFiltersProps {
-  filters: FinancialReportFilters;
-  onChange: (newFilters: Partial<FinancialReportFilters>) => void;
-  onApply: () => Promise<void>;
-}
-
-export interface ProposalStats {
-  total: number;
-  accepted: number;
-  rejected: number;
-  pending: number;
-  draft?: number;
-  sent?: number;
-  viewed?: number;
+export interface PaginationProps {
+  itemsCount: number;
+  itemsPerPage: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
 }

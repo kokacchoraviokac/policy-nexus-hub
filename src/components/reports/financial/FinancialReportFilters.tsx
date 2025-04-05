@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,11 +12,11 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FinancialReportFilters } from "@/utils/reports/financialReportUtils";
+import { FinancialReportFilters as FinancialReportFiltersType } from "@/types/reports";
 
 export interface FinancialReportFiltersProps {
-  filters: FinancialReportFilters;
-  updateFilters: (newFilters: Partial<FinancialReportFilters>) => void;
+  filters: FinancialReportFiltersType;
+  updateFilters: (newFilters: Partial<FinancialReportFiltersType>) => void;
   onApply: () => Promise<void>;
 }
 
@@ -27,9 +26,8 @@ const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
   onApply
 }) => {
   const { t } = useLanguage();
-  const [localFilters, setLocalFilters] = useState<FinancialReportFilters>({
+  const [localFilters, setLocalFilters] = useState<FinancialReportFiltersType>({
     ...filters,
-    // Set these values to match the existing fields to avoid undefined values
     searchTerm: filters.searchTerm || '',
     startDate: filters.dateFrom,
     endDate: filters.dateTo
@@ -44,7 +42,7 @@ const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
     }));
   };
 
-  const handleSelectChange = (field: keyof FinancialReportFilters, value: string) => {
+  const handleSelectChange = (field: keyof FinancialReportFiltersType, value: string) => {
     setLocalFilters((prev) => ({
       ...prev,
       [field]: value
@@ -63,7 +61,6 @@ const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
   const handleApply = async () => {
     setIsApplying(true);
     try {
-      // Map the filter values correctly
       updateFilters({
         searchTerm: localFilters.searchTerm,
         dateFrom: localFilters.startDate,
@@ -79,7 +76,7 @@ const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
   };
 
   const handleReset = () => {
-    const defaultFilters: FinancialReportFilters = {
+    const defaultFilters: FinancialReportFiltersType = {
       dateFrom: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
       dateTo: new Date().toISOString().split('T')[0],
       transactionType: 'all',

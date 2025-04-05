@@ -1,4 +1,5 @@
 
+// Define allowed document types
 export type DocumentType = 
   | 'policy'
   | 'addendum'
@@ -33,7 +34,8 @@ export type DocumentCategory =
   | 'quote'
   | 'proposal'
   | 'contract'
-  | 'closeout';
+  | 'closeout'
+  | 'identification';
 
 export type EntityType =
   | 'policy'
@@ -127,4 +129,25 @@ export interface UseDocumentUploadStateProps {
   onSuccess?: () => void;
   selectedDocument?: Document;
   defaultCategory?: DocumentCategory;
+  originalDocumentId?: string | null;
+  currentVersion?: number;
+}
+
+export interface DocumentSearchParams {
+  search?: string;
+  entity_type?: EntityType;
+  entity_id?: string;
+  document_type?: string;
+  category?: DocumentCategory | string;
+  date_from?: string;
+  date_to?: string;
+  status?: DocumentApprovalStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface UseDocumentSearchProps {
+  initialParams?: Partial<DocumentSearchParams>;
+  page?: number;
+  pageSize?: number;
 }

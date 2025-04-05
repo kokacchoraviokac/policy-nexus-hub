@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCompanies } from '@/hooks/useCompanies';
@@ -23,8 +22,8 @@ const InvitationManagement: React.FC = () => {
   const [itemsPerPage] = useState(10);
   
   const { user } = useAuth();
-  // Update this to compare against the defined UserRole type
-  const isSuperAdmin = user?.role === 'super_admin';
+  const authContext = useAuth();
+  const isSuperAdmin = authContext.role === 'superAdmin' || authContext.role === 'super_admin';
   
   const { companies, loading: isLoadingCompanies } = useCompanies();
   const { 
@@ -33,7 +32,6 @@ const InvitationManagement: React.FC = () => {
     getInvitations
   } = useInvitations();
   
-  // Mock these values until they are properly implemented
   const totalInvitations = invitations.length;
   
   const { createInvitation, isSubmitting } = useCreateInvitation();

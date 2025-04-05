@@ -1,448 +1,263 @@
-
-import React, { createContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { User, AuthContextType, UserRole, CustomPrivilege } from "@/types/auth";
+import React, { createContext, useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { User, UserRole, AuthState } from "@/types/auth";
+import { AuthContextType } from "./types";
+import useAuthOperations from "@/hooks/useAuthOperations";
+import { fetchUserCustomPrivileges } from "@/utils/auth/privilegeUtils";
 
-// Create the context with a default value
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  userProfile: null,
-  isAuthenticated: false,
-  isLoading: true,
-  isInitialized: false,
-  role: null,
-  companyId: null,
-  customPrivileges: [],
-  login: async () => ({ error: null }),
-  logout: async () => {},
-  signup: async () => ({ error: null }),
-  hasPrivilege: () => false,
-  hasPrivilegeWithContext: () => false,
-  updateUser: async () => ({ error: null }),
-  initiatePasswordReset: async () => ({ error: null }),
-  updatePassword: async () => ({ error: null }),
-});
+interface AuthProviderProps {
+  children: React.ReactNode;
+}
 
-// Provider component
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<any | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [companyId, setCompanyId] = useState<string | null>(null);
-  const [customPrivileges, setCustomPrivileges] = useState<CustomPrivilege[]>([]);
+// Create AuthContext
+export const AuthContext = createContext<AuthContextType | null>(null);
+
+// AuthProvider component
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [authState, setState] = useState<AuthState>({
+    session: null,
+    user: null,
+    isAuthenticated: false,
+    isLoading: true,
+  });
   
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [customPrivileges, setCustomPrivileges] = useState<any[]>([]);
   
-  // Check if the user is authenticated on component mount
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        
-        if (data.session) {
-          const { data: userData } = await supabase.auth.getUser();
-          
-          if (userData.user) {
-            // Get user profile from database
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', userData.user.id)
-              .single();
-            
-            if (profileData) {
-              setUserProfile(profileData);
-              setRole(profileData.role as UserRole);
-              setCompanyId(profileData.company_id);
-              
-              // Get custom privileges
-              const { data: privilegeData } = await supabase
-                .from('user_custom_privileges')
-                .select('*')
-                .eq('user_id', userData.user.id);
-              
-              if (privilegeData) {
-                setCustomPrivileges(privilegeData as CustomPrivilege[]);
-              }
-            }
-            
-            // Set user state
-            setUser({
-              ...userData.user,
-              name: profileData?.name || userData.user.email?.split('@')[0] || 'User',
-              role: profileData?.role || 'employee',
-              companyId: profileData?.company_id
-            });
-            setIsAuthenticated(true);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-      } finally {
-        setIsLoading(false);
-        setIsInitialized(true);
-      }
-    };
-    
-    checkUser();
-    
-    // Set up auth state change listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        // User has signed in
-        const { data: userData } = await supabase.auth.getUser();
-        
-        if (userData.user) {
-          // Get user profile
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userData.user.id)
-            .single();
-          
-          if (profileData) {
-            setUserProfile(profileData);
-            setRole(profileData.role as UserRole);
-            setCompanyId(profileData.company_id);
-            
-            // Get custom privileges
-            const { data: privilegeData } = await supabase
-              .from('user_custom_privileges')
-              .select('*')
-              .eq('user_id', userData.user.id);
-            
-            if (privilegeData) {
-              setCustomPrivileges(privilegeData as CustomPrivilege[]);
-            }
-          }
-          
-          // Set user state
-          setUser({
-            ...userData.user,
-            name: profileData?.name || userData.user.email?.split('@')[0] || 'User',
-            role: profileData?.role || 'employee',
-            companyId: profileData?.company_id
-          });
-          setIsAuthenticated(true);
-        }
-      } else if (event === 'SIGNED_OUT') {
-        // User has signed out
-        setUser(null);
-        setUserProfile(null);
-        setIsAuthenticated(false);
-        setRole(null);
-        setCompanyId(null);
-        setCustomPrivileges([]);
-      }
-    });
-    
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+  const { session, user, isAuthenticated, isLoading } = authState;
+  
+  const {
+    login,
+    logout,
+    signUp: register,
+    updateUser,
+    initiatePasswordReset,
+    updatePassword
+  } = useAuthOperations(setState);
+  
+  // Fetch user custom privileges
+  const fetchCustomPrivileges = useCallback(async (userId: string) => {
+    const privileges = await fetchUserCustomPrivileges(userId);
+    setCustomPrivileges(privileges);
   }, []);
   
-  // Login function
-  const login = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        toast({
-          title: "Login failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
+  // Function to check if user has a specific privilege
+  const hasPrivilege = useCallback((privilege: string) => {
+    if (!user) return false;
+    
+    // Check if the user has the privilege directly
+    const hasDirectPrivilege = customPrivileges.some(
+      (p:any) => p.privilege === privilege && p.user_id === user.id
+    );
+    
+    return hasDirectPrivilege;
+  }, [customPrivileges, user]);
+  
+  const hasPrivilegeWithContext = useCallback((
+    privilege: string, 
+    context?: {
+      ownerId?: string;
+      currentUserId?: string;
+      companyId?: string;
+      currentUserCompanyId?: string;
+      resourceType?: string;
+      resourceValue?: any;
+      [key: string]: any;
+    }
+  ) => {
+    if (!user) return false;
+    
+    // Check if the user has the privilege directly
+    const hasDirectPrivilege = customPrivileges.some(p => {
+      if (p.privilege !== privilege || p.user_id !== user.id) {
+        return false;
       }
       
-      if (data.user) {
-        // Get user profile
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-        
-        if (profileData) {
-          setUserProfile(profileData);
-          setRole(profileData.role as UserRole);
-          setCompanyId(profileData.company_id);
-          
-          // Get custom privileges
-          const { data: privilegeData } = await supabase
-            .from('user_custom_privileges')
-            .select('*')
-            .eq('user_id', data.user.id);
-          
-          if (privilegeData) {
-            setCustomPrivileges(privilegeData as CustomPrivilege[]);
+      if (!p.context && !context) {
+        return true;
+      }
+      
+      if (!p.context || !context) {
+        return false;
+      }
+      
+      // Check if all context properties match
+      for (const key in context) {
+        if (context.hasOwnProperty(key)) {
+          if (p.context[key] !== context[key]) {
+            return false;
           }
         }
-        
-        // Set user state
-        setUser({
-          ...data.user,
-          name: profileData?.name || data.user.email?.split('@')[0] || 'User',
-          role: profileData?.role || 'employee',
-          companyId: profileData?.company_id
-        });
-        setIsAuthenticated(true);
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-        });
-        
-        navigate('/dashboard');
       }
       
-      return { error: null };
-    } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { error };
-    }
-  };
-  
-  // Logout function
-  const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setUserProfile(null);
-      setIsAuthenticated(false);
-      setRole(null);
-      setCompanyId(null);
-      setCustomPrivileges([]);
-      navigate('/login');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
-  
-  // Signup function
-  const signup = async (email: string, password: string, name: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role: 'employee', // Default role
-          },
-        },
-      });
+      return true;
+    });
+    
+    return hasDirectPrivilege;
+  }, [customPrivileges, user]);
+
+  // Initialize the authentication state
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (error) {
-        toast({
-          title: "Signup failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
-      }
-      
-      toast({
-        title: "Signup successful",
-        description: "Please check your email for verification.",
-      });
-      
-      return { error: null };
-    } catch (error: any) {
-      toast({
-        title: "Signup failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { error };
-    }
-  };
-  
-  // Check if user has a specific privilege
-  const hasPrivilege = (privilege: string): boolean => {
-    // Super admin has all privileges
-    if (role === 'superAdmin') return true;
-    
-    // Check custom privileges
-    return customPrivileges.some(p => 
-      p.privilege === privilege && 
-      (!p.expires_at || new Date(p.expires_at) > new Date())
-    );
-  };
-  
-  // Check if user has a privilege in a specific context (e.g., for a specific entity)
-  const hasPrivilegeWithContext = (privilege: string, context?: string): boolean => {
-    // Super admin has all privileges
-    if (role === 'superAdmin') return true;
-    
-    // If no context, use simple check
-    if (!context) return hasPrivilege(privilege);
-    
-    // Check custom privileges with context
-    return customPrivileges.some(p => 
-      p.privilege === privilege && 
-      (!p.expires_at || new Date(p.expires_at) > new Date()) &&
-      (p.context === context || p.context === '*')
-    );
-  };
-  
-  // Update user information
-  const updateUser = async (userData: Partial<User>) => {
-    if (!user) return { error: new Error('No user logged in') };
-    
-    try {
-      // Update auth data if email is being changed
-      if (userData.email) {
-        const { error } = await supabase.auth.updateUser({
-          email: userData.email,
-        });
+      if (session) {
+        const { data: { user: supaUser } } = await supabase.auth.getUser();
         
-        if (error) {
-          toast({
-            title: "Update failed",
-            description: error.message,
-            variant: "destructive",
-          });
-          return { error };
+        if (supaUser) {
+          const userData = supaUser.user_metadata;
+          const userRole = userData?.role as UserRole || 'employee';
+          
+          const user: User = {
+            id: supaUser.id,
+            email: supaUser.email || '',
+            name: userData?.name || supaUser.email || 'User',
+            role: userRole,
+            companyId: userData?.companyId || userData?.company_id || '',
+            avatar: userData?.avatar || '',
+            user_metadata: supaUser.user_metadata
+          };
+          
+          setState(prevState => ({
+            ...prevState,
+            session: session,
+            user: user,
+            isAuthenticated: true,
+            isLoading: false,
+          }));
+          
+          // Fetch custom privileges after setting the user
+          await fetchCustomPrivileges(supaUser.id);
+        } else {
+          setState(prevState => ({
+            ...prevState,
+            session: null,
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          }));
+        }
+      } else {
+        setState(prevState => ({
+          ...prevState,
+          session: null,
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        }));
+      }
+    };
+    
+    initializeAuth();
+    
+    // Subscribe to auth state changes
+    const { subscription } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN') {
+          const { data: { user: supaUser } } = await supabase.auth.getUser();
+          
+          if (supaUser) {
+            const userData = supaUser.user_metadata;
+            const userRole = userData?.role as UserRole || 'employee';
+            
+            const user: User = {
+              id: supaUser.id,
+              email: supaUser.email || '',
+              name: userData?.name || supaUser.email || 'User',
+              role: userRole,
+              companyId: userData?.companyId || userData?.company_id || '',
+              avatar: userData?.avatar || '',
+              user_metadata: supaUser.user_metadata
+            };
+            
+            setState(prevState => ({
+              ...prevState,
+              session: session,
+              user: user,
+              isAuthenticated: true,
+              isLoading: false,
+            }));
+            
+            // Fetch custom privileges after setting the user
+            await fetchCustomPrivileges(supaUser.id);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setState(prevState => ({
+            ...prevState,
+            session: null,
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          }));
         }
       }
-      
-      // Update profile data
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: userData.name,
-          avatar_url: userData.avatar,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-      
-      if (error) {
-        toast({
-          title: "Update failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
-      }
-      
-      // Update local state
-      setUser({ ...user, ...userData });
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      });
-      
-      return { error: null };
+    );
+    
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [fetchCustomPrivileges]);
+  
+  const signUp = async (email: string, password: string, userData?: Partial<User>) => {
+    try {
+      await register(email, password, userData);
     } catch (error: any) {
-      toast({
-        title: "Update failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { error };
+      console.error("Error during sign up:", error.message);
+      throw error;
     }
   };
   
-  // Initiate password reset
-  const initiatePasswordReset = async (email: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      
-      if (error) {
-        toast({
-          title: "Password reset failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
-      }
-      
-      toast({
-        title: "Password reset email sent",
-        description: "Please check your email for a reset link.",
-      });
-      
-      return { error: null };
+      await login(email, password);
     } catch (error: any) {
-      toast({
-        title: "Password reset failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { error };
+      console.error("Error during sign in:", error.message);
+      throw error;
     }
   };
   
-  // Update password
-  const updatePassword = async (newPassword: string) => {
+  const signOut = async () => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-      
-      if (error) {
-        toast({
-          title: "Password update failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return { error };
-      }
-      
-      toast({
-        title: "Password updated",
-        description: "Your password has been updated successfully.",
-      });
-      
-      return { error: null };
+      await logout();
     } catch (error: any) {
-      toast({
-        title: "Password update failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { error };
+      console.error("Error during sign out:", error.message);
+      throw error;
     }
+  };
+  
+  const updateUserProfile = async (profile: Partial<User>) => {
+    try {
+      await updateUser(profile);
+    } catch (error: any) {
+      console.error("Error updating user profile:", error.message);
+      throw error;
+    }
+  };
+  
+  const authContextValue: AuthContextType = {
+    user,
+    userProfile: user,
+    session,
+    role: user?.role || null,
+    companyId: user?.companyId || null,
+    isInitialized: true,
+    isAuthenticated: !!user,
+    isLoading,
+    signUp,
+    signIn,
+    signOut,
+    updateUserProfile,
+    login,
+    logout,
+    updateUser,
+    hasPrivilege,
+    hasPrivilegeWithContext,
+    customPrivileges,
+    initiatePasswordReset,
+    updatePassword
   };
   
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        userProfile,
-        isAuthenticated,
-        isLoading,
-        isInitialized,
-        role,
-        companyId,
-        customPrivileges,
-        login,
-        logout,
-        signup,
-        hasPrivilege,
-        hasPrivilegeWithContext,
-        updateUser,
-        initiatePasswordReset,
-        updatePassword,
-      }}
-    >
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

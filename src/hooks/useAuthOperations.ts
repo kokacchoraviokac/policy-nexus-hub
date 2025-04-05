@@ -1,165 +1,136 @@
-
-import { useState } from "react";
+import { useState, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole, AuthState } from "@/types/auth";
-import { toast } from "sonner";
-import { MOCK_USERS } from "@/data/mockUsers";
-import { fetchUserProfile, updateUserProfile, ensureUserProfile } from "@/utils/authUtils";
+import { User, AuthState } from "@/types/auth";
 
-export const useAuthOperations = (
-  authState: AuthState,
-  setAuthState: React.Dispatch<React.SetStateAction<AuthState>>
-) => {
-  const [isLoading, setIsLoading] = useState(false);
+interface UseAuthOperations {
+  setState: React.Dispatch<React.SetStateAction<AuthState>>;
+}
 
-  const login = async (email: string, password: string): Promise<{ error: any }> => {
-    setAuthState({ ...authState, isLoading: true });
-    
+const useAuthOperations = ({ setState }: UseAuthOperations) => {
+  const signUp = useCallback(async (email: string, password: string, userData?: Partial<User>) => {
     try {
-      // First check if the email matches a mock user - allow in all environments
-      const mockUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
-      
-      if (mockUser) {
-        console.log("Using mock user login for:", email);
-        setAuthState({
-          user: mockUser,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        return { error: null };
-      }
-      
-      // If no matching mock user, try Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) {
-        console.error("Supabase login error:", error);
-        throw error;
-      }
-      
-      // Real Supabase auth - user profile is handled by the onAuthStateChange listener
-      console.log("Supabase login successful");
-      
-      return { error: null };
-    } catch (error) {
-      console.error("Login failed:", error);
-      setAuthState({ ...authState, isLoading: false });
-      return { error };
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setAuthState({ ...authState, isLoading: true });
-      
-      // Check if we're dealing with a mock user
-      const isMockUser = authState.user ? MOCK_USERS.some(u => u.id === authState.user?.id) : false;
-      
-      if (!isMockUser) {
-        // Only call Supabase signOut if using a real auth session
-        await supabase.auth.signOut();
-      }
-      
-      // Always reset auth state regardless of mock or real user
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
-      
-      return;
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Force logout anyway
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
-      throw error;
-    }
-  };
-
-  const signUp = async (email: string, password: string, userData: Partial<User>) => {
-    setAuthState({ ...authState, isLoading: true });
-    
-    try {
-      // Ensure userData has required fields with defaults
-      const enrichedUserData = {
-        name: userData.name || email.split('@')[0],
-        role: userData.role || 'employee',
-        companyId: userData.companyId,
-        avatar: userData.avatar,
-        ...userData
-      };
-      
-      // Register user with Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            name: enrichedUserData.name,
-            role: enrichedUserData.role,
-            company_id: enrichedUserData.companyId,
-            avatar_url: enrichedUserData.avatar
+            name: userData?.name,
+            role: userData?.role || 'employee',
+            companyId: userData?.companyId,
+            avatar: userData?.avatar,
           },
         },
       });
       
+      if (authError) {
+        console.error("Signup error:", authError);
+        throw authError;
+      }
+      
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: authData.user?.id,
+            email,
+            name: userData?.name,
+            role: userData?.role || 'employee',
+            companyId: userData?.companyId,
+            avatar: userData?.avatar,
+          },
+        ])
+        .select()
+        .single();
+        
+      if (userError) {
+        console.error("User creation error:", userError);
+        throw userError;
+      }
+      
+      setState(prevState => ({
+        ...prevState,
+        user: user as User,
+        isAuthenticated: true,
+        isLoading: false,
+      }));
+      
+    } catch (error: any) {
+      console.error("Signup failed:", error);
+      setState(prevState => ({
+        ...prevState,
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+      }));
+      throw error;
+    }
+  }, [setState]);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
       if (error) {
-        toast.error(`Sign up failed: ${error.message}`);
+        console.error("Signin error:", error);
         throw error;
       }
       
-      // Manually ensure profile creation in case trigger fails
-      if (data.user) {
-        await ensureUserProfile(data.user.id, {
-          ...enrichedUserData,
-          email,
-        });
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select()
+        .eq('id', data.user?.id)
+        .single();
+        
+      if (userError) {
+        console.error("User fetch error:", userError);
+        throw userError;
       }
       
-      toast.success('Sign up successful! Verification email sent.');
+      setState(prevState => ({
+        ...prevState,
+        user: user as User,
+        session: data.session, // Make sure session is included
+        isAuthenticated: true,
+        isLoading: false,
+      }));
       
-      // NOTE: User profile is created automatically via the database trigger
-      // but we've added a backup ensureUserProfile call above
-    } catch (error) {
-      console.error("Sign up failed:", error);
-      setAuthState({ ...authState, isLoading: false });
+    } catch (error: any) {
+      console.error("Signin failed:", error);
+      setState(prevState => ({
+        ...prevState,
+        user: null,
+        session: null, // Include session
+        isAuthenticated: false,
+        isLoading: false,
+      }));
       throw error;
-    } finally {
-      setAuthState({ ...authState, isLoading: false });
     }
-  };
+  }, [setState]);
 
-  const updateUser = async (userData: Partial<User>): Promise<void> => {
-    if (!authState.user || !authState.isAuthenticated) {
-      console.error("Cannot update user: No authenticated user");
-      return Promise.reject("No authenticated user");
+  const signOut = useCallback(async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Signout error:", error);
+        throw error;
+      }
+      setState(prevState => ({
+        ...prevState,
+        user: null,
+        session: null, // Include session
+        isAuthenticated: false,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      console.error("Signout failed:", error);
+      throw error;
     }
-    
-    const success = await updateUserProfile(authState.user.id, userData);
-    
-    if (success) {
-      // Update local state
-      setAuthState({
-        ...authState,
-        user: { ...authState.user, ...userData },
-      });
-      return Promise.resolve();
-    } else {
-      return Promise.reject("Failed to update user profile");
-    }
-  };
+  }, [setState]);
 
-  return {
-    login,
-    logout,
-    signUp,
-    updateUser
-  };
+  return { signUp, signIn, signOut };
 };
+
+export default useAuthOperations;

@@ -18,7 +18,7 @@ interface DocumentUploadDialogProps {
   onUploadComplete?: () => void; // Optional callback for when upload completes
   embedMode?: boolean; // Flag to indicate if component is embedded in another dialog
   onFileSelected?: (file: File | null) => void; // Callback to notify parent when file is selected
-  defaultCategory?: string; // Default category for the document
+  defaultCategory?: DocumentCategory; // Default category for the document
   salesStage?: string; // Sales process stage
 }
 

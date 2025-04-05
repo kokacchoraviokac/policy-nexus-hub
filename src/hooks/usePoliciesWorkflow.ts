@@ -1,95 +1,89 @@
-
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Policy } from "@/types/policies";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { PolicyService } from "@/services/PolicyService";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useApiService } from "./useApiService";
+import { Policy, PolicyFilterParams } from "@/types/policies";
 
-export const usePoliciesWorkflow = () => {
-  const { t } = useLanguage();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { executeService } = useApiService();
-  
-  const [activeTab, setActiveTab] = useState("draft");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const pageSize = 10;
+interface UsePoliciesWorkflowProps {
+  filters: Omit<PolicyFilterParams, 'page' | 'pageSize'>;
+  initialPageSize?: number;
+}
 
-  // Fetch policies using the PolicyService
+export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePoliciesWorkflowProps) => {
+  const loadPolicies = async ({ pageParam = 1 }) => {
+    const params: PolicyFilterParams = {
+      page: pageParam,
+      pageSize: initialPageSize,
+      client_id: filters.client_id,
+      insurer_id: filters.insurer_id,
+      product_id: filters.product_id,
+      status: filters.status,
+      workflow_status: filters.workflow_status, // Fix naming (was workflowStatus)
+      assigned_to: filters.assigned_to,
+      start_date_from: filters.start_date_from,
+      start_date_to: filters.start_date_to,
+      expiry_date_from: filters.expiry_date_from,
+      expiry_date_to: filters.expiry_date_to,
+      search: filters.search,
+    };
+
+    try {
+      const response = await PolicyService.getPolicies(params);
+      if (!response.success) {
+        const errorMessage = error instanceof Error 
+          ? error.message 
+          : typeof error === 'string' 
+            ? error 
+            : (error as Record<string, any>)?.message || 'Unknown error';
+        throw new Error(errorMessage);
+      }
+
+      return {
+        data: response.data,
+        total: response.total,
+        currentPage: pageParam,
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : typeof error === 'string' 
+          ? error 
+          : (error as Record<string, any>)?.message || 'Unknown error';
+      throw new Error(`Failed to load policies: ${errorMessage}`);
+    }
+  };
+
   const {
     data,
     isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     error,
-    refetch
-  } = useQuery({
-    queryKey: ['policies-workflow', activeTab, searchTerm, currentPage, statusFilter],
-    queryFn: async () => {
-      // Determine workflow status based on active tab
-      let workflowStatus = undefined;
-      
-      if (activeTab !== 'all' && statusFilter === 'all') {
-        workflowStatus = activeTab as any;
-      } else if (statusFilter !== 'all') {
-        workflowStatus = statusFilter as any;
-      }
-      
-      const response = await PolicyService.getPolicies({
-        page: currentPage,
-        pageSize,
-        search: searchTerm,
-        workflowStatus,
-        orderBy: 'created_at',
-        orderDirection: 'desc'
-      });
-      
-      if (!response.success) {
-        throw new Error(response.error?.message || "Failed to fetch policies");
-      }
-      
-      return response.data;
+    refetch,
+  } = useInfiniteQuery(
+    ['policies-workflow', filters],
+    ({ pageParam = 1 }) => loadPolicies({ pageParam }),
+    {
+      getNextPageParam: (lastGroup) => {
+        if (!lastGroup) return undefined;
+        const totalPages = Math.ceil(lastGroup.total / initialPageSize);
+        const nextPage = lastGroup.currentPage + 1;
+        return nextPage <= totalPages ? nextPage : undefined;
+      },
+      staleTime: 60000, // 60 seconds
     }
-  });
+  );
 
-  // Update policy status
-  const updatePolicyStatus = async (policyId: string, status: string) => {
-    return executeService(
-      () => PolicyService.updatePolicyStatus(policyId, status as any),
-      {
-        successMessage: t("policyStatusUpdatedSuccessfully"),
-        errorMessage: t("errorUpdatingPolicyStatus"),
-        invalidateQueryKeys: [['policies-workflow'], ['policy', policyId]]
-      }
-    );
-  };
-
-  const handleRefresh = () => {
-    refetch();
-    
-    toast({
-      title: t("refreshing"),
-      description: t("refreshingPolicies"),
-    });
-  };
+  const policies: Policy[] = data?.pages?.flatMap((page) => page.data) || [];
+  const total = data?.pages?.[0]?.total || 0;
 
   return {
-    activeTab,
-    setActiveTab,
-    searchTerm,
-    setSearchTerm,
-    policies: data?.policies || [],
+    policies,
     isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    total,
     error,
-    currentPage,
-    setCurrentPage,
-    totalCount: data?.totalCount || 0,
-    pageSize,
-    statusFilter,
-    setStatusFilter,
-    handleRefresh,
-    updatePolicyStatus
+    refetch,
   };
 };
