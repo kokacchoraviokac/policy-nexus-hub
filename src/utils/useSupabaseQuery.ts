@@ -17,7 +17,7 @@ export function useSupabaseQuery() {
   ): Promise<{ data: T[] | null; error: PostgrestError | Error | null }> => {
     try {
       // Cast to any to bypass TypeScript's strict typing for table names
-      const baseQuery = supabase.from(tableName) as any;
+      const baseQuery = supabase.from(tableName as any);
       const { data, error } = await queryBuilder(baseQuery);
       
       if (error) {
@@ -42,10 +42,10 @@ export function useSupabaseQuery() {
   ): Promise<{ data: T | null; error: PostgrestError | Error | null }> => {
     try {
       // Cast to any to bypass TypeScript's strict typing for table names
-      const { data: result, error } = await (supabase.from(tableName) as any)
+      const { data: result, error } = await (supabase.from(tableName as any)
         .insert(data)
         .select('*')
-        .single();
+        .single());
       
       if (error) {
         return { data: null, error };
@@ -70,11 +70,11 @@ export function useSupabaseQuery() {
   ): Promise<{ data: T | null; error: PostgrestError | Error | null }> => {
     try {
       // Cast to any to bypass TypeScript's strict typing for table names
-      const { data: result, error } = await (supabase.from(tableName) as any)
+      const { data: result, error } = await (supabase.from(tableName as any)
         .update(data)
         .eq('id', id)
         .select('*')
-        .single();
+        .single());
       
       if (error) {
         return { data: null, error };
@@ -98,9 +98,9 @@ export function useSupabaseQuery() {
   ): Promise<{ error: PostgrestError | Error | null }> => {
     try {
       // Cast to any to bypass TypeScript's strict typing for table names
-      const { error } = await (supabase.from(tableName) as any)
+      const { error } = await (supabase.from(tableName as any)
         .delete()
-        .eq('id', id);
+        .eq('id', id));
       
       return { error };
     } catch (error) {

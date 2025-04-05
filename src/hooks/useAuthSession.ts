@@ -13,6 +13,7 @@ export function useAuthSession() {
   // Create a local state for auth management
   const [authState, setAuthState] = useState<AuthState>({
     user: context.user,
+    session: context.session || null,
     isAuthenticated: context.isAuthenticated,
     isLoading: context.isLoading
   });

@@ -1,20 +1,20 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentTableName } from "@/utils/supabaseQueryHelper";
 
 /**
  * A safer wrapper for Supabase queries that works with dynamic table names
  * by using type assertions to avoid TypeScript errors
  */
 export function safeSupabaseQuery(tableName: string) {
-  return supabase.from(tableName) as any;
+  // Use type assertion to avoid TypeScript limitations with dynamic table names
+  return supabase.from(tableName as any);
 }
 
 /**
  * Safely create a query for document tables
  */
-export function safeDocumentQuery(tableName: DocumentTableName) {
-  return supabase.from(tableName) as any;
+export function safeDocumentQuery(tableName: string) {
+  return supabase.from(tableName as any);
 }
 
 /**
@@ -53,7 +53,7 @@ export function queryWithEntityType(entityType: string) {
       tableName = 'policy_documents';
   }
   
-  return supabase.from(tableName) as any;
+  return supabase.from(tableName as any);
 }
 
 /**

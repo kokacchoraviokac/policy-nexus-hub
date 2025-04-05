@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function fromTable<T = any>(tableName: string) {
   // Use type assertion to avoid TypeScript limitations
-  return supabase.from(tableName) as any;
+  return supabase.from(tableName as any);
 }
 
 /**

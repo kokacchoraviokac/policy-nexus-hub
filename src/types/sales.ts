@@ -34,8 +34,8 @@ export interface Proposal {
 
 export interface SalesProcess {
   id: string;
-  title: string;
-  stage: string;
+  title?: string;
+  stage?: string;
   company_id: string;
   client_id: string;
   created_at: string;
@@ -45,6 +45,11 @@ export interface SalesProcess {
   client_name?: string;
   responsible_person?: string;
   responsible_person_id?: string;
+  // Add other required fields for compatibility
+  status?: string;
+  expected_close_date?: string;
+  sales_number?: string;
+  lead_id?: string;
 }
 
 export interface UseProposalsDataProps {
@@ -52,6 +57,7 @@ export interface UseProposalsDataProps {
   status?: ProposalStatus;
   salesProcessId?: string; // Alias for sales_process_id
   searchQuery?: string; // Added for search functionality
+  statusFilter?: string; // Added for filtering by status
 }
 
 export interface SalesProcessDocumentsProps {

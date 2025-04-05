@@ -32,28 +32,30 @@ const DocumentSearch: React.FC = () => {
   const { t, formatDate } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEntityType, setSelectedEntityType] = useState<EntityType | "all">("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
   const { isDownloading, downloadDocument } = useDocumentDownload();
   
   const {
     documents,
     isLoading,
+    error,
     isError,
     totalCount,
-    search
+    searchDocuments,
+    currentPage,
+    pageSize,
+    handlePageChange
   } = useDocumentSearch({
-    page: currentPage,
-    pageSize: itemsPerPage,
-    searchTerm: searchTerm,
-    entityType: selectedEntityType !== "all" ? selectedEntityType : undefined
+    entityType: selectedEntityType !== "all" ? selectedEntityType : undefined,
+    pageSize: 10,
+    initialSearchParams: {
+      searchTerm
+    }
   });
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(1);
-    search();
+    searchDocuments({ searchTerm });
   };
   
   const handleDownload = (document: any) => {
@@ -63,8 +65,7 @@ const DocumentSearch: React.FC = () => {
   const handleClearSearch = () => {
     setSearchTerm("");
     setSelectedEntityType("all");
-    setCurrentPage(1);
-    search();
+    searchDocuments({});
   };
   
   return (
@@ -156,7 +157,7 @@ const DocumentSearch: React.FC = () => {
         ) : isError ? (
           <div className="p-6 text-center">
             <p className="text-destructive">{t("errorLoadingDocuments")}</p>
-            <Button onClick={search} variant="outline" className="mt-4">
+            <Button onClick={() => searchDocuments({ searchTerm })} variant="outline" className="mt-4">
               {t("tryAgain")}
             </Button>
           </div>
@@ -200,10 +201,10 @@ const DocumentSearch: React.FC = () => {
         
         {!isLoading && documents.length > 0 && (
           <Pagination
-            itemsCount={totalCount || 0}
-            itemsPerPage={itemsPerPage}
+            itemsCount={totalCount}
+            itemsPerPage={pageSize}
             currentPage={currentPage}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
           />
         )}
       </div>

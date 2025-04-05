@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentTableName } from "@/utils/supabaseQueryHelper";
 
 /**
  * Utility functions for making type-safe Supabase queries
@@ -12,8 +11,8 @@ import { DocumentTableName } from "@/utils/supabaseQueryHelper";
  * Makes a query to a document table using type assertions
  * to avoid TypeScript errors
  */
-export function fromDocumentTable(tableName: DocumentTableName) {
-  return supabase.from(tableName) as any;
+export function fromDocumentTable(tableName: string) {
+  return supabase.from(tableName as any);
 }
 
 /**
@@ -21,7 +20,7 @@ export function fromDocumentTable(tableName: DocumentTableName) {
  * to avoid TypeScript errors
  */
 export function fromTable(tableName: string) {
-  return supabase.from(tableName) as any;
+  return supabase.from(tableName as any);
 }
 
 /**
@@ -60,5 +59,5 @@ export function fromEntityTable(entityType: string) {
       tableName = 'policy_documents';
   }
   
-  return supabase.from(tableName) as any;
+  return supabase.from(tableName as any);
 }

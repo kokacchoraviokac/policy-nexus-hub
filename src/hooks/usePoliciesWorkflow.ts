@@ -60,7 +60,7 @@ export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePolici
   } = useInfiniteQuery({
     queryKey: ['policies-workflow', filters],
     queryFn: loadPolicies,
-    initialPageParam: 1, // Add this line to fix the type error
+    initialPageParam: 1,
     getNextPageParam: (lastGroup) => {
       const totalPages = Math.ceil(lastGroup.total / initialPageSize);
       const nextPage = lastGroup.currentPage + 1;
@@ -69,7 +69,10 @@ export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePolici
     staleTime: 60000, // 60 seconds
   });
 
+  // Extract all policies from pages
   const policies: Policy[] = data?.pages?.flatMap((page) => page.data) || [];
+  
+  // Get the total count from the first page (all pages should have the same total)
   const total = data?.pages?.[0]?.total || 0;
 
   return {

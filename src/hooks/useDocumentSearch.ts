@@ -5,23 +5,28 @@ import { Document, EntityType, DocumentSearchParams } from "@/types/documents";
 import { fromEntityTable } from "@/utils/supabaseTypeAssertions";
 import { getDocumentTableForEntity } from "@/utils/supabaseQueryHelper";
 
-interface UseDocumentSearchProps {
+export interface UseDocumentSearchProps {
   entityType?: EntityType;
   entityId?: string;
+  initialSearchParams?: DocumentSearchParams;
+  pageSize?: number;
 }
 
 export const useDocumentSearch = ({
   entityType,
-  entityId
+  entityId,
+  initialSearchParams,
+  pageSize = 10
 }: UseDocumentSearchProps) => {
   const [isSearching, setIsSearching] = useState(false);
-  const [searchParams, setSearchParams] = useState<DocumentSearchParams>({});
+  const [searchParams, setSearchParams] = useState<DocumentSearchParams>(initialSearchParams || {});
+  const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   
-  const queryKey = ['document-search', entityType, entityId, searchParams];
+  const queryKey = ['document-search', entityType, entityId, searchParams, currentPage, pageSize];
   
   const { 
-    data: documents = [], 
+    data, 
     isLoading: isLoadingDocuments,
     error,
     refetch
@@ -64,12 +69,27 @@ export const useDocumentSearch = ({
             filteredQuery = query.eq('addendum_id', entityId);
           }
           
+          // Add pagination
+          const from = (currentPage - 1) * pageSize;
+          const to = from + pageSize - 1;
+          
+          // Get count for pagination
+          const countQuery = filteredQuery.count();
+          const { count, error: countError } = await countQuery;
+          
+          if (countError) throw countError;
+          
+          // Get the actual documents with pagination
           const { data, error: fetchError } = await filteredQuery
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .range(from, to);
           
           if (fetchError) throw fetchError;
           
-          return mapToDocuments(data, entityType);
+          return {
+            documents: mapToDocuments(data, entityType),
+            totalCount: count || 0
+          };
         }
         
         // Simplified implementation for search - uses a single entity type
@@ -127,16 +147,31 @@ export const useDocumentSearch = ({
             filteredQuery = filteredQuery.lt('created_at', nextDay.toISOString());
           }
           
+          // Add pagination
+          const from = (currentPage - 1) * pageSize;
+          const to = from + pageSize - 1;
+          
+          // Get count for pagination
+          const countQuery = filteredQuery.count();
+          const { count, error: countError } = await countQuery;
+          
+          if (countError) throw countError;
+          
+          // Get the actual documents with pagination
           const { data, error: fetchError } = await filteredQuery
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .range(from, to);
           
           if (fetchError) throw fetchError;
           
-          return mapToDocuments(data, entityType);
+          return {
+            documents: mapToDocuments(data, entityType),
+            totalCount: count || 0
+          };
         }
         
         // Return empty array if no entity type provided
-        return [];
+        return { documents: [], totalCount: 0 };
         
       } finally {
         setIsSearching(false);
@@ -147,14 +182,34 @@ export const useDocumentSearch = ({
   
   const searchDocuments = (params: DocumentSearchParams) => {
     setSearchParams(params);
+    setCurrentPage(1); // Reset to first page on new search
     queryClient.invalidateQueries({ queryKey: ['document-search', entityType, entityId] });
   };
   
+  // Simple function to trigger a search without params
+  const search = () => {
+    queryClient.invalidateQueries({ queryKey: ['document-search', entityType, entityId] });
+  };
+  
+  // Add pagination handling
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  
+  // Add isError property for consistency
+  const isError = !!error;
+  
   return {
-    documents,
+    documents: data?.documents || [],
     isLoading: isLoadingDocuments || isSearching,
     error,
+    isError,
+    totalCount: data?.totalCount || 0,
     searchDocuments,
+    search,
+    currentPage,
+    pageSize,
+    handlePageChange,
     refresh: refetch
   };
 };

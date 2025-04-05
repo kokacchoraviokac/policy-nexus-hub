@@ -31,9 +31,9 @@ export interface FinancialReportData {
 export interface FinancialReportFilters {
   dateFrom: string | Date;
   dateTo: string | Date;
-  entityType: string[];
-  transactionType: string[];
-  category: string[];
+  entityType: string;
+  transactionType: string;
+  category: string;
   searchTerm: string;
   status?: string;
   startDate?: string | Date;
@@ -59,6 +59,7 @@ export interface ProposalStats {
   pendingCount: number;
   approvedCount: number;
   rejectedCount: number;
+  // Legacy properties for backward compatibility 
   total?: number;
   accepted?: number;
   rejected?: number;

@@ -8,6 +8,10 @@ export function useProposalsData({ sales_process_id, status }: UseProposalsDataP
   const [loading, setLoading] = useState(true);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [stats, setStats] = useState<ProposalStats>({
+    totalCount: 0,
+    pendingCount: 0,
+    approvedCount: 0,
+    rejectedCount: 0,
     total: 0,
     accepted: 0,
     rejected: 0,
@@ -21,6 +25,11 @@ export function useProposalsData({ sales_process_id, status }: UseProposalsDataP
   // Calculate statistics based on current proposals
   const calculateStats = (proposals: Proposal[]): ProposalStats => {
     const newStats: ProposalStats = {
+      totalCount: proposals.length,
+      pendingCount: 0,
+      approvedCount: 0,
+      rejectedCount: 0,
+      // Legacy stats for compatibility
       total: proposals.length,
       accepted: 0,
       rejected: 0,
@@ -32,20 +41,26 @@ export function useProposalsData({ sales_process_id, status }: UseProposalsDataP
     
     proposals.forEach(proposal => {
       if (proposal.status === 'accepted') {
-        newStats.accepted++;
+        newStats.approvedCount++;
+        newStats.accepted!++;
       } else if (proposal.status === 'rejected') {
-        newStats.rejected++;
+        newStats.rejectedCount++;
+        newStats.rejected!++;
       } else if (proposal.status === 'draft') {
         newStats.draft!++;
-        newStats.pending++;
+        newStats.pending!++;
+        newStats.pendingCount++;
       } else if (proposal.status === 'sent') {
         newStats.sent!++;
-        newStats.pending++;
+        newStats.pending!++;
+        newStats.pendingCount++;
       } else if (proposal.status === 'viewed') {
         newStats.viewed!++;
-        newStats.pending++;
+        newStats.pending!++;
+        newStats.pendingCount++;
       } else if (proposal.status === 'expired') {
-        newStats.pending++;
+        newStats.pending!++;
+        newStats.pendingCount++;
       }
     });
     

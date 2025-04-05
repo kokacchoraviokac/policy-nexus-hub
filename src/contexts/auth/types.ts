@@ -12,15 +12,19 @@ export interface AuthContextType {
   isInitialized: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
+  
+  // Standard auth operations
   signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateUserProfile: (profile: Partial<User>) => Promise<void>;
   
-  // Auth operations 
+  // Alias auth operations (for backward compatibility)
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
   updateUser: (user: Partial<User>) => Promise<void>;
+  
+  // Privilege checking
   hasPrivilege: (privilege: string) => boolean;
   hasPrivilegeWithContext: (
     privilege: string, 
@@ -28,7 +32,7 @@ export interface AuthContextType {
   ) => boolean;
   hasRole: (role: UserRole | UserRole[]) => boolean;
   
-  // Additional properties for custom privileges
+  // Additional properties
   customPrivileges: CustomPrivilege[];
   initiatePasswordReset: (email: string) => Promise<boolean>;
   updatePassword: (newPassword: string) => Promise<boolean>;

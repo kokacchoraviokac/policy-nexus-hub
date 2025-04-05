@@ -27,7 +27,7 @@ export const entityToDocumentTable: Record<EntityType, DocumentTableName> = {
 
 // Helper function to safely query document tables
 export function queryDocumentTable(tableName: DocumentTableName) {
-  return supabase.from(tableName) as any;
+  return supabase.from(tableName as any);
 }
 
 // Type guard for DocumentTableName
@@ -49,7 +49,7 @@ export function getDocumentTableForEntity(entityType: EntityType): DocumentTable
 // Helper for safely querying document tables
 export function queryDocuments(entityType: EntityType) {
   const tableName = getDocumentTableForEntity(entityType);
-  return supabase.from(tableName) as any;
+  return supabase.from(tableName as any);
 }
 
 // Helper for safely casting objects to Document type
@@ -59,10 +59,10 @@ export function castToDocument(data: any) {
 
 // Safe Supabase table query
 export function safeSupabaseQuery(tableName: string) {
-  return supabase.from(tableName) as any;
+  return supabase.from(tableName as any);
 }
 
 // Helper function for document queries with any table
 export function documentQuery(tableName: string) {
-  return supabase.from(tableName) as any;
+  return supabase.from(tableName as any);
 }

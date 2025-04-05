@@ -11,6 +11,9 @@ export function getDocumentTableName(entityType: EntityType): DocumentTableName 
   return entityToDocumentTable[entityType];
 }
 
+// Re-export the DocumentTableName type for convenience
+export type { DocumentTableName };
+
 /**
  * Upload a document file to Supabase storage
  */

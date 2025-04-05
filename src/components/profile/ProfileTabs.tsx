@@ -6,6 +6,12 @@ import UserSecuritySettings from "@/components/auth/UserSecuritySettings";
 import CustomPrivilegeManager from "@/components/auth/CustomPrivilegeManager";
 import { User } from "@/types/auth";
 
+// Define ProfileEditFormProps explicitly here
+interface ProfileEditFormProps {
+  user: User;
+  updateUser: (data: Partial<User>) => Promise<void>;
+}
+
 interface ProfileTabsProps {
   user: User;
   activeTab: string;

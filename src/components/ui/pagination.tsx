@@ -1,234 +1,133 @@
 
-import React from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
-import { cn } from "@/utils/cn";
-import { Button } from "./button";
-import { PaginationProps } from "@/types/reports";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+
+export interface PaginationProps {
+  itemsCount: number;
+  itemsPerPage: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
+  totalPages?: number;
+  totalItems?: number;
+  pageSizeOptions?: number[];
+  className?: string;
+  children?: React.ReactNode;
+}
 
 export const Pagination: React.FC<PaginationProps> = ({
   itemsCount,
   itemsPerPage,
   currentPage,
   onPageChange,
-  pageSize = 10,
-  onPageSizeChange,
-  children
+  className,
+  children,
 }) => {
+  // Calculate total pages
   const totalPages = Math.ceil(itemsCount / itemsPerPage);
   
-  // Don't render if there's only one page or no items
+  // Do not render if there is only one page or no items
   if (totalPages <= 1 || itemsCount === 0) {
     return null;
   }
   
-  // Handle page change
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) return;
-    onPageChange(page);
+  // Calculate the range of pages to show
+  const getPageRange = () => {
+    const maxButtons = 5; // Maximum number of page buttons to show (odd number recommended)
+    const halfMaxButtons = Math.floor(maxButtons / 2);
+    
+    if (totalPages <= maxButtons) {
+      // If total pages is less than or equal to maxButtons, show all pages
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    
+    if (currentPage <= halfMaxButtons + 1) {
+      // We're near the start, show first maxButtons
+      return Array.from({ length: maxButtons }, (_, i) => i + 1);
+    }
+    
+    if (currentPage >= totalPages - halfMaxButtons) {
+      // We're near the end, show last maxButtons
+      return Array.from({ length: maxButtons }, (_, i) => totalPages - maxButtons + i + 1);
+    }
+    
+    // We're in the middle, show currentPage and surrounding pages
+    return Array.from(
+      { length: maxButtons },
+      (_, i) => currentPage - halfMaxButtons + i
+    );
   };
   
-  // Generate page numbers to display
-  const getPageNumbers = () => {
-    const pages = [];
-    
-    // Always show first page
-    pages.push(1);
-    
-    // Calculate range of pages to show around current page
-    let rangeStart = Math.max(2, currentPage - 1);
-    let rangeEnd = Math.min(totalPages - 1, currentPage + 1);
-    
-    // Add ellipsis if necessary
-    if (rangeStart > 2) {
-      pages.push(-1); // -1 represents ellipsis
-    }
-    
-    // Add pages in the range
-    for (let i = rangeStart; i <= rangeEnd; i++) {
-      pages.push(i);
-    }
-    
-    // Add ellipsis if necessary
-    if (rangeEnd < totalPages - 1) {
-      pages.push(-2); // -2 represents ellipsis
-    }
-    
-    // Always show last page if more than one page
-    if (totalPages > 1) {
-      pages.push(totalPages);
-    }
-    
-    return pages;
-  };
+  const pageRange = getPageRange();
   
   return (
-    <nav className="flex items-center justify-between">
-      <div className="flex-1 flex justify-between sm:hidden">
+    <div className={`flex justify-center items-center space-x-2 py-2 ${className}`}>
+      {/* First Page Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(1)}
+        disabled={currentPage === 1}
+        className="hidden sm:flex"
+      >
+        <ChevronsLeft className="h-4 w-4" />
+      </Button>
+      
+      {/* Previous Page Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      
+      {/* Page Number Buttons */}
+      {pageRange.map(page => (
         <Button
-          variant="outline"
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
+          key={page}
+          variant={currentPage === page ? "default" : "outline"}
+          size="sm"
+          onClick={() => onPageChange(page)}
+          className="hidden sm:flex"
         >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Previous
+          {page}
         </Button>
-        <Button
-          variant="outline" 
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          Next
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+      ))}
+      
+      {/* Page Indicator for Mobile */}
+      <div className="sm:hidden">
+        <span className="text-sm">
+          {currentPage} / {totalPages}
+        </span>
       </div>
       
-      <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-        {/* Optional page size selector */}
-        {onPageSizeChange && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <span className="mr-2">Show</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="h-8 rounded-md border border-input bg-background px-2 py-1 text-sm"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-            <span className="ml-2">per page</span>
-          </div>
-        )}
-        
-        {/* Page navigation */}
-        <div>
-          <div className="flex space-x-1">
-            {/* Previous button */}
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            {/* Page numbers */}
-            {getPageNumbers().map((page, index) => {
-              if (page < 0) {
-                // Render ellipsis
-                return (
-                  <span 
-                    key={`ellipsis-${index}`}
-                    className="flex h-8 w-8 items-center justify-center text-muted-foreground"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </span>
-                );
-              }
-              
-              return (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  className={cn(
-                    "h-8 w-8 p-0",
-                    currentPage === page && "pointer-events-none"
-                  )}
-                  onClick={() => handlePageChange(page)}
-                >
-                  {page}
-                </Button>
-              );
-            })}
-            
-            {/* Next button */}
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Next Page Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
       
+      {/* Last Page Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPageChange(totalPages)}
+        disabled={currentPage === totalPages}
+        className="hidden sm:flex"
+      >
+        <ChevronsRight className="h-4 w-4" />
+      </Button>
+      
+      {/* Additional children (if provided) */}
       {children}
-    </nav>
+    </div>
   );
 };
-
-// Export pagination related components
-export const PaginationContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-row items-center gap-1", className)}
-    {...props}
-  />
-));
-PaginationContent.displayName = "PaginationContent";
-
-export const PaginationEllipsis = () => (
-  <span className="flex h-9 w-9 items-center justify-center">
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More pages</span>
-  </span>
-);
-
-export const PaginationItem = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-row items-center", className)}
-    {...props}
-  />
-));
-PaginationItem.displayName = "PaginationItem";
-
-export const PaginationLink = ({
-  className,
-  isActive,
-  ...props
-}: React.ComponentProps<"button"> & { isActive?: boolean }) => (
-  <Button
-    variant={isActive ? "default" : "outline"}
-    className={cn("h-9 w-9", className)}
-    {...props}
-  />
-);
-
-export const PaginationNext = ({
-  className,
-  ...props
-}: React.ComponentProps<"button">) => (
-  <Button
-    variant="outline"
-    className={cn("h-9 w-9 p-0", className)}
-    {...props}
-  >
-    <ChevronRight className="h-4 w-4" />
-    <span className="sr-only">Next page</span>
-  </Button>
-);
-
-export const PaginationPrevious = ({
-  className,
-  ...props
-}: React.ComponentProps<"button">) => (
-  <Button
-    variant="outline"
-    className={cn("h-9 w-9 p-0", className)}
-    {...props}
-  >
-    <ChevronLeft className="h-4 w-4" />
-    <span className="sr-only">Previous page</span>
-  </Button>
-);
