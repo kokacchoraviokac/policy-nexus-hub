@@ -36,6 +36,8 @@ export interface FinancialReportFilters {
   category: string[];
   searchTerm: string;
   status?: string;
+  startDate?: string | Date;
+  endDate?: string | Date;
 }
 
 export interface PaginationProps {
@@ -52,6 +54,13 @@ export interface ProposalStats {
   pendingCount: number;
   approvedCount: number;
   rejectedCount: number;
+  total?: number;
+  accepted?: number;
+  rejected?: number;
+  draft?: number;
+  pending?: number;
+  sent?: number;
+  viewed?: number;
 }
 
 export interface Proposal {

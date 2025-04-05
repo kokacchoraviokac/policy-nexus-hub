@@ -1,7 +1,8 @@
-import React, { createContext, useState, useEffect, useCallback, useMemo } from "react";
+
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole, AuthState } from "@/types/auth";
-import { AuthContextType } from "./types";
+import { AuthContextType } from "@/types/auth/contextTypes";
 import useAuthOperations from "@/hooks/useAuthOperations";
 import { fetchUserCustomPrivileges } from "@/utils/auth/privilegeUtils";
 
@@ -29,10 +30,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     signUp: register,
+    signIn,
+    signOut,
     updateUser,
     initiatePasswordReset,
     updatePassword
-  } = useAuthOperations(setState);
+  } = useAuthOperations({ setState });
   
   // Fetch user custom privileges
   const fetchCustomPrivileges = useCallback(async (userId: string) => {
@@ -95,6 +98,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return hasDirectPrivilege;
   }, [customPrivileges, user]);
 
+  const hasRole = useCallback((role: UserRole | UserRole[]) => {
+    if (!user) return false;
+    
+    if (Array.isArray(role)) {
+      return role.includes(user.role as UserRole);
+    }
+    
+    return user.role === role;
+  }, [user]);
+
   // Initialize the authentication state
   useEffect(() => {
     const initializeAuth = async () => {
@@ -105,13 +118,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (supaUser) {
           const userData = supaUser.user_metadata;
-          const userRole = userData?.role as UserRole || 'employee';
+          const userRole = userData?.role || 'employee';
           
           const user: User = {
             id: supaUser.id,
             email: supaUser.email || '',
             name: userData?.name || supaUser.email || 'User',
-            role: userRole,
+            role: userRole as UserRole,
             companyId: userData?.companyId || userData?.company_id || '',
             avatar: userData?.avatar || '',
             user_metadata: supaUser.user_metadata
@@ -150,20 +163,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
     
     // Subscribe to auth state changes
-    const { subscription } = supabase.auth.onAuthStateChange(
+    const { data } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN') {
           const { data: { user: supaUser } } = await supabase.auth.getUser();
           
           if (supaUser) {
             const userData = supaUser.user_metadata;
-            const userRole = userData?.role as UserRole || 'employee';
+            const userRole = userData?.role || 'employee';
             
             const user: User = {
               id: supaUser.id,
               email: supaUser.email || '',
               name: userData?.name || supaUser.email || 'User',
-              role: userRole,
+              role: userRole as UserRole,
               companyId: userData?.companyId || userData?.company_id || '',
               avatar: userData?.avatar || '',
               user_metadata: supaUser.user_metadata
@@ -193,44 +206,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     );
     
     return () => {
-      subscription?.unsubscribe();
+      data.subscription?.unsubscribe();
     };
   }, [fetchCustomPrivileges]);
   
-  const signUp = async (email: string, password: string, userData?: Partial<User>) => {
-    try {
-      await register(email, password, userData);
-    } catch (error: any) {
-      console.error("Error during sign up:", error.message);
-      throw error;
-    }
-  };
-  
-  const signIn = async (email: string, password: string) => {
-    try {
-      await login(email, password);
-    } catch (error: any) {
-      console.error("Error during sign in:", error.message);
-      throw error;
-    }
-  };
-  
-  const signOut = async () => {
-    try {
-      await logout();
-    } catch (error: any) {
-      console.error("Error during sign out:", error.message);
-      throw error;
+  const refreshSession = async () => {
+    const { data: { session } } = await supabase.auth.refreshSession();
+    
+    if (session) {
+      setState(prevState => ({
+        ...prevState,
+        session,
+      }));
     }
   };
   
   const updateUserProfile = async (profile: Partial<User>) => {
-    try {
-      await updateUser(profile);
-    } catch (error: any) {
-      console.error("Error updating user profile:", error.message);
-      throw error;
-    }
+    await updateUser(profile);
   };
   
   const authContextValue: AuthContextType = {
@@ -242,7 +234,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isInitialized: true,
     isAuthenticated: !!user,
     isLoading,
-    signUp,
+    signUp: register,
     signIn,
     signOut,
     updateUserProfile,
@@ -251,9 +243,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUser,
     hasPrivilege,
     hasPrivilegeWithContext,
+    hasRole,
     customPrivileges,
     initiatePasswordReset,
-    updatePassword
+    updatePassword,
+    refreshSession,
+    permissions: []
   };
   
   return (

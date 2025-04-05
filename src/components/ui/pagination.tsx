@@ -1,216 +1,141 @@
 
 import React from "react";
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
-import { cn } from "@/utils/cn";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./button";
+import { PaginationProps } from "@/types/reports";
 
-export interface PaginationProps {
-  itemsCount: number;
-  itemsPerPage: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-  pageSize?: number;
-  onPageSizeChange?: (size: number) => void;
-  className?: string;
-  children?: React.ReactNode;
-}
-
-export function Pagination({
+export const Pagination: React.FC<PaginationProps> = ({
   itemsCount,
   itemsPerPage,
   currentPage,
   onPageChange,
   pageSize,
-  onPageSizeChange,
-  className,
-  children,
-}: PaginationProps) {
+  onPageSizeChange
+}) => {
   const totalPages = Math.ceil(itemsCount / itemsPerPage);
-
+  
+  // If there's only 1 page or no items, don't render pagination
+  if (totalPages <= 1 || itemsCount === 0) {
+    return null;
+  }
+  
   // Generate page numbers to display
   const getPageNumbers = () => {
-    const pages = [];
+    // Always show first & last, plus current and 1 on each side
+    // [1, ..., currentPage-1, currentPage, currentPage+1, ..., totalPages]
+    const pages: (number | 'ellipsis')[] = [];
     
-    // Always show first page
-    pages.push(1);
-    
-    // Calculate range of pages around current page
-    let rangeStart = Math.max(2, currentPage - 1);
-    let rangeEnd = Math.min(totalPages - 1, currentPage + 1);
-    
-    // Adjust if current page is at the beginning
-    if (currentPage <= 3) {
-      rangeEnd = Math.min(4, totalPages - 1);
-    }
-    
-    // Adjust if current page is at the end
-    if (currentPage >= totalPages - 2) {
-      rangeStart = Math.max(2, totalPages - 3);
-    }
-    
-    // Add ellipsis before range if needed
-    if (rangeStart > 2) {
-      pages.push(-1); // Use -1 to represent ellipsis
-    }
-    
-    // Add range of pages
-    for (let i = rangeStart; i <= rangeEnd; i++) {
-      pages.push(i);
-    }
-    
-    // Add ellipsis after range if needed
-    if (rangeEnd < totalPages - 1) {
-      pages.push(-2); // Use -2 to represent ellipsis
-    }
-    
-    // Always show last page if there's more than one page
-    if (totalPages > 1) {
+    if (totalPages <= 7) {
+      // Show all pages if there are 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always add page 1
+      pages.push(1);
+      
+      // If current page is far from beginning, add ellipsis
+      if (currentPage > 3) {
+        pages.push('ellipsis');
+      }
+      
+      // Pages around current page
+      const startPage = Math.max(2, currentPage - 1);
+      const endPage = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      
+      // If current page is far from end, add ellipsis
+      if (currentPage < totalPages - 2) {
+        pages.push('ellipsis');
+      }
+      
+      // Always add last page
       pages.push(totalPages);
     }
     
     return pages;
   };
-
-  const pageNumbers = getPageNumbers();
-
-  if (totalPages <= 1) {
-    return null;
-  }
-
+  
   return (
-    <nav
-      className={cn(
-        "flex flex-wrap items-center justify-between gap-y-3",
-        className
-      )}
-    >
-      <div className="flex items-center space-x-2">
+    <div className="flex items-center justify-between px-2 py-4">
+      <div className="flex items-center gap-1">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          className="h-8 w-8 p-0"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="sr-only">Previous Page</span>
+          <span className="sr-only">Previous page</span>
         </Button>
         
-        {pageNumbers.map((page, i) => {
-          if (page < 0) {
-            // Render ellipsis
-            return (
-              <Button
-                key={`ellipsis-${i}`}
-                variant="ghost"
-                size="sm"
-                disabled
-                className="cursor-default"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">More Pages</span>
-              </Button>
-            );
-          }
-          
-          return (
-            <Button
-              key={page}
-              variant={page === currentPage ? "default" : "outline"}
-              size="sm"
+        {getPageNumbers().map((page, i) => 
+          page === 'ellipsis' ? (
+            <span key={`ellipsis-${i}`} className="w-8 text-center">...</span>
+          ) : (
+            <PaginationButton
+              key={`page-${page}`}
+              isActive={page === currentPage}
               onClick={() => onPageChange(page)}
-              aria-current={page === currentPage ? "page" : undefined}
             >
               {page}
-            </Button>
-          );
-        })}
+            </PaginationButton>
+          )
+        )}
         
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+          onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
+          className="h-8 w-8 p-0"
         >
           <ChevronRight className="h-4 w-4" />
-          <span className="sr-only">Next Page</span>
+          <span className="sr-only">Next page</span>
         </Button>
       </div>
       
-      {children}
-    </nav>
+      {onPageSizeChange && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Items per page:
+          </span>
+          <select
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          >
+            {[10, 25, 50, 100].map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+    </div>
   );
-}
+};
 
-export const PaginationContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-wrap items-center gap-1", className)}
-    {...props}
-  />
-));
-PaginationContent.displayName = "PaginationContent";
+const PaginationButton: React.FC<{
+  children: React.ReactNode;
+  isActive: boolean;
+  onClick: () => void;
+}> = ({ children, isActive, onClick }) => {
+  return (
+    <Button
+      variant={isActive ? "default" : "outline"}
+      size="sm"
+      className={`h-8 w-8 p-0 ${isActive ? "pointer-events-none" : ""}`}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
+  );
+};
 
-export const PaginationEllipsis = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">) => (
-  <span
-    aria-hidden
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
-    {...props}
-  >
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More pages</span>
-  </span>
-);
-
-export const PaginationItem = React.forwardRef<
-  HTMLLIElement,
-  React.ComponentProps<"li">
->(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("", className)} {...props} />
-));
-PaginationItem.displayName = "PaginationItem";
-
-export const PaginationLink = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof Button>) => (
-  <Button
-    variant="outline"
-    size="icon"
-    className={cn("h-9 w-9", className)}
-    {...props}
-  />
-);
-
-export const PaginationNext = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink
-    aria-label="Go to next page"
-    size="icon"
-    className={cn("gap-1", className)}
-    {...props}
-  >
-    <ChevronRight className="h-4 w-4" />
-  </PaginationLink>
-);
-
-export const PaginationPrevious = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PaginationLink>) => (
-  <PaginationLink
-    aria-label="Go to previous page"
-    size="icon"
-    className={cn("gap-1", className)}
-    {...props}
-  >
-    <ChevronLeft className="h-4 w-4" />
-  </PaginationLink>
-);
+export default Pagination;

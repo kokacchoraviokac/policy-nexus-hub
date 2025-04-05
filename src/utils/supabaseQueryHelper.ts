@@ -27,8 +27,7 @@ export const entityToDocumentTable: Record<string, DocumentTableName> = {
 
 // Helper function to safely query document tables
 export function queryDocumentTable(tableName: DocumentTableName) {
-  // Use type assertion to bypass TypeScript's strict checks for dynamic table names
-  return supabase.from(tableName as any);
+  return supabase.from(tableName);
 }
 
 // Type guard for DocumentTableName
@@ -50,8 +49,7 @@ export function getDocumentTableForEntity(entityType: string): DocumentTableName
 // Helper for safely querying document tables
 export function queryDocuments(entityType: string) {
   const tableName = getDocumentTableForEntity(entityType);
-  // Use type assertion to bypass TypeScript's strict checks for dynamic table names
-  return supabase.from(tableName as any);
+  return supabase.from(tableName);
 }
 
 // Helper for safely casting objects to Document type
@@ -61,6 +59,10 @@ export function castToDocument(data: any) {
 
 // Safe Supabase table query
 export function safeSupabaseQuery(tableName: string) {
-  // Use type assertion to bypass TypeScript's strict checking
-  return supabase.from(tableName as any);
+  return supabase.from(tableName);
+}
+
+// Helper function for document queries with any table
+export function documentQuery(tableName: string) {
+  return supabase.from(tableName) as any;
 }

@@ -27,6 +27,20 @@ export function formatDate(
 }
 
 /**
+ * Formats a date to a localized format
+ */
+export function formatDateToLocal(
+  date: string | Date,
+  options: Intl.DateTimeFormatOptions = { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  }
+): string {
+  return formatDate(date, options);
+}
+
+/**
  * Parses a date string into a Date object
  * @param dateString - The date string to parse
  * @returns A Date object

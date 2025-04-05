@@ -1,6 +1,8 @@
+
 import { useState, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { User, AuthState } from "@/types/auth";
+import { safeSupabaseQuery } from '@/utils/supabaseQueryHelper';
 
 interface UseAuthOperations {
   setState: React.Dispatch<React.SetStateAction<AuthState>>;
@@ -27,8 +29,7 @@ const useAuthOperations = ({ setState }: UseAuthOperations) => {
         throw authError;
       }
       
-      const { data: user, error: userError } = await supabase
-        .from('users')
+      const { data: user, error: userError } = await safeSupabaseQuery('users')
         .insert([
           {
             id: authData.user?.id,
@@ -50,6 +51,7 @@ const useAuthOperations = ({ setState }: UseAuthOperations) => {
       setState(prevState => ({
         ...prevState,
         user: user as User,
+        session: authData.session,
         isAuthenticated: true,
         isLoading: false,
       }));
@@ -59,6 +61,7 @@ const useAuthOperations = ({ setState }: UseAuthOperations) => {
       setState(prevState => ({
         ...prevState,
         user: null,
+        session: null,
         isAuthenticated: false,
         isLoading: false,
       }));
@@ -78,8 +81,7 @@ const useAuthOperations = ({ setState }: UseAuthOperations) => {
         throw error;
       }
       
-      const { data: user, error: userError } = await supabase
-        .from('users')
+      const { data: user, error: userError } = await safeSupabaseQuery('users')
         .select()
         .eq('id', data.user?.id)
         .single();
@@ -97,6 +99,8 @@ const useAuthOperations = ({ setState }: UseAuthOperations) => {
         isLoading: false,
       }));
       
+      return { error: null };
+      
     } catch (error: any) {
       console.error("Signin failed:", error);
       setState(prevState => ({
@@ -106,7 +110,7 @@ const useAuthOperations = ({ setState }: UseAuthOperations) => {
         isAuthenticated: false,
         isLoading: false,
       }));
-      throw error;
+      return { error };
     }
   }, [setState]);
 
@@ -130,7 +134,75 @@ const useAuthOperations = ({ setState }: UseAuthOperations) => {
     }
   }, [setState]);
 
-  return { signUp, signIn, signOut };
+  const updateUser = useCallback(async (userData: Partial<User>) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: userData
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      setState(prevState => ({
+        ...prevState,
+        user: {
+          ...prevState.user!,
+          ...userData
+        } as User,
+        session: data.session,
+      }));
+      
+    } catch (error) {
+      console.error("Failed to update user:", error);
+      throw error;
+    }
+  }, [setState]);
+
+  const initiatePasswordReset = useCallback(async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password'
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { error: null };
+    } catch (error) {
+      console.error("Password reset error:", error);
+      return { error };
+    }
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { error: null };
+    } catch (error) {
+      console.error("Update password error:", error);
+      return { error };
+    }
+  }, []);
+
+  return { 
+    signUp, 
+    signIn, 
+    signOut,
+    login: signIn, 
+    logout: signOut,
+    updateUser,
+    initiatePasswordReset,
+    updatePassword
+  };
 };
 
 export default useAuthOperations;

@@ -54,7 +54,7 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
               onOpenChange={() => {}}
               entityType={entityType}
               entityId={entityId}
-              embedMode={true}
+              embedMode
               onUploadComplete={() => onOpenChange(false)}
               onFileSelected={handleFileSelected}
             />
@@ -67,7 +67,7 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
                 onOpenChange={() => {}}
                 entityType={entityType}
                 entityId={entityId}
-                embedMode={true}
+                embedMode
                 onUploadComplete={() => onOpenChange(false)}
                 onFileSelected={handleFileSelected}
               />

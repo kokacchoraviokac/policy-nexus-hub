@@ -1,9 +1,9 @@
 
 // Define policy types
-export type PolicyType = 'external' | 'internal';
-export type PolicyStatus = 'active' | 'expired' | 'cancelled' | 'pending';
+export type PolicyType = 'external' | 'internal' | string;
+export type PolicyStatus = 'active' | 'expired' | 'cancelled' | 'pending' | string;
 export type CommissionType = 'automatic' | 'manual' | 'none';
-export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
+export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete' | string;
 export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual' | 'full';
 
 // Basic interfaces for related entities
@@ -24,7 +24,7 @@ export interface PolicyAddendum {
   effective_date: string;
   description: string;
   premium_adjustment?: number;
-  lien_status: boolean; // Changed from optional to required
+  lien_status?: boolean;
   status: string;
   workflow_status: string;
   created_at: string;
@@ -40,7 +40,7 @@ export interface Policy {
   policy_type: PolicyType;
   policyholder_name: string;
   client_id?: string;
-  client_name?: string; // Added client_name for compatibility
+  client_name?: string;
   insurer_id?: string;
   insurer_name: string;
   product_id?: string;
@@ -49,7 +49,7 @@ export interface Policy {
   start_date: string;
   expiry_date: string;
   premium: number;
-  premium_amount?: number; // Added for compatibility
+  premium_amount?: number;
   currency: string;
   payment_frequency?: PaymentFrequency;
   status: PolicyStatus;
