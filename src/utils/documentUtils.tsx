@@ -11,7 +11,7 @@ export const getDocumentIcon = (document: Document | { category: DocumentCategor
       return <Clipboard className="h-4 w-4" />;
     case 'invoice':
       return <Receipt className="h-4 w-4" />;
-    case 'client':
+    case 'identification':
       return <File className="h-4 w-4" />;
     default:
       return <Info className="h-4 w-4" />;
@@ -55,16 +55,16 @@ export const getEntityTableName = (entityType: EntityType): string => {
       return 'claim_documents';
     case 'client':
       return 'client_documents';
-    case 'invoice':
-      return 'invoice_documents';
-    case 'addendum':
-      return 'addendum_documents';
     case 'sales_process':
       return 'sales_documents';
     case 'agent':
       return 'agent_documents';
     case 'insurer':
       return 'insurer_documents';
+    case 'invoice':
+      return 'invoice_documents';
+    case 'addendum':
+      return 'addendum_documents';
     default:
       throw new Error(`Unsupported entity type: ${entityType}`);
   }

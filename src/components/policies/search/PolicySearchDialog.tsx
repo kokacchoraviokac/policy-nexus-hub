@@ -1,100 +1,124 @@
 
-import React, { useState } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { usePolicySearch } from '@/hooks/usePolicySearch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, X, Filter, Calendar } from 'lucide-react';
-import { formatDateToLocal } from '@/utils/dateUtils';
-import LoadingState from '@/components/ui/loading-state';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search, Loader2 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
+import { formatDateToLocal } from "@/utils/dateUtils";
+import LoadingState from "@/components/ui/loading-state";
+import { usePolicySearch } from "@/hooks/usePolicySearch";
+
+export interface Policy {
+  id: string;
+  policy_number: string;
+  policyholder_name: string;
+  insurer_name: string;
+  expiry_date: string;
+}
 
 interface PolicySearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPolicySelected: (policy: any) => void;
+  onPolicySelect: (policy: Policy) => void;
+  searchTerm?: string;
 }
 
 const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
   open,
   onOpenChange,
-  onPolicySelected
+  onPolicySelect,
+  searchTerm: initialSearchTerm = ""
 }) => {
   const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
+  
   const { policies, isLoading, search } = usePolicySearch();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim().length > 0) {
+  
+  useEffect(() => {
+    if (open && searchTerm) {
       search(searchTerm);
     }
-  };
+  }, [open, searchTerm, search]);
 
-  const handlePolicySelect = (policy: any) => {
-    onPolicySelected(policy);
-    onOpenChange(false);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    if (e.target.value.length >= 3) {
+      search(e.target.value);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>{t("searchPolicies")}</DialogTitle>
+          <DialogTitle>{t("searchPolicy")}</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSearch} className="flex space-x-2 mb-4">
-          <div className="relative flex-grow">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t("searchByPolicyNumberOrPolicyholder")}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Button type="submit">{t("search")}</Button>
-        </form>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder={t("searchByPolicyOrPolicyholder")}
+            className="pl-8"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+        </div>
         
-        {isLoading ? (
-          <LoadingState>{t("searchingPolicies")}</LoadingState>
-        ) : policies.length > 0 ? (
-          <div className="border rounded-md overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="text-left p-2 font-medium">{t("policyNumber")}</th>
-                  <th className="text-left p-2 font-medium">{t("policyholder")}</th>
-                  <th className="text-left p-2 font-medium">{t("insurer")}</th>
-                  <th className="text-left p-2 font-medium">{t("expiryDate")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {policies.map(policy => (
-                  <tr 
-                    key={policy.id} 
-                    onClick={() => handlePolicySelect(policy)}
-                    className="cursor-pointer hover:bg-muted/50 border-t"
-                  >
-                    <td className="p-2">{policy.policy_number}</td>
-                    <td className="p-2">{policy.policyholder_name}</td>
-                    <td className="p-2">{policy.insurer_name}</td>
-                    <td className="p-2">
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                        {formatDateToLocal(policy.expiry_date)}
-                      </div>
-                    </td>
-                  </tr>
+        <div className="max-h-[400px] overflow-y-auto">
+          {isLoading ? (
+            <LoadingState>{t("searchingPolicies")}</LoadingState>
+          ) : policies.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>{t("noPoliciesFound")}</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("policyNumber")}</TableHead>
+                  <TableHead>{t("policyholder")}</TableHead>
+                  <TableHead>{t("insurer")}</TableHead>
+                  <TableHead>{t("expiryDate")}</TableHead>
+                  <TableHead className="text-right">{t("actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {policies.map((policy) => (
+                  <TableRow key={policy.id}>
+                    <TableCell className="font-medium">{policy.policy_number}</TableCell>
+                    <TableCell>{policy.policyholder_name}</TableCell>
+                    <TableCell>{policy.insurer_name}</TableCell>
+                    <TableCell>{formatDateToLocal(policy.expiry_date)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onPolicySelect(policy)}
+                      >
+                        {t("select")}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        ) : searchTerm && (
-          <div className="text-center p-4 border rounded-md">
-            <p className="text-muted-foreground">{t("noPoliciesFound")}</p>
-          </div>
-        )}
+              </TableBody>
+            </Table>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

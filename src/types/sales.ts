@@ -18,9 +18,9 @@ export interface SalesProcess {
   estimated_value?: number;
   created_at: string;
   updated_at: string;
-  company?: string; // Make company field optional
-  title?: string; // Add title field
-  stage?: SalesProcessStage; // Add stage for better type checking
+  company?: string;
+  title?: string;
+  stage?: SalesProcessStage;
 }
 
 export type ProposalStatus = 
@@ -52,12 +52,11 @@ export interface Proposal {
   company_id: string;
   template_id?: string;
   document_ids?: string[];
-  // Additional fields used in ProposalViewDialog.tsx
+  // Optional fields for UI display
   notes?: string;
   premium?: string;
-  coverageDetails?: string;
-  insurerName?: string;
-  documents?: string[];
+  coverage_details?: string;
+  insurer_name?: string;
 }
 
 export interface UseProposalsDataProps {

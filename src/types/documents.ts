@@ -6,7 +6,9 @@ export type EntityType =
   | 'sales_process'
   | 'client'
   | 'insurer'
-  | 'agent';
+  | 'agent'
+  | 'invoice'
+  | 'addendum';
 
 // Document approval status options
 export type DocumentApprovalStatus = 
@@ -86,4 +88,31 @@ export interface DocumentSearchParams {
   dateFrom?: string;
   dateTo?: string;
   uploadedBy?: string;
+}
+
+// For DocumentUpload hook
+export interface DocumentUploadRequest {
+  documentName: string;
+  documentType: string;
+  category: string;
+  file: File;
+  entityId: string;
+  entityType: EntityType;
+  originalDocumentId?: string;
+  currentVersion?: number;
+}
+
+// For DocumentAnalysisPanel
+export interface DocumentAnalysisPanelProps {
+  document: Document;
+  onClose: () => void;
+}
+
+// Type for document search hook props
+export interface UseDocumentSearchProps {
+  entityType?: EntityType;
+  entityId?: string;
+  searchTerm?: string;
+  category?: string;
+  status?: string;
 }

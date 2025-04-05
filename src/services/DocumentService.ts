@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Document, DocumentApprovalStatus, EntityType } from "@/types/documents";
 import { ServiceResponse } from "@/types/services";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
-import { entityTablesMap } from "./documentTypes";
 
 export class DocumentService {
   // Create a document entry in the database
@@ -13,14 +12,14 @@ export class DocumentService {
       
       // Use type assertion to handle the table name
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .insert(documentData)
         .select()
         .single();
       
       if (error) throw error;
       
-      return { success: true, data: data as unknown as Document };
+      return { success: true, data: data as Document };
     } catch (error) {
       console.error("Error creating document:", error);
       return { 
@@ -37,14 +36,14 @@ export class DocumentService {
       
       // Use type assertion to handle the table name
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .select('*')
         .eq('id', documentId)
         .single();
       
       if (error) throw error;
       
-      return { success: true, data: data as unknown as Document };
+      return { success: true, data: data as Document };
     } catch (error) {
       console.error("Error retrieving document:", error);
       return { 
@@ -62,7 +61,7 @@ export class DocumentService {
       
       // Create the base query with type assertion
       const query = supabase
-        .from(tableName as any)
+        .from(tableName)
         .select('*');
       
       // Add entity ID filter
@@ -77,7 +76,7 @@ export class DocumentService {
       
       if (error) throw error;
       
-      return { success: true, data: data as unknown as Document[] };
+      return { success: true, data: data as Document[] };
     } catch (error) {
       console.error("Error retrieving documents:", error);
       return { 
@@ -94,7 +93,7 @@ export class DocumentService {
       
       // First, we need to get the document to know its storage path
       const { data: document, error: fetchError } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .select('file_path')
         .eq('id', documentId)
         .single();
@@ -115,7 +114,7 @@ export class DocumentService {
       
       // Delete from database with type assertion
       const { error: deleteError } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .delete()
         .eq('id', documentId);
         
@@ -138,7 +137,7 @@ export class DocumentService {
       
       // First get the original document ID
       const { data: document, error: fetchError } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .select('original_document_id, id')
         .eq('id', documentId)
         .single();
@@ -149,14 +148,14 @@ export class DocumentService {
       
       // Then get all versions with type assertion
       const { data, error } = await supabase
-        .from(tableName as any)
+        .from(tableName)
         .select('*')
         .or(`id.eq.${originalId},original_document_id.eq.${originalId}`)
         .order('version', { ascending: true });
         
       if (error) throw error;
       
-      return { success: true, data: data as unknown as Document[] };
+      return { success: true, data: data as Document[] };
     } catch (error) {
       console.error("Error retrieving document versions:", error);
       return { 
@@ -186,15 +185,15 @@ export class DocumentService {
       
       // Use type assertion for the update operation
       const { data, error } = await supabase
-        .from(tableName as any)
-        .update(updateData as any)
+        .from(tableName)
+        .update(updateData)
         .eq('id', documentId)
         .select()
         .single();
         
       if (error) throw error;
       
-      return { success: true, data: data as unknown as Document };
+      return { success: true, data: data as Document };
     } catch (error) {
       console.error("Error updating document approval:", error);
       return { 
@@ -204,6 +203,7 @@ export class DocumentService {
     }
   }
   
+  // Search documents across all document tables with pagination
   static async searchDocuments(
     searchParams: {
       searchTerm?: string;
@@ -214,6 +214,8 @@ export class DocumentService {
       page?: number;
       pageSize?: number;
       status?: string;
+      dateFrom?: string;
+      dateTo?: string;
     }
   ): Promise<ServiceResponse<{ documents: Document[], totalCount: number }>> {
     try {
@@ -225,53 +227,57 @@ export class DocumentService {
         category,
         status,
         page = 1,
-        pageSize = 10
+        pageSize = 10,
+        dateFrom,
+        dateTo
       } = searchParams;
       
-      let query;
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize - 1;
-      
-      if (entityType) {
-        // Use a specific table based on entity type
-        const tableName = getDocumentTableName(entityType);
-        
-        // Use type assertion for the query
-        query = supabase
-          .from(tableName as any)
-          .select('*', { count: 'exact' });
-        
-        if (entityId) {
-          const entityIdColumn = `${entityType}_id`;
-          query = query.eq(entityIdColumn, entityId);
-        }
-      } else {
-        // For simplicity, use policy_documents as a fallback
-        // In a real implementation, you would use a view that combines all document tables
-        query = supabase
-          .from('policy_documents')
-          .select('*', { count: 'exact' });
+      // Since we don't have a view that consolidates all document tables,
+      // we need to target a specific table based on entity type
+      if (!entityType) {
+        throw new Error("Entity type is required for document search");
       }
+
+      const tableName = getDocumentTableName(entityType);
+      const entityIdColumn = `${entityType}_id`;
+      
+      // Base query
+      const query = supabase
+        .from(tableName)
+        .select('*', { count: 'exact' });
       
       // Apply filters
+      if (entityId) {
+        query.eq(entityIdColumn, entityId);
+      }
+      
       if (searchTerm) {
-        query = query.or(`document_name.ilike.%${searchTerm}%,document_type.ilike.%${searchTerm}%`);
+        query.or(`document_name.ilike.%${searchTerm}%,document_type.ilike.%${searchTerm}%`);
       }
       
       if (documentType) {
-        query = query.eq('document_type', documentType);
+        query.eq('document_type', documentType);
       }
       
       if (category) {
-        query = query.eq('category', category);
+        query.eq('category', category);
       }
       
       if (status) {
-        query = query.eq('status', status);
+        query.eq('status', status);
+      }
+      
+      if (dateFrom) {
+        query.gte('created_at', dateFrom);
+      }
+      
+      if (dateTo) {
+        query.lte('created_at', dateTo);
       }
       
       // Apply pagination
-      query = query.range(startIndex, endIndex).order('created_at', { ascending: false });
+      const startIndex = (page - 1) * pageSize;
+      query.range(startIndex, startIndex + pageSize - 1).order('created_at', { ascending: false });
       
       // Execute the query
       const { data, error, count } = await query;
@@ -281,7 +287,7 @@ export class DocumentService {
       return { 
         success: true, 
         data: { 
-          documents: data as unknown as Document[], 
+          documents: data as Document[], 
           totalCount: count || 0 
         } 
       };

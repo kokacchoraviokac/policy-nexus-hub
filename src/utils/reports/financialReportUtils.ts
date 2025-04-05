@@ -1,19 +1,21 @@
 
-import { formatDateToLocal } from '@/utils/dateUtils';
+import { formatDateToLocal } from "../dateUtils";
 
-// Types for our financial reports
+export interface FinancialReportFilters {
+  dateFrom: string;
+  dateTo: string;
+  transactionType: string;
+  category: string;
+  status: string;
+}
+
 export interface FinancialTransaction {
   id: string;
-  date: string;
   amount: number;
-  type: string;
-  category: string;
-  reference: string;
-  currency: string;
+  date: string;
+  source: string;
   status: string;
-  entity_id?: string;
-  entity_type?: string;
-  description?: string;
+  details: string;
 }
 
 export interface FinancialReportData {
@@ -27,104 +29,118 @@ export interface FinancialReportData {
   status: string;
   entity_id?: string;
   entity_type?: string;
-  transactions: FinancialTransaction[];
+  transactions?: FinancialTransaction[];
 }
 
-export interface FinancialReportFilters {
-  dateFrom: string;
-  dateTo: string;
-  transactionType: string;
-  category: string;
-  status: string;
-  searchTerm?: string;
-  startDate?: string;
-  endDate?: string;
-}
+export const defaultFinancialReportFilters: FinancialReportFilters = {
+  dateFrom: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
+  dateTo: new Date().toISOString().split('T')[0],
+  transactionType: 'all',
+  category: 'all',
+  status: 'all'
+};
 
-// Format currency based on the currency code
-export const formatCurrency = (amount: number, currency: string = 'EUR'): string => {
+export const transactionTypeOptions = [
+  { value: 'all', label: 'All Types' },
+  { value: 'income', label: 'Income' },
+  { value: 'expense', label: 'Expense' },
+  { value: 'commission', label: 'Commission' },
+  { value: 'policy_payment', label: 'Policy Payment' }
+];
+
+export const categoryOptions = [
+  { value: 'all', label: 'All Categories' },
+  { value: 'policy', label: 'Policies' },
+  { value: 'claim', label: 'Claims' },
+  { value: 'commission', label: 'Commissions' },
+  { value: 'operating', label: 'Operating' }
+];
+
+export const statusOptions = [
+  { value: 'all', label: 'All Statuses' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'failed', label: 'Failed' }
+];
+
+export const formatCurrency = (amount: number, currency = 'EUR'): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency,
+    currency
   }).format(amount);
 };
 
-// Group transactions for summary
-export const groupTransactionsByType = (
-  transactions: FinancialTransaction[]
-): Record<string, { count: number; total: number }> => {
-  return transactions.reduce((acc, transaction) => {
-    const { type, amount } = transaction;
-    
-    if (!acc[type]) {
-      acc[type] = { count: 0, total: 0 };
-    }
-    
-    acc[type].count += 1;
-    acc[type].total += amount;
-    
-    return acc;
-  }, {} as Record<string, { count: number; total: number }>);
-};
+export interface FinancialReportFiltersProps {
+  filters: FinancialReportFilters;
+  onChange: (newFilters: Partial<FinancialReportFilters>) => void;
+  onApply: () => Promise<void>;
+}
 
-// Calculate totals for financial report
-export const calculateTotals = (transactions: FinancialTransaction[]): { income: number; expense: number; balance: number } => {
-  return transactions.reduce(
-    (acc, transaction) => {
-      if (transaction.type === 'income') {
-        acc.income += transaction.amount;
-      } else if (transaction.type === 'expense') {
-        acc.expense += transaction.amount;
+export const financialReportMockData: FinancialReportData[] = [
+  {
+    id: '1',
+    date: '2023-04-01',
+    description: 'Policy Premium',
+    type: 'income',
+    reference: 'P-123456',
+    amount: 1250.00,
+    currency: 'EUR',
+    status: 'completed',
+    entity_id: '123',
+    entity_type: 'policy',
+    transactions: [
+      {
+        id: 't1',
+        amount: 1250.00,
+        date: '2023-04-01',
+        source: 'Bank Transfer',
+        status: 'completed',
+        details: 'Premium payment for policy P-123456'
       }
-      
-      acc.balance = acc.income - acc.expense;
-      return acc;
-    },
-    { income: 0, expense: 0, balance: 0 }
-  );
-};
-
-// Filter transactions based on financial report filters
-export const filterTransactions = (
-  transactions: FinancialTransaction[],
-  filters: FinancialReportFilters
-): FinancialTransaction[] => {
-  return transactions.filter((transaction) => {
-    const transactionDate = new Date(transaction.date);
-    const fromDate = new Date(filters.dateFrom);
-    const toDate = new Date(filters.dateTo);
-    
-    // Date range filter
-    if (transactionDate < fromDate || transactionDate > toDate) {
-      return false;
-    }
-    
-    // Transaction type filter
-    if (filters.transactionType && filters.transactionType !== 'all' && transaction.type !== filters.transactionType) {
-      return false;
-    }
-    
-    // Category filter
-    if (filters.category && filters.category !== 'all' && transaction.category !== filters.category) {
-      return false;
-    }
-    
-    // Status filter
-    if (filters.status && filters.status !== 'all' && transaction.status !== filters.status) {
-      return false;
-    }
-    
-    // Search term filter
-    if (filters.searchTerm) {
-      const searchTerm = filters.searchTerm.toLowerCase();
-      const matchesDescription = transaction.description?.toLowerCase().includes(searchTerm);
-      const matchesReference = transaction.reference?.toLowerCase().includes(searchTerm);
-      
-      if (!matchesDescription && !matchesReference) {
-        return false;
+    ]
+  },
+  {
+    id: '2',
+    date: '2023-04-05',
+    description: 'Commission Payout',
+    type: 'expense',
+    reference: 'C-78901',
+    amount: 450.00,
+    currency: 'EUR',
+    status: 'pending',
+    entity_id: '456',
+    entity_type: 'commission',
+    transactions: [
+      {
+        id: 't2',
+        amount: 450.00,
+        date: '2023-04-05',
+        source: 'Bank Transfer',
+        status: 'pending',
+        details: 'Commission payout to agent A-001'
       }
-    }
-    
-    return true;
-  });
-};
+    ]
+  },
+  {
+    id: '3',
+    date: '2023-04-10',
+    description: 'Claim Settlement',
+    type: 'expense',
+    reference: 'CL-34567',
+    amount: 2800.00,
+    currency: 'EUR',
+    status: 'completed',
+    entity_id: '789',
+    entity_type: 'claim',
+    transactions: [
+      {
+        id: 't3',
+        amount: 2800.00,
+        date: '2023-04-10',
+        source: 'Bank Transfer',
+        status: 'completed',
+        details: 'Claim settlement for policy P-987654'
+      }
+    ]
+  }
+];

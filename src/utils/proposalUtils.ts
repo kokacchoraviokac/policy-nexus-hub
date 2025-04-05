@@ -30,7 +30,7 @@ export const formatProposalAmount = (proposal: Proposal): string => {
 
 export const getProposalDisplayInfo = (proposal: Proposal): string => {
   const clientInfo = proposal.client_name || "N/A";
-  const insurerInfo = proposal.insurerName ? ` - ${proposal.insurerName}` : "";
+  const insurerInfo = proposal.insurer_name ? ` - ${proposal.insurer_name}` : "";
   
   return `${clientInfo}${insurerInfo}`;
 };
@@ -88,4 +88,43 @@ export const filterProposals = (
     
     return true;
   });
+};
+
+export const calculateProposalStats = (proposals: Proposal[]) => {
+  const total = proposals.length;
+  const accepted = proposals.filter(p => p.status === 'accepted').length;
+  const rejected = proposals.filter(p => p.status === 'rejected').length;
+  const pending = proposals.filter(p => p.status === 'draft' || p.status === 'sent' || p.status === 'viewed').length;
+  
+  return { total, accepted, rejected, pending };
+};
+
+export const getUpdatedProposalWithStatus = (
+  proposal: Proposal, 
+  status: ProposalStatus, 
+  notes?: string
+): Proposal => {
+  const now = new Date().toISOString();
+  
+  const updatedProposal = {
+    ...proposal,
+    status,
+    updated_at: now
+  };
+  
+  if (status === 'sent') {
+    updatedProposal.sent_at = now;
+  } else if (status === 'viewed') {
+    updatedProposal.viewed_at = now;
+  } else if (status === 'accepted') {
+    updatedProposal.accepted_at = now;
+  } else if (status === 'rejected') {
+    updatedProposal.rejected_at = now;
+  }
+  
+  if (notes) {
+    updatedProposal.notes = notes;
+  }
+  
+  return updatedProposal;
 };

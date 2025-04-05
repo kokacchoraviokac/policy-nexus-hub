@@ -7,7 +7,9 @@ export type DocumentTableName =
   | 'sales_documents'
   | 'client_documents'
   | 'insurer_documents'
-  | 'agent_documents';
+  | 'agent_documents'
+  | 'invoice_documents'
+  | 'addendum_documents';
 
 // Maps entity types to their corresponding document table names
 export const getDocumentTableName = (entityType: EntityType): DocumentTableName => {
@@ -17,7 +19,9 @@ export const getDocumentTableName = (entityType: EntityType): DocumentTableName 
     'sales_process': 'sales_documents',
     'client': 'client_documents',
     'insurer': 'insurer_documents',
-    'agent': 'agent_documents'
+    'agent': 'agent_documents',
+    'invoice': 'invoice_documents',
+    'addendum': 'addendum_documents'
   };
   
   return tableMapping[entityType];
@@ -31,7 +35,9 @@ export const getEntityIdColumn = (entityType: EntityType): string => {
     'sales_process': 'sales_process_id',
     'client': 'client_id',
     'insurer': 'insurer_id',
-    'agent': 'agent_id'
+    'agent': 'agent_id',
+    'invoice': 'invoice_id',
+    'addendum': 'addendum_id'
   };
   
   return idColumnMapping[entityType];
@@ -45,7 +51,9 @@ export const getDocumentCategories = (entityType: EntityType): string[] => {
     'sales_process': ['quote', 'proposal', 'contract', 'authorization', 'other'],
     'client': ['identification', 'authorization', 'financial', 'other'],
     'insurer': ['agreement', 'certificate', 'report', 'other'],
-    'agent': ['contract', 'license', 'identification', 'other']
+    'agent': ['contract', 'license', 'identification', 'other'],
+    'invoice': ['invoice', 'financial', 'other'],
+    'addendum': ['amendment', 'contract', 'other']
   };
   
   return categoryMapping[entityType];

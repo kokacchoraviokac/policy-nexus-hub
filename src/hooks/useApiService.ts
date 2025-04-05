@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 
-type ApiError = string | Record<string, any>;
+export type ApiError = string | Record<string, any>;
 
 interface ServiceOptions {
   successMessage?: string;
@@ -29,7 +29,7 @@ export const useApiService = () => {
   
   // Add a new executeService method for better service handling
   const executeService = async <T extends any>(
-    serviceCall: () => Promise<{ success: boolean; data?: T; error?: Error }>,
+    serviceCall: () => Promise<{ success: boolean; data?: T; error?: Error | string | Record<string, any> }>,
     options?: ServiceOptions
   ): Promise<T | null> => {
     setIsLoading(true);
@@ -49,7 +49,9 @@ export const useApiService = () => {
       
       return result.data || null;
     } catch (err) {
-      setError(handleApiError(err as ApiError));
+      const apiError = err as ApiError;
+      const formattedError = handleApiError(apiError);
+      setError(formattedError);
       
       if (options?.errorMessage) {
         // You could add toast notification here
