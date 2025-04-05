@@ -1,28 +1,32 @@
 
+import { Session } from "@supabase/supabase-js";
+
+// Define UserRole
+export type UserRole = 'superAdmin' | 'admin' | 'employee' | 'agent' | 'client';
+
+// Define User interface
 export interface User {
   id: string;
+  email?: string;
   name: string;
-  email: string;
   role: UserRole;
-  avatar?: string;
   companyId?: string;
+  avatar?: string;
 }
 
-export type UserRole = 'superAdmin' | 'admin' | 'employee' | 'agent';
-
+// Define AuthState interface
 export interface AuthState {
+  session: Session | null;
   user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
 }
 
+// Define CustomPrivilege interface
 export interface CustomPrivilege {
   id: string;
+  user_id: string;
   privilege: string;
-  context?: Record<string, any>;
-  description?: string;
-  grantedBy?: string;
-  grantedAt?: Date;
-  expiresAt?: Date;
-  userId?: string;
+  granted_at: string;
+  granted_by: string;
+  expires_at?: string;
+  context?: string;
 }

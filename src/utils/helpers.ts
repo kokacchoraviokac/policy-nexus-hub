@@ -1,66 +1,50 @@
 
 /**
- * Formats a date string to a localized display format
- * @param dateString 
- * @param locale 
- * @returns 
+ * Generates a random ID with a specified prefix
  */
-export const formatDate = (dateString: string, locale: string = 'en-US'): string => {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  
-  return new Intl.DateTimeFormat(locale, {
+export function generateRandomId(prefix = 'id') {
+  return `${prefix}_${Math.random().toString(36).substring(2, 11)}`;
+}
+
+/**
+ * Formats a date to a locale string
+ */
+export function formatDate(date: string | Date) {
+  if (!date) return '';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  }).format(date);
-};
+    month: 'long',
+    day: 'numeric',
+  });
+}
 
 /**
- * Truncates text to a specified length and adds ellipsis
- * @param text 
- * @param maxLength 
- * @returns 
+ * Formats a currency value
  */
-export const truncateText = (text: string, maxLength: number): string => {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  
-  return text.substring(0, maxLength) + '...';
-};
-
-/**
- * Generates a random ID for temporary use
- * @returns A random ID string
- */
-export const generateTempId = (): string => {
-  return Math.random().toString(36).substring(2, 15);
-};
-
-/**
- * Formats a number as currency
- * @param value 
- * @param currency 
- * @returns 
- */
-export const formatCurrency = (value: number | string, currency: string = 'EUR'): string => {
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  
-  if (isNaN(numValue)) return '';
-  
+export function formatCurrency(amount: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency,
-  }).format(numValue);
-};
+    currency,
+  }).format(amount);
+}
 
 /**
- * Capitalizes the first letter of a string
- * @param str 
- * @returns 
+ * Creates a delay using Promises
  */
-export const capitalize = (str: string): string => {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
+export function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Safely access nested object properties
+ */
+export function get(obj: any, path: string, defaultValue: any = undefined) {
+  const travel = (regexp: RegExp) =>
+    String.prototype.split
+      .call(path, regexp)
+      .filter(Boolean)
+      .reduce((res, key) => (res !== null && res !== undefined ? res[key] : res), obj);
+  const result = travel(/[,[\]]+?/) || travel(/[,[\].]+?/);
+  return result === undefined || result === obj ? defaultValue : result;
+}

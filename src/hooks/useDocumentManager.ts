@@ -1,133 +1,126 @@
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Document, DocumentApprovalStatus, EntityType } from "@/types/documents";
-import { fromDocumentTable } from "@/utils/supabaseTypeAssertions";
-import { getDocumentTableName } from "@/utils/documentUploadUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
+import { getDocumentTableName } from "@/utils/documentUploadUtils";
+import { getErrorMessage } from "@/utils/errorHandling";
+import { useSupabaseQuery } from "@/utils/useSupabaseQuery";
 
 interface UseDocumentManagerProps {
   entityType: EntityType;
   entityId: string;
 }
 
-export function useDocumentManager({ 
-  entityType, 
-  entityId 
-}: UseDocumentManagerProps) {
-  const { t } = useLanguage();
+export function useDocumentManager({ entityType, entityId }: UseDocumentManagerProps) {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
-  
-  const tableName = getDocumentTableName(entityType);
-  const entityIdField = `${entityType}_id`.replace('sales_process', 'sales_process');
-  
-  // Query to fetch documents
-  const { 
-    data: documents = [], 
-    isLoading, 
+  const { executeQuery, updateData, deleteData } = useSupabaseQuery();
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // Fetch documents
+  const {
+    data: documents = [],
+    isLoading,
+    isError,
     error,
-    refetch
+    refetch,
   } = useQuery({
     queryKey: ['documents', entityType, entityId],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from(tableName)
+      const tableName = getDocumentTableName(entityType);
+      const entityIdField = `${entityType}_id`;
+      
+      const { data, error } = await executeQuery<Document>(
+        tableName,
+        (query) => query
           .select('*')
           .eq(entityIdField, entityId)
-          .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        // Use type assertion to handle the conversion safely
-        return (data || []) as unknown as Document[];
-      } catch (err) {
-        console.error(`Error fetching ${entityType} documents:`, err);
-        throw err;
-      }
-    }
+          .order('created_at', { ascending: false })
+      );
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!entityId,
   });
-  
-  // Mutation to delete a document
+
+  // Delete document mutation
   const deleteMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      const { error } = await supabase
-        .from(tableName)
-        .delete()
-        .eq('id', documentId);
-      
+      const tableName = getDocumentTableName(entityType);
+      const { error } = await deleteData(tableName, documentId);
       if (error) throw error;
       return documentId;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
       toast({
-        title: t('documentDeleted'),
-        description: t('documentDeletedSuccessfully'),
+        title: t("documentDeleted"),
+        description: t("documentDeletedSuccess"),
+      });
+      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
+    },
+    onError: (error) => {
+      toast({
+        title: t("deleteError"),
+        description: getErrorMessage(error),
+        variant: "destructive",
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: t('errorDeletingDocument'),
-        description: error.message || t('unknownError'),
-        variant: 'destructive',
-      });
-    }
   });
-  
-  // Mutation to update document approval status
-  const approvalMutation = useMutation({
-    mutationFn: async ({
-      documentId,
-      status,
-      notes
-    }: {
-      documentId: string;
-      status: DocumentApprovalStatus;
-      notes?: string;
+
+  // Update document approval status
+  const updateApprovalMutation = useMutation({
+    mutationFn: async ({ documentId, status, notes = "" }: { 
+      documentId: string; 
+      status: DocumentApprovalStatus; 
+      notes?: string 
     }) => {
-      const { data, error } = await supabase
-        .from(tableName)
-        .update({
+      const tableName = getDocumentTableName(entityType);
+      
+      const { data, error } = await updateData<Document>(
+        tableName,
+        documentId,
+        {
           approval_status: status,
           approval_notes: notes,
-          approved_at: new Date().toISOString()
-        })
-        .eq('id', documentId)
-        .select()
-        .single();
+          approved_at: new Date().toISOString(),
+          // We would normally use the actual user id here
+          approved_by: "current-user-id"
+        }
+      );
       
       if (error) throw error;
-      return data as unknown as Document;
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
       toast({
-        title: t('documentApprovalUpdated'),
-        description: t('documentApprovalUpdatedSuccessfully'),
+        title: t("approvalUpdated"),
+        description: t("documentApprovalStatusUpdated"),
+      });
+      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
+    },
+    onError: (error) => {
+      toast({
+        title: t("updateError"),
+        description: getErrorMessage(error),
+        variant: "destructive",
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: t('errorUpdatingApproval'),
-        description: error.message || t('unknownError'),
-        variant: 'destructive',
-      });
-    }
   });
-  
+
   return {
     documents,
     isLoading,
-    isError: !!error,
-    error,
-    documentsCount: documents.length,
-    refreshDocuments: refetch,
+    isError,
+    error: error as Error,
     deleteDocument: deleteMutation.mutate,
+    updateDocumentApproval: updateApprovalMutation.mutate,
     isDeleting: deleteMutation.isPending,
-    updateDocumentApproval: approvalMutation.mutate,
-    isApproving: approvalMutation.isPending
+    isUpdatingApproval: updateApprovalMutation.isPending,
+    refreshDocuments: refetch,
+    refetch
   };
 }

@@ -1,7 +1,31 @@
 
-import { formatCurrency as formatCurrencyHelper } from "@/utils/formatters";
+// Financial report filter types
+export interface FinancialReportFilters {
+  dateRange: [Date | null, Date | null];
+  entityType: string[];
+  status: string[];
+  amount: [number | null, number | null];
+  transactionType: string[];
+  category: string[];
+  searchTerm: string;
+  startDate: Date | null;
+  endDate: Date | null;
+}
 
-// Type definitions
+// Default filter values
+export const defaultFinancialFilters: FinancialReportFilters = {
+  dateRange: [null, null],
+  entityType: [],
+  status: [],
+  amount: [null, null],
+  transactionType: [],
+  category: [],
+  searchTerm: "",
+  startDate: null,
+  endDate: null
+};
+
+// Mock data for testing financial reports
 export interface FinancialTransaction {
   id: string;
   date: string;
@@ -19,7 +43,7 @@ export interface FinancialTransaction {
 export interface FinancialReportData {
   id: string;
   date: string;
-  type: string; 
+  type: string;
   description: string;
   reference: string;
   amount: number;
@@ -31,90 +55,69 @@ export interface FinancialReportData {
   transactions: FinancialTransaction[];
 }
 
-export interface FinancialReportFilters {
-  dateFrom: string;
-  dateTo: string;
-  type: string[];
-  status: string[];
-  minAmount?: number;
-  maxAmount?: number;
-  reference?: string;
-  description?: string;
-}
-
-// Default filters
-export const defaultFinancialFilters: FinancialReportFilters = {
-  dateFrom: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
-  dateTo: new Date().toISOString().split('T')[0],
-  type: [],
-  status: [],
-  minAmount: undefined,
-  maxAmount: undefined,
-  reference: undefined,
-  description: undefined
+// Helper to format currency
+export const formatCurrency = (amount: number, currency: string = "EUR") => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2
+  }).format(amount);
 };
 
-// Helper functions
-export const formatCurrency = (amount: number, currency: string = 'EUR'): string => {
-  return formatCurrencyHelper(amount, currency);
-};
-
-// Mock data for development
+// Mock financial transactions for demo purposes
 export const mockFinancialTransactions: FinancialTransaction[] = [
   {
-    id: '1',
-    date: '2023-10-01',
-    type: 'invoice',
-    description: 'Invoice #INV-001',
-    reference: 'INV-001',
-    amount: 1500,
-    currency: 'EUR',
-    entity_id: 'inv-001',
-    entity_type: 'invoice',
-    status: 'paid',
-    category: 'income'
+    id: "1",
+    date: "2025-03-01",
+    type: "payment",
+    description: "Premium payment",
+    reference: "INV-2023-001",
+    amount: 1250.00,
+    currency: "EUR",
+    entity_id: "policy-123",
+    entity_type: "policy",
+    status: "completed",
+    category: "income"
   },
   {
-    id: '2',
-    date: '2023-10-05',
-    type: 'payment',
-    description: 'Premium payment for policy P-001',
-    reference: 'PAY-001',
-    amount: 750,
-    currency: 'EUR',
-    entity_id: 'pol-001',
-    entity_type: 'policy',
-    status: 'completed',
-    category: 'income'
-  },
-  // Add more mock transactions as needed
-];
-
-// Mock financial report data
-export const mockFinancialReportData: FinancialReportData[] = [
-  {
-    id: 'rep-001',
-    date: '2023-10',
-    type: 'monthly',
-    description: 'October 2023 Financial Report',
-    reference: 'REP-OCT-2023',
-    amount: 2250,
-    currency: 'EUR',
-    status: 'completed',
-    category: 'monthly_report',
-    transactions: mockFinancialTransactions
+    id: "2",
+    date: "2025-02-15",
+    type: "commission",
+    description: "Commission payout",
+    reference: "COM-2023-001",
+    amount: 125.00,
+    currency: "EUR",
+    entity_id: "agent-456",
+    entity_type: "agent",
+    status: "completed",
+    category: "expense"
   }
 ];
 
-// Filter functions
-export const filterTransactionsByDate = (
-  transactions: FinancialTransaction[],
-  dateFrom: string,
-  dateTo: string
-): FinancialTransaction[] => {
-  return transactions.filter(
-    transaction => transaction.date >= dateFrom && transaction.date <= dateTo
-  );
-};
-
-// More filter functions as needed
+// Mock report data
+export const mockFinancialReportData: FinancialReportData[] = [
+  {
+    id: "report-1",
+    date: "2025-03-01",
+    type: "payment",
+    description: "Premium payments summary",
+    reference: "",
+    amount: 1250.00,
+    currency: "EUR",
+    status: "completed",
+    category: "income",
+    transactions: mockFinancialTransactions.filter(t => t.type === "payment")
+  },
+  {
+    id: "report-2",
+    date: "2025-02-15",
+    type: "commission",
+    description: "Commission payouts summary",
+    reference: "",
+    amount: 125.00,
+    currency: "EUR",
+    status: "completed",
+    category: "expense",
+    transactions: mockFinancialTransactions.filter(t => t.type === "commission")
+  }
+];

@@ -7,13 +7,14 @@ export type DocumentType =
   | 'lien'
   | 'contract'
   | 'image'
-  | 'other';
+  | 'other'
+  | 'identification';
 
 export type DocumentApprovalStatus = 
   | 'pending'
   | 'approved'
   | 'rejected'
-  | 'needs_review';  // Added this status
+  | 'needs_review';
 
 export type DocumentCategory = 
   | 'policy'
@@ -52,7 +53,7 @@ export interface Document {
   entity_type: EntityType;
   entity_id: string;
   uploaded_by: string;
-  uploaded_by_name?: string;  // Added this property
+  uploaded_by_name?: string;
   created_at: string;
   updated_at?: string;
   mime_type?: string;
@@ -79,8 +80,9 @@ export interface DocumentListProps {
   onUploadVersion?: (document: Document) => void;
   entityType: EntityType;
   entityId: string;
-  refetch?: () => void;  // Added this property
+  refetch?: () => void;
   updateDocumentApproval?: (documentId: string, status: DocumentApprovalStatus, notes?: string) => Promise<void>;
+  deleteDocument?: (documentId: string) => void;
 }
 
 export interface DocumentUploadDialogProps {
@@ -89,7 +91,7 @@ export interface DocumentUploadDialogProps {
   entityType: EntityType;
   entityId: string;
   onUploadComplete?: () => void;
-  defaultCategory?: DocumentCategory;  // Changed to allow DocumentCategory type
+  defaultCategory?: string;
   salesStage?: string;
   selectedDocument?: Document;
 }

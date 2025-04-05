@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import DocumentListItem from "./DocumentListItem";
 import DocumentUploadDialog from "./DocumentUploadDialog";
 import { Document, EntityType, DocumentApprovalStatus } from "@/types/documents";
+import { useDocumentDownload } from "@/hooks/useDocumentDownload";
 
 interface DocumentListProps {
   entityType: EntityType;
@@ -25,6 +26,7 @@ interface DocumentListProps {
   onUploadVersion?: (document: Document) => void;
   refetch?: () => void;
   updateDocumentApproval?: (documentId: string, status: DocumentApprovalStatus, notes?: string) => Promise<void>;
+  deleteDocument?: (docId: string) => void;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ 
@@ -42,11 +44,13 @@ const DocumentList: React.FC<DocumentListProps> = ({
   isDeleting: providedIsDeleting,
   onUploadVersion: providedOnUploadVersion,
   refetch: providedRefetch,
-  updateDocumentApproval
+  updateDocumentApproval,
+  deleteDocument: providedDeleteDocument
 }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
+  const { downloadDocument, isDownloading } = useDocumentDownload();
   
   // Use provided props if available, otherwise fetch documents using the hook
   const { 
@@ -64,18 +68,19 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const error = providedError || errorFetched;
   const isDeleting = providedIsDeleting !== undefined ? providedIsDeleting : isDeletingFetched;
   const refetch = providedRefetch || refetchFetched;
+  const deleteDocument = providedDeleteDocument || deleteDocumentFetched;
 
   // Custom delete document handler that manages both string IDs and Document objects
   const handleDeleteDocument = (documentIdOrObject: string | Document) => {
     if (providedOnDelete) {
       providedOnDelete(documentIdOrObject);
-    } else if (deleteDocumentFetched) {
+    } else if (deleteDocument) {
       // Extract document ID if a Document object was passed
       const documentId = typeof documentIdOrObject === 'string' 
         ? documentIdOrObject 
         : documentIdOrObject.id;
       
-      deleteDocumentFetched(documentId);
+      deleteDocument(documentId);
     }
   };
 
@@ -92,7 +97,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   // Filter documents by category if filterCategory is provided
   const filteredDocuments = useMemo(() => {
     if (!filterCategory) return documents;
-    return documents.filter(doc => doc.category === filterCategory);
+    return documents?.filter(doc => doc.category === filterCategory) || [];
   }, [documents, filterCategory]);
 
   const handleUploadClick = () => {
@@ -176,6 +181,9 @@ const DocumentList: React.FC<DocumentListProps> = ({
         entityType={entityType}
         entityId={entityId}
         selectedDocument={selectedDocument}
+        onUploadComplete={refetch}
+        defaultCategory={filterCategory}
+        salesStage=""
       />
     </div>
   );

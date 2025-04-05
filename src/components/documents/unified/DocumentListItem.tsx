@@ -20,29 +20,31 @@ import {
 import { Badge } from "@/components/ui/badge";
 import DocumentPreview from "./DocumentPreview";
 import DocumentApprovalDialog from "./DocumentApprovalDialog";
+import { useDocumentDownload } from "@/hooks/useDocumentDownload";
 
 interface DocumentListItemProps {
   document: Document;
-  onDownload: () => void;
   onDelete: () => void;
   onUploadVersion?: () => void;
   showApproval?: boolean;
-  isDeleting: boolean;
-  isDownloading: boolean;
+  isDeleting?: boolean;
 }
 
 const DocumentListItem: React.FC<DocumentListItemProps> = ({
   document,
-  onDownload,
   onDelete,
   onUploadVersion,
   showApproval = true,
-  isDeleting,
-  isDownloading
+  isDeleting = false
 }) => {
   const { formatDate, t } = useLanguage();
   const [showPreview, setShowPreview] = useState(false);
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  const { isDownloading, downloadDocument } = useDocumentDownload();
+  
+  const onDownload = () => {
+    downloadDocument(document);
+  };
   
   const getApprovalStatusIcon = (status?: DocumentApprovalStatus) => {
     switch (status) {
@@ -51,7 +53,6 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
       case "rejected":
         return <XCircle className="h-4 w-4 text-destructive" />;
       case "needs_review":
-        return <AlertCircle className="h-4 w-4 text-amber-500" />;
       case "pending":
       default:
         return <AlertCircle className="h-4 w-4 text-gray-500" />;
@@ -61,7 +62,7 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
   const getApprovalStatusBadge = (status?: DocumentApprovalStatus) => {
     if (!status) return null;
     
-    const variants: Record<DocumentApprovalStatus, string> = {
+    const variants: Record<string, string> = {
       approved: "bg-green-100 text-green-800 border-green-200",
       rejected: "bg-red-100 text-red-800 border-red-200",
       needs_review: "bg-amber-100 text-amber-800 border-amber-200",
@@ -93,12 +94,12 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
             >
               {document.document_name}
             </p>
-            {document.version > 1 && (
+            {document.version && document.version > 1 && (
               <span className="ml-2 text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">
                 v{document.version}
               </span>
             )}
-            {document.is_latest_version && document.version > 1 && (
+            {document.is_latest_version && document.version && document.version > 1 && (
               <span className="ml-2 text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
                 {t("latest")}
               </span>

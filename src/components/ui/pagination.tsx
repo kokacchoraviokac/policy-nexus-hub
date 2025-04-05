@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,11 +14,97 @@ export interface PaginationProps {
   itemsPerPage: number;
   currentPage: number;
   onPageChange: (page: number) => void;
-  pageSize?: number;  // Added optional pageSize
-  onPageSizeChange?: (pageSize: number) => void;  // Added optional handler
+  pageSize?: number;
+  onPageSizeChange?: (pageSize: number) => void;
   className?: string;
   showPageInfo?: boolean;
 }
+
+export const PaginationContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-row items-center gap-1", className)}
+    {...props}
+  />
+));
+PaginationContent.displayName = "PaginationContent";
+
+export const PaginationItem = React.forwardRef<
+  HTMLLIElement,
+  React.HTMLAttributes<HTMLLIElement>
+>(({ className, ...props }, ref) => (
+  <li ref={ref} className={cn("", className)} {...props} />
+));
+PaginationItem.displayName = "PaginationItem";
+
+export type PaginationLinkProps = {
+  isActive?: boolean;
+} & ButtonProps;
+
+export const PaginationLink = React.forwardRef<
+  HTMLButtonElement,
+  PaginationLinkProps
+>(({ className, isActive, size, ...props }, ref) => (
+  <Button
+    ref={ref}
+    variant={isActive ? "default" : "outline"}
+    size="icon"
+    className={cn(className)}
+    {...props}
+  />
+));
+PaginationLink.displayName = "PaginationLink";
+
+export const PaginationPrevious = React.forwardRef<
+  HTMLButtonElement,
+  PaginationLinkProps
+>(({ className, ...props }, ref) => (
+  <Button
+    ref={ref}
+    variant="outline"
+    size="icon"
+    className={cn("gap-1 pl-2.5", className)}
+    {...props}
+  >
+    <ChevronLeft className="h-4 w-4" />
+    <span className="sr-only">Previous</span>
+  </Button>
+));
+PaginationPrevious.displayName = "PaginationPrevious";
+
+export const PaginationNext = React.forwardRef<
+  HTMLButtonElement,
+  PaginationLinkProps
+>(({ className, ...props }, ref) => (
+  <Button
+    ref={ref}
+    variant="outline"
+    size="icon"
+    className={cn("gap-1 pr-2.5", className)}
+    {...props}
+  >
+    <span className="sr-only">Next</span>
+    <ChevronRight className="h-4 w-4" />
+  </Button>
+));
+PaginationNext.displayName = "PaginationNext";
+
+export const PaginationEllipsis = React.forwardRef<
+  HTMLSpanElement,
+  React.HTMLAttributes<HTMLSpanElement>
+>(({ className, ...props }, ref) => (
+  <span
+    ref={ref}
+    className={cn("flex h-9 w-9 items-center justify-center", className)}
+    {...props}
+  >
+    <span className="text-muted-foreground">...</span>
+  </span>
+));
+PaginationEllipsis.displayName = "PaginationEllipsis";
 
 export function Pagination({
   itemsCount,
@@ -63,52 +149,46 @@ export function Pagination({
         </div>
       )}
       <div className="ml-auto flex items-center gap-1">
-        <Button
-          variant="outline"
-          className="h-8 w-8 p-0"
+        <PaginationLink
           onClick={() => onPageChange(1)}
           disabled={safeCurrentPage === 1}
+          aria-label="Go to first page"
         >
-          <span className="sr-only">Go to first page</span>
           <ChevronsLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          className="h-8 w-8 p-0"
+        </PaginationLink>
+        <PaginationLink
           onClick={() => onPageChange(safeCurrentPage - 1)}
           disabled={safeCurrentPage === 1}
+          aria-label="Go to previous page"
         >
-          <span className="sr-only">Go to previous page</span>
           <ChevronLeft className="h-4 w-4" />
-        </Button>
+        </PaginationLink>
+        
         {visiblePages.map((page) => (
-          <Button
+          <PaginationLink
             key={page}
-            variant={page === safeCurrentPage ? "default" : "outline"}
-            className="h-8 w-8 p-0"
+            isActive={page === safeCurrentPage}
             onClick={() => onPageChange(page)}
+            aria-label={`Page ${page}`}
           >
-            <span>{page}</span>
-          </Button>
+            {page}
+          </PaginationLink>
         ))}
-        <Button
-          variant="outline"
-          className="h-8 w-8 p-0"
+        
+        <PaginationLink
           onClick={() => onPageChange(safeCurrentPage + 1)}
           disabled={safeCurrentPage === safePageCount}
+          aria-label="Go to next page"
         >
-          <span className="sr-only">Go to next page</span>
           <ChevronRight className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          className="h-8 w-8 p-0"
+        </PaginationLink>
+        <PaginationLink
           onClick={() => onPageChange(safePageCount)}
           disabled={safeCurrentPage === safePageCount}
+          aria-label="Go to last page"
         >
-          <span className="sr-only">Go to last page</span>
           <ChevronsRight className="h-4 w-4" />
-        </Button>
+        </PaginationLink>
       </div>
     </div>
   );

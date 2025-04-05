@@ -11,12 +11,12 @@ import { SalesProcess } from '@/types/sales';
 
 export interface SalesProcessDocumentsProps {
   salesProcess: SalesProcess;
-  salesStage: string;
+  salesStage?: string;
 }
 
 const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ 
   salesProcess,
-  salesStage 
+  salesStage = 'default' 
 }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -26,7 +26,7 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
     isLoading,
     error,
     documentsCount,
-    refetch,
+    refreshDocuments,
     deleteDocument,
     updateDocumentApproval
   } = useSalesProcessDocuments(salesProcess.id);
@@ -36,16 +36,19 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
   };
   
   const handleUploadComplete = () => {
-    refetch();
+    refreshDocuments();
   };
   
   const isError = !!error;
   
   const handleUpdateApproval = async (docId: string, status: DocumentApprovalStatus, notes?: string) => {
-    if (updateDocumentApproval) {
-      return updateDocumentApproval(docId, status, notes);
+    try {
+      await updateDocumentApproval(docId, status, notes);
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error updating approval status:", error);
+      return Promise.reject(error);
     }
-    return Promise.resolve();
   };
 
   return (
@@ -70,11 +73,18 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
         isLoading={isLoading}
         isError={isError}
         error={error as Error}
-        refetch={refetch}
-        deleteDocument={(docId: string) => deleteDocument(docId)}
+        refetch={refreshDocuments}
+        onDelete={(docId: any) => {
+          if (typeof docId === 'string') {
+            deleteDocument(docId);
+          } else if (docId && docId.id) {
+            deleteDocument(docId.id);
+          }
+        }}
         updateDocumentApproval={handleUpdateApproval}
         entityType="sales_process"
         entityId={salesProcess.id}
+        showUploadButton={false}
       />
       
       <DocumentUploadDialog
@@ -83,7 +93,7 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
         entityType="sales_process"
         entityId={salesProcess.id}
         onUploadComplete={handleUploadComplete}
-        defaultCategory={"other" as DocumentCategory}
+        defaultCategory="other"
         salesStage={salesStage}
       />
     </div>
