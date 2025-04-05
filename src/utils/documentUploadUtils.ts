@@ -2,34 +2,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { EntityType } from "@/types/documents";
 import { v4 as uuidv4 } from "uuid";
-
-// Define the valid document table names
-export type DocumentTableName = 
-  | 'policy_documents' 
-  | 'claim_documents' 
-  | 'sales_documents'
-  | 'client_documents'
-  | 'insurer_documents'
-  | 'agent_documents'
-  | 'invoice_documents'
-  | 'addendum_documents';
+import { DocumentTableName, entityToDocumentTable } from "@/utils/supabaseQueryHelper";
 
 /**
  * Get the corresponding document table name for an entity type
  */
 export function getDocumentTableName(entityType: EntityType): DocumentTableName {
-  const tableMap: Record<EntityType, DocumentTableName> = {
-    'policy': 'policy_documents',
-    'claim': 'claim_documents',
-    'sales_process': 'sales_documents',
-    'client': 'client_documents',
-    'insurer': 'insurer_documents',
-    'agent': 'agent_documents',
-    'invoice': 'invoice_documents',
-    'addendum': 'addendum_documents'
-  };
-  
-  return tableMap[entityType];
+  return entityToDocumentTable[entityType];
 }
 
 /**

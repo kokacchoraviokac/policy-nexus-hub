@@ -59,9 +59,9 @@ export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePolici
     refetch,
   } = useInfiniteQuery({
     queryKey: ['policies-workflow', filters],
-    queryFn: ({ pageParam = 1 }) => loadPolicies({ pageParam }),
+    queryFn: loadPolicies,
+    initialPageParam: 1, // Add this line to fix the type error
     getNextPageParam: (lastGroup) => {
-      if (!lastGroup) return undefined;
       const totalPages = Math.ceil(lastGroup.total / initialPageSize);
       const nextPage = lastGroup.currentPage + 1;
       return nextPage <= totalPages ? nextPage : undefined;
