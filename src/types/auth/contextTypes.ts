@@ -14,7 +14,7 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   // Additional methods
-  login?: (email: string, password: string) => Promise<{ error?: any }>;
+  login?: (email: string, password: string) => Promise<void>;
   logout?: () => Promise<void>;
   updateUser?: (data: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;

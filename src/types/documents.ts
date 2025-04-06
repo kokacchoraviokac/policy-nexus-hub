@@ -120,6 +120,9 @@ export interface DocumentSearchParams {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  uploadedAfter?: string;
+  uploadedBefore?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
 export interface PolicyImportInstructionsProps {

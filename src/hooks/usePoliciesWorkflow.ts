@@ -13,17 +13,17 @@ export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePolici
     const params: PolicyFilterParams = {
       page: pageParam,
       pageSize: initialPageSize,
-      client_id: filters.client_id,
-      insurer_id: filters.insurer_id,
-      product_id: filters.product_id,
+      clientId: filters.clientId,
+      insurerId: filters.insurerId,
+      productId: filters.productId,
       status: filters.status,
-      workflow_status: filters.workflow_status,
-      assigned_to: filters.assigned_to,
-      start_date_from: filters.start_date_from,
-      start_date_to: filters.start_date_to,
-      expiry_date_from: filters.expiry_date_from,
-      expiry_date_to: filters.expiry_date_to,
-      search: filters.search,
+      workflowStatus: filters.workflowStatus,
+      assignedTo: filters.assignedTo,
+      startDateFrom: filters.startDateFrom,
+      startDateTo: filters.startDateTo,
+      expiryDateFrom: filters.expiryDateFrom,
+      expiryDateTo: filters.expiryDateTo,
+      searchTerm: filters.searchTerm,
     };
 
     try {

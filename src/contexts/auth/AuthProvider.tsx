@@ -1,10 +1,9 @@
-
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, UserRole, AuthState } from "@/types/auth";
-import { AuthContextType } from "@/types/auth/contextTypes";
+import { User, UserRole } from "@/types/auth/userTypes";
+import { AuthState, AuthContextType } from "@/types/auth/contextTypes";
 import useAuthOperations from "@/hooks/useAuthOperations";
-import { fetchUserCustomPrivileges } from "@/utils/auth/privilegeUtils";
+import { fetchUserCustomPrivileges } from "@/utils/authUtils";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -223,6 +222,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   const updateUserProfile = async (profile: Partial<User>) => {
     await updateUser(profile);
+  };
+  
+  const login = async (email: string, password: string): Promise<void> => {
+    try {
+      const result = await signIn(email, password);
+      // We deliberately ignore the error from signIn since we're returning void
+    } catch (error) {
+      // Rethrow to let caller handle it
+      throw error;
+    }
+  };
+  
+  const initiatePasswordReset = async (email: string): Promise<boolean> => {
+    try {
+      const result = await useAuthOperations.initiatePasswordReset(email);
+      return !result.error;
+    } catch (error) {
+      console.error("Password reset error:", error);
+      return false;
+    }
+  };
+
+  const updatePassword = async (newPassword: string): Promise<boolean> => {
+    try {
+      const result = await useAuthOperations.updatePassword(newPassword);
+      return !result.error;
+    } catch (error) {
+      console.error("Update password error:", error);
+      return false;
+    }
   };
   
   const authContextValue: AuthContextType = {

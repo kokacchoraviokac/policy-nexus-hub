@@ -2,8 +2,6 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileEditForm from "./ProfileEditForm";
-import PasswordChangeForm from "./PasswordChangeForm";
-import NotificationsForm from "./NotificationsForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -48,11 +46,11 @@ const ProfileTabs: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="password" className="p-6">
-          <PasswordChangeForm />
+          <div>{t("passwordChangeFeatureComingSoon")}</div>
         </TabsContent>
         
         <TabsContent value="notifications" className="p-6">
-          <NotificationsForm />
+          <div>{t("notificationsFeatureComingSoon")}</div>
         </TabsContent>
       </Tabs>
     </Card>

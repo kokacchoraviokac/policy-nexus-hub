@@ -10,6 +10,8 @@ export interface User {
   user_metadata?: Record<string, any>;
 }
 
+export type UserRole = 'superAdmin' | 'admin' | 'employee' | 'agent' | 'client' | 'super_admin';
+
 export interface CustomPrivilege {
   id: string;
   user_id: string;
@@ -17,5 +19,5 @@ export interface CustomPrivilege {
   granted_at: string;
   granted_by: string;
   expires_at?: string;
-  context?: Record<string, any>;
+  context?: string | Record<string, any>;
 }

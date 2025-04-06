@@ -6,8 +6,9 @@ import { CustomPrivilege } from "@/types/auth/userTypes";
 // Helper to fetch a user's privileges from the database
 export const fetchUserPrivileges = async (userId: string): Promise<UserPrivilege[]> => {
   try {
+    // We need to handle the table name type correctly
     const { data, error } = await supabase
-      .from('user_privileges')
+      .from('user_privileges' as any)
       .select('*')
       .eq('user_id', userId);
       
@@ -16,7 +17,7 @@ export const fetchUserPrivileges = async (userId: string): Promise<UserPrivilege
       return [];
     }
     
-    return data || [];
+    return data as UserPrivilege[] || [];
   } catch (error) {
     console.error('Exception fetching user privileges:', error);
     return [];
@@ -40,6 +41,55 @@ export const fetchUserCustomPrivileges = async (userId: string): Promise<CustomP
   } catch (error) {
     console.error('Exception fetching user custom privileges:', error);
     return [];
+  }
+};
+
+// Helper to grant a custom privilege to a user
+export const grantCustomPrivilege = async (
+  userId: string,
+  privilege: string,
+  grantedBy: string,
+  expiresAt?: Date
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('user_custom_privileges')
+      .insert({
+        user_id: userId,
+        privilege,
+        granted_by: grantedBy,
+        expires_at: expiresAt?.toISOString()
+      });
+      
+    if (error) {
+      console.error('Error granting custom privilege:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception granting custom privilege:', error);
+    return false;
+  }
+};
+
+// Helper to revoke a custom privilege
+export const revokeCustomPrivilege = async (privilegeId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('user_custom_privileges')
+      .delete()
+      .eq('id', privilegeId);
+      
+    if (error) {
+      console.error('Error revoking custom privilege:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception revoking custom privilege:', error);
+    return false;
   }
 };
 
