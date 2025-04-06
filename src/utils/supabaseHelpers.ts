@@ -1,153 +1,153 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { SupabaseClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
-// Type guard to help Typescript with dynamic table names
-type TableName = keyof typeof supabase["_Tables"] | string;
-
-/**
- * Generic function to safely query any table with proper type assertions
- * This helps avoid TypeScript's deep type instantiation errors
- */
-export function fromTable<T = any>(tableName: TableName) {
-  // Using type assertion to avoid TypeScript's strict table name checking
-  return supabase.from(tableName as any);
+// Helper function to extract table name from entity type
+export function getTableNameFromEntityType(entityType: string): string {
+  const tableMappings: Record<string, string> = {
+    'policy': 'policy_documents',
+    'claim': 'claim_documents',
+    'sales_process': 'sales_documents',
+    'client': 'client_documents',
+    'insurer': 'insurer_documents',
+    'agent': 'agent_documents',
+    'addendum': 'addendum_documents',
+    'invoice': 'invoice_documents',
+    'sale': 'sales_documents', // Alias for sales_process
+  };
+  
+  return tableMappings[entityType] || `${entityType}_documents`;
 }
 
-/**
- * Generic function to safely select data from a specified table
- */
-export async function selectFromTable<T = any>(
-  tableName: TableName,
-  options: {
-    columns?: string;
-    eq?: { column: string; value: any };
-    order?: { column: string; ascending?: boolean };
-    limit?: number;
-    single?: boolean;
-  } = {}
-) {
-  // Create the base query
-  let query = fromTable<T>(tableName).select(options.columns || '*');
-  
-  // Apply filter if provided
-  if (options.eq) {
-    query = query.eq(options.eq.column, options.eq.value);
+// Function to safely convert symbol to string
+export function convertSymbolToString(symbol: symbol | string): string {
+  if (typeof symbol === 'symbol') {
+    return String(symbol);
   }
-  
-  // Apply ordering if provided
-  if (options.order) {
-    query = query.order(options.order.column, {
-      ascending: options.order.ascending !== false
-    });
-  }
-  
-  // Apply limit if provided
-  if (options.limit) {
-    query = query.limit(options.limit);
-  }
-  
-  // Execute the query
-  const { data, error } = await query;
-  
-  if (error) {
-    console.error(`Error querying ${tableName}:`, error);
-    throw new Error(`Database query failed: ${error.message}`);
-  }
-  
-  // Return single item if requested
-  if (options.single && data && data.length > 0) {
-    return data[0] as T;
-  }
-  
-  return data as T[];
+  return symbol;
 }
 
-/**
- * Generic function to safely insert data into a specified table
- */
-export async function insertIntoTable<T = any>(
-  tableName: TableName,
-  data: any,
-  options: {
-    returning?: boolean;
-  } = { returning: true }
-) {
-  const query = fromTable<T>(tableName).insert(data);
-  
-  if (options.returning) {
-    const { data: result, error } = await query.select();
+// Generic function to paginate results
+export async function paginateQuery<T>(
+  query: any,
+  page = 1,
+  pageSize = 10
+): Promise<{ data: T[]; count: number }> {
+  try {
+    // Get count first
+    const countQuery = query.clone();
+    const { count, error: countError } = await countQuery.count();
     
-    if (error) {
-      console.error(`Error inserting into ${tableName}:`, error);
-      throw new Error(`Database insert failed: ${error.message}`);
+    if (countError) throw countError;
+    
+    // Add pagination to original query
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    
+    const { data, error } = await query
+      .range(from, to);
+    
+    if (error) throw error;
+    
+    return { data: data || [], count };
+  } catch (error) {
+    console.error('Error paginating query:', error);
+    return { data: [], count: 0 };
+  }
+}
+
+// Function to execute safely from table
+export async function safeFromTable(
+  client: SupabaseClient,
+  table: string | symbol,
+  options?: { select?: string }
+) {
+  const tableName = typeof table === 'symbol' ? String(table) : table;
+  let query = client.from(tableName);
+  
+  if (options?.select) {
+    query = query.select(options.select);
+  }
+  
+  return query;
+}
+
+// Function to create a generic filter builder
+export function buildFilteredQuery(
+  client: SupabaseClient,
+  table: string | symbol,
+  filters: Record<string, any>,
+  options?: { select?: string; order?: { column: string; ascending?: boolean } }
+) {
+  const tableName = typeof table === 'symbol' ? String(table) : table;
+  let query = client.from(tableName);
+  
+  if (options?.select) {
+    query = query.select(options.select);
+  }
+  
+  // Apply filters
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      if (typeof value === 'string' && value.includes('%')) {
+        query = query.ilike(key, value);
+      } else {
+        query = query.eq(key, value);
+      }
     }
-    
-    return result as T[];
+  });
+  
+  // Apply ordering
+  if (options?.order) {
+    const { column, ascending = true } = options.order;
+    query = query.order(column, { ascending });
   }
   
-  const { error } = await query;
-  
-  if (error) {
-    console.error(`Error inserting into ${tableName}:`, error);
-    throw new Error(`Database insert failed: ${error.message}`);
-  }
-  
-  return null;
+  return query;
 }
 
-/**
- * Generic function to safely update data in a specified table
- */
-export async function updateInTable<T = any>(
-  tableName: TableName,
-  data: any,
-  options: {
-    eq: { column: string; value: any };
-    returning?: boolean;
-  }
-) {
-  const query = fromTable<T>(tableName)
-    .update(data)
-    .eq(options.eq.column, options.eq.value);
-  
-  if (options.returning !== false) {
-    const { data: result, error } = await query.select();
+// Function to create entity with safe error handling
+export async function createEntitySafely<T>(
+  client: SupabaseClient,
+  table: string | symbol,
+  data: Partial<T>
+): Promise<T | null> {
+  try {
+    const tableName = typeof table === 'symbol' ? String(table) : table;
+    const { data: createdData, error } = await client
+      .from(tableName)
+      .insert(data)
+      .select()
+      .single();
     
-    if (error) {
-      console.error(`Error updating ${tableName}:`, error);
-      throw new Error(`Database update failed: ${error.message}`);
-    }
-    
-    return result as T[];
+    if (error) throw error;
+    return createdData as T;
+  } catch (error) {
+    console.error(`Error creating entity in ${String(table)}:`, error);
+    return null;
   }
-  
-  const { error } = await query;
-  
-  if (error) {
-    console.error(`Error updating ${tableName}:`, error);
-    throw new Error(`Database update failed: ${error.message}`);
-  }
-  
-  return null;
 }
 
-/**
- * Generic function to safely delete data from a specified table
- */
-export async function deleteFromTable(
-  tableName: TableName,
-  options: {
-    eq: { column: string; value: any };
-  }
-) {
-  const { error } = await fromTable(tableName)
-    .delete()
-    .eq(options.eq.column, options.eq.value);
+// Function to update entity with safe error handling
+export async function updateEntitySafely<T>(
+  client: SupabaseClient,
+  table: string | symbol,
+  id: string,
+  data: Partial<T>
+): Promise<T | null> {
+  try {
+    const tableName = typeof table === 'symbol' ? String(table) : table;
+    const { data: updatedData, error } = await client
+      .from(tableName)
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single();
     
-  if (error) {
-    console.error(`Error deleting from ${tableName}:`, error);
-    throw new Error(`Database delete failed: ${error.message}`);
+    if (error) throw error;
+    return updatedData as T;
+  } catch (error) {
+    console.error(`Error updating entity in ${String(table)}:`, error);
+    return null;
   }
-  
-  return true;
 }

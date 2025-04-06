@@ -36,7 +36,7 @@ export interface FinancialTransaction {
   description: string;
   status: 'pending' | 'completed' | 'failed' | 'paid' | string; // Allow string
   reference?: string;
-  currency?: string; // Add currency field
+  currency?: string;
 }
 
 export interface FinancialReportFiltersProps {
@@ -71,23 +71,28 @@ export interface UseFinancialReportReturn {
   defaultFilters: FinancialReportFilters;
 }
 
-export interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  
-  // Support for alternative naming convention
-  totalItems?: number;
-  itemsPerPage?: number;
-  itemsCount?: number; // Support older implementations
-  children?: React.ReactNode; // Support children prop
-  
-  onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: number[];
-  className?: string;
+export interface FinancialReportTableProps {
+  data: FinancialReportData[];
+  isLoading: boolean;
 }
 
-// Add missing proposal types
+export interface FinancialTransactionsProps {
+  data: FinancialTransaction[];
+  isLoading: boolean;
+  onExport: () => void;
+  isExporting: boolean;
+}
+
+// Proposal types
+export type ProposalStatus = 
+  | 'draft' 
+  | 'sent' 
+  | 'viewed' 
+  | 'accepted' 
+  | 'rejected'
+  | 'approved'
+  | 'pending';
+
 export interface Proposal {
   id: string;
   title: string;
@@ -102,15 +107,6 @@ export interface Proposal {
   due_date?: string;
   approved?: boolean;
 }
-
-export type ProposalStatus = 
-  | 'draft' 
-  | 'sent' 
-  | 'viewed' 
-  | 'accepted' 
-  | 'rejected'
-  | 'approved'
-  | 'pending';
 
 export interface ProposalStats {
   totalCount: number;

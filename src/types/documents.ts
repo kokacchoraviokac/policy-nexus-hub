@@ -2,7 +2,8 @@
 // Re-export EntityType from common
 import { EntityType } from './common';
 
-export type { EntityType }; // Correctly export EntityType for imports with type modifier
+// Explicitly export the type
+export type { EntityType };
 
 export type DocumentCategory = 
   | 'policy' 
@@ -10,7 +11,7 @@ export type DocumentCategory =
   | 'invoice' 
   | 'contract' 
   | 'identification' 
-  | 'proposal' // Add missing category
+  | 'proposal' 
   | 'other';
 
 export type DocumentApprovalStatus = 
@@ -40,7 +41,7 @@ export interface Document {
   approved_by?: string;
   approved_at?: string;
   approval_notes?: string;
-  description?: string; // Add missing description field
+  description?: string;
 }
 
 export interface DocumentUploadDialogProps {
@@ -74,7 +75,7 @@ export enum DocumentTableName {
   ADDENDUM = "addendum_documents"
 }
 
-// Add missing interfaces for document search
+// Document search types
 export interface DocumentSearchParams {
   searchTerm?: string;
   entityType?: EntityType;
@@ -99,6 +100,7 @@ export interface UseDocumentSearchProps {
   defaultSortOrder?: 'asc' | 'desc';
   initialSearchTerm?: string;
   approvalStatus?: DocumentApprovalStatus;
+  pageSize?: number;
 }
 
 export interface UseDocumentSearchReturn {
@@ -115,4 +117,17 @@ export interface UseDocumentSearchReturn {
   searchParams: DocumentSearchParams;
   setSearchParams: (params: Partial<DocumentSearchParams>) => void;
   page?: number;
+  setPage?: (page: number) => void;
+}
+
+// Document upload options
+export interface DocumentUploadOptions {
+  entityType: EntityType;
+  entityId: string;
+  documentName: string;
+  documentType: string;
+  category?: string;
+  salesStage?: string;
+  originalDocumentId?: string;
+  file: File;
 }

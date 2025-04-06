@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { Policy, WorkflowStatus } from "@/types/policies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,242 +19,249 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pagination } from "@/components/ui/pagination";
+import { 
+  Edit,
+  Loader2,
+  Search,
+  AlertTriangle,
+  Filter,
+  ChevronRight,
+  ClipboardList,
+  FileCheck,
+  Calendar,
+  Building,
+  FileArchive,
+  Users,
+  MoreHorizontal
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { formatDateToLocal } from "@/utils/dateUtils";
-import { formatCurrency } from "@/utils/formatters";
-import { Loader2, Search, Filter, CheckCircle, AlertCircle, Clock, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Pagination } from "@/components/ui/pagination";
+import { mapPolicyStatusToBadgeVariant } from "@/utils/policies/policyMappers";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Card } from "@/components/ui/card";
 
 interface WorkflowPoliciesListProps {
   policies: Policy[];
   isLoading: boolean;
-  error: Error | null;
-  onRefresh: () => void;
+  onReviewPolicy?: (policyId: string) => void;
+  error?: Error | null;
+  isError?: boolean;
+  totalCount?: number;
+  currentPage?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  workflowStatus?: string;
+  onStatusChange?: (status: string) => void;
 }
 
 const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
   policies,
   isLoading,
+  onReviewPolicy,
   error,
-  onRefresh,
+  isError,
+  totalCount = 0,
+  currentPage = 1,
+  pageSize = 10,
+  onPageChange,
+  workflowStatus,
+  onStatusChange
 }) => {
-  const { t } = useLanguage();
-  const { hasRole } = useAuth();
-  const navigate = useNavigate();
+  const { t, formatDate, formatCurrency } = useLanguage();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>(policies);
   
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  // Status options
+  const statusOptions = [
+    { id: "all", label: t("allStatuses"), value: "all" },
+    { id: "draft", label: t("draft"), value: WorkflowStatus.DRAFT },
+    { id: "in_review", label: t("inReview"), value: WorkflowStatus.IN_REVIEW },
+    { id: "ready", label: t("ready"), value: WorkflowStatus.READY },
+    { id: "complete", label: t("complete"), value: WorkflowStatus.COMPLETE },
+    { id: "review", label: t("review"), value: WorkflowStatus.REVIEW },
+    { id: "rejected", label: t("rejected"), value: WorkflowStatus.REJECTED },
+  ];
   
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
-  
-  const canReviewPolicies = hasRole(["admin", "superAdmin", "super_admin"]);
-  
-  // Filter policies based on search term and status
-  const filteredPolicies = policies.filter((policy) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      policy.policy_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      policy.policyholder_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (policy.client_name && policy.client_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus =
-      statusFilter === "all" || policy.workflow_status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-  
-  // Paginate the filtered policies
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentPolicies = filteredPolicies.slice(indexOfFirstItem, indexOfLastItem);
-  
-  const handleViewPolicy = (policyId: string) => {
-    navigate(`/policies/review/${policyId}`);
-  };
-  
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case WorkflowStatus.DRAFT:
-        return (
-          <Badge variant="outline" className="bg-slate-100">
-            <Clock className="h-3 w-3 mr-1" />
-            {t("draft")}
-          </Badge>
-        );
-      case WorkflowStatus.REVIEW:
-        return (
-          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
-            <Clock className="h-3 w-3 mr-1" />
-            {t("review")}
-          </Badge>
-        );
-      case WorkflowStatus.READY:
-        return (
-          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            {t("ready")}
-          </Badge>
-        );
-      case WorkflowStatus.COMPLETE:
-        return (
-          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
-            <CheckCircle className="h-3 w-3 mr-1" />
-            {t("complete")}
-          </Badge>
-        );
-      case WorkflowStatus.REJECTED:
-        return (
-          <Badge variant="outline" className="bg-red-100 text-red-700 border-red-200">
-            <X className="h-3 w-3 mr-1" />
-            {t("rejected")}
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline">
-            {status}
-          </Badge>
-        );
+  // Filter policies based on search query
+  React.useEffect(() => {
+    if (!searchQuery) {
+      setFilteredPolicies(policies);
+      return;
     }
+    
+    const results = policies.filter((policy) => {
+      const searchableFields = [
+        policy.policy_number,
+        policy.policyholder_name,
+        policy.insurer_name,
+        policy.client_name || policy.policyholder_name,
+      ];
+      
+      return searchableFields.some((field) =>
+        field?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
+    
+    setFilteredPolicies(results);
+  }, [policies, searchQuery]);
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Search logic is applied in useEffect
   };
   
-  if (error) {
+  const renderWorkflowStatusBadge = (status?: string) => {
+    const statusMap: Record<string, { label: string; variant: string }> = {
+      [WorkflowStatus.DRAFT]: { label: t("draft"), variant: "secondary" },
+      [WorkflowStatus.IN_REVIEW]: { label: t("inReview"), variant: "warning" },
+      [WorkflowStatus.READY]: { label: t("ready"), variant: "info" },
+      [WorkflowStatus.COMPLETE]: { label: t("complete"), variant: "success" },
+      [WorkflowStatus.REVIEW]: { label: t("review"), variant: "warning" },
+      [WorkflowStatus.REJECTED]: { label: t("rejected"), variant: "destructive" },
+    };
+    
+    const { label, variant } = statusMap[status || ""] || { label: status || t("unknown"), variant: "default" };
+    
+    return <Badge variant={variant as any}>{label}</Badge>;
+  };
+  
+  if (isLoading) {
     return (
-      <div className="rounded-md border p-8 text-center">
-        <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+      <div className="flex justify-center items-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 space-y-4">
+        <AlertTriangle className="h-12 w-12 text-destructive" />
         <h3 className="text-lg font-medium">{t("errorLoadingPolicies")}</h3>
-        <p className="text-sm text-muted-foreground mt-1">{error.message}</p>
-        <Button onClick={onRefresh} variant="outline" className="mt-4">
-          {t("tryAgain")}
-        </Button>
+        <p className="text-sm text-muted-foreground">{error?.message || t("unknownError")}</p>
+      </div>
+    );
+  }
+  
+  if (filteredPolicies.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 space-y-4">
+        <FileArchive className="h-12 w-12 text-muted-foreground" />
+        <h3 className="text-lg font-medium">{t("noPoliciesFound")}</h3>
+        <p className="text-sm text-muted-foreground">{t("tryAdjustingYourSearch")}</p>
       </div>
     );
   }
   
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4 items-end">
-        <div className="flex-1">
-          <div className="relative">
+      <div className="flex flex-col md:flex-row gap-4">
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <div className="relative flex-1">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder={t("searchPolicies")}
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-        </div>
+          <Button type="submit" size="icon">
+            <Search className="h-4 w-4" />
+            <span className="sr-only">{t("search")}</span>
+          </Button>
+        </form>
         
-        <div className="w-full sm:w-[180px]">
+        {onStatusChange && (
           <Select
-            value={statusFilter}
-            onValueChange={setStatusFilter}
+            value={workflowStatus || "all"}
+            onValueChange={onStatusChange}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-auto">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder={t("filterByStatus")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">{t("allStatuses")}</SelectItem>
-              <SelectItem value={WorkflowStatus.DRAFT}>{t("draft")}</SelectItem>
-              <SelectItem value={WorkflowStatus.REVIEW}>{t("review")}</SelectItem>
-              <SelectItem value={WorkflowStatus.READY}>{t("ready")}</SelectItem>
-              <SelectItem value={WorkflowStatus.COMPLETE}>{t("complete")}</SelectItem>
-              <SelectItem value={WorkflowStatus.REJECTED}>{t("rejected")}</SelectItem>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.id} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-        </div>
+        )}
       </div>
       
-      {isLoading ? (
-        <div className="flex justify-center items-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : filteredPolicies.length === 0 ? (
-        <div className="rounded-md border p-8 text-center">
-          <h3 className="text-lg font-medium">{t("noPoliciesFound")}</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {searchTerm || statusFilter !== "all"
-              ? t("tryAdjustingFilters")
-              : t("noPoliciesInWorkflow")}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("policyNumber")}</TableHead>
-                  <TableHead>{t("policyholder")}</TableHead>
-                  <TableHead>{t("insurer")}</TableHead>
-                  <TableHead>{t("startDate")}</TableHead>
-                  <TableHead>{t("premium")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                  <TableHead className="text-right">{t("actions")}</TableHead>
+      <Card>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("policyNumber")}</TableHead>
+                <TableHead>{t("client")}</TableHead>
+                <TableHead>{t("insurer")}</TableHead>
+                <TableHead>{t("startDate")}</TableHead>
+                <TableHead>{t("expiryDate")}</TableHead>
+                <TableHead>{t("premium")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPolicies.map((policy) => (
+                <TableRow key={policy.id}>
+                  <TableCell className="font-medium">{policy.policy_number}</TableCell>
+                  <TableCell>
+                    {policy.client_name || policy.policyholder_name}
+                  </TableCell>
+                  <TableCell>{policy.insurer_name}</TableCell>
+                  <TableCell>{formatDate(policy.start_date)}</TableCell>
+                  <TableCell>{formatDate(policy.expiry_date)}</TableCell>
+                  <TableCell>
+                    {formatCurrency(policy.premium, policy.currency || "EUR")}
+                  </TableCell>
+                  <TableCell>
+                    {renderWorkflowStatusBadge(policy.workflow_status)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onReviewPolicy && onReviewPolicy(policy.id)}
+                    >
+                      <Edit className="h-4 w-4 mr-1.5" />
+                      {t("review")}
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentPolicies.map((policy) => (
-                  <TableRow key={policy.id}>
-                    <TableCell className="font-medium">
-                      {policy.policy_number}
-                    </TableCell>
-                    <TableCell>
-                      {policy.policyholder_name}
-                      {policy.client_name && policy.client_name !== policy.policyholder_name && (
-                        <div className="text-xs text-muted-foreground">
-                          {policy.client_name}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>{policy.insurer_name}</TableCell>
-                    <TableCell>{formatDateToLocal(policy.start_date)}</TableCell>
-                    <TableCell>
-                      {formatCurrency(policy.premium, policy.currency)}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(policy.workflow_status)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewPolicy(policy.id)}
-                        disabled={!canReviewPolicies && policy.workflow_status !== WorkflowStatus.DRAFT}
-                      >
-                        {policy.workflow_status === WorkflowStatus.REVIEW
-                          ? t("review")
-                          : t("view")}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
+      
+      {totalCount > pageSize && onPageChange && (
+        <div className="mt-4">
           <Pagination
-            itemsCount={filteredPolicies.length}
-            itemsPerPage={itemsPerPage}
+            totalPages={Math.ceil(totalCount / pageSize)}
             currentPage={currentPage}
-            onPageChange={setCurrentPage}
+            onPageChange={onPageChange}
+            itemsCount={totalCount}
+            itemsPerPage={pageSize}
           >
             <div className="text-sm text-muted-foreground">
-              {t("showing")} {indexOfFirstItem + 1}-
-              {Math.min(indexOfLastItem, filteredPolicies.length)} {t("of")}{" "}
-              {filteredPolicies.length} {t("policies")}
+              {t("showing")} {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalCount)} {t("of")} {totalCount} {t("policies")}
             </div>
           </Pagination>
-        </>
+        </div>
       )}
     </div>
   );

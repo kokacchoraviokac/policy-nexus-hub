@@ -1,7 +1,7 @@
 
 import { Session } from "@supabase/supabase-js";
 
-// Define UserRole as an enum with all possible values to avoid string/UserRole type conflicts
+// Define UserRole as an enum with all possible values
 export enum UserRole {
   SUPER_ADMIN = 'superAdmin',
   ADMIN = 'admin',
@@ -44,6 +44,10 @@ export interface AuthState {
   isInitialized?: boolean;
   customPrivileges: CustomPrivilege[];
 }
+
+// Export the types
+export type { User, CustomPrivilege, AuthState };
+export { UserRole };
 
 // Export type definitions from other auth modules
 export * from './userTypes';

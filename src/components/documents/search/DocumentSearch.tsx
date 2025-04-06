@@ -44,13 +44,11 @@ const DocumentSearch: React.FC = () => {
     searchDocuments,
     currentPage,
     pageSize,
+    totalPages,
     handlePageChange
   } = useDocumentSearch({
     entityType: selectedEntityType !== "all" ? selectedEntityType : undefined,
-    pageSize: 10,
-    initialSearchParams: {
-      searchTerm
-    }
+    initialSearchTerm: searchTerm
   });
   
   const handleSearch = (e: React.FormEvent) => {
@@ -201,6 +199,7 @@ const DocumentSearch: React.FC = () => {
         
         {!isLoading && documents.length > 0 && (
           <Pagination
+            totalPages={totalPages}
             itemsCount={totalCount}
             itemsPerPage={pageSize}
             currentPage={currentPage}

@@ -1,5 +1,9 @@
 
-import { Policy, WorkflowPolicy, WorkflowStatus } from "@/types/policies";
+import { Policy, PolicyAddendum, WorkflowStatus } from "@/types/policies";
+
+export interface WorkflowPolicy extends Policy {
+  workflow_status: string;
+}
 
 /**
  * Converts a list of Policy objects to WorkflowPolicy objects

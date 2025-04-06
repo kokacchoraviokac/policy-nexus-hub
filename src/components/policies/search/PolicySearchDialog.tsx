@@ -38,6 +38,7 @@ const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
           start_date: '2023-01-01',
           expiry_date: '2024-01-01',
           premium: 1200,
+          policy_type: 'Auto Insurance',
           status: 'active',
           workflow_status: 'complete',
           company_id: '1',
@@ -54,6 +55,7 @@ const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
           start_date: '2023-02-01',
           expiry_date: '2024-02-01',
           premium: 950,
+          policy_type: 'Home Insurance',
           status: 'active',
           workflow_status: 'complete',
           company_id: '1',
@@ -141,8 +143,5 @@ const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
     </Dialog>
   );
 };
-
-export { PolicySearchDialog };
-export type { Policy };
 
 export default PolicySearchDialog;

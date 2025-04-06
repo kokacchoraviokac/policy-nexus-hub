@@ -1,100 +1,88 @@
-import React, { useState } from 'react';
-import { useSalesProcessDocuments } from '@/hooks/sales/useSalesProcessDocuments';
-import { Button } from '@/components/ui/button';
-import { Upload } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import DocumentList from '@/components/documents/unified/DocumentList';
-import DocumentUploadDialog from '@/components/documents/unified/DocumentUploadDialog';
-import { Document, DocumentApprovalStatus, DocumentCategory } from '@/types/documents';
-import { SalesProcess } from '@/types/sales';
 
-export interface SalesProcessDocumentsProps {
-  salesProcess: SalesProcess;
-  salesStage?: string;
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Upload, Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { SalesProcess } from "@/types/salesProcess";
+import { useDocuments } from "@/hooks/useDocuments";
+import DocumentList from "@/components/documents/DocumentList";
+import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
+
+interface SalesProcessDocumentsProps {
+  process: SalesProcess;
 }
 
-const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ 
-  salesProcess,
-  salesStage = 'default' 
-}) => {
+const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ process }) => {
   const { t } = useLanguage();
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [uploading, setUploading] = useState(false);
   
-  const {
-    documents,
-    isLoading,
-    error,
-    documentsCount,
-    refreshDocuments,
-    deleteDocument,
-    updateDocumentApproval
-  } = useSalesProcessDocuments(salesProcess.id);
+  const { 
+    documents, 
+    isLoading, 
+    error, 
+    refetch
+  } = useDocuments("sales_process", process.id);
   
-  const handleUploadClick = () => {
-    setUploadDialogOpen(true);
+  const handleOpenUploadDialog = () => {
+    setShowUploadDialog(true);
+  };
+  
+  const handleCloseUploadDialog = () => {
+    setShowUploadDialog(false);
   };
   
   const handleUploadComplete = () => {
-    refreshDocuments();
+    setShowUploadDialog(false);
+    setUploading(false);
+    refetch();
   };
   
-  const isError = !!error;
-  
-  const updateApproval = async (docId: string, status: DocumentApprovalStatus, notes?: string) => {
-    await updateDocumentApproval(docId, status, notes);
-    refreshDocuments();
-  };
-
-  const refresh = () => {
-    refreshDocuments();
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-medium">{t("documents")}</h3>
-          <p className="text-sm text-muted-foreground">
-            {documentsCount === 0 
-              ? t("noDocumentsUploaded") 
-              : t("documentsCount", { count: documentsCount })}
-          </p>
-        </div>
-        <Button size="sm" onClick={handleUploadClick}>
-          <Upload className="h-4 w-4 mr-2" />
-          {t("uploadDocument")}
+    <Card>
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle>{t("processDocuments")}</CardTitle>
+        <Button 
+          size="sm" 
+          onClick={handleOpenUploadDialog}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t("uploading")}
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" />
+              {t("uploadDocument")}
+            </>
+          )}
         </Button>
-      </div>
-      
-      <DocumentList 
-        documents={documents}
-        isLoading={isLoading}
-        isError={isError}
-        error={error as Error}
-        refetch={refreshDocuments}
-        onDelete={(docId: any) => {
-          if (typeof docId === 'string') {
-            deleteDocument(docId);
-          } else if (docId && docId.id) {
-            deleteDocument(docId.id);
-          }
-        }}
-        updateDocumentApproval={updateApproval}
-        entityType="sales_process"
-        entityId={salesProcess.id}
-        showUploadButton={false}
-      />
-      
-      <DocumentUploadDialog
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        entityType="sales_process"
-        entityId={salesProcess.id}
-        onUploadComplete={handleUploadComplete}
-        defaultCategory="other"
-        salesStage={salesStage}
-      />
-    </div>
+      </CardHeader>
+      <CardContent>
+        <DocumentList 
+          entityType="sales_process"
+          entityId={process.id}
+          documents={documents}
+          isLoading={isLoading}
+          isError={!!error}
+          error={error}
+          onUploadClick={handleOpenUploadDialog}
+        />
+        
+        {showUploadDialog && (
+          <DocumentUploadDialog
+            open={showUploadDialog}
+            onOpenChange={handleCloseUploadDialog}
+            entityType="sales_process"
+            entityId={process.id}
+            onUploadComplete={handleUploadComplete}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

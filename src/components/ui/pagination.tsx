@@ -2,11 +2,23 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Button } from './button';
-import { PaginationProps } from '@/types/reports';
+
+export interface PaginationProps {
+  currentPage: number;
+  totalPages?: number;
+  onPageChange: (page: number) => void;
+  totalItems?: number;
+  itemsCount?: number; // Support older implementations
+  itemsPerPage?: number;
+  children?: React.ReactNode; // Support children prop
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
+  className?: string;
+}
 
 export function Pagination({
   currentPage,
-  totalPages,
+  totalPages: propsTotalPages,
   onPageChange,
   totalItems,
   itemsPerPage,
@@ -16,11 +28,11 @@ export function Pagination({
   pageSizeOptions = [10, 25, 50, 100],
   className
 }: PaginationProps) {
-  // Calculate total pages if totalItems and itemsPerPage are provided but totalPages is not
-  const calculatedTotalPages = totalItems && itemsPerPage ? Math.ceil(totalItems / itemsPerPage) : totalPages;
-  
-  // Use itemsCount as fallback for totalItems
+  // Calculate total pages if not provided directly
   const displayedTotalItems = totalItems || itemsCount;
+  const calculatedTotalPages = displayedTotalItems && itemsPerPage 
+    ? Math.ceil(displayedTotalItems / itemsPerPage) 
+    : propsTotalPages || 1;
   
   // Generate an array of page numbers to display
   const pageNumbers: (number | string)[] = [];
@@ -155,30 +167,30 @@ export function Pagination({
   );
 }
 
-// Add this for pagination component compatibility 
-export const PaginationContent = ({ children }: { children: React.ReactNode }) => (
+// Export pagination component parts for compatibility 
+export const PaginationContent: React.FC<{children: React.ReactNode}> = ({ children }) => (
   <div className="flex items-center space-x-1">{children}</div>
 );
 
-export const PaginationEllipsis = () => (
+export const PaginationEllipsis: React.FC = () => (
   <div className="flex h-9 w-9 items-center justify-center">
     <MoreHorizontal className="h-4 w-4" />
     <span className="sr-only">More pages</span>
   </div>
 );
 
-export const PaginationItem = ({ children }: { children: React.ReactNode }) => (
+export const PaginationItem: React.FC<{children: React.ReactNode}> = ({ children }) => (
   <div>{children}</div>
 );
 
-export const PaginationLink = ({ 
+export const PaginationLink: React.FC<{
+  children: React.ReactNode;
+  isActive?: boolean;
+  [key: string]: any;
+}> = ({ 
   children, 
   isActive, 
   ...props 
-}: { 
-  children: React.ReactNode; 
-  isActive?: boolean; 
-  [key: string]: any 
 }) => (
   <Button 
     variant={isActive ? "default" : "outline"} 
@@ -189,14 +201,14 @@ export const PaginationLink = ({
   </Button>
 );
 
-export const PaginationNext = ({ ...props }: { [key: string]: any }) => (
+export const PaginationNext: React.FC<{[key: string]: any}> = ({ ...props }) => (
   <Button variant="outline" size="icon" {...props}>
     <ChevronRight className="h-4 w-4" />
     <span className="sr-only">Next page</span>
   </Button>
 );
 
-export const PaginationPrevious = ({ ...props }: { [key: string]: any }) => (
+export const PaginationPrevious: React.FC<{[key: string]: any}> = ({ ...props }) => (
   <Button variant="outline" size="icon" {...props}>
     <ChevronLeft className="h-4 w-4" />
     <span className="sr-only">Previous page</span>

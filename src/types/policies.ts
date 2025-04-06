@@ -29,8 +29,8 @@ export interface Policy {
   insured_id?: string;
   insurer_id?: string;
   product_id?: string;
-  workflow_status?: string; // Add workflow status
-  client_name?: string; // Add client name for convenience
+  workflow_status?: string;
+  client_name?: string;
 }
 
 export interface WorkflowPolicy extends Policy {
@@ -41,13 +41,13 @@ export interface PolicyAddendum {
   id: string;
   policy_id: string;
   addendum_number: string;
-  description?: string; // Make optional to match implementation
-  effective_date?: string; // Make optional to match implementation
+  description: string;
+  effective_date: string;
   premium_adjustment?: number;
   status: string;
   workflow_status: string;
   lien_status: boolean;
-  created_by?: string; // Make optional to match implementation
+  created_by?: string;
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -56,10 +56,12 @@ export interface PolicyAddendum {
 export interface PolicyImportReviewProps {
   policies: Partial<Policy>[];
   invalidPolicies: InvalidPolicy[];
-  onSubmit?: () => Promise<void>; // Make optional to match implementation
+  onSubmit?: () => Promise<void>;
   isSubmitting?: boolean;
   errors?: ValidationErrors;
-  validationErrors?: ValidationErrors; // Add alias
+  validationErrors?: ValidationErrors;
+  onBack?: () => void;
+  onImport?: () => void;
 }
 
 export interface PolicyImportInstructionsProps {
@@ -70,7 +72,7 @@ export interface InvalidPolicy {
   row: number;
   errors: string[];
   data: Partial<Policy>;
-  policy?: Partial<Policy>; // Support for older code
+  policy?: Partial<Policy>;
 }
 
 export interface ValidationErrors {
@@ -91,7 +93,7 @@ export enum WorkflowStatus {
   IN_REVIEW = 'in_review',
   READY = 'ready',
   COMPLETE = 'complete',
-  REVIEW = 'review', // Added missing values used in code
+  REVIEW = 'review',
   REJECTED = 'rejected'
 }
 
@@ -113,7 +115,7 @@ export interface PolicyFilterParams {
   dateTo?: string;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
-  // Additional fields needed by usePoliciesWorkflow
+  // Additional fields
   clientId?: string;
   insurerId?: string;
   productId?: string;
@@ -143,5 +145,13 @@ export interface UnlinkedPaymentType {
 export interface WorkflowPoliciesListProps {
   policies: Policy[];
   isLoading: boolean;
-  onReviewPolicy?: (policyId: string) => void; // Add missing prop
+  onReviewPolicy?: (policyId: string) => void;
+  error?: Error | null;
+  isError?: boolean;
+  totalCount?: number;
+  currentPage?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  workflowStatus?: string;
+  onStatusChange?: (status: string) => void;
 }

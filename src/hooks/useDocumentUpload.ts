@@ -1,112 +1,124 @@
 
 import { useState } from "react";
-import { DocumentCategory, EntityType } from "@/types/documents";
-import { uploadDocument } from "@/utils/documents";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { EntityType, DocumentUploadOptions } from "@/types/documents";
+import { getTableNameFromEntityType } from "@/utils/supabaseHelpers";
+import { v4 as uuidv4 } from "uuid";
+import { useToast } from "./use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface UseDocumentUploadProps {
-  entityType: EntityType;
-  entityId: string;
-  onSuccess?: () => void;
-  originalDocumentId?: string;
-  currentVersion?: number;
-}
-
-export function useDocumentUpload({
-  entityType,
-  entityId,
-  onSuccess,
-  originalDocumentId,
-  currentVersion = 0
-}: UseDocumentUploadProps) {
+export const useDocumentUpload = (onSuccess?: () => void) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
-  const { t } = useLanguage();
-  
-  const [documentName, setDocumentName] = useState<string>("");
-  const [documentType, setDocumentType] = useState<string>("");
-  const [documentCategory, setDocumentCategory] = useState<DocumentCategory | string>("");
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [salesStage, setSalesStage] = useState<string>("");
-  
-  const handleFileChange = (newFile: File | null) => {
-    setFile(newFile);
-    
-    // Automatically set document name from file name if not set yet
-    if (newFile && !documentName) {
-      const fileName = newFile.name.split('.')[0];
-      setDocumentName(fileName);
-    }
-  };
-  
-  const handleUpload = async () => {
-    if (!file || !documentName || !documentType) {
+  const { user } = useAuth();
+
+  const uploadDocument = async (options: DocumentUploadOptions) => {
+    if (!user) {
       toast({
-        title: t("missingRequiredFields"),
-        description: t("pleaseCompleteAllRequiredFields"),
-        variant: "destructive"
+        title: "Authentication Error",
+        description: "You must be logged in to upload documents",
+        variant: "destructive",
       });
-      return;
+      return null;
     }
-    
-    setUploading(true);
-    
+
+    setIsUploading(true);
+    setProgress(0);
+
     try {
-      const result = await uploadDocument({
-        file,
+      const {
+        entityType,
+        entityId,
         documentName,
         documentType,
-        category: documentCategory || "other",
-        entityId,
-        entityType,
+        category,
+        salesStage,
         originalDocumentId,
-        currentVersion,
-        salesStage: entityType === "sales_process" ? salesStage : undefined
-      });
-      
-      if (!result.success) {
-        throw new Error(result.error || t("documentUploadFailed"));
+        file,
+      } = options;
+
+      // Generate a unique file path
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${entityType}/${entityId}/${uuidv4()}.${fileExt}`;
+
+      // Upload the file to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+          onUploadProgress: (progress) => {
+            setProgress(Math.round((progress.loaded / progress.total) * 100));
+          },
+        });
+
+      if (uploadError) {
+        throw uploadError;
       }
-      
+
+      // Get document table name based on entity type
+      const tableName = getTableNameFromEntityType(entityType);
+
+      // Insert a record for the document
+      const { data: documentData, error: documentError } = await supabase
+        .from(tableName)
+        .insert({
+          document_name: documentName,
+          document_type: documentType,
+          file_path: filePath,
+          entity_id: entityId,
+          entity_type: entityType,
+          uploaded_by: user.id,
+          company_id: user.companyId || user.company_id,
+          mime_type: file.type,
+          category,
+          sales_stage: salesStage, // This is now supported in the type
+          original_document_id: originalDocumentId,
+          is_latest_version: true,
+        })
+        .select()
+        .single();
+
+      if (documentError) {
+        throw documentError;
+      }
+
+      // If this is a new version, update the previous version
+      if (originalDocumentId) {
+        await supabase
+          .from(tableName)
+          .update({ is_latest_version: false })
+          .eq("id", originalDocumentId);
+      }
+
       toast({
-        title: t("documentUploaded"),
-        description: t("documentUploadedSuccessfully")
+        title: "Document Uploaded",
+        description: "Document has been uploaded successfully.",
       });
-      
+
       if (onSuccess) {
         onSuccess();
       }
-      
-      // Reset form
-      setDocumentName("");
-      setDocumentType("");
-      setDocumentCategory("");
-      setFile(null);
+
+      return documentData;
     } catch (error: any) {
-      console.error("Document upload error:", error);
+      console.error("Error uploading document:", error);
       toast({
-        title: t("documentUploadFailed"),
-        description: error.message || t("errorOccurredWhileUploading"),
-        variant: "destructive"
+        title: "Upload Failed",
+        description: error.message || "An error occurred while uploading the document.",
+        variant: "destructive",
       });
+      return null;
     } finally {
-      setUploading(false);
+      setIsUploading(false);
+      setProgress(0);
     }
   };
-  
+
   return {
-    documentName,
-    setDocumentName,
-    documentType,
-    setDocumentType,
-    documentCategory,
-    setDocumentCategory,
-    file,
-    handleFileChange,
-    uploading,
-    handleUpload,
-    salesStage,
-    setSalesStage
+    uploadDocument,
+    isUploading,
+    progress,
   };
-}
+};
