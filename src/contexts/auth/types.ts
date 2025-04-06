@@ -1,5 +1,5 @@
 
-import { User, UserRole, AuthState, CustomPrivilege } from "@/types/auth/user";
+import { User, UserRole, CustomPrivilege } from "@/types/auth/userTypes";
 import { Session } from "@supabase/supabase-js";
 import { ResourceContext } from "@/types/auth/contextTypes";
 
@@ -20,7 +20,7 @@ export interface AuthContextType {
   updateUserProfile: (profile: Partial<User>) => Promise<void>;
   
   // Alias auth operations (for backward compatibility)
-  login: (email: string, password: string) => Promise<{ error: any }>;
+  login: (email: string, password: string) => Promise<{ error?: any }>;
   logout: () => Promise<void>;
   updateUser: (user: Partial<User>) => Promise<void>;
   

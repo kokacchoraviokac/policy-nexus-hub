@@ -1,5 +1,5 @@
 
-import { User } from "./userTypes";
+import { User, UserRole, CustomPrivilege } from "./userTypes";
 
 export interface AuthState {
   user: User | null;
@@ -14,19 +14,25 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   // Additional methods
-  login?: (email: string, password: string) => Promise<void>;
-  logout?: () => Promise<void>;
-  updateUser?: (data: Partial<User>) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error?: any }>;
+  logout: () => Promise<void>;
+  updateUser: (data: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
   session: any;
   hasPrivilege: (privilege: string) => boolean;
   hasPrivilegeWithContext: (privilege: string, resourceContext?: ResourceContext) => boolean;
-  hasRole?: (role: string | string[]) => boolean;
+  hasRole: (role: string | string[]) => boolean;
   role?: string;
-  initiatePasswordReset?: (email: string) => Promise<boolean>;
-  updatePassword?: (newPassword: string) => Promise<boolean>;
-  customPrivileges?: any[];
+  initiatePasswordReset: (email: string) => Promise<boolean>;
+  updatePassword: (newPassword: string) => Promise<boolean>;
+  customPrivileges?: CustomPrivilege[];
+  userProfile?: User | null;
+  companyId?: string | null;
+  isInitialized?: boolean;
+  refreshSession?: () => Promise<void>;
+  updateUserProfile?: (profile: Partial<User>) => Promise<void>;
+  permissions?: string[];
 }
 
 export interface ResourceContext {

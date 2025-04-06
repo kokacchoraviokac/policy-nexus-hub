@@ -2,28 +2,35 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { PolicyService } from "@/services/PolicyService";
 import { Policy, PolicyFilterParams } from "@/types/policies";
+import { useState, useCallback } from "react";
 
 interface UsePoliciesWorkflowProps {
-  filters: Omit<PolicyFilterParams, 'page' | 'pageSize'>;
+  filters?: Omit<PolicyFilterParams, 'page' | 'pageSize'>;
   initialPageSize?: number;
 }
 
-export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePoliciesWorkflowProps) => {
+export const usePoliciesWorkflow = ({ filters = {}, initialPageSize = 10 }: UsePoliciesWorkflowProps = {}) => {
+  const [activeTab, setActiveTab] = useState("draft");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+
   const loadPolicies = async ({ pageParam = 1 }) => {
     const params: PolicyFilterParams = {
       page: pageParam,
-      pageSize: initialPageSize,
+      pageSize: pageSize,
       clientId: filters.clientId,
       insurerId: filters.insurerId,
       productId: filters.productId,
       status: filters.status,
-      workflowStatus: filters.workflowStatus,
+      workflowStatus: statusFilter !== "all" ? statusFilter : filters.workflowStatus,
       assignedTo: filters.assignedTo,
       startDateFrom: filters.startDateFrom,
       startDateTo: filters.startDateTo,
       expiryDateFrom: filters.expiryDateFrom,
       expiryDateTo: filters.expiryDateTo,
-      searchTerm: filters.searchTerm,
+      searchTerm: searchTerm || filters.searchTerm,
     };
 
     try {
@@ -58,11 +65,11 @@ export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePolici
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['policies-workflow', filters],
+    queryKey: ['policies-workflow', statusFilter, searchTerm, pageSize, currentPage, filters],
     queryFn: loadPolicies,
     initialPageParam: 1,
     getNextPageParam: (lastGroup) => {
-      const totalPages = Math.ceil(lastGroup.total / initialPageSize);
+      const totalPages = Math.ceil(lastGroup.total / pageSize);
       const nextPage = lastGroup.currentPage + 1;
       return nextPage <= totalPages ? nextPage : undefined;
     },
@@ -75,6 +82,10 @@ export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePolici
   // Get the total count from the first page (all pages should have the same total)
   const total = data?.pages?.[0]?.total || 0;
 
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
   return {
     policies,
     isLoading,
@@ -84,5 +95,17 @@ export const usePoliciesWorkflow = ({ filters, initialPageSize = 10 }: UsePolici
     total,
     error,
     refetch,
+    activeTab,
+    setActiveTab,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalCount: total,
+    handleRefresh
   };
 };

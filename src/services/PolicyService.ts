@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Policy, PolicyFilterParams } from "@/types/policies";
+import { Policy, PolicyFilterParams, WorkflowStatus } from "@/types/policies";
 import { User } from "@/types/auth/userTypes";
 
 // Service class for policy operations
@@ -198,13 +199,36 @@ export class PolicyService {
       };
     }
   }
+  
+  // Update policy status
+  static async updatePolicyStatus(policyId: string, status: string) {
+    return this.updatePolicy(policyId, { status });
+  }
 
   // Import multiple policies
   static async importPolicies(policies: Partial<Policy>[], userId: string) {
     try {
+      if (!policies || policies.length === 0) {
+        return {
+          success: false,
+          message: 'No policies to import',
+          error: 'No policies provided'
+        };
+      }
+
       // Ensure each policy has required fields
       const preparedPolicies = policies.map(policy => ({
-        ...policy,
+        policy_number: policy.policy_number || '',
+        policyholder_name: policy.policyholder_name || '',
+        insurer_name: policy.insurer_name || '',
+        start_date: policy.start_date || new Date().toISOString().split('T')[0],
+        expiry_date: policy.expiry_date || '',
+        premium: policy.premium || 0,
+        currency: policy.currency || 'EUR',
+        policy_type: policy.policy_type || 'standard',
+        status: policy.status || 'active',
+        workflow_status: policy.workflow_status || WorkflowStatus.DRAFT,
+        company_id: policy.company_id || '',
         created_by: userId,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -214,7 +238,7 @@ export class PolicyService {
       // In a real app, you might want to batch these for larger imports
       const { data, error } = await supabase
         .from('policies')
-        .insert(preparedPolicies as any);
+        .insert(preparedPolicies);
 
       if (error) throw error;
 

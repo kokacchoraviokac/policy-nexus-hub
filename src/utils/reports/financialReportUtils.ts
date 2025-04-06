@@ -1,5 +1,20 @@
 
-import { FinancialReportData, FinancialReportFilters } from '@/types/reports';
+import { FinancialReportFilters } from '@/types/reports';
+
+// Define FinancialReportData interface
+export interface FinancialReportData {
+  id: string;
+  date: string;
+  type: string;
+  description: string;
+  reference: string;
+  amount: number;
+  currency: string;
+  entity_id: string;
+  entity_type: string;
+  status: string;
+  category: string;
+}
 
 // Export the FinancialTransaction type for components
 export type { FinancialReportData as FinancialTransaction };

@@ -17,7 +17,7 @@ export const fetchUserPrivileges = async (userId: string): Promise<UserPrivilege
       return [];
     }
     
-    return data as UserPrivilege[] || [];
+    return (data || []) as UserPrivilege[];
   } catch (error) {
     console.error('Exception fetching user privileges:', error);
     return [];
