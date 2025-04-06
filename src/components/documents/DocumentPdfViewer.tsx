@@ -1,7 +1,11 @@
 
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { DocumentPdfViewerProps } from '@/types/documents';
+
+export interface DocumentPdfViewerProps {
+  url: string;
+  className?: string;
+}
 
 const DocumentPdfViewer: React.FC<DocumentPdfViewerProps> = ({ url, className }) => {
   const [isLoading, setIsLoading] = useState(true);

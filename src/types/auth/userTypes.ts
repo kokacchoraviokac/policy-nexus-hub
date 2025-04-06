@@ -1,59 +1,41 @@
 
-import { Session } from "@supabase/supabase-js";
-
-// Define UserRole as an enum
+// Define available user roles
 export enum UserRole {
-  SUPER_ADMIN = 'superAdmin',
+  SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
   EMPLOYEE = 'employee',
   AGENT = 'agent',
   CLIENT = 'client'
 }
 
-// Define User interface
+// Base user interface
 export interface User {
   id: string;
-  name: string;
   email: string;
-  role: UserRole | string;
-  companyId?: string;
-  company_id?: string; // For backward compatibility
-  avatar?: string;
-  avatarUrl?: string; // For backward compatibility
-  avatar_url?: string; // For backward compatibility
-  user_metadata?: Record<string, any>;
+  name: string;
+  role: UserRole;
+  company_id: string;
+  avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  last_sign_in_at?: string;
+  is_active?: boolean;
 }
 
-// Define CustomPrivilege interface
+// Custom privileges for users
 export interface CustomPrivilege {
   id: string;
   user_id: string;
   privilege: string;
   granted_at: string;
+  expires_at?: string;
   granted_by: string;
-  expires_at?: string | null;
-  context?: string;
 }
 
-// Define AuthState interface
+// Auth state representation
 export interface AuthState {
-  user: User | null;
-  session: Session | null;
   isLoading: boolean;
-  isInitialized: boolean;
   isAuthenticated: boolean;
-  customPrivileges: CustomPrivilege[];
-}
-
-// Define SignupFormValues
-export interface SignupFormValues {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  role: UserRole;
-  companyOption: 'new' | 'existing' | 'invitation';
-  companyId?: string;
-  companyName?: string;
-  invitationToken?: string;
+  user: User | null;
+  error: string | null;
 }
