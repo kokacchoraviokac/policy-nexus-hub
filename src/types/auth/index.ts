@@ -45,12 +45,6 @@ export interface AuthState {
   customPrivileges: CustomPrivilege[];
 }
 
-// Export types - use export type to avoid conflicts with isolatedModules
-export type { User, CustomPrivilege, AuthState };
-
-// Export enum
-export { UserRole };
-
 // Define SignupFormValues
 export interface SignupFormValues {
   name: string;

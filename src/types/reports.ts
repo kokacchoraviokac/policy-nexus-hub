@@ -24,8 +24,8 @@ export interface FinancialReportFilters {
   searchTerm?: string;
   transactionType?: string;
   status?: string;
-  dateFrom?: string | Date;  // Added to match component usage
-  dateTo?: string | Date;    // Added to match component usage
+  dateFrom?: string | Date;  
+  dateTo?: string | Date;    
 }
 
 export interface FinancialReportData {
@@ -36,7 +36,7 @@ export interface FinancialReportData {
   type: string;
   category?: string;
   reference?: string;
-  status?: string;  // Added to match component usage
+  status?: string;  
 }
 
 export interface FinancialReportSummary {
@@ -57,10 +57,8 @@ export interface FinancialTransactionsProps {
   isExporting: boolean;
 }
 
-export interface FinancialReportSummaryProps {
-  totalIncome: number;
-  totalExpenses: number;
-  netAmount: number;
+export interface FinancialReportSummaryProps extends FinancialReportSummary {
+  // Directly extend FinancialReportSummary
 }
 
 export interface FinancialReportFiltersProps {
@@ -81,7 +79,8 @@ export interface UseFinancialReportReturn {
   applyFilters: () => void;
   exportReport: () => void;
   isExporting: boolean;
-  defaultFilters?: FinancialReportFilters;  // Added to match component usage
-  resetFilters?: () => void;  // Added to match component usage
-  reports?: any[];  // Added to match component usage
+  defaultFilters?: FinancialReportFilters;
+  resetFilters?: () => void;
+  reports?: any[];
+  refetch?: () => void;
 }

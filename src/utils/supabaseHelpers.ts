@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { PostgrestQueryBuilder } from "@supabase/postgrest-js";
+import { PostgrestQueryBuilder, PostgrestFilterBuilder } from "@supabase/postgrest-js";
 
 /**
  * Helper function to create a query builder for a specific table
@@ -56,13 +56,13 @@ export function safeQueryCast<T>(data: any): T {
 /**
  * Safe wrapper for supabase queries with dynamic table names
  */
-export function executeQuery(tableName: string, queryFn: (query: any) => any) {
+export function executeQuery<T = any>(tableName: string, queryFn: (query: PostgrestQueryBuilder<any, any, string>) => any): Promise<{ data: T, error: any }> {
   try {
     const query = safeFrom(tableName);
-    return queryFn(query);
+    return queryFn(query as any);
   } catch (error) {
     console.error(`Error executing query on ${tableName}:`, error);
-    throw error;
+    return Promise.resolve({ data: null, error: errorToString(error) });
   }
 }
 

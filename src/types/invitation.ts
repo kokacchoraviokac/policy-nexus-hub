@@ -26,3 +26,9 @@ export interface InvitationFormData {
   role: UserRole;
   expiresIn: number; // days
 }
+
+export interface CreateInvitationRequest {
+  email: string;
+  role: UserRole;
+  expiresIn: number;
+}

@@ -86,10 +86,31 @@ export interface UseProposalsDataProps {
   sales_process_id?: string;
   status?: ProposalStatus | 'all';
   limit?: number;
+  searchQuery?: string;
+  statusFilter?: string;
 }
 
 // Define SalesProcessDocumentsProps
 export interface SalesProcessDocumentsProps {
   process: SalesProcess;
   salesStage?: string;
+}
+
+// Define ProposalsListProps
+export interface ProposalsListProps {
+  proposals: Proposal[];
+  onStatusChange?: (proposalId: string, newStatus: ProposalStatus) => Promise<boolean>;
+}
+
+// Define UpdateProposalStatusDialogProps
+export interface UpdateProposalStatusDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentStatus: ProposalStatus;
+  onUpdate: (status: ProposalStatus) => Promise<void>;
+}
+
+// Define the DocumentsTabProps
+export interface DocumentsTabProps {
+  process: SalesProcess;
 }

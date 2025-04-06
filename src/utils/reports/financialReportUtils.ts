@@ -1,177 +1,109 @@
 
-import { FinancialReportData, FinancialReportFilters, FinancialReportSummary } from "@/types/reports";
-import { formatCurrency } from "@/utils/formatUtils";
+import { FinancialReportData, FinancialReportFilters, FinancialTransaction, FinancialReportSummary } from "@/types/reports";
 
-export function initializeFilters(): FinancialReportFilters {
-  return {
-    startDate: new Date(new Date().setDate(1)), // First day of current month
-    endDate: new Date(), // Today
-    searchTerm: '',
-    transactionType: 'all',
-    status: 'all',
-    category: 'all',
-  };
-}
+// Default financial report filters
+export const defaultFinancialFilters: FinancialReportFilters = {
+  startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // First day of current month
+  endDate: new Date(),
+  type: '',
+  category: '',
+  minAmount: undefined,
+  maxAmount: undefined,
+  searchTerm: '',
+  transactionType: '',
+  status: '',
+  dateFrom: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  dateTo: new Date()
+};
 
-export function mockFinancialData(): FinancialReportData[] {
-  const today = new Date();
-  const thisMonth = today.getMonth();
-  const thisYear = today.getFullYear();
+// Fetch financial report data
+export const fetchFinancialReportData = async (filters: FinancialReportFilters): Promise<FinancialReportData[]> => {
+  // This is a mock implementation - in real world scenario, this would call an API
+  // or query a database to get financial data based on the filters
   
-  return [
-    {
-      id: "1",
-      date: new Date(thisYear, thisMonth, 5).toISOString(),
-      amount: 2500,
-      description: "Policy Premium - Auto Insurance",
-      type: "income",
-      category: "sales",
-      reference: "POL-1234",
-      status: "completed"
-    },
-    {
-      id: "2",
-      date: new Date(thisYear, thisMonth, 8).toISOString(),
-      amount: 1800,
-      description: "Commission - Home Insurance",
-      type: "income",
-      category: "commissions",
-      reference: "COM-5678",
-      status: "completed"
-    },
-    {
-      id: "3",
-      date: new Date(thisYear, thisMonth, 12).toISOString(),
-      amount: -450,
-      description: "Office Supplies",
-      type: "expense",
-      category: "operational",
-      reference: "EXP-91011",
-      status: "completed"
-    },
-    {
-      id: "4",
-      date: new Date(thisYear, thisMonth, 15).toISOString(),
-      amount: 3200,
-      description: "Policy Premium - Life Insurance",
-      type: "income",
-      category: "sales",
-      reference: "POL-1235",
-      status: "completed"
-    },
-    {
-      id: "5",
-      date: new Date(thisYear, thisMonth, 18).toISOString(),
-      amount: -750,
-      description: "Rent Payment",
-      type: "expense",
-      category: "operational",
-      reference: "EXP-91012",
-      status: "completed"
-    },
-    {
-      id: "6",
-      date: new Date(thisYear, thisMonth, 20).toISOString(),
-      amount: 950,
-      description: "Commission - Travel Insurance",
-      type: "income",
-      category: "commissions",
-      reference: "COM-5679",
-      status: "pending"
-    },
-    {
-      id: "7",
-      date: new Date(thisYear, thisMonth, 22).toISOString(),
-      amount: -380,
-      description: "Utilities",
-      type: "expense",
-      category: "operational",
-      reference: "EXP-91013",
-      status: "pending"
-    },
-    {
-      id: "8",
-      date: new Date(thisYear, thisMonth, 25).toISOString(),
-      amount: -1200,
-      description: "Tax Payment",
-      type: "expense",
-      category: "taxes",
-      reference: "TAX-2023",
-      status: "completed"
+  // Simulate API call delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Generate some mock data
+  const mockData: FinancialReportData[] = Array.from({ length: 20 }, (_, i) => {
+    const isIncome = Math.random() > 0.3;
+    return {
+      id: `trans-${i}`,
+      date: new Date(
+        new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 30))
+      ).toISOString(),
+      amount: Math.floor(Math.random() * 10000) / 100,
+      description: isIncome ? `Income payment #${i}` : `Expense payment #${i}`,
+      type: isIncome ? 'income' : 'expense',
+      category: isIncome ? 'commission' : 'service',
+      reference: `REF-${Math.floor(Math.random() * 1000)}`,
+      status: Math.random() > 0.2 ? 'completed' : 'pending'
+    };
+  });
+  
+  // Apply filters (basic filtering for demonstration)
+  return mockData.filter(transaction => {
+    const transactionDate = new Date(transaction.date);
+    const startDate = new Date(filters.startDate);
+    const endDate = new Date(filters.endDate);
+    
+    // Date range filter
+    if (transactionDate < startDate || transactionDate > endDate) {
+      return false;
     }
-  ];
-}
+    
+    // Type filter
+    if (filters.type && transaction.type !== filters.type) {
+      return false;
+    }
+    
+    // Category filter
+    if (filters.category && transaction.category !== filters.category) {
+      return false;
+    }
+    
+    // Amount range filter
+    if (filters.minAmount && transaction.amount < filters.minAmount) {
+      return false;
+    }
+    if (filters.maxAmount && transaction.amount > filters.maxAmount) {
+      return false;
+    }
+    
+    // Search term filter (checks description and reference)
+    if (filters.searchTerm && 
+        !transaction.description.toLowerCase().includes(filters.searchTerm.toLowerCase()) &&
+        !transaction.reference?.toLowerCase().includes(filters.searchTerm.toLowerCase())) {
+      return false;
+    }
+    
+    // Transaction type filter
+    if (filters.transactionType && transaction.type !== filters.transactionType) {
+      return false;
+    }
+    
+    // Status filter
+    if (filters.status && transaction.status !== filters.status) {
+      return false;
+    }
+    
+    return true;
+  });
+};
 
-export function generateFinancialSummary(data: FinancialReportData[]): FinancialReportSummary {
+// Calculate financial report summary
+export const calculateFinancialSummary = (data: FinancialReportData[]): FinancialReportSummary => {
   const totalIncome = data
     .filter(item => item.type === 'income')
     .reduce((sum, item) => sum + item.amount, 0);
     
   const totalExpenses = data
     .filter(item => item.type === 'expense')
-    .reduce((sum, item) => sum + Math.abs(item.amount), 0);
+    .reduce((sum, item) => sum + item.amount, 0);
     
-  const netAmount = totalIncome - totalExpenses;
-  
   return {
     totalIncome,
     totalExpenses,
-    netAmount
+    netAmount: totalIncome - totalExpenses
   };
-}
-
-export function filterFinancialData(data: FinancialReportData[], filters: FinancialReportFilters): FinancialReportData[] {
-  return data.filter(item => {
-    const itemDate = new Date(item.date);
-    const startDate = filters.startDate instanceof Date ? filters.startDate : new Date(filters.startDate);
-    const endDate = filters.endDate instanceof Date ? filters.endDate : new Date(filters.endDate);
-    
-    // Date range filter
-    if (itemDate < startDate || itemDate > endDate) {
-      return false;
-    }
-    
-    // Transaction type filter
-    if (filters.transactionType && filters.transactionType !== 'all') {
-      if (item.type !== filters.transactionType) {
-        return false;
-      }
-    }
-    
-    // Category filter
-    if (filters.category && filters.category !== 'all') {
-      if (item.category !== filters.category) {
-        return false;
-      }
-    }
-    
-    // Status filter
-    if (filters.status && filters.status !== 'all') {
-      if (item.status !== filters.status) {
-        return false;
-      }
-    }
-    
-    // Min amount filter
-    if (filters.minAmount && Math.abs(item.amount) < filters.minAmount) {
-      return false;
-    }
-    
-    // Max amount filter
-    if (filters.maxAmount && Math.abs(item.amount) > filters.maxAmount) {
-      return false;
-    }
-    
-    // Search term filter
-    if (filters.searchTerm && filters.searchTerm.trim() !== '') {
-      const searchLower = filters.searchTerm.toLowerCase();
-      return (
-        item.description.toLowerCase().includes(searchLower) ||
-        (item.reference && item.reference.toLowerCase().includes(searchLower)) ||
-        formatCurrency(item.amount).toLowerCase().includes(searchLower)
-      );
-    }
-    
-    return true;
-  });
-}
+};

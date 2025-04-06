@@ -1,7 +1,8 @@
 
-import { EntityType, DocumentCategory as CommonDocumentCategory } from "@/types/common";
+import { EntityType as CommonEntityType, DocumentCategory as CommonDocumentCategory } from "@/types/common";
 
-// Re-export the DocumentCategory from common types
+// Re-export the types from common
+export type EntityType = CommonEntityType;
 export type DocumentCategory = CommonDocumentCategory;
 
 // Document status types
@@ -16,7 +17,7 @@ export interface Document {
   document_name: string;
   document_type: string;
   file_path: string;
-  entity_type: EntityType; // Reference from common types
+  entity_type: EntityType; 
   entity_id: string;
   created_at: string;
   updated_at?: string;
@@ -34,6 +35,7 @@ export interface Document {
   version?: number;
   is_latest_version?: boolean;
   original_document_id?: string | null;
+  comments?: string[]; // Added for DocumentViewDialog
 }
 
 // Document list display options
@@ -79,3 +81,53 @@ export interface DocumentUploadDialogProps {
   defaultCategory?: DocumentCategory;
   salesStage?: string;
 }
+
+// Document analysis panel props
+export interface DocumentAnalysisPanelProps {
+  document?: Document;
+  file?: File;
+  onAnalysisComplete?: () => void;
+  onCategoryDetected?: (category: DocumentCategory) => void;
+}
+
+// Document search parameters
+export interface DocumentSearchParams {
+  searchTerm?: string;
+  category?: DocumentCategory;
+  dateFrom?: string;
+  dateTo?: string;
+  entityType?: EntityType;
+  page?: number;
+  pageSize?: number;
+}
+
+// Document search props
+export interface UseDocumentSearchProps {
+  initialSearchParams?: DocumentSearchParams;
+  companyId?: string;
+}
+
+// Document search return
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  searchParams: DocumentSearchParams;
+  setSearchParams: (params: Partial<DocumentSearchParams>) => void;
+  totalCount: number;
+  page: number;
+  setPage: (page: number) => void;
+  pageSize: number;
+  resetSearch: () => void;
+}
+
+// Document table name type
+export type DocumentTableName = 
+  | 'policy_documents'
+  | 'claim_documents'
+  | 'sales_documents'
+  | 'client_documents'
+  | 'insurer_documents'
+  | 'agent_documents'
+  | 'addendum_documents';

@@ -5,7 +5,7 @@ import { usePolicyImport } from "@/hooks/usePolicyImport";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Upload, Save, FileText, AlertCircle } from "lucide-react";
+import { ArrowLeft, Upload, FileText, AlertCircle } from "lucide-react";
 import PolicyImportFileUpload from "./PolicyImportFileUpload";
 import PolicyImportReview from "./PolicyImportReview";
 import PolicyImportInstructions from "./PolicyImportInstructions";
@@ -35,7 +35,7 @@ const PolicyImportPage: React.FC = () => {
   const convertedInvalidPolicies: PolicyImportReviewData[] = invalidPolicies ? 
     invalidPolicies.map(item => ({
       policy: item.policy || {},
-      errors: Array.isArray(item.errors) ? item.errors : [item.errors.toString()]
+      errors: Array.isArray(item.errors) ? item.errors : [String(item.errors || '')]
     })) : 
     Object.entries(validationErrors).map(
       ([index, errors]) => ({
@@ -53,9 +53,7 @@ const PolicyImportPage: React.FC = () => {
   };
 
   const handleImportComplete = () => {
-    const promise = submitPolicies();
-    
-    promise.then(success => {
+    submitPolicies().then(success => {
       if (success) {
         navigate("/policies/workflow");
       }
