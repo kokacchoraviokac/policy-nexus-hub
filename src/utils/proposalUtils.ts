@@ -1,12 +1,30 @@
 
-import { Proposal, ProposalStatus } from "@/types/sales";
-import { ProposalStats } from "@/types/reports";
+import { Proposal, ProposalStats, ProposalStatus } from '@/types/reports';
 
-/**
- * Calculate statistics for proposals
- */
-export function calculateProposalStats(proposals: Proposal[]): ProposalStats {
+// Initialize default proposal stats
+export const initialProposalStats: ProposalStats = {
+  totalCount: 0,
+  pendingCount: 0,
+  approvedCount: 0,
+  rejectedCount: 0,
+  // Legacy fields
+  total: 0,
+  accepted: 0,
+  rejected: 0,
+  pending: 0,
+  draft: 0,
+  sent: 0,
+  viewed: 0
+};
+
+// Calculate proposal statistics from a list of proposals
+export const calculateProposalStats = (proposals: Proposal[]): ProposalStats => {
   const stats: ProposalStats = {
+    totalCount: proposals.length,
+    pendingCount: 0,
+    approvedCount: 0,
+    rejectedCount: 0,
+    // Legacy fields
     total: proposals.length,
     accepted: 0,
     rejected: 0,
@@ -17,63 +35,54 @@ export function calculateProposalStats(proposals: Proposal[]): ProposalStats {
   };
   
   proposals.forEach(proposal => {
-    if (proposal.status === 'accepted') {
+    if (proposal.status === 'accepted' || proposal.status === 'approved') {
+      stats.approvedCount++;
       stats.accepted++;
     } else if (proposal.status === 'rejected') {
+      stats.rejectedCount++;
       stats.rejected++;
     } else if (proposal.status === 'draft') {
-      stats.draft!++;
+      stats.draft++;
       stats.pending++;
+      stats.pendingCount++;
     } else if (proposal.status === 'sent') {
-      stats.sent!++;
+      stats.sent++;
       stats.pending++;
+      stats.pendingCount++;
     } else if (proposal.status === 'viewed') {
-      stats.viewed!++;
+      stats.viewed++;
       stats.pending++;
+      stats.pendingCount++;
     } else if (proposal.status === 'expired') {
       stats.pending++;
+      stats.pendingCount++;
     }
   });
   
   return stats;
-}
+};
 
-/**
- * Get updated proposal with new status
- */
-export function getUpdatedProposalWithStatus(
-  proposal: Proposal, 
-  newStatus: ProposalStatus
-): Proposal {
-  const now = new Date().toISOString();
-  const updates: Partial<Proposal> = { status: newStatus };
-  
-  // Add appropriate timestamp based on status
-  switch (newStatus) {
-    case 'sent':
-      updates.sent_at = now;
-      break;
-    case 'viewed':
-      updates.viewed_at = now;
-      break;
-    case 'accepted':
-      updates.accepted_at = now;
-      break;
-    case 'rejected':
-      updates.rejected_at = now;
-      break;
-  }
-  
-  return { ...proposal, ...updates };
-}
-
-/**
- * Filter proposals by status
- */
-export function filterProposals(proposals: Proposal[], status?: ProposalStatus): Proposal[] {
+// Filter proposals by status
+export const filterProposalsByStatus = (
+  proposals: Proposal[], 
+  status: ProposalStatus | string
+): Proposal[] => {
   if (!status || status === 'all') {
     return proposals;
   }
   
   return proposals.filter(proposal => proposal.status === status);
-}
+};
+
+// Get proposals grouped by status
+export const getProposalsByStatus = (
+  proposals: Proposal[]
+): Record<string, Proposal[]> => {
+  return proposals.reduce((acc, proposal) => {
+    if (!acc[proposal.status]) {
+      acc[proposal.status] = [];
+    }
+    acc[proposal.status].push(proposal);
+    return acc;
+  }, {} as Record<string, Proposal[]>);
+};

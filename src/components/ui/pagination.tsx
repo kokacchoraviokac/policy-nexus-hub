@@ -11,6 +11,7 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   className?: string;
+  children?: React.ReactNode;
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
@@ -19,11 +20,12 @@ export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   onPageChange,
   onPageSizeChange,
-  className
+  className,
+  children
 }) => {
   const totalPages = Math.ceil(itemsCount / itemsPerPage);
   
-  if (totalPages <= 1) {
+  if (totalPages <= 1 && !children) {
     return null;
   }
 
@@ -59,6 +61,11 @@ export const Pagination: React.FC<PaginationProps> = ({
   };
 
   const pagination = generatePagination();
+
+  // If children are provided, render those instead of the default pagination
+  if (children) {
+    return <nav className={cn("flex items-center justify-center", className)}>{children}</nav>;
+  }
 
   return (
     <nav className={cn("flex items-center justify-center", className)}>
@@ -177,18 +184,43 @@ export const PaginationController: React.FC<PaginationControllerProps> = ({
   );
 };
 
-// Export the sub-components for backward compatibility
-export const PaginationContent = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-export const PaginationEllipsis = () => <MoreHorizontal className="h-4 w-4" />;
-export const PaginationItem = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-export const PaginationLink = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
-export const PaginationNext = ({ onClick }: { onClick?: () => void }) => (
-  <Button variant="outline" size="icon" onClick={onClick}>
+// Export these components for backward compatibility
+export const PaginationContent: React.FC<{children: React.ReactNode; className?: string}> = ({ children, className }) => (
+  <div className={className}>{children}</div>
+);
+
+export const PaginationEllipsis: React.FC = () => <MoreHorizontal className="h-4 w-4" />;
+
+export const PaginationItem: React.FC<{children: React.ReactNode}> = ({ children }) => <div>{children}</div>;
+
+export const PaginationLink: React.FC<{
+  children: React.ReactNode;
+  isActive?: boolean;
+  onClick?: () => void;
+}> = ({ children, onClick, isActive }) => (
+  <Button 
+    variant={isActive ? "default" : "outline"} 
+    size="icon" 
+    onClick={onClick}
+  >
+    {children}
+  </Button>
+);
+
+export const PaginationNext: React.FC<{ 
+  onClick?: () => void;
+  className?: string;
+}> = ({ onClick, className }) => (
+  <Button variant="outline" size="icon" onClick={onClick} className={className}>
     <ChevronRight className="h-4 w-4" />
   </Button>
 );
-export const PaginationPrevious = ({ onClick }: { onClick?: () => void }) => (
-  <Button variant="outline" size="icon" onClick={onClick}>
+
+export const PaginationPrevious: React.FC<{ 
+  onClick?: () => void;
+  className?: string;
+}> = ({ onClick, className }) => (
+  <Button variant="outline" size="icon" onClick={onClick} className={className}>
     <ChevronLeft className="h-4 w-4" />
   </Button>
 );

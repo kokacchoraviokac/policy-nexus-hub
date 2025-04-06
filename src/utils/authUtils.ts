@@ -1,177 +1,102 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ResourceContext } from "@/types/auth/contextTypes";
-import { fromTable } from "./supabaseQueryHelper";
+import { ResourceContext, UserPrivilege } from "@/types/auth/contextTypes";
+import { CustomPrivilege } from "@/types/auth/userTypes";
 
-/**
- * Check if a user has a specific privilege with context
- */
-export async function checkPrivilegeWithContext(
-  userId: string,
-  privilege: string,
-  context?: ResourceContext
-): Promise<boolean> {
-  if (!userId || !privilege) {
-    return false;
-  }
-
+// Helper to fetch a user's privileges from the database
+export const fetchUserPrivileges = async (userId: string): Promise<UserPrivilege[]> => {
   try {
-    // Query for direct user privileges
-    const { data: userPrivileges, error } = await supabase
-      .from('user_custom_privileges')
+    const { data, error } = await supabase
+      .from('user_privileges')
       .select('*')
-      .eq('user_id', userId)
-      .eq('privilege', privilege);
-
+      .eq('user_id', userId);
+      
     if (error) {
-      console.error('Error checking user privileges:', error);
-      return false;
+      console.error('Error fetching user privileges:', error);
+      return [];
     }
-
-    // No privileges found
-    if (!userPrivileges || userPrivileges.length === 0) {
-      return false;
-    }
-
-    // If no context is provided, the user has the privilege
-    if (!context) {
-      return true;
-    }
-
-    // Check if any privilege matches the context
-    for (const userPrivilege of userPrivileges) {
-      // If privilege has no specific context, it applies to all
-      if (!userPrivilege.context) {
-        return true;
-      }
-
-      // Check owner context
-      if (context.ownerId && userPrivilege.context.ownerId) {
-        if (userPrivilege.context.ownerId !== context.ownerId) {
-          continue;
-        }
-      }
-
-      // Check user ID context
-      if (context.currentUserId && userPrivilege.context.currentUserId) {
-        if (userPrivilege.context.currentUserId !== context.currentUserId) {
-          continue;
-        }
-      }
-
-      // Check company context
-      if (context.companyId && userPrivilege.context.companyId) {
-        if (userPrivilege.context.companyId !== context.companyId) {
-          continue;
-        }
-      }
-
-      // Check user company context
-      if (context.currentUserCompanyId && userPrivilege.context.currentUserCompanyId) {
-        if (userPrivilege.context.currentUserCompanyId !== context.currentUserCompanyId) {
-          continue;
-        }
-      }
-
-      // Check resource type
-      if (context.resourceType && userPrivilege.context.resourceType) {
-        if (userPrivilege.context.resourceType !== context.resourceType) {
-          continue;
-        }
-      }
-
-      // If all checks passed, user has the privilege
-      return true;
-    }
-
-    // No matching context found
-    return false;
+    
+    return data || [];
   } catch (error) {
-    console.error('Error checking privilege with context:', error);
-    return false;
+    console.error('Exception fetching user privileges:', error);
+    return [];
   }
-}
+};
 
-/**
- * Check if a user has a specific privilege
- */
-export async function checkPrivilege(userId: string, privilege: string): Promise<boolean> {
-  return checkPrivilegeWithContext(userId, privilege);
-}
-
-/**
- * Fetch custom privileges for a user
- */
-export async function fetchUserCustomPrivileges(userId: string) {
+// Helper to fetch a user's custom privileges from the database
+export const fetchUserCustomPrivileges = async (userId: string): Promise<CustomPrivilege[]> => {
   try {
     const { data, error } = await supabase
       .from('user_custom_privileges')
       .select('*')
       .eq('user_id', userId);
-
+      
     if (error) {
-      console.error('Error fetching user privileges:', error);
+      console.error('Error fetching user custom privileges:', error);
       return [];
     }
-
+    
     return data || [];
   } catch (error) {
-    console.error('Error in fetchUserCustomPrivileges:', error);
+    console.error('Exception fetching user custom privileges:', error);
     return [];
   }
-}
+};
 
-/**
- * Grant a custom privilege to a user
- */
-export async function grantCustomPrivilege(
-  userId: string,
+// Check if user has a specific privilege with context 
+export const hasPrivilegeWithContext = (
   privilege: string,
-  grantedBy: string,
-  expiresAt?: Date,
-  context?: Record<string, any>
-) {
-  try {
-    const { data, error } = await fromTable('user_custom_privileges')
-      .insert({
-        user_id: userId,
-        privilege,
-        granted_by: grantedBy,
-        granted_at: new Date().toISOString(),
-        expires_at: expiresAt ? expiresAt.toISOString() : null,
-        context: context ? JSON.stringify(context) : null
-      })
-      .select();
-
-    if (error) {
-      console.error('Error granting privilege:', error);
-      return false;
+  userPrivileges: CustomPrivilege[],
+  context?: ResourceContext
+): boolean => {
+  if (!userPrivileges?.length) return false;
+  
+  return userPrivileges.some(p => {
+    if (p.privilege !== privilege) return false;
+    
+    if (!p.context && !context) return true;
+    
+    if (!p.context || !context) return false;
+    
+    const privilegeContext = typeof p.context === 'string' 
+      ? JSON.parse(p.context) 
+      : p.context;
+    
+    // Handle company context match
+    if (context.companyId && privilegeContext.companyId) {
+      if (privilegeContext.companyId !== context.companyId) return false;
     }
-
-    return true;
-  } catch (error) {
-    console.error('Error in grantCustomPrivilege:', error);
-    return false;
-  }
-}
-
-/**
- * Revoke a custom privilege
- */
-export async function revokeCustomPrivilege(privilegeId: string) {
-  try {
-    const { error } = await fromTable('user_custom_privileges')
-      .delete()
-      .eq('id', privilegeId);
-
-    if (error) {
-      console.error('Error revoking privilege:', error);
-      return false;
+    
+    // Handle owner context match
+    if (context.ownerId && privilegeContext.ownerId) {
+      if (privilegeContext.ownerId !== context.ownerId) return false;
     }
-
+    
+    // Handle resource type context match
+    if (context.resourceType && privilegeContext.resourceType) {
+      if (privilegeContext.resourceType !== context.resourceType) return false;
+    }
+    
+    // Handle resource ID context match
+    if (context.resourceId && privilegeContext.resourceId) {
+      if (privilegeContext.resourceId !== context.resourceId) return false;
+    }
+    
+    // Handle current user context match
+    if (context.currentUserId && privilegeContext.currentUserId) {
+      if (privilegeContext.currentUserId !== context.currentUserId) return false;
+    }
+    
     return true;
-  } catch (error) {
-    console.error('Error in revokeCustomPrivilege:', error);
-    return false;
-  }
-}
+  });
+};
+
+// Simple function to check if a user has a specific privilege
+export const hasPrivilege = (
+  privilege: string,
+  userPrivileges: CustomPrivilege[]
+): boolean => {
+  if (!userPrivileges?.length) return false;
+  
+  return userPrivileges.some(p => p.privilege === privilege);
+};

@@ -1,60 +1,61 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileEditForm from "./ProfileEditForm";
-import UserSecuritySettings from "@/components/auth/UserSecuritySettings";
-import CustomPrivilegeManager from "@/components/auth/CustomPrivilegeManager";
-import { User } from "@/types/auth";
+import PasswordChangeForm from "./PasswordChangeForm";
+import NotificationsForm from "./NotificationsForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-// Define ProfileEditFormProps explicitly here
-interface ProfileEditFormProps {
-  user: User;
-  updateUser: (data: Partial<User>) => Promise<void>;
-}
+/**
+ * Profile Tabs component for user profile settings
+ */
+const ProfileTabs: React.FC = () => {
+  const { t } = useLanguage();
+  const { user, updateUser } = useAuth();
+  const [activeTab, setActiveTab] = useState("profile");
 
-interface ProfileTabsProps {
-  user: User;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  canViewPrivileges: boolean;
-  updateUser: (data: Partial<User>) => Promise<void>;
-}
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
 
-const ProfileTabs: React.FC<ProfileTabsProps> = ({
-  user,
-  activeTab,
-  setActiveTab,
-  canViewPrivileges,
-  updateUser,
-}) => {
-  // Determine number of tabs (2 or 3 based on privileges)
-  const gridCols = canViewPrivileges ? "grid-cols-3" : "grid-cols-2";
+  if (!user) {
+    return <div>Loading user profile...</div>;
+  }
 
   return (
-    <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className={`grid w-full ${gridCols}`}>
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value="security">Security</TabsTrigger>
-        {canViewPrivileges && <TabsTrigger value="privileges">Privileges</TabsTrigger>}
-      </TabsList>
-      
-      <TabsContent value="profile" className="mt-6">
-        <ProfileEditForm user={user} updateUser={updateUser} />
-      </TabsContent>
-      
-      <TabsContent value="security" className="mt-6">
-        <UserSecuritySettings />
-      </TabsContent>
-      
-      {canViewPrivileges && (
-        <TabsContent value="privileges" className="mt-6">
-          <CustomPrivilegeManager 
-            userId={user.id}
-            isAdmin={user.role === "admin" || user.role === "superAdmin"}
-          />
+    <Card className="w-full shadow-sm">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <TabsList className="border-b w-full rounded-none justify-start">
+          <TabsTrigger value="profile" className="rounded-none">
+            {t("generalInfo")}
+          </TabsTrigger>
+          <TabsTrigger value="password" className="rounded-none">
+            {t("password")}
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="rounded-none">
+            {t("notifications")}
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="profile" className="p-6">
+          <ProfileEditForm user={user} updateUser={updateUser} />
         </TabsContent>
-      )}
-    </Tabs>
+        
+        <TabsContent value="password" className="p-6">
+          <PasswordChangeForm />
+        </TabsContent>
+        
+        <TabsContent value="notifications" className="p-6">
+          <NotificationsForm />
+        </TabsContent>
+      </Tabs>
+    </Card>
   );
 };
 

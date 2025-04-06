@@ -74,6 +74,14 @@ export interface ProposalStats {
   pendingCount: number;
   approvedCount: number;
   rejectedCount: number;
+  // Legacy fields for backward compatibility
+  total?: number;
+  accepted?: number;
+  rejected?: number;
+  pending?: number;
+  draft?: number;
+  sent?: number;
+  viewed?: number;
 }
 
 export interface Proposal {
@@ -97,3 +105,9 @@ export type ProposalStatus =
 
 // Export type for Financial Transaction
 export type FinancialTransaction = FinancialReportData;
+
+// Interface for useProposalsData hook
+export interface UseProposalsDataProps {
+  sales_process_id?: string;
+  status?: ProposalStatus | string;
+}

@@ -31,18 +31,28 @@ const LoginForm: React.FC = () => {
 
   type LoginFormValues = z.infer<typeof loginSchema>;
 
+  const formMethods = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   const handleLogin = async (values: LoginFormValues) => {
     setIsSubmitting(true);
     
     try {
-      const result = await login?.(values.email, values.password);
-      
-      if (result && result.error) {
-        throw new Error(result.error.message || t("invalidCredentials"));
+      if (login) {
+        const result = await login(values.email, values.password);
+        
+        if (result && result.error) {
+          throw new Error(result.error.message || t("invalidCredentials"));
+        }
+        
+        toast.success(t("loginSuccessful"));
+        navigate(from, { replace: true });
       }
-      
-      toast.success(t("loginSuccessful"));
-      navigate(from, { replace: true });
     } catch (error: any) {
       toast.error(error.message || t("invalidCredentials"));
       console.error("Login error:", error);
@@ -81,10 +91,10 @@ const LoginForm: React.FC = () => {
 
   return (
     <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
+      <Form {...formMethods}>
+        <form onSubmit={formMethods.handleSubmit(handleLogin)} className="space-y-5">
           <FormField
-            control={form.control}
+            control={formMethods.control}
             name="email"
             render={({ field }) => (
               <FormItem>
@@ -98,7 +108,7 @@ const LoginForm: React.FC = () => {
           />
           
           <FormField
-            control={form.control}
+            control={formMethods.control}
             name="password"
             render={({ field }) => (
               <FormItem>

@@ -1,6 +1,4 @@
 
-import { UserRole } from "./user";
-
 export interface User {
   id: string;
   email?: string;

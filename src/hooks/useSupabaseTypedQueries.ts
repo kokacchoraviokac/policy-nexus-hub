@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentTableName } from "@/utils/supabaseQueryHelper";
+import { DocumentTableName } from "@/types/documents";
 
 /**
  * A utility to help with type-safe Supabase queries for document tables
