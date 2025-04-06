@@ -1,87 +1,103 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { Loader2 } from "lucide-react";
 import { User } from "@/types/auth/user";
+import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 export interface ProfileEditFormProps {
   user: User;
   updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, updateUser }) => {
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      name: user.name || "",
-      email: user.email || "",
-    }
+      name: user.name || '',
+      email: user.email || '',
+    },
   });
 
-  const onSubmit = async (data: { name: string; email: string }) => {
+  const onSubmit = async (values: FormValues) => {
+    setIsSubmitting(true);
     try {
       await updateUser({
-        name: data.name,
-        email: data.email,
-      });
-      
-      toast({
-        title: t("profileUpdated"),
-        description: t("profileUpdatedSuccessfully"),
+        name: values.name,
+        email: values.email,
       });
     } catch (error) {
-      toast({
-        title: t("errorUpdatingProfile"),
-        description: (error as Error)?.message || t("unknownError"),
-        variant: "destructive",
-      });
+      console.error("Error updating profile:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">{t("fullName")}</Label>
-        <Input
-          id="name"
-          {...register("name", { required: t("nameRequired") })}
-          className={errors.name ? "border-destructive" : ""}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("fullName")}</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder={t("enterYourName")} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.name && (
-          <p className="text-sm text-destructive">{errors.name.message}</p>
-        )}
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">{t("emailAddress")}</Label>
-        <Input
-          id="email"
-          type="email"
-          {...register("email", { 
-            required: t("emailRequired"),
-            pattern: {
-              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: t("invalidEmail"),
-            }
-          })}
-          className={errors.email ? "border-destructive" : ""}
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("emailAddress")}</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder={t("enterYourEmail")} type="email" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-        {errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
-        )}
-      </div>
-      
-      <div className="pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? t("saving") : t("saveChanges")}
+
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t("saving")}
+            </>
+          ) : (
+            t("saveChanges")
+          )}
         </Button>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 };
 

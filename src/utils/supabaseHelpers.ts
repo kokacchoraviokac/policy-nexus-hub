@@ -6,8 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
  * This helps avoid TypeScript's deep type instantiation errors
  */
 export function fromTable<T = any>(tableName: string) {
-  // Use type assertion to avoid TypeScript limitations
-  return supabase.from(tableName as any);
+  return supabase.from(tableName);
 }
 
 /**
@@ -24,7 +23,7 @@ export async function selectFromTable<T = any>(
   } = {}
 ) {
   // Create the base query
-  let query = fromTable(tableName).select(options.columns || '*');
+  let query = fromTable<T>(tableName).select(options.columns || '*');
   
   // Apply filter if provided
   if (options.eq) {
@@ -43,12 +42,20 @@ export async function selectFromTable<T = any>(
     query = query.limit(options.limit);
   }
   
-  // Return single item if requested
-  if (options.single) {
-    return await query.single();
+  // Execute the query
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error(`Error querying ${tableName}:`, error);
+    throw new Error(`Database query failed: ${error.message}`);
   }
   
-  return await query;
+  // Return single item if requested
+  if (options.single && data && data.length > 0) {
+    return data[0] as T;
+  }
+  
+  return data as T[];
 }
 
 /**
@@ -56,18 +63,32 @@ export async function selectFromTable<T = any>(
  */
 export async function insertIntoTable<T = any>(
   tableName: string,
-  data: T,
+  data: any,
   options: {
     returning?: boolean;
   } = { returning: true }
 ) {
-  const query = fromTable(tableName).insert(data as any);
+  const query = fromTable<T>(tableName).insert(data);
   
   if (options.returning) {
-    return await query.select();
+    const { data: result, error } = await query.select();
+    
+    if (error) {
+      console.error(`Error inserting into ${tableName}:`, error);
+      throw new Error(`Database insert failed: ${error.message}`);
+    }
+    
+    return result as T[];
   }
   
-  return await query;
+  const { error } = await query;
+  
+  if (error) {
+    console.error(`Error inserting into ${tableName}:`, error);
+    throw new Error(`Database insert failed: ${error.message}`);
+  }
+  
+  return null;
 }
 
 /**
@@ -75,21 +96,35 @@ export async function insertIntoTable<T = any>(
  */
 export async function updateInTable<T = any>(
   tableName: string,
-  data: Partial<T>,
+  data: any,
   options: {
     eq: { column: string; value: any };
     returning?: boolean;
   }
 ) {
-  const query = fromTable(tableName)
-    .update(data as any)
+  const query = fromTable<T>(tableName)
+    .update(data)
     .eq(options.eq.column, options.eq.value);
   
   if (options.returning !== false) {
-    return await query.select();
+    const { data: result, error } = await query.select();
+    
+    if (error) {
+      console.error(`Error updating ${tableName}:`, error);
+      throw new Error(`Database update failed: ${error.message}`);
+    }
+    
+    return result as T[];
   }
   
-  return await query;
+  const { error } = await query;
+  
+  if (error) {
+    console.error(`Error updating ${tableName}:`, error);
+    throw new Error(`Database update failed: ${error.message}`);
+  }
+  
+  return null;
 }
 
 /**
@@ -101,7 +136,14 @@ export async function deleteFromTable(
     eq: { column: string; value: any };
   }
 ) {
-  return await fromTable(tableName)
+  const { error } = await fromTable(tableName)
     .delete()
     .eq(options.eq.column, options.eq.value);
+    
+  if (error) {
+    console.error(`Error deleting from ${tableName}:`, error);
+    throw new Error(`Database delete failed: ${error.message}`);
+  }
+  
+  return true;
 }

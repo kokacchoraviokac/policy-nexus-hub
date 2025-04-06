@@ -22,7 +22,13 @@ export const fetchUserCustomPrivileges = async (userId: string): Promise<CustomP
 /**
  * Grant a custom privilege to a user
  */
-export const grantCustomPrivilege = async (userId: string, privilege: string, grantedBy: string, expiresAt?: string, context?: string): Promise<CustomPrivilege> => {
+export const grantCustomPrivilege = async (
+  userId: string, 
+  privilege: string, 
+  grantedBy: string, 
+  expiresAt?: string, 
+  context?: string
+): Promise<CustomPrivilege> => {
   const { data, error } = await supabase
     .from("user_custom_privileges")
     .insert({

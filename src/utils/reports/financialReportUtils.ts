@@ -1,146 +1,154 @@
 
-import { FinancialReportData, FinancialReportFilters } from "@/types/reports";
+import { supabase } from "@/integrations/supabase/client";
 
-// Define FinancialTransaction type
+// Define the interfaces for financial reports
+export interface FinancialReportFilters {
+  dateFrom: string;
+  dateTo: string;
+  transactionType: string;
+  category: string;
+  status: string;
+  searchTerm: string;
+  startDate: string;
+  endDate: string;
+  entityType: string; // Required by the component
+}
+
 export interface FinancialTransaction {
   id: string;
   date: string;
-  amount: number;
   description: string;
-  category: string;
+  amount: number;
   status: string;
-  paymentMethod?: string;
-  reference?: string;
-  relatedEntity?: {
-    id: string;
-    type: string;
-    name: string;
+  category: string;
+  reference: string;
+  type: string; // Required by the component
+  currency: string; // Required by the component
+}
+
+export interface FinancialReportData {
+  id?: string;
+  title?: string;
+  filters?: FinancialReportFilters;
+  summary?: {
+    totalIncome: number;
+    totalExpenses: number;
+    netAmount: number;
   };
+  data: FinancialTransaction[];
+  description?: string; // Required by some components
 }
 
 // Default filters for financial reports
 export const defaultFinancialFilters: FinancialReportFilters = {
-  searchTerm: "",
   dateFrom: "",
   dateTo: "",
   transactionType: "all",
   category: "all",
   status: "all",
-  entityType: "all",
-  // Aliases
-  startDate: "",
-  endDate: ""
+  searchTerm: "",
+  startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+  endDate: new Date().toISOString().split('T')[0],
+  entityType: "transaction" // Default entity type
 };
 
-// Function to fetch financial report data
-export const fetchFinancialReportData = async (filters: FinancialReportFilters): Promise<FinancialReportData[]> => {
-  // In a real app, this would make API calls to fetch data based on filters
-  // Mock implementation for now
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: "1",
-          date: "2023-01-15",
-          amount: 1500,
-          type: "invoice",
-          category: "premium",
-          status: "paid",
-          entityName: "ABC Corporation",
-          entityType: "client",
-          entityId: "client-123",
-          reference: "INV-2023-001",
-          description: "Premium payment"
-        },
-        {
-          id: "2",
-          date: "2023-02-10",
-          amount: 750,
-          type: "commission",
-          category: "income",
-          status: "received",
-          entityName: "XYZ Insurance",
-          entityType: "insurer",
-          entityId: "insurer-456",
-          reference: "COM-2023-002",
-          description: "Commission payment"
-        }
-      ]);
-    }, 500);
-  });
+// Fetch financial report data based on filters
+export const fetchFinancialReportData = async (
+  filters: FinancialReportFilters
+): Promise<FinancialReportData> => {
+  try {
+    // Start building the query
+    let query = supabase
+      .from('bank_transactions')
+      .select('*');
+    
+    // Apply date filters
+    if (filters.startDate) {
+      query = query.gte('transaction_date', filters.startDate);
+    }
+    
+    if (filters.endDate) {
+      query = query.lte('transaction_date', filters.endDate);
+    }
+    
+    // Apply transaction type filter
+    if (filters.transactionType && filters.transactionType !== 'all') {
+      query = query.eq('type', filters.transactionType);
+    }
+    
+    // Apply category filter
+    if (filters.category && filters.category !== 'all') {
+      query = query.eq('category', filters.category);
+    }
+    
+    // Apply status filter
+    if (filters.status && filters.status !== 'all') {
+      query = query.eq('status', filters.status);
+    }
+    
+    // Apply search term
+    if (filters.searchTerm) {
+      query = query.ilike('description', `%${filters.searchTerm}%`);
+    }
+    
+    // Execute the query
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching financial data:', error);
+      throw new Error(`Failed to fetch financial data: ${error.message}`);
+    }
+    
+    // Transform the data to match our FinancialTransaction interface
+    const transactions: FinancialTransaction[] = data.map(item => ({
+      id: item.id,
+      date: item.transaction_date,
+      description: item.description,
+      amount: item.amount,
+      status: item.status,
+      category: item.category || 'Uncategorized',
+      reference: item.reference || '',
+      type: item.matched_invoice_id ? 'invoice' : (item.matched_policy_id ? 'policy' : 'other'),
+      currency: 'EUR' // Default currency
+    }));
+    
+    // Calculate summary
+    const totalIncome = transactions
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
+      
+    const totalExpenses = transactions
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    
+    const netAmount = totalIncome - totalExpenses;
+    
+    // Return the formatted report data
+    return {
+      id: `report-${Date.now()}`,
+      title: 'Financial Report',
+      filters,
+      summary: {
+        totalIncome,
+        totalExpenses,
+        netAmount
+      },
+      data: transactions,
+      description: `Financial report for period ${filters.startDate} to ${filters.endDate}`
+    };
+  } catch (error) {
+    console.error('Error in fetchFinancialReportData:', error);
+    throw error;
+  }
 };
 
-// Format currency with the proper symbol
-export const formatCurrency = (amount: number, currency: string = "USD"): string => {
-  const formatter = new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: currency,
+// Format currency values for display
+export const formatCurrency = (amount: number, currency: string = 'EUR'): string => {
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2
   });
   
   return formatter.format(amount);
-};
-
-// Calculate totals from financial data
-export const calculateTotals = (data: FinancialReportData[]): { income: number; expenses: number; balance: number } => {
-  return data.reduce(
-    (acc, transaction) => {
-      if (transaction.type === "income" || transaction.type === "commission") {
-        acc.income += transaction.amount;
-      } else if (transaction.type === "expense") {
-        acc.expenses += transaction.amount;
-      }
-      
-      acc.balance = acc.income - acc.expenses;
-      return acc;
-    },
-    { income: 0, expenses: 0, balance: 0 }
-  );
-};
-
-// Filter financial data based on filters
-export const filterFinancialData = (
-  data: FinancialReportData[],
-  filters: FinancialReportFilters
-): FinancialReportData[] => {
-  return data.filter(item => {
-    // Search term filter
-    if (
-      filters.searchTerm &&
-      !item.reference?.toLowerCase().includes(filters.searchTerm.toLowerCase()) &&
-      !item.entityName?.toLowerCase().includes(filters.searchTerm.toLowerCase())
-    ) {
-      return false;
-    }
-    
-    // Date range filter
-    if (filters.dateFrom && new Date(item.date) < new Date(filters.dateFrom)) {
-      return false;
-    }
-    
-    if (filters.dateTo && new Date(item.date) > new Date(filters.dateTo)) {
-      return false;
-    }
-    
-    // Type filter
-    if (filters.transactionType !== "all" && item.type !== filters.transactionType) {
-      return false;
-    }
-    
-    // Category filter
-    if (filters.category !== "all" && item.category !== filters.category) {
-      return false;
-    }
-    
-    // Status filter
-    if (filters.status !== "all" && item.status !== filters.status) {
-      return false;
-    }
-    
-    // Entity type filter
-    if (filters.entityType !== "all" && item.entityType !== filters.entityType) {
-      return false;
-    }
-    
-    return true;
-  });
 };

@@ -1,103 +1,74 @@
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FinancialReportData, FinancialReportFilters } from "@/types/reports";
-import { financialReportData, defaultFinancialFilters, fetchFinancialReports } from "@/utils/reports/financialReportUtils";
+import { FinancialReportData, FinancialReportFilters, fetchFinancialReportData, defaultFinancialFilters } from "@/utils/reports/financialReportUtils";
 
-export function useFinancialReport(initialFilters?: Partial<FinancialReportFilters>) {
-  const [filters, setFilters] = useState<FinancialReportFilters>({
+export const useFinancialReport = (initialFilters?: Partial<FinancialReportFilters>) => {
+  // Merge initial filters with defaults
+  const mergedFilters = {
     ...defaultFinancialFilters,
     ...initialFilters
-  });
+  };
   
-  const [viewMode, setViewMode] = useState<"summary" | "detail">("summary");
+  const [filters, setFilters] = useState<FinancialReportFilters>(mergedFilters);
   
   // Query for financial report data
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["financial-report", filters],
-    queryFn: () => fetchFinancialReports(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+  const { 
+    data: reports, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useQuery({
+    queryKey: ['financial-reports', filters],
+    queryFn: () => fetchFinancialReportData(filters),
+    enabled: false, // Don't run automatically, we'll trigger it manually
   });
   
-  // Handle filter changes
-  const handleFilterChange = (filterName: keyof FinancialReportFilters, value: any) => {
-    setFilters(prev => ({
-      ...prev,
-      [filterName]: value
-    }));
-  };
-  
-  // Calculate totals
-  const calculateTotals = (reports: FinancialReportData[] = []) => {
-    return reports.reduce((acc, report) => {
+  // Calculate summary statistics
+  const summary = useMemo(() => {
+    if (!reports?.data?.length) {
       return {
-        totalAmount: acc.totalAmount + report.amount,
-        incomeAmount: report.type === "income" ? acc.incomeAmount + report.amount : acc.incomeAmount,
-        expenseAmount: report.type === "expense" ? acc.expenseAmount + report.amount : acc.expenseAmount,
-        transactionsCount: acc.transactionsCount + (report.transactions?.length || 0)
+        totalIncome: 0,
+        totalExpenses: 0,
+        netAmount: 0
       };
-    }, {
-      totalAmount: 0,
-      incomeAmount: 0,
-      expenseAmount: 0,
-      transactionsCount: 0
-    });
-  };
-  
-  const totals = calculateTotals(data);
-  
-  // Apply date filtering
-  const applyDateFilter = (reports: FinancialReportData[] = [], dateFrom?: Date | string, dateTo?: Date | string) => {
-    if (!dateFrom && !dateTo) return reports;
+    }
     
-    return reports.filter(report => {
-      const reportDate = new Date(report.date);
+    const income = reports.data
+      .filter(tx => tx.amount > 0)
+      .reduce((sum, tx) => sum + tx.amount, 0);
       
-      if (dateFrom && dateTo) {
-        const fromDate = new Date(dateFrom);
-        const toDate = new Date(dateTo);
-        return reportDate >= fromDate && reportDate <= toDate;
-      }
+    const expenses = reports.data
+      .filter(tx => tx.amount < 0)
+      .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
       
-      if (dateFrom) {
-        return reportDate >= new Date(dateFrom);
-      }
-      
-      if (dateTo) {
-        return reportDate <= new Date(dateTo);
-      }
-      
-      return true;
-    });
+    return {
+      totalIncome: income,
+      totalExpenses: expenses,
+      netAmount: income - expenses
+    };
+  }, [reports]);
+  
+  // Apply filters and run the report
+  const applyFilters = () => {
+    refetch();
   };
   
-  // Generate date range options
-  const dateRangeOptions = [
-    { value: "today", label: "Today" },
-    { value: "yesterday", label: "Yesterday" },
-    { value: "thisWeek", label: "This Week" },
-    { value: "lastWeek", label: "Last Week" },
-    { value: "thisMonth", label: "This Month" },
-    { value: "lastMonth", label: "Last Month" },
-    { value: "thisQuarter", label: "This Quarter" },
-    { value: "lastQuarter", label: "Last Quarter" },
-    { value: "thisYear", label: "This Year" },
-    { value: "lastYear", label: "Last Year" },
-    { value: "custom", label: "Custom Range" }
-  ];
+  // Reset filters to default
+  const resetFilters = () => {
+    setFilters(defaultFinancialFilters);
+  };
   
   return {
-    reports: data || [],
+    reports,
     isLoading,
     error,
     filters,
     setFilters,
-    handleFilterChange,
-    viewMode,
-    setViewMode,
-    totals,
+    applyFilters,
+    resetFilters,
     refetch,
-    dateRangeOptions,
+    summary,
     defaultFilters: defaultFinancialFilters
   };
-}
+};

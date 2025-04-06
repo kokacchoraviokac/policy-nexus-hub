@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -89,23 +88,22 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
     
     setIsLoading(true);
     try {
-      const success = await grantCustomPrivilege(
+      // Convert the Date to ISO string if present
+      const expiresAtString = values.expiresAt ? values.expiresAt.toISOString() : undefined;
+      
+      await grantCustomPrivilege(
         values.userId,
         values.privilege,
         user.id,
-        values.expiresAt
+        expiresAtString
       );
       
-      if (success) {
-        toast.success("Privilege granted successfully");
-        // Refresh privileges
-        const updatedPrivileges = await fetchUserCustomPrivileges(values.userId);
-        setPrivileges(updatedPrivileges);
-        setIsDialogOpen(false);
-        form.reset();
-      } else {
-        toast.error("Failed to grant privilege");
-      }
+      // Refresh privileges
+      const updatedPrivileges = await fetchUserCustomPrivileges(values.userId);
+      setPrivileges(updatedPrivileges);
+      setIsDialogOpen(false);
+      form.reset();
+      toast.success("Privilege granted successfully");
     } catch (error) {
       console.error("Error granting privilege:", error);
       toast.error("Failed to grant privilege");
@@ -117,15 +115,11 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
   const handleRevokePrivilege = async (privilegeId: string) => {
     setIsLoading(true);
     try {
-      const success = await revokeCustomPrivilege(privilegeId);
+      await revokeCustomPrivilege(privilegeId);
       
-      if (success) {
-        toast.success("Privilege revoked successfully");
-        // Update local state
-        setPrivileges(prev => prev.filter(p => p.id !== privilegeId));
-      } else {
-        toast.error("Failed to revoke privilege");
-      }
+      // Update local state
+      setPrivileges(prev => prev.filter(p => p.id !== privilegeId));
+      toast.success("Privilege revoked successfully");
     } catch (error) {
       console.error("Error revoking privilege:", error);
       toast.error("Failed to revoke privilege");

@@ -1,11 +1,12 @@
 
-import { EntityType, DocumentTableName } from "@/types/documents";
+import { EntityType } from "@/types/documents";
 
 // Map entity types to their corresponding document table names
-export const entityToDocumentTable: Record<EntityType, DocumentTableName> = {
+export const entityToDocumentTable: Record<EntityType, string> = {
   policy: "policy_documents",
   claim: "claim_documents",
   sales_process: "sales_documents",
+  sale: "sales_documents", // Alias for backward compatibility
   client: "client_documents",
   insurer: "insurer_documents",
   agent: "agent_documents",
@@ -16,14 +17,14 @@ export const entityToDocumentTable: Record<EntityType, DocumentTableName> = {
 /**
  * Get the document table name for a specific entity type
  */
-export function getDocumentTableName(entityType: EntityType): DocumentTableName {
+export function getDocumentTableName(entityType: EntityType): string {
   return entityToDocumentTable[entityType];
 }
 
 /**
  * Get entity type from document table name
  */
-export function getEntityTypeFromTable(tableName: DocumentTableName): EntityType {
+export function getEntityTypeFromTable(tableName: string): EntityType {
   const entries = Object.entries(entityToDocumentTable);
   const match = entries.find(([_entityType, docTableName]) => docTableName === tableName);
   
@@ -51,5 +52,3 @@ export interface DocumentUploadOptions {
   salesStage?: string;
   description?: string;
 }
-
-export type { DocumentTableName };

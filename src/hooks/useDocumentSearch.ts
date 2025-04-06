@@ -1,165 +1,173 @@
 
-import { useState, useCallback, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Document, DocumentSearchParams, EntityType } from '@/types/documents';
-import { supabase } from '@/integrations/supabase/client';
-import { getDocumentTableName } from '@/utils/documentUploadUtils';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Document, EntityType, DocumentCategory, DocumentSearchParams, DocumentApprovalStatus } from "@/types/documents";
+import { safeQueryCast } from "@/utils/safeSupabaseQuery";
+import { fromTable } from "@/utils/supabaseHelpers";
+import { mapEntityToDocumentTable } from "@/utils/supabaseQueryHelper";
 
-export interface UseDocumentSearchProps {
-  entityType?: EntityType | EntityType[];
+interface UseDocumentSearchProps {
+  entityType: EntityType;
   entityId?: string;
-  initialSearchParams?: DocumentSearchParams;
-  page?: number;
-  pageSize?: number;
+  category?: DocumentCategory;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
 }
-
-const DEFAULT_PAGE_SIZE = 10;
 
 export const useDocumentSearch = ({
   entityType,
   entityId,
-  initialSearchParams = {},
-  page = 1,
-  pageSize = DEFAULT_PAGE_SIZE
+  category,
+  defaultPageSize = 10,
+  defaultSortBy = 'created_at',
+  defaultSortOrder = 'desc',
+  initialSearchTerm = '',
+  approvalStatus
 }: UseDocumentSearchProps) => {
-  const [searchParams, setSearchParams] = useState<DocumentSearchParams>(initialSearchParams);
-  const [currentPage, setCurrentPage] = useState<number>(page);
-  const [pageSize, setPageSize] = useState<number>(pageSize);
-
-  // Reset pagination when search params change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchParams]);
-
-  const fetchDocuments = useCallback(async () => {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
+  const [sortBy, setSortBy] = useState(defaultSortBy);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(defaultSortOrder);
+  const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | undefined>(category);
+  const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<DocumentApprovalStatus | undefined>(approvalStatus);
+  
+  const fetchDocuments = async (params?: Partial<DocumentSearchParams>) => {
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      let tables: string[] = [];
+      const searchParams: DocumentSearchParams = {
+        entityType,
+        entityId: params?.entityId || entityId,
+        category: params?.category || selectedCategory,
+        searchTerm: params?.searchTerm !== undefined ? params.searchTerm : searchTerm,
+        page: params?.page || page,
+        pageSize: params?.pageSize || pageSize,
+        sortBy: params?.sortBy || sortBy,
+        sortOrder: params?.sortOrder || sortOrder,
+        approvalStatus: params?.approvalStatus || selectedApprovalStatus
+      };
       
-      // Determine which tables to query
-      if (entityType) {
-        if (Array.isArray(entityType)) {
-          tables = entityType.map(type => getDocumentTableName(type));
-        } else {
-          tables = [getDocumentTableName(entityType)];
-        }
-      } else {
-        // Query all document tables if no entity type specified
-        tables = [
-          'policy_documents',
-          'claim_documents',
-          'sales_documents',
-          'client_documents',
-          'insurer_documents',
-          'agent_documents',
-          'invoice_documents',
-          'addendum_documents'
-        ];
+      // Get the table name for this entity type
+      const tableName = mapEntityToDocumentTable(searchParams.entityType);
+      
+      if (!tableName) {
+        throw new Error(`Invalid entity type: ${searchParams.entityType}`);
       }
-      
-      // For simplicity, we'll just query the first table in the list
-      // In a real implementation, you might want to query all tables and merge results
-      const tableName = tables[0];
       
       // Build the query
-      const query = supabase
-        .from(tableName as any)
-        .select('*', { count: 'exact' });
+      let query = fromTable(tableName);
       
-      // Add filters
-      if (entityId) {
-        if (tableName === 'policy_documents') {
-          query.eq('policy_id', entityId);
-        } else if (tableName === 'claim_documents') {
-          query.eq('claim_id', entityId);
-        } else if (tableName === 'sales_documents') {
-          query.eq('sales_process_id', entityId);
-        } else {
-          query.eq('entity_id', entityId);
-        }
+      // Apply entity ID filter if provided
+      if (searchParams.entityId) {
+        query = query.eq('entity_id', searchParams.entityId);
       }
       
-      if (searchParams.searchTerm) {
-        query.ilike('document_name', `%${searchParams.searchTerm}%`);
-      }
-      
-      if (searchParams.documentType) {
-        query.eq('document_type', searchParams.documentType);
-      }
-      
+      // Apply category filter if provided
       if (searchParams.category) {
-        query.eq('category', searchParams.category);
+        query = query.eq('category', searchParams.category);
       }
       
-      if (searchParams.uploadedAfter) {
-        query.gte('created_at', searchParams.uploadedAfter);
+      // Apply approval status filter if provided
+      if (searchParams.approvalStatus) {
+        query = query.eq('approval_status', searchParams.approvalStatus);
       }
       
-      if (searchParams.uploadedBefore) {
-        query.lte('created_at', searchParams.uploadedBefore);
+      // Apply search term filter if provided
+      if (searchParams.searchTerm) {
+        query = query.ilike('document_name', `%${searchParams.searchTerm}%`);
       }
       
-      // Add pagination
-      const from = (currentPage - 1) * pageSize;
-      const to = from + pageSize - 1;
+      // Get the total count first
+      const { count, error: countError } = await query.count();
       
-      query.range(from, to);
-      
-      // Add sorting
-      if (searchParams.sortBy) {
-        query.order(searchParams.sortBy, {
-          ascending: searchParams.sortDirection === 'asc'
-        });
-      } else {
-        query.order('created_at', { ascending: false });
+      if (countError) {
+        throw new Error(`Error counting documents: ${countError.message}`);
       }
       
-      const { data, error, count } = await query;
+      setTotalCount(count || 0);
       
-      if (error) {
-        throw error;
+      // Apply pagination and sorting
+      query = query
+        .order(searchParams.sortBy, { ascending: searchParams.sortOrder === 'asc' })
+        .range(
+          (searchParams.page - 1) * searchParams.pageSize,
+          searchParams.page * searchParams.pageSize - 1
+        );
+      
+      // Execute the query
+      const { data, error: queryError } = await query;
+      
+      if (queryError) {
+        throw new Error(`Error fetching documents: ${queryError.message}`);
       }
       
-      return {
-        documents: data as Document[],
-        totalCount: count || 0
-      };
+      // Convert the query result to Document[]
+      const documentData = data as unknown as Document[];
+      setDocuments(documentData || []);
+      
     } catch (error) {
-      console.error('Error fetching documents:', error);
-      throw error;
+      console.error('Error in fetchDocuments:', error);
+      setError(error instanceof Error ? error : new Error('Unknown error occurred'));
+    } finally {
+      setIsLoading(false);
     }
-  }, [entityType, entityId, searchParams, currentPage, pageSize]);
+  };
   
-  const { data, error, isLoading, refetch } = useQuery({
-    queryKey: ['documents', entityType, entityId, searchParams, currentPage, pageSize],
-    queryFn: fetchDocuments,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  // Initial fetch and when dependencies change
+  useEffect(() => {
+    fetchDocuments();
+  }, [
+    entityType,
+    entityId,
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+    selectedCategory,
+    selectedApprovalStatus
+  ]);
   
-  const searchDocuments = useCallback((params: DocumentSearchParams) => {
-    setSearchParams(params);
-    setCurrentPage(1); // Reset to first page on new search
-  }, []);
-  
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-  }, []);
-  
-  // Simple search function for convenience
-  const search = useCallback(() => {
-    refetch();
-  }, [refetch]);
+  // Handle search with debounce
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (page !== 1) {
+        setPage(1); // Reset to first page on new search
+      } else {
+        fetchDocuments({ searchTerm });
+      }
+    }, 300);
+    
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
   
   return {
-    documents: data?.documents || [],
-    totalCount: data?.totalCount || 0,
+    documents,
+    totalCount,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
     isLoading,
     error,
-    searchDocuments,
-    refresh: refetch,
-    search,
-    isError: !!error,
-    currentPage,
-    pageSize,
-    handlePageChange
+    searchTerm,
+    setSearchTerm,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    selectedCategory,
+    setSelectedCategory,
+    selectedApprovalStatus,
+    setSelectedApprovalStatus,
+    refetch: fetchDocuments
   };
 };

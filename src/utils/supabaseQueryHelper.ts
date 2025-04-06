@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { EntityType } from "@/types/documents";
 
 /**
  * Safe wrapper for Supabase queries to handle errors consistently
@@ -25,7 +26,7 @@ export const safeSupabaseQuery = async <T,>(
 /**
  * Helper to fetch documents based on entity type and ID
  */
-export const queryDocuments = async (entityType: string, entityId: string) => {
+export const queryDocuments = async (entityType: EntityType, entityId: string) => {
   // Map entity type to the correct document table
   const documentTable = mapEntityToDocumentTable(entityType);
   
@@ -33,24 +34,29 @@ export const queryDocuments = async (entityType: string, entityId: string) => {
     throw new Error(`Invalid entity type: ${entityType}`);
   }
   
-  // Use the .from method with a string literal to avoid TS errors
-  return safeSupabaseQuery(() => 
-    supabase
-      .from(documentTable)
-      .select("*")
-      .eq("entity_id", entityId)
-      .order("created_at", { ascending: false })
-  );
+  // Use the safe query function to fetch documents
+  const { data, error } = await supabase
+    .from(documentTable)
+    .select("*")
+    .eq("entity_id", entityId)
+    .order("created_at", { ascending: false });
+    
+  if (error) {
+    throw new Error(`Error fetching documents: ${error.message}`);
+  }
+  
+  return data;
 };
 
 /**
  * Map entity type to the corresponding document table
  */
-export const mapEntityToDocumentTable = (entityType: string): string => {
-  const mapping: Record<string, string> = {
+export const mapEntityToDocumentTable = (entityType: EntityType): string => {
+  const mapping: Record<EntityType, string> = {
     "policy": "policy_documents",
     "claim": "claim_documents",
     "sale": "sales_documents",
+    "sales_process": "sales_documents",
     "client": "client_documents",
     "insurer": "insurer_documents",
     "agent": "agent_documents",

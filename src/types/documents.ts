@@ -7,7 +7,8 @@ export type EntityType =
   | 'insurer'
   | 'agent'
   | 'invoice'
-  | 'addendum';
+  | 'addendum'
+  | 'sales_process';
 
 export type DocumentCategory = 
   | 'policy'
@@ -16,7 +17,13 @@ export type DocumentCategory =
   | 'proposal'
   | 'contract'
   | 'invoice'
-  | 'other';
+  | 'other'
+  | 'identification'
+  | 'financial'
+  | 'medical'
+  | 'legal'
+  | 'notification'
+  | 'lien';
 
 export type DocumentType = 
   | 'application'
@@ -41,10 +48,18 @@ export type DocumentRelation =
   | 'invoice_documents'
   | 'addendum_documents';
 
+export type DocumentTableName = DocumentRelation;
+
+export type DocumentApprovalStatus = 
+  | 'approved'
+  | 'rejected'
+  | 'pending'
+  | 'needs_review';
+
 export interface Document {
   id: string;
   document_name: string;
-  document_type: DocumentType;
+  document_type: string;
   created_at: string;
   updated_at: string;
   uploaded_by: string;
@@ -56,6 +71,17 @@ export interface Document {
   version?: number;
   is_latest_version?: boolean;
   original_document_id?: string;
+  
+  // Approval-related fields
+  approval_status?: DocumentApprovalStatus;
+  approval_notes?: string;
+  approved_by?: string;
+  approved_at?: string;
+  
+  // Additional fields
+  description?: string;
+  uploaded_by_name?: string;
+  company_id?: string;
 }
 
 export interface DocumentUploadOptions {
@@ -64,7 +90,9 @@ export interface DocumentUploadOptions {
   defaultCategory?: DocumentCategory;
   selectedDocument?: Document;
   onSuccess?: () => void;
-  salesStage?: string; // Added for sales documents
+  salesStage?: string;
+  originalDocumentId?: string;
+  currentVersion?: number;
 }
 
 export interface DocumentUploadDialogProps {
@@ -78,4 +106,21 @@ export interface DocumentUploadDialogProps {
   selectedDocument?: Document;
   embedMode?: boolean;
   onFileSelected?: (file: File | null) => void;
+}
+
+export interface DocumentAnalysisPanelProps {
+  document: Document;
+  onAnalyze?: () => void;
+}
+
+export interface DocumentSearchParams {
+  entityType: EntityType;
+  entityId?: string;
+  category?: DocumentCategory;
+  searchTerm?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  approvalStatus?: DocumentApprovalStatus;
 }

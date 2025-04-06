@@ -9,7 +9,15 @@ import {
 } from '@/components/ui/select';
 import { Pagination } from '@/components/ui/pagination';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { PaginationProps } from '@/types/reports';
+
+// Define PaginationProps interface here to ensure it matches what Pagination component expects
+export interface PaginationProps {
+  itemsCount: number;
+  itemsPerPage: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  className?: string;
+}
 
 interface PaginationControllerProps {
   currentPage: number;
