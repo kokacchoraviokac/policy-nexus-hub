@@ -1,38 +1,15 @@
 
-/**
- * Common types shared across multiple modules
- */
+// Common type definitions shared across the application
 
-/**
- * Represents the type of entity in the system
- */
 export type EntityType = 
-  | 'policy'
-  | 'claim'
-  | 'sale'
-  | 'client'
-  | 'insurer'
-  | 'agent'
-  | 'invoice'
-  | 'addendum'
-  | 'sales_process';
+  | 'policy' 
+  | 'claim' 
+  | 'sales_process' 
+  | 'sale' // Alias for backward compatibility 
+  | 'client' 
+  | 'insurer' 
+  | 'agent' 
+  | 'invoice' 
+  | 'addendum';
 
-/**
- * Utility type for pagination results
- */
-export interface PaginatedResult<T> {
-  data: T[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-}
-
-/**
- * Basic service response interface
- */
-export interface ServiceResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: Error;
-  message?: string;
-}
+// Add any other shared common types here

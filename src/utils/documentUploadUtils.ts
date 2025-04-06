@@ -44,7 +44,8 @@ export function mapEntityToDocumentTable(entityType: EntityType): string {
   return getDocumentTableName(entityType);
 }
 
-export { DocumentTableName } from "@/types/documents";
+// Use export type for DocumentTableName to avoid isolatedModules error
+export type { DocumentTableName } from "@/types/documents";
 
 /**
  * Utility interface for document upload options

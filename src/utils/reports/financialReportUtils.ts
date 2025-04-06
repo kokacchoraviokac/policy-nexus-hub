@@ -72,5 +72,5 @@ export function formatCurrency(amount: number, currency: string = 'EUR'): string
   }).format(amount);
 }
 
-// Export the FinancialTransaction type
-export { FinancialTransaction };
+// Export the types - use 'export type' with isolatedModules enabled
+export type { FinancialTransaction, FinancialReportFilters };

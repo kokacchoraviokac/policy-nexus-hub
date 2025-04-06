@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 import { fetchUserCustomPrivileges, grantCustomPrivilege, revokeCustomPrivilege } from "@/utils/authUtils";
-import { CustomPrivilege } from "@/types/auth";
+import { CustomPrivilege } from "@/types/auth/index";
 
 const privilegeFormSchema = z.object({
   userId: z.string().uuid("Invalid user ID"),
@@ -62,8 +63,13 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
     
     // If we're looking at the current user, use the context value
     if (targetUserId === user?.id) {
-      // Cast to ensure type compatibility
-      setPrivileges([...customPrivileges]);
+      // Cast to convert context to ensure type compatibility
+      const convertedPrivileges = [...customPrivileges].map(priv => ({
+        ...priv,
+        // Ensure context is always a string
+        context: typeof priv.context === 'object' ? JSON.stringify(priv.context) : priv.context
+      }));
+      setPrivileges(convertedPrivileges);
       return;
     }
     
@@ -72,8 +78,13 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
       setIsLoading(true);
       try {
         const userPrivileges = await fetchUserCustomPrivileges(targetUserId);
-        // Cast to ensure type compatibility
-        setPrivileges([...userPrivileges]);
+        // Convert any object contexts to strings to ensure type compatibility
+        const convertedPrivileges = userPrivileges.map(priv => ({
+          ...priv,
+          // Ensure context is always a string
+          context: typeof priv.context === 'object' ? JSON.stringify(priv.context) : priv.context
+        }));
+        setPrivileges(convertedPrivileges);
       } catch (error) {
         console.error("Error loading privileges:", error);
         toast.error("Failed to load custom privileges");
@@ -102,8 +113,12 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
       
       // Refresh privileges
       const updatedPrivileges = await fetchUserCustomPrivileges(values.userId);
-      // Cast to ensure type compatibility
-      setPrivileges([...updatedPrivileges]);
+      // Convert any object contexts to strings
+      const convertedPrivileges = updatedPrivileges.map(priv => ({
+        ...priv,
+        context: typeof priv.context === 'object' ? JSON.stringify(priv.context) : priv.context
+      }));
+      setPrivileges(convertedPrivileges);
       setIsDialogOpen(false);
       form.reset();
       toast.success("Privilege granted successfully");

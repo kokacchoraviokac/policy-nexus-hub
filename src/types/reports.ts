@@ -34,14 +34,24 @@ export interface FinancialTransaction {
   type: 'income' | 'expense';
   category: string;
   description: string;
-  status: 'pending' | 'completed' | 'failed';
+  status: 'pending' | 'completed' | 'failed' | 'paid';
   reference?: string;
+  currency?: string; // Add currency field
 }
 
 export interface FinancialReportFiltersProps {
   filters: FinancialReportFilters;
   onApply: () => void;
   onChange?: (filters: FinancialReportFilters) => void;
+  setFilters?: React.Dispatch<React.SetStateAction<FinancialReportFilters>>;
+}
+
+export interface FinancialReportSummaryProps {
+  summary: {
+    totalIncome: number;
+    totalExpenses: number;
+    netAmount: number;
+  };
 }
 
 export interface UseFinancialReportReturn {
@@ -59,4 +69,51 @@ export interface UseFinancialReportReturn {
     netAmount: number;
   };
   defaultFilters: FinancialReportFilters;
+}
+
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  totalItems?: number;
+  itemsPerPage?: number;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
+  className?: string;
+}
+
+// Add missing proposal types
+export interface Proposal {
+  id: string;
+  title: string;
+  description?: string;
+  status: ProposalStatus;
+  created_at: string;
+  updated_at: string;
+  client_id?: string;
+  client_name?: string;
+  amount?: number;
+  currency?: string;
+  due_date?: string;
+  approved?: boolean;
+}
+
+export type ProposalStatus = 
+  | 'draft' 
+  | 'sent' 
+  | 'viewed' 
+  | 'accepted' 
+  | 'rejected'
+  | 'approved';
+
+export interface ProposalStats {
+  totalCount: number;
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+  draft: number;
+  sent: number;
+  viewed: number;
+  accepted: number;
+  approved: number;
 }

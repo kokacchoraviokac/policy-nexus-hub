@@ -470,7 +470,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       },
       
       get companyId() {
-        return state.user?.companyId || state.user?.company_id || null;
+        // Look for companyId first, then company_id as fallback
+        return state.user?.companyId || 
+               state.user?.company_id || 
+               // Check user_metadata if available
+               state.user?.user_metadata?.company_id || 
+               null;
       },
       
       get customPrivileges() {

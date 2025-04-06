@@ -1,54 +1,53 @@
 
 import { Policy } from "@/types/policies";
 
-/**
- * Interface for policies in the workflow
- */
 export interface WorkflowPolicy {
   id: string;
   policyNumber: string;
-  policyholderName: string;
-  insurerName: string;
+  client: string;
+  insurer: string;
+  product: string;
   startDate: string;
-  expiryDate: string;
+  endDate: string;
   premium: number;
   currency: string;
-  workflowStatus: string;
-  status?: string;
-  missingFields?: string[];
+  status: string;
+  assignedTo?: string;
+  lastModified?: string;
+  client_name?: string; // Add client_name for compatibility
 }
 
 /**
- * Convert policy objects to workflow policy format
+ * Maps API Policy to WorkflowPolicy for UI display
  */
-export function policiesToWorkflowPolicies(policies: Policy[]): WorkflowPolicy[] {
-  return policies.map(policy => ({
+export function mapPolicyToWorkflowPolicy(policy: Policy): WorkflowPolicy {
+  return {
     id: policy.id,
     policyNumber: policy.policy_number,
-    policyholderName: policy.policyholder_name,
-    insurerName: policy.insurer_name,
+    client: policy.client_name || "Unknown Client",
+    insurer: policy.insurer_name,
+    product: policy.product_name || policy.product_code || "Unknown Product",
     startDate: policy.start_date,
-    expiryDate: policy.expiry_date,
+    endDate: policy.expiry_date,
     premium: policy.premium,
     currency: policy.currency || "EUR",
-    workflowStatus: policy.workflow_status,
-    status: policy.status,
-    missingFields: getMissingFields(policy)
-  }));
+    status: policy.workflow_status || policy.status,
+    assignedTo: policy.assigned_to,
+    lastModified: policy.updated_at,
+    client_name: policy.client_name // Map client_name for compatibility
+  };
 }
 
 /**
- * Determine which required fields are missing from a policy
+ * Maps multiple policies to workflow policies
  */
-function getMissingFields(policy: Policy): string[] {
-  const missingFields: string[] = [];
-  
-  if (!policy.policy_number) missingFields.push("policyNumber");
-  if (!policy.policyholder_name) missingFields.push("policyholderName");
-  if (!policy.insurer_name) missingFields.push("insurerName");
-  if (!policy.start_date) missingFields.push("startDate");
-  if (!policy.expiry_date) missingFields.push("expiryDate");
-  if (!policy.premium) missingFields.push("premium");
-  
-  return missingFields;
+export function mapPoliciesToWorkflowPolicies(policies: Policy[]): WorkflowPolicy[] {
+  return policies.map(mapPolicyToWorkflowPolicy);
+}
+
+/**
+ * Count policies by status
+ */
+export function countPoliciesByStatus(policies: Policy[], status: string): number {
+  return policies.filter(policy => policy.workflow_status === status || policy.status === status).length;
 }

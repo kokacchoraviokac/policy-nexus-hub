@@ -36,7 +36,7 @@ export interface CustomPrivilege {
   granted_at: string;
   granted_by: string;
   expires_at?: string | null;
-  context?: string; // Changed from string | Record<string, any> to just string
+  context?: string; // Changed to only allow string, not Record<string, any>
 }
 
 // Export old types for backward compatibility
