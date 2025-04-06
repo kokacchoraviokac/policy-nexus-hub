@@ -9,6 +9,9 @@ export enum PolicyStatus {
   RENEWED = 'renewed'
 }
 
+// Re-export WorkflowStatus from workflow.ts
+export { WorkflowStatus } from "./workflow";
+
 export interface Policy {
   id: string;
   policy_number: string;
