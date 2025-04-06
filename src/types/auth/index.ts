@@ -1,7 +1,7 @@
 
 import { Session } from "@supabase/supabase-js";
 
-// Define UserRole as an enum to avoid string/UserRole type conflicts
+// Define UserRole as an enum with all possible values to avoid string/UserRole type conflicts
 export enum UserRole {
   SUPER_ADMIN = 'superAdmin',
   ADMIN = 'admin',

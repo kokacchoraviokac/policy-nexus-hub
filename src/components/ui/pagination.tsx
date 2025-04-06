@@ -154,3 +154,51 @@ export function Pagination({
     </div>
   );
 }
+
+// Add this for pagination component compatibility 
+export const PaginationContent = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex items-center space-x-1">{children}</div>
+);
+
+export const PaginationEllipsis = () => (
+  <div className="flex h-9 w-9 items-center justify-center">
+    <MoreHorizontal className="h-4 w-4" />
+    <span className="sr-only">More pages</span>
+  </div>
+);
+
+export const PaginationItem = ({ children }: { children: React.ReactNode }) => (
+  <div>{children}</div>
+);
+
+export const PaginationLink = ({ 
+  children, 
+  isActive, 
+  ...props 
+}: { 
+  children: React.ReactNode; 
+  isActive?: boolean; 
+  [key: string]: any 
+}) => (
+  <Button 
+    variant={isActive ? "default" : "outline"} 
+    size="icon" 
+    {...props}
+  >
+    {children}
+  </Button>
+);
+
+export const PaginationNext = ({ ...props }: { [key: string]: any }) => (
+  <Button variant="outline" size="icon" {...props}>
+    <ChevronRight className="h-4 w-4" />
+    <span className="sr-only">Next page</span>
+  </Button>
+);
+
+export const PaginationPrevious = ({ ...props }: { [key: string]: any }) => (
+  <Button variant="outline" size="icon" {...props}>
+    <ChevronLeft className="h-4 w-4" />
+    <span className="sr-only">Previous page</span>
+  </Button>
+);

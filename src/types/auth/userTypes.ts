@@ -1,18 +1,18 @@
 
 import { Session } from "@supabase/supabase-js";
-
-export type UserRole = 'admin' | 'employee' | 'superAdmin' | 'agent' | string;
+import { UserRole } from "./index";
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
+  role: UserRole | string;
   companyId?: string;
   company_id?: string; // For backward compatibility
   avatar?: string;
   avatarUrl?: string; // For backward compatibility
   avatar_url?: string; // For backward compatibility
+  user_metadata?: Record<string, any>;
 }
 
 export interface CustomPrivilege {
@@ -22,7 +22,7 @@ export interface CustomPrivilege {
   granted_at: string;
   expires_at?: string | null;
   granted_by: string;
-  context?: string | Record<string, any>;
+  context?: string;
 }
 
 export interface AuthState {

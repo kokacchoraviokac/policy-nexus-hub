@@ -1,3 +1,4 @@
+
 export interface FinancialReportFilters {
   searchTerm: string;
   dateFrom: string;
@@ -30,10 +31,10 @@ export interface FinancialTransaction {
   id: string;
   date: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | string; // Allow string to match FinancialReportData
   category: string;
   description: string;
-  status: 'pending' | 'completed' | 'failed' | 'paid';
+  status: 'pending' | 'completed' | 'failed' | 'paid' | string; // Allow string
   reference?: string;
   currency?: string; // Add currency field
 }
@@ -42,7 +43,7 @@ export interface FinancialReportFiltersProps {
   filters: FinancialReportFilters;
   onApply: () => void;
   onChange?: (filters: FinancialReportFilters) => void;
-  setFilters?: React.Dispatch<React.SetStateAction<FinancialReportFilters>>;
+  setFilters: React.Dispatch<React.SetStateAction<FinancialReportFilters>>;
 }
 
 export interface FinancialReportSummaryProps {
@@ -91,7 +92,7 @@ export interface Proposal {
   id: string;
   title: string;
   description?: string;
-  status: ProposalStatus;
+  status: ProposalStatus | string;
   created_at: string;
   updated_at: string;
   client_id?: string;
@@ -108,16 +109,20 @@ export type ProposalStatus =
   | 'viewed' 
   | 'accepted' 
   | 'rejected'
-  | 'approved';
+  | 'approved'
+  | 'pending';
 
 export interface ProposalStats {
   totalCount: number;
   pendingCount: number;
   approvedCount: number;
   rejectedCount: number;
-  draft: number;
-  sent: number;
-  viewed: number;
-  accepted: number;
-  approved: number;
+  draft?: number;
+  sent?: number;
+  viewed?: number;
+  accepted?: number;
+  approved?: number;
+  total?: number;
+  rejected?: number;
+  pending?: number;
 }

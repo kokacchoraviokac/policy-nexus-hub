@@ -41,8 +41,8 @@ export interface PolicyAddendum {
   id: string;
   policy_id: string;
   addendum_number: string;
-  description: string;
-  effective_date: string;
+  description?: string; // Make optional to match implementation
+  effective_date?: string; // Make optional to match implementation
   premium_adjustment?: number;
   status: string;
   workflow_status: string;
@@ -56,9 +56,10 @@ export interface PolicyAddendum {
 export interface PolicyImportReviewProps {
   policies: Partial<Policy>[];
   invalidPolicies: InvalidPolicy[];
-  onSubmit: () => Promise<void>; // Add missing prop
-  isSubmitting: boolean;
+  onSubmit?: () => Promise<void>; // Make optional to match implementation
+  isSubmitting?: boolean;
   errors?: ValidationErrors;
+  validationErrors?: ValidationErrors; // Add alias
 }
 
 export interface PolicyImportInstructionsProps {
@@ -89,7 +90,9 @@ export enum WorkflowStatus {
   DRAFT = 'draft',
   IN_REVIEW = 'in_review',
   READY = 'ready',
-  COMPLETE = 'complete'
+  COMPLETE = 'complete',
+  REVIEW = 'review', // Added missing values used in code
+  REJECTED = 'rejected'
 }
 
 // Define PolicyStatus as an enum to be used as a value

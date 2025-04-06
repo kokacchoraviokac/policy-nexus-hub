@@ -1,19 +1,19 @@
 
 import { Session } from "@supabase/supabase-js";
-
-// Define UserRole
-export type UserRole = 'superAdmin' | 'admin' | 'employee' | 'agent' | 'client' | 'super_admin';
+import { UserRole } from "./index";
 
 // Define User interface
 export interface User {
   id: string;
   email?: string;
   name: string;
-  role: UserRole;
+  role: UserRole | string;
   companyId?: string;
   company_id?: string; // For backward compatibility
   avatar?: string;
-  user_metadata?: Record<string, any>; // Added for compatibility
+  avatarUrl?: string; // For backward compatibility
+  avatar_url?: string; // For backward compatibility
+  user_metadata?: Record<string, any>;
 }
 
 // Define AuthState interface
@@ -22,15 +22,16 @@ export interface AuthState {
   user: User | null;
   isAuthenticated?: boolean;
   isLoading?: boolean;
+  customPrivileges: CustomPrivilege[];
 }
 
-// Define CustomPrivilege interface - matched with userTypes.ts
+// Define CustomPrivilege interface - matched with index.ts
 export interface CustomPrivilege {
   id: string;
   user_id: string;
   privilege: string;
   granted_at: string;
   granted_by: string;
-  expires_at?: string;
+  expires_at?: string | null;
   context?: string;
 }

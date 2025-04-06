@@ -2,7 +2,7 @@
 // Re-export EntityType from common
 import { EntityType } from './common';
 
-export { EntityType }; // Explicitly export EntityType for imports
+export type { EntityType }; // Correctly export EntityType for imports with type modifier
 
 export type DocumentCategory = 
   | 'policy' 
@@ -84,12 +84,21 @@ export interface DocumentSearchParams {
   dateTo?: string;
   page?: number;
   pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  approvalStatus?: DocumentApprovalStatus;
 }
 
 export interface UseDocumentSearchProps {
   entityType?: EntityType;
   entityId?: string;
   initialParams?: DocumentSearchParams;
+  category?: string;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
 }
 
 export interface UseDocumentSearchReturn {
@@ -105,4 +114,5 @@ export interface UseDocumentSearchReturn {
   totalCount: number;
   searchParams: DocumentSearchParams;
   setSearchParams: (params: Partial<DocumentSearchParams>) => void;
+  page?: number;
 }

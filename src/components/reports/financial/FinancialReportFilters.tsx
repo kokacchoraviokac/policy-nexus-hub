@@ -1,38 +1,31 @@
-
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   Select, 
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Filter, X } from "lucide-react";
-import { format } from "date-fns";
-import { FinancialReportFilters } from "@/utils/reports/financialReportUtils";
-import { useLanguage } from "@/contexts/LanguageContext";
+  Card, 
+  CardContent, 
+  CardFooter 
+} from '@/components/ui/card';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { FilterX, Search } from 'lucide-react';
+import { 
+  defaultFinancialFilters 
+} from '@/utils/reports/financialReportUtils';
+import type { FinancialReportFilters, FinancialReportFiltersProps } from '@/types/reports';
 
-export interface FinancialReportFiltersProps {
-  filters: FinancialReportFilters;
-  setFilters: (filters: FinancialReportFilters) => void;
-  onApply: () => void;
-  onReset?: () => void;
-}
-
-const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
-  filters,
-  setFilters,
-  onApply,
-  onReset
+const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({ 
+  filters, 
+  onApply, 
+  onChange,
+  setFilters
 }) => {
   const { t } = useLanguage();
   const [startDateOpen, setStartDateOpen] = useState(false);
