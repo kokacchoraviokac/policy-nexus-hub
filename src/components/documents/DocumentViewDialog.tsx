@@ -1,106 +1,139 @@
 
 import React from 'react';
-import { Document } from '@/types/documents';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useDocumentDownload } from '@/hooks/useDocumentDownload';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, X, FileText, Calendar, User } from 'lucide-react';
-import { formatDateToLocal } from '@/utils/dateUtils';
+import { formatDate, formatDateTime, formatDateToLocal } from '@/utils/dateUtils';
+import { Badge } from '@/components/ui/badge';
+import { Download, File, FileCheck, FileWarning } from 'lucide-react';
+import { Document } from '@/types/documents';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-export interface DocumentViewDialogProps {
+interface DocumentViewDialogProps {
   document: Document;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDownload?: () => void;
+  onDelete?: () => void;
+  onNewVersion?: () => void;
+  disableVersioning?: boolean;
+  disableDelete?: boolean;
 }
 
-export const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
+export function DocumentViewDialog({
   document,
   open,
-  onOpenChange
-}) => {
+  onOpenChange,
+  onDownload,
+  onDelete,
+  onNewVersion,
+  disableVersioning = false,
+  disableDelete = false
+}: DocumentViewDialogProps) {
   const { t } = useLanguage();
-  const { downloadDocument, isDownloading } = useDocumentDownload();
   
-  const handleDownload = () => {
-    downloadDocument(document);
-  };
-  
-  // Function to determine if we can render a preview
-  const canRenderPreview = () => {
-    if (!document.file_path) return false;
+  const getStatusBadge = () => {
+    if (!document.approval_status) return null;
     
-    const fileType = document.mime_type?.toLowerCase();
-    return fileType?.includes('image') || fileType?.includes('pdf');
+    switch (document.approval_status) {
+      case 'approved':
+        return (
+          <Badge variant="success" className="ml-2 gap-1">
+            <FileCheck className="h-3.5 w-3.5" />
+            {t('approved')}
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge variant="destructive" className="ml-2 gap-1">
+            <FileWarning className="h-3.5 w-3.5" />
+            {t('rejected')}
+          </Badge>
+        );
+      case 'pending':
+        return (
+          <Badge variant="warning" className="ml-2 gap-1">
+            <File className="h-3.5 w-3.5" />
+            {t('pending')}
+          </Badge>
+        );
+      default:
+        return null;
+    }
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-auto">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle className="flex items-center">
-            <FileText className="mr-2 h-5 w-5" />
             {document.document_name}
+            {getStatusBadge()}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-2">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
-            <div className="space-y-1">
-              <div className="text-sm font-medium">{t("type")}: {document.document_type}</div>
-              {document.category && (
-                <div className="text-sm font-medium">{t("category")}: {document.category}</div>
-              )}
-              <div className="flex items-center text-sm">
-                <Calendar className="mr-1 h-4 w-4 text-muted-foreground" />
-                <span>{t("uploadedOn")}: {formatDateToLocal(document.created_at)}</span>
-              </div>
-              {document.uploaded_by_name && (
-                <div className="flex items-center text-sm">
-                  <User className="mr-1 h-4 w-4 text-muted-foreground" />
-                  <span>{t("uploadedBy")}: {document.uploaded_by_name}</span>
-                </div>
-              )}
+        <div className="py-4 space-y-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">{t('documentType')}</div>
+              <div>{t(document.document_type)}</div>
             </div>
+            
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">{t('category')}</div>
+              <div>{t(document.category)}</div>
+            </div>
+            
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">{t('uploadedBy')}</div>
+              <div>{document.uploaded_by_name || document.uploaded_by}</div>
+            </div>
+            
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">{t('uploadedAt')}</div>
+              <div>{formatDateToLocal(document.created_at)}</div>
+            </div>
+            
+            {document.version > 1 && (
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">{t('version')}</div>
+                <div>{document.version}</div>
+              </div>
+            )}
           </div>
           
-          {canRenderPreview() ? (
-            <div className="border rounded-md overflow-hidden aspect-video bg-muted">
-              {document.mime_type?.includes('image') ? (
-                <img 
-                  src={`${process.env.SUPABASE_URL}/storage/v1/object/public/documents/${document.file_path}`}
-                  alt={document.document_name}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center">
-                  <p className="text-center text-muted-foreground">
-                    {t("pdfPreviewNotAvailable")}
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="border rounded-md p-6 bg-muted flex flex-col items-center justify-center space-y-2">
-              <FileText className="h-12 w-12 text-muted-foreground" />
-              <p className="text-center text-muted-foreground">
-                {t("previewNotAvailable")}
-              </p>
+          {document.comments && (
+            <div>
+              <div className="text-sm font-medium text-muted-foreground">{t('comments')}</div>
+              <div className="bg-muted p-3 rounded-md text-sm">{document.comments}</div>
             </div>
           )}
         </div>
         
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            <X className="mr-2 h-4 w-4" />
-            {t("close")}
-          </Button>
-          <Button onClick={handleDownload} disabled={isDownloading}>
-            <Download className="mr-2 h-4 w-4" />
-            {isDownloading ? t("downloading") : t("download")}
-          </Button>
+        <DialogFooter className="flex justify-between sm:justify-between">
+          <div>
+            {!disableDelete && onDelete && (
+              <Button variant="destructive" onClick={onDelete}>
+                {t('delete')}
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex gap-2 justify-end">
+            {!disableVersioning && onNewVersion && (
+              <Button variant="outline" onClick={onNewVersion}>
+                {t('uploadNewVersion')}
+              </Button>
+            )}
+            
+            {onDownload && (
+              <Button onClick={onDownload}>
+                <Download className="mr-2 h-4 w-4" />
+                {t('download')}
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-};
+}

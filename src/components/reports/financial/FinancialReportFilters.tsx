@@ -1,213 +1,218 @@
 
 import React, { useState } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Card,
-  CardContent,
-} from '@/components/ui/card';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Filter, X } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { FinancialReportFilters, FinancialReportFiltersProps } from '@/types/reports';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Filter, X, Calendar } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { FinancialReportFiltersProps } from '@/types/reports';
 
-const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
+const FinancialReportFiltersComponent: React.FC<FinancialReportFiltersProps> = ({
   filters,
-  onApply,
-  onChange,
   setFilters,
+  onApply,
+  onChange
 }) => {
   const { t } = useLanguage();
-  const [fromDate, setFromDate] = useState<Date | undefined>(filters.dateFrom ? new Date(filters.dateFrom) : undefined);
-  const [toDate, setToDate] = useState<Date | undefined>(filters.dateTo ? new Date(filters.dateTo) : undefined);
-
-  // Handle filter changes
-  const handleFilterChange = (key: string, value: string) => {
+  const [localFilters, setLocalFilters] = useState<FinancialReportFilters>({
+    ...filters
+  });
+  
+  const handleChange = (field: keyof FinancialReportFilters, value: any) => {
+    const updatedFilters = {
+      ...localFilters,
+      [field]: value
+    };
+    setLocalFilters(updatedFilters);
+    
     if (onChange) {
-      onChange({ ...filters, [key]: value });
-    } else {
-      setFilters({ ...filters, [key]: value });
+      onChange(updatedFilters);
     }
   };
-
-  // Handle date changes
-  const handleDateChange = (type: 'from' | 'to', date?: Date) => {
-    if (type === 'from') {
-      setFromDate(date);
-      if (date) {
-        handleFilterChange('dateFrom', format(date, 'yyyy-MM-dd'));
-      }
-    } else {
-      setToDate(date);
-      if (date) {
-        handleFilterChange('dateTo', format(date, 'yyyy-MM-dd'));
-      }
-    }
-  };
-
-  // Reset filters
+  
   const handleReset = () => {
-    setFromDate(undefined);
-    setToDate(undefined);
-    setFilters({
-      searchTerm: '',
-      dateFrom: '',
-      dateTo: '',
-      transactionType: '',
-      category: '',
-      status: '',
-      entityType: '',
-      startDate: '',
-      endDate: '',
-    });
+    const resetFilters: FinancialReportFilters = {
+      startDate: new Date(new Date().setDate(1)),
+      endDate: new Date()
+    };
+    
+    setLocalFilters(resetFilters);
+    setFilters(resetFilters);
   };
-
+  
+  const handleApply = () => {
+    setFilters(localFilters);
+    onApply();
+  };
+  
   return (
     <Card className="mb-6">
-      <CardContent className="p-4">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('search')}</label>
-              <Input
-                placeholder={t('searchTransactions')}
-                value={filters.searchTerm}
-                onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('fromDate')}</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {fromDate ? format(fromDate, 'PPP') : t('selectDate')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={fromDate}
-                    onSelect={(date) => handleDateChange('from', date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('toDate')}</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {toDate ? format(toDate, 'PPP') : t('selectDate')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={toDate}
-                    onSelect={(date) => handleDateChange('to', date)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('transactionType')}</label>
-              <Select
-                value={filters.transactionType}
-                onValueChange={(value) => handleFilterChange('transactionType', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('allTransactionTypes')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">{t('allTransactionTypes')}</SelectItem>
-                  <SelectItem value="income">{t('income')}</SelectItem>
-                  <SelectItem value="expense">{t('expense')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('category')}</label>
-              <Select
-                value={filters.category}
-                onValueChange={(value) => handleFilterChange('category', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('allCategories')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">{t('allCategories')}</SelectItem>
-                  <SelectItem value="commission">{t('commission')}</SelectItem>
-                  <SelectItem value="premium">{t('premium')}</SelectItem>
-                  <SelectItem value="claim">{t('claim')}</SelectItem>
-                  <SelectItem value="operational">{t('operational')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t('status')}</label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => handleFilterChange('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('allStatuses')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">{t('allStatuses')}</SelectItem>
-                  <SelectItem value="pending">{t('pending')}</SelectItem>
-                  <SelectItem value="completed">{t('completed')}</SelectItem>
-                  <SelectItem value="failed">{t('failed')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label>{t('startDate')}</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {localFilters.startDate instanceof Date 
+                    ? format(localFilters.startDate, 'PPP')
+                    : t('selectDate')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <DatePicker
+                  mode="single"
+                  selected={localFilters.startDate instanceof Date ? localFilters.startDate : new Date()}
+                  onSelect={(date) => handleChange('startDate', date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
-
-          <div className="flex justify-between items-center pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleReset}
-              className="gap-1.5"
+          
+          <div className="space-y-2">
+            <Label>{t('endDate')}</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {localFilters.endDate instanceof Date 
+                    ? format(localFilters.endDate, 'PPP')
+                    : t('selectDate')}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <DatePicker
+                  mode="single"
+                  selected={localFilters.endDate instanceof Date ? localFilters.endDate : new Date()}
+                  onSelect={(date) => handleChange('endDate', date)}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>{t('search')}</Label>
+            <Input 
+              placeholder={t('searchTransactions')}
+              value={localFilters.searchTerm || ''}
+              onChange={(e) => handleChange('searchTerm', e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2 self-end">
+            <Button 
+              className="w-full"
+              onClick={handleApply}
             >
-              <X className="h-4 w-4" />
-              {t('resetFilters')}
-            </Button>
-
-            <Button
-              size="sm"
-              onClick={onApply}
-              className="gap-1.5"
-            >
-              <Filter className="h-4 w-4" />
               {t('applyFilters')}
+            </Button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label>{t('transactionType')}</Label>
+            <Select 
+              value={localFilters.transactionType || 'all'}
+              onValueChange={(value) => handleChange('transactionType', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('allTypes')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allTypes')}</SelectItem>
+                <SelectItem value="income">{t('income')}</SelectItem>
+                <SelectItem value="expense">{t('expense')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>{t('minAmount')}</Label>
+            <Input
+              type="number"
+              placeholder={t('minAmount')}
+              value={localFilters.minAmount || ''}
+              onChange={(e) => handleChange('minAmount', e.target.value ? Number(e.target.value) : undefined)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>{t('maxAmount')}</Label>
+            <Input
+              type="number"
+              placeholder={t('maxAmount')}
+              value={localFilters.maxAmount || ''}
+              onChange={(e) => handleChange('maxAmount', e.target.value ? Number(e.target.value) : undefined)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label>{t('status')}</Label>
+            <Select 
+              value={localFilters.status || 'all'}
+              onValueChange={(value) => handleChange('status', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('allStatuses')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allStatuses')}</SelectItem>
+                <SelectItem value="completed">{t('completed')}</SelectItem>
+                <SelectItem value="pending">{t('pending')}</SelectItem>
+                <SelectItem value="cancelled">{t('cancelled')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>{t('category')}</Label>
+            <Select 
+              value={localFilters.category || 'all'}
+              onValueChange={(value) => handleChange('category', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('allCategories')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allCategories')}</SelectItem>
+                <SelectItem value="sales">{t('sales')}</SelectItem>
+                <SelectItem value="commissions">{t('commissions')}</SelectItem>
+                <SelectItem value="operational">{t('operational')}</SelectItem>
+                <SelectItem value="taxes">{t('taxes')}</SelectItem>
+                <SelectItem value="other">{t('other')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2 flex items-end">
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={handleReset}
+            >
+              <X className="mr-2 h-4 w-4" />
+              {t('resetFilters')}
             </Button>
           </div>
         </div>
@@ -216,4 +221,4 @@ const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
   );
 };
 
-export default FinancialReportFilters;
+export default FinancialReportFiltersComponent;

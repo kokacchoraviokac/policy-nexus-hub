@@ -45,20 +45,39 @@ export interface AuthState {
   customPrivileges: CustomPrivilege[];
 }
 
-// Export these types directly, don't use export * to avoid conflicts
-export { User, UserRole, CustomPrivilege, AuthState };
+// Export types - use export type to avoid conflicts with isolatedModules
+export type { User, CustomPrivilege, AuthState };
 
-// Import and re-export types from other auth modules explicitly
-// avoiding conflicts with the exported interfaces above
-import * as userTypes from './userTypes';
-import * as userExports from './user';
+// Export enum
+export { UserRole };
 
-// Export specific types that don't conflict
-export type { 
-  SignupFormValues 
-} from './userTypes';
+// Define SignupFormValues
+export interface SignupFormValues {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: UserRole;
+  companyOption: 'new' | 'existing' | 'invitation';
+  companyId?: string;
+  companyName?: string;
+  invitationToken?: string;
+}
 
-export type {
-  AuthContextType,
-  AuthProviderProps
-} from './contextTypes';
+// Define auth context related types
+export interface AuthContextType {
+  session: Session | null;
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
+}
+
+export interface AuthProviderProps {
+  children: React.ReactNode;
+}

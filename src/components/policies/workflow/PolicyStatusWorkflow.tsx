@@ -1,146 +1,209 @@
 
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Badge } from "@/components/ui/badge";
-import { AlertCircle, ArrowRight, CheckCircle2, ClipboardCheck, XCircle } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { WorkflowStatus } from "@/types/policies";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/components/ui/use-toast";
-import PolicyService from "@/services/PolicyService";
-import { mapPolicyStatusToBadgeVariant, mapPolicyStatusToText } from "@/utils/policies/policyMappers";
+import React, { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from '@/components/ui/dialog';
+import {
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  Loader2
+} from 'lucide-react';
+import { WorkflowStatus } from '@/types/policies';
+import PolicyService from '@/services/PolicyService';
 
-interface PolicyStatusWorkflowProps {
-  status: string;
-  id: string;
+export interface PolicyStatusWorkflowProps {
+  policyId: string;
+  currentStatus: string;
   onStatusChange?: (newStatus: string) => void;
 }
 
-const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ status, id, onStatusChange }) => {
+export function PolicyStatusWorkflow({
+  policyId,
+  currentStatus,
+  onStatusChange
+}: PolicyStatusWorkflowProps) {
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const updateStatus = async (newStatus: string) => {
-    setIsUpdating(true);
-    setError(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleUpdateStatus = async () => {
+    if (!newStatus || newStatus === currentStatus) return;
     
+    setIsSubmitting(true);
     try {
-      await PolicyService.updatePolicy(id, { workflow_status: newStatus });
-      
-      toast({
-        title: t("statusUpdated"),
-        description: t("policyStatusUpdatedSuccessfully"),
-      });
-      
+      await PolicyService.updatePolicy(policyId, { workflow_status: newStatus });
       if (onStatusChange) {
         onStatusChange(newStatus);
       }
-    } catch (err: any) {
-      console.error("Error updating policy status:", err);
-      setError(err.message || t("errorUpdatingPolicyStatus"));
-      
-      toast({
-        variant: "destructive",
-        title: t("updateFailed"),
-        description: err.message || t("errorUpdatingPolicyStatus"),
-      });
+      setDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating policy status:', error);
     } finally {
-      setIsUpdating(false);
+      setIsSubmitting(false);
     }
   };
-  
-  const statusBadgeVariant = mapPolicyStatusToBadgeVariant(status);
-  const statusText = mapPolicyStatusToText(status);
-  
-  return (
-    <Card className="mb-4">
-      <CardContent className="pt-6">
-        <div className="flex flex-col space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">{t("workflowStatus")}</h3>
-            <Badge variant={statusBadgeVariant}>{statusText}</Badge>
-          </div>
-          
-          <Separator />
-          
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
-          <div className="flex flex-col space-y-2">
-            {status === WorkflowStatus.DRAFT && (
-              <Button 
-                onClick={() => updateStatus(WorkflowStatus.IN_REVIEW)}
-                className="w-full"
-                variant="outline"
-                disabled={isUpdating}
-              >
-                <ClipboardCheck className="mr-2 h-4 w-4" />
-                {t("sendForReview")}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            )}
-            
-            {status === WorkflowStatus.IN_REVIEW && (
-              <>
-                <Button 
-                  onClick={() => updateStatus(WorkflowStatus.READY)}
-                  className="w-full"
-                  variant="outline"
-                  disabled={isUpdating}
-                >
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  {t("markAsReady")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-                
-                <Button 
-                  onClick={() => updateStatus(WorkflowStatus.REJECTED)}
-                  className="w-full"
-                  variant="outline"
-                  disabled={isUpdating}
-                >
-                  <XCircle className="mr-2 h-4 w-4" />
-                  {t("reject")}
-                </Button>
-              </>
-            )}
-            
-            {status === WorkflowStatus.READY && (
-              <Button 
-                onClick={() => updateStatus(WorkflowStatus.COMPLETE)}
-                className="w-full"
-                variant="outline"
-                disabled={isUpdating}
-              >
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                {t("markAsComplete")}
-              </Button>
-            )}
-            
-            {(status === WorkflowStatus.COMPLETE || status === WorkflowStatus.REJECTED) && (
-              <Button 
-                onClick={() => updateStatus(WorkflowStatus.IN_REVIEW)}
-                className="w-full"
-                variant="outline"
-                disabled={isUpdating}
-              >
-                <ArrowRight className="mr-2 h-4 w-4" />
-                {t("reopenForReview")}
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
-export default PolicyStatusWorkflow;
+  const getStatusBadge = (status: string) => {
+    // Make sure the badge variant matches the available options
+    let variant: "default" | "destructive" | "secondary" | "success" | "warning" | "outline" = "default";
+    let icon = null;
+
+    switch (status) {
+      case WorkflowStatus.PENDING:
+        variant = "warning";
+        icon = <Clock className="h-4 w-4 mr-1" />;
+        break;
+      case WorkflowStatus.APPROVED:
+        variant = "success";
+        icon = <CheckCircle className="h-4 w-4 mr-1" />;
+        break;
+      case WorkflowStatus.REJECTED:
+        variant = "destructive";
+        icon = <XCircle className="h-4 w-4 mr-1" />;
+        break;
+      case WorkflowStatus.IN_REVIEW:
+        variant = "secondary";
+        icon = <AlertCircle className="h-4 w-4 mr-1" />;
+        break;
+      case WorkflowStatus.NEEDS_INFO:
+        variant = "outline";
+        icon = <AlertTriangle className="h-4 w-4 mr-1" />;
+        break;
+      default:
+        variant = "default";
+        break;
+    }
+
+    return (
+      <Badge variant={variant} className="flex items-center text-xs">
+        {icon}
+        {t(status)}
+      </Badge>
+    );
+  };
+
+  const handleOpenDialog = (status: string) => {
+    setNewStatus(status);
+    setDialogOpen(true);
+  };
+
+  return (
+    <div className="flex flex-col space-y-2">
+      <div className="flex items-center mb-2">
+        <span className="font-medium mr-2">{t('currentStatus')}:</span>
+        {getStatusBadge(currentStatus)}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {currentStatus !== WorkflowStatus.PENDING && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleOpenDialog(WorkflowStatus.PENDING)}
+          >
+            {t('markAsPending')}
+          </Button>
+        )}
+
+        {currentStatus !== WorkflowStatus.IN_REVIEW && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleOpenDialog(WorkflowStatus.IN_REVIEW)}
+          >
+            {t('markAsInReview')}
+          </Button>
+        )}
+
+        {currentStatus !== WorkflowStatus.NEEDS_INFO && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleOpenDialog(WorkflowStatus.NEEDS_INFO)}
+          >
+            {t('markAsNeedsInfo')}
+          </Button>
+        )}
+
+        {currentStatus !== WorkflowStatus.APPROVED && (
+          <Button
+            size="sm"
+            variant="success"
+            onClick={() => handleOpenDialog(WorkflowStatus.APPROVED)}
+          >
+            {t('approve')}
+          </Button>
+        )}
+
+        {currentStatus !== WorkflowStatus.REJECTED && (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => handleOpenDialog(WorkflowStatus.REJECTED)}
+          >
+            {t('reject')}
+          </Button>
+        )}
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('updatePolicyStatus')}</DialogTitle>
+            <DialogDescription>
+              {t('areYouSureYouWantToUpdateStatus')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{t('from')}:</span>
+                {getStatusBadge(currentStatus)}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{t('to')}:</span>
+                {getStatusBadge(newStatus)}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDialogOpen(false)}
+              disabled={isSubmitting}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              onClick={handleUpdateStatus}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('updating')}
+                </>
+              ) : (
+                t('confirm')
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentTableName } from "@/types/documents";
 
 /**
  * Utility functions for making type-safe Supabase queries
@@ -62,4 +61,21 @@ export function fromEntityTable(entityType: string) {
   }
   
   return supabase.from(tableName as any);
+}
+
+/**
+ * Safely casts any data type for Supabase queries
+ */
+export function safeTableCast<T>(table: T): any {
+  return table;
+}
+
+/**
+ * Helper to safely convert an error to a string
+ */
+export function errorToString(error: any): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
 }

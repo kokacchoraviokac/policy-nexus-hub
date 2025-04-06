@@ -1,5 +1,5 @@
-import React from "react";
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Dialog, 
@@ -10,36 +10,62 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { 
+  RadioGroup, 
+  RadioGroupItem 
+} from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Proposal, ProposalStatus } from "@/types/sales";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { ProposalStatus } from "@/types/sales";
 
 interface UpdateProposalStatusDialogProps {
-  proposal: Proposal;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStatusChange: (status: ProposalStatus) => void;
+  onUpdateStatus: (status: ProposalStatus) => Promise<void>;
+  currentStatus: ProposalStatus;
 }
 
 const UpdateProposalStatusDialog: React.FC<UpdateProposalStatusDialogProps> = ({
-  proposal,
   open,
   onOpenChange,
-  onStatusChange
+  onUpdateStatus,
+  currentStatus
 }) => {
   const { t } = useLanguage();
-  const [status, setStatus] = useState<ProposalStatus>(proposal.status);
-  const [notes, setNotes] = useState("");
-  const [updating, setUpdating] = useState(false);
+  const [status, setStatus] = useState<ProposalStatus>(currentStatus);
+  const [isUpdating, setIsUpdating] = useState(false);
   
+  const handleSubmit = async () => {
+    setIsUpdating(true);
+    try {
+      await onUpdateStatus(status);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error updating proposal status:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  
+  // Define available statuses based on current status
+  // This represents a simple status workflow
   const getAvailableStatuses = () => {
-    switch (proposal.status) {
-      case "sent":
-        return ["viewed", "accepted", "rejected", "expired"];
-      case "viewed":
-        return ["accepted", "rejected", "expired"];
+    switch (currentStatus) {
+      case ProposalStatus.DRAFT:
+        return [
+          { value: ProposalStatus.SENT, label: t("sent") }
+        ];
+      case ProposalStatus.SENT:
+        return [
+          { value: ProposalStatus.VIEWED, label: t("viewed") },
+          { value: ProposalStatus.ACCEPTED, label: t("accepted") },
+          { value: ProposalStatus.REJECTED, label: t("rejected") }
+        ];
+      case ProposalStatus.VIEWED:
+        return [
+          { value: ProposalStatus.ACCEPTED, label: t("accepted") },
+          { value: ProposalStatus.REJECTED, label: t("rejected") }
+        ];
       default:
         return [];
     }
@@ -47,70 +73,50 @@ const UpdateProposalStatusDialog: React.FC<UpdateProposalStatusDialogProps> = ({
   
   const availableStatuses = getAvailableStatuses();
   
-  const handleUpdate = () => {
-    setUpdating(true);
-    
-    setTimeout(() => {
-      setUpdating(false);
-      onStatusChange(status);
-      toast.success(t("statusUpdated"), {
-        description: t("proposalStatusUpdatedTo", { status: t(status) })
-      });
-      onOpenChange(false);
-    }, 1000);
-  };
-  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("updateProposalStatus")}</DialogTitle>
           <DialogDescription>
-            {t("updateProposalStatusDescription")}
+            {t("selectNewStatusForProposal")}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>{t("currentStatus")}</Label>
-            <div className="font-medium">{t(proposal.status)}</div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>{t("newStatus")}</Label>
-            <RadioGroup value={status} onValueChange={(value) => setStatus(value as ProposalStatus)}>
-              {availableStatuses.map(s => (
-                <div key={s} className="flex items-center space-x-2">
-                  <RadioGroupItem value={s} id={`status-${s}`} />
-                  <Label htmlFor={`status-${s}`}>{t(s)}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="notes">{t("statusNotes")}</Label>
-            <Textarea
-              id="notes"
-              placeholder={t("optionalStatusNotes")}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
+        <div className="py-4">
+          <RadioGroup
+            value={status}
+            onValueChange={(value) => setStatus(value as ProposalStatus)}
+            className="space-y-3"
+          >
+            {availableStatuses.map((option) => (
+              <div key={option.value} className="flex items-center space-x-2">
+                <RadioGroupItem value={option.value} id={option.value} />
+                <Label htmlFor={option.value}>{option.label}</Label>
+              </div>
+            ))}
+          </RadioGroup>
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isUpdating}
+          >
             {t("cancel")}
           </Button>
-          <Button onClick={handleUpdate} disabled={updating || status === proposal.status}>
-            {updating ? (
+          <Button 
+            onClick={handleSubmit}
+            disabled={isUpdating || status === currentStatus || availableStatuses.length === 0}
+          >
+            {isUpdating ? (
               <>
-                <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-b-transparent" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("updating")}
               </>
             ) : (
-              t("updateStatus")
+              t("update")
             )}
           </Button>
         </DialogFooter>

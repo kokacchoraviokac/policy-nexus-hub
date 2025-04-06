@@ -18,13 +18,19 @@ export interface SalesProcess {
   contact_email?: string;
   contact_phone?: string;
   notes?: string;
+  title?: string;
+  stage?: string;
+  insurance_type?: string;
 }
 
 export enum ProposalStatus {
   DRAFT = "draft",
   SENT = "sent",
+  VIEWED = "viewed",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
+  APPROVED = "approved",
+  PENDING = "pending",
   EXPIRED = "expired"
 }
 
@@ -35,7 +41,7 @@ export interface Proposal {
   client_id?: string;
   client_name: string;
   estimated_value: number;
-  currency: string; 
+  currency: string;
   status: ProposalStatus;
   expiry_date: string;
   document_url?: string;
@@ -43,6 +49,17 @@ export interface Proposal {
   updated_at?: string;
   created_by: string;
   sales_process_id?: string;
+  insurer_name?: string;
+  coverage_details?: string;
+  premium?: number;
+  notes?: string;
+  document_ids?: string[];
+  sent_at?: string;
+  viewed_at?: string;
+  expires_at?: string;
+  accepted_at?: string;
+  rejected_at?: string;
+  amount?: number;
 }
 
 export interface ProposalStats {
@@ -51,7 +68,14 @@ export interface ProposalStats {
   accepted: number;
   rejected: number;
   expired: number;
+  viewed: number;
+  pending: number;
+  approved: number;
   total: number;
+  totalCount?: number;
+  pendingCount?: number;
+  approvedCount?: number;
+  rejectedCount?: number;
 }
 
 export interface SalesLeadFormValues {
@@ -118,4 +142,12 @@ export enum AssignmentRole {
   SECONDARY = "secondary",
   SUPPORT = "support",
   SPECIALIST = "specialist"
+}
+
+// Define interface for useProposalsData hook props
+export interface UseProposalsDataProps {
+  sales_process_id?: string;
+  status?: string;
+  searchQuery?: string;
+  statusFilter?: string;
 }

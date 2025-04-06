@@ -25,18 +25,20 @@ const PolicyImportPage: React.FC = () => {
     importedPolicies, 
     validationErrors, 
     handleFileSelect, 
-    isImporting, 
-    savePolicies,
-    clearImportData
+    isProcessing,
+    isSubmitting,
+    submitPolicies,
+    invalidPolicies
   } = usePolicyImport();
 
   // Convert validation errors to the expected format
-  const invalidPolicies: InvalidPolicy[] = Object.entries(validationErrors).map(
-    ([index, errors]) => ({
-      policy: importedPolicies[parseInt(index, 10)] || {},
-      errors
-    })
-  );
+  const convertedInvalidPolicies: InvalidPolicy[] = invalidPolicies || 
+    Object.entries(validationErrors).map(
+      ([index, errors]) => ({
+        policy: importedPolicies[parseInt(index, 10)] || {},
+        errors
+      })
+    );
 
   const handleFileUpload = async (file: File) => {
     await handleFileSelect(file);
@@ -47,14 +49,13 @@ const PolicyImportPage: React.FC = () => {
   };
 
   const handleImportComplete = async () => {
-    const success = await savePolicies();
+    const success = await submitPolicies();
     if (success) {
       navigate("/policies/workflow");
     }
   };
 
   const handleCancel = () => {
-    clearImportData();
     navigate("/policies");
   };
 
@@ -83,13 +84,13 @@ const PolicyImportPage: React.FC = () => {
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="upload" disabled={isImporting}>
+              <TabsTrigger value="upload" disabled={isProcessing}>
                 <Upload className="h-4 w-4 mr-2" />
                 {t("upload")}
               </TabsTrigger>
               <TabsTrigger 
                 value="review" 
-                disabled={isImporting || importedPolicies.length === 0}
+                disabled={isProcessing || importedPolicies.length === 0}
               >
                 <FileText className="h-4 w-4 mr-2" />
                 {t("review")}
@@ -101,19 +102,19 @@ const PolicyImportPage: React.FC = () => {
               <div className="mt-6">
                 <PolicyImportFileUpload 
                   onFileUpload={handleFileUpload} 
-                  isUploading={isImporting} 
+                  isUploading={isProcessing} 
                 />
               </div>
             </TabsContent>
             
             <TabsContent value="review" className="py-4">
-              {invalidPolicies.length > 0 && (
+              {convertedInvalidPolicies.length > 0 && (
                 <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md flex items-start gap-2">
                   <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5" />
                   <div>
                     <h4 className="font-medium text-yellow-800">{t("validationWarning")}</h4>
                     <p className="text-sm text-yellow-700">
-                      {t("validationWarningDescription", { count: invalidPolicies.length })}
+                      {t("validationWarningDescription", { count: convertedInvalidPolicies.length })}
                     </p>
                   </div>
                 </div>
@@ -121,21 +122,10 @@ const PolicyImportPage: React.FC = () => {
               
               <PolicyImportReview 
                 policies={importedPolicies}
-                invalidPolicies={invalidPolicies}
+                invalidPolicies={convertedInvalidPolicies}
+                onBack={() => setActiveTab("upload")}
+                onImport={handleImportComplete}
               />
-              
-              <div className="mt-6 flex justify-end gap-3">
-                <Button variant="outline" onClick={handleCancel}>
-                  {t("cancel")}
-                </Button>
-                <Button 
-                  onClick={handleImportComplete} 
-                  disabled={isImporting || importedPolicies.length === 0}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {t("importPolicies")}
-                </Button>
-              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -1,4 +1,3 @@
-
 /**
  * Formats a date string into a localized format
  */
@@ -52,6 +51,26 @@ export function toISODateString(date: Date | string | null): string {
   }
   
   return dateObj.toISOString().split('T')[0];
+}
+
+/**
+ * Formats a date to a localized string for display
+ * This is the missing function that's referenced in several places
+ */
+export function formatDateToLocal(dateString: string | Date, locale = 'en-US'): string {
+  if (!dateString) return '';
+  
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  
+  if (isNaN(date.getTime())) {
+    return typeof dateString === 'string' ? dateString : '';
+  }
+  
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric'
+  }).format(date);
 }
 
 /**

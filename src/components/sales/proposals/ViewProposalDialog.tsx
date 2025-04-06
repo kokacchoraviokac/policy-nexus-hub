@@ -1,52 +1,54 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileDownload, XCircle } from "lucide-react";
-import { Proposal, ProposalStatus } from "@/types/sales";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { formatDate } from "@/utils/dateUtils";
-import { formatCurrency } from "@/utils/formatUtils";
+import { Download, Calendar, User, Building, FileCheck } from "lucide-react";
+import { Proposal, ProposalStatus } from "@/types/sales";
 
 interface ViewProposalDialogProps {
+  proposal: Proposal;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  proposal: Proposal;
-  onUpdateStatus?: (proposalId: string, status: ProposalStatus) => Promise<void>;
+  onStatusChange?: (proposalId: string, status: ProposalStatus) => Promise<void>;
 }
 
 const ViewProposalDialog: React.FC<ViewProposalDialogProps> = ({
+  proposal,
   open,
   onOpenChange,
-  proposal,
-  onUpdateStatus
+  onStatusChange
 }) => {
-  const { t } = useLanguage();
-  const [isLoading, setIsLoading] = useState(false);
+  const { t, formatDateTime } = useLanguage();
   
-  const handleUpdateStatus = async (status: ProposalStatus) => {
-    if (!onUpdateStatus) return;
-    
-    setIsLoading(true);
-    try {
-      await onUpdateStatus(proposal.id, status);
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Error updating proposal status:", error);
-    } finally {
-      setIsLoading(false);
+  const handleStatusChange = async (status: ProposalStatus) => {
+    if (onStatusChange) {
+      try {
+        await onStatusChange(proposal.id, status);
+        // Close the dialog after changing status
+        onOpenChange(false);
+      } catch (error) {
+        console.error("Error changing proposal status:", error);
+      }
     }
   };
   
-  const getBadgeVariant = (status: ProposalStatus) => {
+  const getBadgeVariant = (status: string) => {
     switch (status) {
       case "draft": return "secondary";
-      case "sent": return "info";
+      case "sent": return "warning";
+      case "viewed": return "secondary";
       case "accepted": return "success";
       case "rejected": return "destructive";
-      case "expired": return "warning";
+      case "approved": return "success";
+      case "pending": return "warning";
       default: return "default";
     }
   };
@@ -55,97 +57,123 @@ const ViewProposalDialog: React.FC<ViewProposalDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{t("viewProposal")}</DialogTitle>
+          <DialogTitle>{proposal.title}</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <h3 className="text-lg font-semibold">{proposal.title}</h3>
-            <Badge variant={getBadgeVariant(proposal.status)}>
+        <div className="space-y-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4 mr-1" />
+              {formatDateTime(proposal.created_at)}
+            </div>
+            <Badge variant={getBadgeVariant(proposal.status as string)}>
               {t(proposal.status)}
             </Badge>
           </div>
           
-          <Separator />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">{t("client")}</p>
-              <p className="font-medium">{proposal.client_name}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="text-sm font-medium">{t("clientDetails")}</div>
+              <div className="flex items-center text-sm">
+                <User className="h-4 w-4 mr-2 text-muted-foreground" />
+                {proposal.client_name}
+              </div>
             </div>
             
-            <div>
-              <p className="text-sm text-muted-foreground">{t("createdDate")}</p>
-              <p className="font-medium">{formatDate(proposal.created_at)}</p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-muted-foreground">{t("estimatedValue")}</p>
-              <p className="font-medium">
-                {formatCurrency(proposal.estimated_value, proposal.currency)}
-              </p>
-            </div>
-            
-            <div>
-              <p className="text-sm text-muted-foreground">{t("expiryDate")}</p>
-              <p className="font-medium">{formatDate(proposal.expiry_date)}</p>
-            </div>
-          </div>
-          
-          <div>
-            <p className="text-sm text-muted-foreground">{t("description")}</p>
-            <p className="mt-1">{proposal.description}</p>
-          </div>
-          
-          <Separator />
-          
-          <div className="flex flex-col space-y-4">
-            <h4 className="font-medium">{t("proposalDocuments")}</h4>
-            
-            {proposal.document_url ? (
-              <Button variant="secondary" className="w-full md:w-auto">
-                <FileDownload className="h-4 w-4 mr-2" />
-                {t("downloadProposal")}
-              </Button>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {t("noDocumentsAttached")}
-              </p>
+            {proposal.insurer_name && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium">{t("insurerDetails")}</div>
+                <div className="flex items-center text-sm">
+                  <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+                  {proposal.insurer_name}
+                </div>
+              </div>
             )}
           </div>
           
-          {proposal.status === "draft" && onUpdateStatus && (
-            <div className="flex justify-end space-x-2 mt-4">
-              <Button
-                variant="default"
-                onClick={() => handleUpdateStatus("sent")}
-                disabled={isLoading}
-              >
-                {t("markAsSent")}
-              </Button>
+          {proposal.coverage_details && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium">{t("coverageDetails")}</div>
+              <div className="text-sm rounded-md bg-muted p-3">
+                {proposal.coverage_details}
+              </div>
             </div>
           )}
           
-          {proposal.status === "sent" && onUpdateStatus && (
-            <div className="flex justify-end space-x-2 mt-4">
-              <Button
-                variant="default"
-                onClick={() => handleUpdateStatus("accepted")}
-                disabled={isLoading}
-              >
+          {proposal.premium && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium">{t("premium")}</div>
+              <div className="text-sm font-semibold">{proposal.premium}</div>
+            </div>
+          )}
+          
+          {proposal.notes && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium">{t("notes")}</div>
+              <div className="text-sm rounded-md bg-muted p-3">
+                {proposal.notes}
+              </div>
+            </div>
+          )}
+          
+          {proposal.document_ids && proposal.document_ids.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium">{t("attachedDocuments")}</div>
+              <div className="space-y-1">
+                {proposal.document_ids.map((doc, index) => (
+                  <div key={index} className="flex items-center text-sm">
+                    <Download className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span>{doc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {proposal.sent_at && (
+            <div className="text-sm text-muted-foreground">
+              {t("sentAt")}: {formatDateTime(proposal.sent_at)}
+            </div>
+          )}
+          
+          {proposal.viewed_at && (
+            <div className="text-sm text-muted-foreground">
+              {t("viewedAt")}: {formatDateTime(proposal.viewed_at)}
+            </div>
+          )}
+          
+          {proposal.expires_at && (
+            <div className="text-sm text-muted-foreground">
+              {t("expiresAt")}: {formatDateTime(proposal.expires_at)}
+            </div>
+          )}
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t("close")}
+          </Button>
+          
+          {proposal.status === ProposalStatus.DRAFT && onStatusChange && (
+            <Button onClick={() => handleStatusChange(ProposalStatus.SENT)}>
+              {t("markAsSent")}
+            </Button>
+          )}
+          
+          {proposal.status === ProposalStatus.SENT && onStatusChange && (
+            <div className="flex gap-2">
+              <Button onClick={() => handleStatusChange(ProposalStatus.ACCEPTED)}>
                 {t("markAsAccepted")}
               </Button>
-              <Button
+              <Button 
                 variant="destructive"
-                onClick={() => handleUpdateStatus("rejected")}
-                disabled={isLoading}
+                onClick={() => handleStatusChange(ProposalStatus.REJECTED)}
               >
-                <XCircle className="h-4 w-4 mr-2" />
                 {t("markAsRejected")}
               </Button>
             </div>
           )}
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
