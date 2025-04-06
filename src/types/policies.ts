@@ -1,4 +1,3 @@
-
 export interface Policy {
   id: string;
   policy_number: string;

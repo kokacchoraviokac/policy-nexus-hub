@@ -1,4 +1,3 @@
-
 export interface FinancialReportData {
   id: string;
   date: string;
@@ -10,6 +9,8 @@ export interface FinancialReportData {
   entityId?: string;
   entityType?: string;
   entityName?: string;
+  description?: string;
+  transactions?: any[];
 }
 
 export interface FinancialReportFilters {
@@ -112,6 +113,7 @@ export interface PolicyImportReviewProps {
   isSubmitting?: boolean;
   onBack?: () => void;
   onImport?: () => void;
+  errors?: any;
 }
 
 export interface PolicyImportInstructionsProps {

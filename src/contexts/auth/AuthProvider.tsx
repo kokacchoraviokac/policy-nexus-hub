@@ -1,8 +1,7 @@
-
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, createContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole } from "@/types/auth/userTypes";
-import { AuthState } from "@/types/auth/contextTypes";
+import { AuthState } from "@/types/auth/user";
 import useAuthOperations from "@/hooks/useAuthOperations";
 import { fetchUserCustomPrivileges } from "@/utils/authUtils";
 import { AuthContextType } from "./types";
@@ -34,17 +33,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUser,
   } = useAuthOperations({ setState });
   
-  // Fetch user custom privileges
   const fetchCustomPrivileges = useCallback(async (userId: string) => {
     const privileges = await fetchUserCustomPrivileges(userId);
     setCustomPrivileges(privileges);
   }, []);
   
-  // Function to check if user has a specific privilege
   const hasPrivilege = useCallback((privilege: string) => {
     if (!user) return false;
     
-    // Check if the user has the privilege directly
     const hasDirectPrivilege = customPrivileges.some(
       (p:any) => p.privilege === privilege && p.user_id === user.id
     );
@@ -66,7 +62,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ) => {
     if (!user) return false;
     
-    // Check if the user has the privilege directly
     const hasDirectPrivilege = customPrivileges.some(p => {
       if (p.privilege !== privilege || p.user_id !== user.id) {
         return false;
@@ -80,7 +75,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
       
-      // Check if all context properties match
       for (const key in context) {
         if (context.hasOwnProperty(key)) {
           if (p.context[key] !== context[key]) {
@@ -105,7 +99,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return user.role === role;
   }, [user]);
 
-  // Initialize the authentication state
   useEffect(() => {
     const initializeAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -135,7 +128,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             isLoading: false,
           }));
           
-          // Fetch custom privileges after setting the user
           await fetchCustomPrivileges(supaUser.id);
         } else {
           setState(prevState => ({
@@ -159,7 +151,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     initializeAuth();
     
-    // Subscribe to auth state changes
     const { data } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN') {
@@ -187,7 +178,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               isLoading: false,
             }));
             
-            // Fetch custom privileges after setting the user
             await fetchCustomPrivileges(supaUser.id);
           }
         } else if (event === 'SIGNED_OUT') {
@@ -222,13 +212,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await updateUser(profile);
   };
   
-  const login = async (email: string, password: string): Promise<{ error?: any }> => {
+  const login = async (email: string, password: string): Promise<void> => {
     try {
       await signIn(email, password);
-      return { error: undefined };
     } catch (error) {
-      // Return error to let caller handle it
-      return { error };
+      console.error("Login error:", error);
+      throw error;
     }
   };
   
@@ -238,7 +227,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   const initiatePasswordReset = async (email: string): Promise<boolean> => {
     try {
-      // This is a mock implementation - you'll need to replace it with your actual implementation
       console.log(`Initiating password reset for ${email}`);
       return true;
     } catch (error) {
@@ -249,7 +237,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updatePassword = async (newPassword: string): Promise<boolean> => {
     try {
-      // This is a mock implementation - you'll need to replace it with your actual implementation
       console.log('Updating password');
       return true;
     } catch (error) {

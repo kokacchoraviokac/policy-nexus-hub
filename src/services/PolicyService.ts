@@ -1,284 +1,193 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Policy, PolicyFilterParams, WorkflowStatus } from "@/types/policies";
-import { User } from "@/types/auth/userTypes";
+import { Policy, InvalidPolicy, PolicyAddendum } from "@/types/policies";
+import { User } from "@/types/auth/user";
 
-// Service class for policy operations
 export class PolicyService {
-  // Get a list of policies with filtering
-  static async getPolicies(params: PolicyFilterParams) {
-    try {
-      const {
-        page = 1,
-        pageSize = 10,
-        searchTerm,
-        status,
-        clientId,
-        insurerId,
-        productId,
-        workflowStatus,
-        assignedTo,
-        startDateFrom,
-        startDateTo,
-        expiryDateFrom,
-        expiryDateTo,
-        search
-      } = params;
-
-      // Calculate pagination offset
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      // Start building the query
-      let query = supabase.from('policies').select('*', { count: 'exact' });
-
-      // Apply filters
-      if (searchTerm) {
-        query = query.or(
-          `policy_number.ilike.%${searchTerm}%,policyholder_name.ilike.%${searchTerm}%,insurer_name.ilike.%${searchTerm}%`
-        );
-      }
-
-      if (search) {
-        query = query.or(
-          `policy_number.ilike.%${search}%,policyholder_name.ilike.%${search}%,insurer_name.ilike.%${search}%`
-        );
-      }
-
-      if (status && status !== 'all') {
-        query = query.eq('status', status);
-      }
-
-      if (workflowStatus && workflowStatus !== 'all') {
-        query = query.eq('workflow_status', workflowStatus);
-      }
-
-      if (startDateFrom) {
-        query = query.gte('start_date', startDateFrom);
-      }
-
-      if (startDateTo) {
-        query = query.lte('start_date', startDateTo);
-      }
-
-      if (expiryDateFrom) {
-        query = query.gte('expiry_date', expiryDateFrom);
-      }
-
-      if (expiryDateTo) {
-        query = query.lte('expiry_date', expiryDateTo);
-      }
-
-      if (clientId) {
-        query = query.eq('client_id', clientId);
-      }
-
-      if (insurerId) {
-        query = query.eq('insurer_id', insurerId);
-      }
-
-      if (productId) {
-        query = query.eq('product_id', productId);
-      }
-
-      if (assignedTo) {
-        query = query.eq('assigned_to', assignedTo);
-      }
-
-      // Apply sorting (newest first by default)
-      query = query.order('created_at', { ascending: false });
-
-      // Apply pagination
-      query = query.range(from, to);
-
-      // Execute the query
-      const { data, error, count } = await query;
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        data: data as Policy[],
-        totalCount: count || 0,
-        error: null
-      };
-    } catch (error) {
-      console.error('Error fetching policies:', error);
-      return {
-        success: false,
-        data: [] as Policy[],
-        totalCount: 0,
-        error: error
-      };
+  /**
+   * Fetch policies with optional filtering
+   */
+  static async fetchPolicies(filters: any = {}) {
+    let query = supabase
+      .from("policies")
+      .select("*");
+    
+    // Apply filters
+    if (filters.searchTerm) {
+      query = query.or(
+        `policy_number.ilike.%${filters.searchTerm}%,policyholder_name.ilike.%${filters.searchTerm}%`
+      );
     }
-  }
-
-  // Get a single policy by ID
-  static async getPolicyById(policyId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('policies')
-        .select('*')
-        .eq('id', policyId)
-        .single();
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        data: data as Policy,
-        error: null
-      };
-    } catch (error) {
-      console.error('Error fetching policy:', error);
-      return {
-        success: false,
-        data: null,
-        error: error
-      };
+    
+    if (filters.status) {
+      query = query.eq("status", filters.status);
     }
-  }
-
-  // Create a new policy
-  static async createPolicy(policy: Partial<Policy>, userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('policies')
-        .insert({
-          ...policy,
-          created_by: userId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        data: data as Policy,
-        error: null
-      };
-    } catch (error) {
-      console.error('Error creating policy:', error);
-      return {
-        success: false,
-        data: null,
-        error: error
-      };
+    
+    if (filters.workflowStatus) {
+      query = query.eq("workflow_status", filters.workflowStatus);
     }
-  }
-
-  // Update an existing policy
-  static async updatePolicy(policyId: string, updates: Partial<Policy>) {
-    try {
-      const { data, error } = await supabase
-        .from('policies')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', policyId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        data: data as Policy,
-        error: null
-      };
-    } catch (error) {
-      console.error('Error updating policy:', error);
-      return {
-        success: false,
-        data: null,
-        error: error
-      };
+    
+    if (filters.startDateFrom) {
+      query = query.gte("start_date", filters.startDateFrom);
     }
+    
+    if (filters.startDateTo) {
+      query = query.lte("start_date", filters.startDateTo);
+    }
+    
+    if (filters.expiryDateFrom) {
+      query = query.gte("expiry_date", filters.expiryDateFrom);
+    }
+    
+    if (filters.expiryDateTo) {
+      query = query.lte("expiry_date", filters.expiryDateTo);
+    }
+    
+    // Add pagination
+    const page = filters.page || 1;
+    const pageSize = filters.pageSize || 10;
+    const startIndex = (page - 1) * pageSize;
+    
+    query = query
+      .order("created_at", { ascending: false })
+      .range(startIndex, startIndex + pageSize - 1);
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data as Policy[];
   }
   
-  // Update policy status
-  static async updatePolicyStatus(policyId: string, status: string) {
-    return this.updatePolicy(policyId, { status });
+  /**
+   * Fetch a single policy by ID
+   */
+  static async fetchPolicyById(id: string) {
+    const { data, error } = await supabase
+      .from("policies")
+      .select("*")
+      .eq("id", id)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data as Policy;
   }
-
-  // Import multiple policies
-  static async importPolicies(policies: Partial<Policy>[], userId: string) {
-    try {
-      if (!policies || policies.length === 0) {
-        return {
-          success: false,
-          message: 'No policies to import',
-          error: 'No policies provided'
+  
+  /**
+   * Update a policy
+   */
+  static async updatePolicy(id: string, updates: Partial<Policy>) {
+    const { data, error } = await supabase
+      .from("policies")
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data as Policy;
+  }
+  
+  /**
+   * Import policies
+   */
+  static async importPolicies(policies: Partial<Policy>[], user: User): Promise<{ success: Policy[], failed: InvalidPolicy[] }> {
+    const now = new Date().toISOString();
+    const success: Policy[] = [];
+    const failed: InvalidPolicy[] = [];
+    
+    // Process each policy
+    for (const policy of policies) {
+      try {
+        // Prepare policy data
+        const policyData = {
+          ...policy,
+          created_by: user.id,
+          created_at: now,
+          updated_at: now,
+          company_id: user.companyId || user.company_id,
+          workflow_status: "review" // All imported policies start in review status
         };
+        
+        // Insert the policy
+        const { data, error } = await supabase
+          .from("policies")
+          .insert({
+            ...policyData,
+            company_id: user.companyId || user.company_id,
+            workflow_status: "review"
+          })
+          .select()
+          .single();
+        
+        if (error) {
+          throw error;
+        }
+        
+        success.push(data as Policy);
+      } catch (error) {
+        console.error("Error importing policy:", error);
+        failed.push({
+          policy,
+          errors: [(error as Error).message]
+        });
       }
-
-      // Ensure each policy has required fields
-      const preparedPolicies = policies.map(policy => ({
-        policy_number: policy.policy_number || '',
-        policyholder_name: policy.policyholder_name || '',
-        insurer_name: policy.insurer_name || '',
-        start_date: policy.start_date || new Date().toISOString().split('T')[0],
-        expiry_date: policy.expiry_date || '',
-        premium: policy.premium || 0,
-        currency: policy.currency || 'EUR',
-        policy_type: policy.policy_type || 'standard',
-        status: policy.status || 'active',
-        workflow_status: policy.workflow_status || WorkflowStatus.DRAFT,
-        company_id: policy.company_id || '',
-        created_by: userId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
-
-      // For now, we'll use a single insert to keep it simple
-      // In a real app, you might want to batch these for larger imports
-      const { data, error } = await supabase
-        .from('policies')
-        .insert(preparedPolicies);
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        message: `Successfully imported ${policies.length} policies`,
-        error: null
-      };
-    } catch (error) {
-      console.error('Error importing policies:', error);
-      return {
-        success: false,
-        message: 'Failed to import policies',
-        error: error
-      };
     }
+    
+    return { success, failed };
   }
-
-  // Delete a policy
-  static async deletePolicy(policyId: string) {
-    try {
-      const { error } = await supabase
-        .from('policies')
-        .delete()
-        .eq('id', policyId);
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        message: 'Policy successfully deleted',
-        error: null
-      };
-    } catch (error) {
-      console.error('Error deleting policy:', error);
-      return {
-        success: false,
-        message: 'Failed to delete policy',
-        error: error
-      };
+  
+  /**
+   * Fetch policy addendums
+   */
+  static async fetchPolicyAddendums(policyId: string) {
+    const { data, error } = await supabase
+      .from("policy_addendums")
+      .select("*")
+      .eq("policy_id", policyId)
+      .order("created_at", { ascending: false });
+    
+    if (error) {
+      throw error;
     }
+    
+    return data as PolicyAddendum[];
+  }
+  
+  /**
+   * Create policy addendum
+   */
+  static async createAddendum(addendum: Partial<PolicyAddendum>, user: User) {
+    const now = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from("policy_addendums")
+      .insert({
+        ...addendum,
+        created_by: user.id,
+        created_at: now,
+        updated_at: now,
+        company_id: user.companyId || user.company_id,
+        status: "active",
+        workflow_status: "complete"
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data as PolicyAddendum;
   }
 }
+
+export default PolicyService;

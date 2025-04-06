@@ -1,6 +1,16 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { Policy, WorkflowStatus } from "@/types/policies";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -9,289 +19,242 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Eye, 
-  AlertTriangle,
-  FileSpreadsheet,
-  Loader2,
-  ClipboardCheck,
-  ArrowRightCircle
-} from "lucide-react";
-import { WorkflowPolicy } from "@/utils/policies/policyMappers";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { formatDateToLocal } from "@/utils/dateUtils";
+import { formatCurrency } from "@/utils/formatters";
+import { Loader2, Search, Filter, CheckCircle, AlertCircle, Clock, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface WorkflowPoliciesListProps {
-  policies: WorkflowPolicy[];
+  policies: Policy[];
   isLoading: boolean;
-  isError?: boolean;
-  onReviewPolicy: (policyId: string) => void;
-  totalCount?: number;
-  currentPage?: number;
-  pageSize?: number;
-  workflowStatus?: string;
-  onPageChange?: (page: number) => void;
-  onStatusChange?: (status: string) => void;
+  error: Error | null;
+  onRefresh: () => void;
 }
 
-const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({ 
-  policies, 
-  isLoading, 
-  isError = false,
-  onReviewPolicy,
-  totalCount = 0,
-  currentPage = 1,
-  pageSize = 10,
-  workflowStatus = "all",
-  onPageChange,
-  onStatusChange,
+const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
+  policies,
+  isLoading,
+  error,
+  onRefresh,
 }) => {
-  const { t, formatDate, formatCurrency } = useLanguage();
+  const { t } = useLanguage();
+  const { hasRole } = useAuth();
+  const navigate = useNavigate();
   
-  const totalPages = Math.ceil(totalCount / pageSize);
-
-  // Page numbering logic for pagination
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+  
+  const canReviewPolicies = hasRole(["admin", "superAdmin", "super_admin"]);
+  
+  // Filter policies based on search term and status
+  const filteredPolicies = policies.filter((policy) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      policy.policy_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      policy.policyholder_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (policy.client_name && policy.client_name.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i);
-        }
-        pages.push('ellipsis');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push('ellipsis');
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(1);
-        pages.push('ellipsis');
-        pages.push(currentPage - 1);
-        pages.push(currentPage);
-        pages.push(currentPage + 1);
-        pages.push('ellipsis');
-        pages.push(totalPages);
-      }
-    }
+    const matchesStatus =
+      statusFilter === "all" || policy.workflow_status === statusFilter;
     
-    return pages;
+    return matchesSearch && matchesStatus;
+  });
+  
+  // Paginate the filtered policies
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPolicies = filteredPolicies.slice(indexOfFirstItem, indexOfLastItem);
+  
+  const handleViewPolicy = (policyId: string) => {
+    navigate(`/policies/review/${policyId}`);
   };
   
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages && onPageChange) {
-      onPageChange(page);
-    }
-  };
-
-  const getWorkflowStatusBadge = (status: string) => {
-    switch(status) {
-      case 'draft':
-        return <Badge variant="outline">{t("draft")}</Badge>;
-      case 'in_review':
-        return <Badge variant="secondary">{t("inReview")}</Badge>;
-      case 'ready':
-        return <Badge variant="success">{t("ready")}</Badge>;
-      case 'complete':
-        return <Badge variant="default">{t("complete")}</Badge>;
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case WorkflowStatus.DRAFT:
+        return (
+          <Badge variant="outline" className="bg-slate-100">
+            <Clock className="h-3 w-3 mr-1" />
+            {t("draft")}
+          </Badge>
+        );
+      case WorkflowStatus.REVIEW:
+        return (
+          <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-200">
+            <Clock className="h-3 w-3 mr-1" />
+            {t("review")}
+          </Badge>
+        );
+      case WorkflowStatus.READY:
+        return (
+          <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            {t("ready")}
+          </Badge>
+        );
+      case WorkflowStatus.COMPLETE:
+        return (
+          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            {t("complete")}
+          </Badge>
+        );
+      case WorkflowStatus.REJECTED:
+        return (
+          <Badge variant="outline" className="bg-red-100 text-red-700 border-red-200">
+            <X className="h-3 w-3 mr-1" />
+            {t("rejected")}
+          </Badge>
+        );
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return (
+          <Badge variant="outline">
+            {status}
+          </Badge>
+        );
     }
   };
   
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">{t("loading")}</p>
+      <div className="rounded-md border p-8 text-center">
+        <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+        <h3 className="text-lg font-medium">{t("errorLoadingPolicies")}</h3>
+        <p className="text-sm text-muted-foreground mt-1">{error.message}</p>
+        <Button onClick={onRefresh} variant="outline" className="mt-4">
+          {t("tryAgain")}
+        </Button>
       </div>
     );
   }
   
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <AlertTriangle className="h-8 w-8 text-destructive mb-4" />
-        <p className="font-medium mb-2">{t("errorLoadingPolicies")}</p>
-        <p className="text-muted-foreground mb-4">{t("unknownError")}</p>
-        <Button onClick={() => window.location.reload()}>{t("retry")}</Button>
-      </div>
-    );
-  }
-  
-  if (policies.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-        <FileSpreadsheet className="h-12 w-12 text-muted-foreground mb-4" />
-        <p className="font-medium mb-2">{t("noPoliciesInWorkflow")}</p>
-        <p className="text-muted-foreground mb-6 max-w-md">{t("noPoliciesInWorkflowDescription")}</p>
-        
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button onClick={() => window.location.href = "/policies/import"}>
-            {t("importPolicies")}
-          </Button>
-          
-          {workflowStatus !== "all" && onStatusChange && (
-            <Button variant="outline" onClick={() => onStatusChange("all")}>
-              {t("showAllWorkflowStatuses")}
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
-      <div className="border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("policyNumber")}</TableHead>
-              <TableHead>{t("policyholder")}</TableHead>
-              <TableHead>{t("insurer")}</TableHead>
-              <TableHead>{t("startDate")}</TableHead>
-              <TableHead>{t("expiryDate")}</TableHead>
-              <TableHead>{t("premium")}</TableHead>
-              <TableHead>{t("workflowStatus")}</TableHead>
-              <TableHead className="text-right">{t("actions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {policies.map((policy) => (
-              <TableRow key={policy.id}>
-                <TableCell className="font-medium">{policy.policyNumber}</TableCell>
-                <TableCell>{policy.policyholderName}</TableCell>
-                <TableCell>{policy.insurerName}</TableCell>
-                <TableCell>{formatDate(policy.startDate)}</TableCell>
-                <TableCell>{formatDate(policy.expiryDate)}</TableCell>
-                <TableCell>{formatCurrency(policy.premium, policy.currency)}</TableCell>
-                <TableCell>{getWorkflowStatusBadge(policy.workflowStatus)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.location.href = `/policies/${policy.id}`}
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">{t("view")}</span>
-                    </Button>
-                    
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => onReviewPolicy(policy.id)}
-                    >
-                      {policy.workflowStatus === 'draft' && (
-                        <ClipboardCheck className="h-4 w-4 mr-2" />
-                      )}
-                      {policy.workflowStatus === 'in_review' && (
-                        <ClipboardCheck className="h-4 w-4 mr-2" />
-                      )}
-                      {policy.workflowStatus === 'ready' && (
-                        <ArrowRightCircle className="h-4 w-4 mr-2" />
-                      )}
-                      {policy.workflowStatus === 'draft' && t("review")}
-                      {policy.workflowStatus === 'in_review' && t("review")}
-                      {policy.workflowStatus === 'ready' && t("finalizePolicy")}
-                      {policy.workflowStatus === 'complete' && t("view")}
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="flex flex-col sm:flex-row gap-4 items-end">
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder={t("searchPolicies")}
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        
+        <div className="w-full sm:w-[180px]">
+          <Select
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+          >
+            <SelectTrigger>
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder={t("filterByStatus")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("allStatuses")}</SelectItem>
+              <SelectItem value={WorkflowStatus.DRAFT}>{t("draft")}</SelectItem>
+              <SelectItem value={WorkflowStatus.REVIEW}>{t("review")}</SelectItem>
+              <SelectItem value={WorkflowStatus.READY}>{t("ready")}</SelectItem>
+              <SelectItem value={WorkflowStatus.COMPLETE}>{t("complete")}</SelectItem>
+              <SelectItem value={WorkflowStatus.REJECTED}>{t("rejected")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            {t("showing")} {Math.min((currentPage - 1) * pageSize + 1, totalCount)}-
-            {Math.min(currentPage * pageSize, totalCount)} {t("of")} {totalCount} {t("policies")}
+      
+      {isLoading ? (
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : filteredPolicies.length === 0 ? (
+        <div className="rounded-md border p-8 text-center">
+          <h3 className="text-lg font-medium">{t("noPoliciesFound")}</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            {searchTerm || statusFilter !== "all"
+              ? t("tryAdjustingFilters")
+              : t("noPoliciesInWorkflow")}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("policyNumber")}</TableHead>
+                  <TableHead>{t("policyholder")}</TableHead>
+                  <TableHead>{t("insurer")}</TableHead>
+                  <TableHead>{t("startDate")}</TableHead>
+                  <TableHead>{t("premium")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
+                  <TableHead className="text-right">{t("actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentPolicies.map((policy) => (
+                  <TableRow key={policy.id}>
+                    <TableCell className="font-medium">
+                      {policy.policy_number}
+                    </TableCell>
+                    <TableCell>
+                      {policy.policyholder_name}
+                      {policy.client_name && policy.client_name !== policy.policyholder_name && (
+                        <div className="text-xs text-muted-foreground">
+                          {policy.client_name}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>{policy.insurer_name}</TableCell>
+                    <TableCell>{formatDateToLocal(policy.start_date)}</TableCell>
+                    <TableCell>
+                      {formatCurrency(policy.premium, policy.currency)}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(policy.workflow_status)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewPolicy(policy.id)}
+                        disabled={!canReviewPolicies && policy.workflow_status !== WorkflowStatus.DRAFT}
+                      >
+                        {policy.workflow_status === WorkflowStatus.REVIEW
+                          ? t("review")
+                          : t("view")}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
           
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              
-              {getPageNumbers().map((page, index) => (
-                <PaginationItem key={index}>
-                  {page === 'ellipsis' ? (
-                    <PaginationEllipsis />
-                  ) : (
-                    <PaginationLink
-                      onClick={() => handlePageChange(page as number)}
-                      isActive={currentPage === page}
-                    >
-                      {page}
-                    </PaginationLink>
-                  )}
-                </PaginationItem>
-              ))}
-              
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
+          <Pagination
+            itemsCount={filteredPolicies.length}
+            itemsPerPage={itemsPerPage}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+          >
+            <div className="text-sm text-muted-foreground">
+              {t("showing")} {indexOfFirstItem + 1}-
+              {Math.min(indexOfLastItem, filteredPolicies.length)} {t("of")}{" "}
+              {filteredPolicies.length} {t("policies")}
+            </div>
           </Pagination>
-        </div>
-      )}
-
-      {onStatusChange && (
-        <div className="flex mt-4 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground">{t("workflowStatus")}:</span>
-            <Select 
-              value={workflowStatus} 
-              onValueChange={onStatusChange}
-            >
-              <SelectTrigger className="w-[180px] h-8 text-xs">
-                <SelectValue placeholder={t("allWorkflowStatuses")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("allWorkflowStatuses")}</SelectItem>
-                <SelectItem value="draft">{t("draft")}</SelectItem>
-                <SelectItem value="in_review">{t("inReview")}</SelectItem>
-                <SelectItem value="ready">{t("ready")}</SelectItem>
-                <SelectItem value="complete">{t("complete")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );

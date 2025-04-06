@@ -1,88 +1,77 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DOCUMENT_TABLES, DocumentTableName } from "@/types/documents";
 
 /**
- * Helper function to safely query Supabase tables.
- * @param tableName Table name to query
+ * Safe wrapper for Supabase queries to handle errors consistently
  */
-export const getTable = (tableName: string) => {
-  // Use type assertion to handle string-based table names
-  return supabase.from(tableName as any);
-};
-
-/**
- * Get a document table name based on entity type
- * @param entityType Entity type
- */
-export const getDocumentTableName = (entityType: string): DocumentTableName => {
-  const tableName = `${entityType}_documents` as DocumentTableName;
-  
-  if (DOCUMENT_TABLES.includes(tableName)) {
-    return tableName;
-  }
-  
-  // Default to policy_documents if the entity type doesn't match
-  console.warn(`Invalid entity type: ${entityType}, defaulting to policy_documents`);
-  return 'policy_documents';
-};
-
-/**
- * Safely handle Supabase query errors
- * @param error Supabase error object
- */
-export const handleQueryError = (error: any) => {
-  console.error('Supabase query error:', error);
-  return { error: true, message: error.message || 'An error occurred' };
-};
-
-/**
- * Helper function to query documents from Supabase
- * @param tableName Document table name
- * @param filters Query filters
- */
-export const queryDocuments = async (tableName: DocumentTableName, filters: any = {}) => {
+export const safeSupabaseQuery = async <T,>(
+  queryFn: () => Promise<{ data: T | null; error: any }>
+): Promise<T> => {
   try {
-    // Use type assertion to handle table name
-    let query = supabase.from(tableName as any).select('*');
+    const { data, error } = await queryFn();
     
-    // Apply filters
-    if (filters.entityId) {
-      query = query.eq(filters.entityIdField || 'entity_id', filters.entityId);
+    if (error) {
+      console.error("Supabase query error:", error);
+      throw new Error(error.message || "An error occurred with the database query");
     }
     
-    if (filters.limit) {
-      query = query.limit(filters.limit);
-    }
-    
-    if (filters.order) {
-      query = query.order(filters.order.column, filters.order.options);
-    }
-    
-    const { data, error } = await query;
-    
-    if (error) throw error;
-    
-    return data;
+    return data as T;
   } catch (error) {
-    console.error(`Error querying ${tableName}:`, error);
-    return [];
+    console.error("Error in safeSupabaseQuery:", error);
+    throw error;
   }
 };
 
 /**
- * Helper function for safe Supabase queries with error handling
+ * Helper to fetch documents based on entity type and ID
  */
-export const safeSupabaseQuery = async (queryFn: () => Promise<any>) => {
+export const queryDocuments = async (entityType: string, entityId: string) => {
+  // Map entity type to the correct document table
+  const documentTable = mapEntityToDocumentTable(entityType);
+  
+  if (!documentTable) {
+    throw new Error(`Invalid entity type: ${entityType}`);
+  }
+  
+  // Use the .from method with a string literal to avoid TS errors
+  return safeSupabaseQuery(() => 
+    supabase
+      .from(documentTable)
+      .select("*")
+      .eq("entity_id", entityId)
+      .order("created_at", { ascending: false })
+  );
+};
+
+/**
+ * Map entity type to the corresponding document table
+ */
+export const mapEntityToDocumentTable = (entityType: string): string => {
+  const mapping: Record<string, string> = {
+    "policy": "policy_documents",
+    "claim": "claim_documents",
+    "sale": "sales_documents",
+    "client": "client_documents",
+    "insurer": "insurer_documents",
+    "agent": "agent_documents",
+    "invoice": "invoice_documents",
+    "addendum": "addendum_documents"
+  };
+  
+  return mapping[entityType] || "";
+};
+
+/**
+ * Convert Supabase date to local format
+ */
+export const formatSupabaseDate = (dateString: string): string => {
+  if (!dateString) return "";
+  
   try {
-    const result = await queryFn();
-    if (result.error) {
-      console.error('Supabase query error:', result.error);
-      return { error: result.error, data: null };
-    }
-    return { data: result.data, error: null };
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
   } catch (error) {
-    console.error('Supabase query exception:', error);
-    return { error, data: null };
+    console.error("Error formatting date:", error);
+    return dateString;
   }
 };

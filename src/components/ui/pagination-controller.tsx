@@ -7,8 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Pagination, PaginationProps } from '@/components/ui/pagination';
+import { Pagination } from '@/components/ui/pagination';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { PaginationProps } from '@/types/reports';
 
 interface PaginationControllerProps {
   currentPage: number;

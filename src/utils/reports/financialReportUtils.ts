@@ -1,106 +1,146 @@
 
 import { FinancialReportData, FinancialReportFilters } from "@/types/reports";
-import { supabase } from "@/integrations/supabase/client";
 
-export interface FinancialReportData {
+// Define FinancialTransaction type
+export interface FinancialTransaction {
   id: string;
   date: string;
   amount: number;
-  type: string;
+  description: string;
   category: string;
   status: string;
+  paymentMethod?: string;
   reference?: string;
-  entityId?: string;
-  entityType?: string;
-  entityName?: string;
+  relatedEntity?: {
+    id: string;
+    type: string;
+    name: string;
+  };
 }
 
-export const fetchFinancialReportData = async (
-  filters: FinancialReportFilters
-): Promise<FinancialReportData[]> => {
-  try {
-    // Sample implementation - replace with actual data fetching logic
-    const { data: invoices, error: invoicesError } = await supabase
-      .from('invoices')
-      .select('*')
-      .gte('issue_date', filters.dateFrom)
-      .lte('issue_date', filters.dateTo);
-
-    if (invoicesError) {
-      console.error('Error fetching invoice data:', invoicesError);
-      return [];
-    }
-
-    // Transform invoice data to FinancialReportData format
-    const reportData: FinancialReportData[] = invoices.map((invoice: any) => ({
-      id: invoice.id,
-      date: invoice.issue_date,
-      amount: invoice.total_amount,
-      type: 'invoice',
-      category: invoice.entity_type || 'client',
-      status: invoice.status,
-      reference: invoice.invoice_number,
-      entityId: invoice.entity_id,
-      entityType: invoice.entity_type,
-      entityName: invoice.entity_name
-    }));
-
-    return reportData;
-  } catch (error) {
-    console.error('Error generating financial report:', error);
-    return [];
-  }
+// Default filters for financial reports
+export const defaultFinancialFilters: FinancialReportFilters = {
+  searchTerm: "",
+  dateFrom: "",
+  dateTo: "",
+  transactionType: "all",
+  category: "all",
+  status: "all",
+  entityType: "all",
+  // Aliases
+  startDate: "",
+  endDate: ""
 };
 
-export const getDefaultFinancialReportFilters = (): FinancialReportFilters => {
-  const today = new Date();
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  
-  return {
-    searchTerm: '',
-    dateFrom: firstDayOfMonth.toISOString().split('T')[0],
-    dateTo: today.toISOString().split('T')[0],
-    transactionType: 'all',
-    category: 'all',
-    status: 'all',
-    entityType: 'all',
-    startDate: firstDayOfMonth.toISOString().split('T')[0],
-    endDate: today.toISOString().split('T')[0]
-  };
+// Function to fetch financial report data
+export const fetchFinancialReportData = async (filters: FinancialReportFilters): Promise<FinancialReportData[]> => {
+  // In a real app, this would make API calls to fetch data based on filters
+  // Mock implementation for now
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve([
+        {
+          id: "1",
+          date: "2023-01-15",
+          amount: 1500,
+          type: "invoice",
+          category: "premium",
+          status: "paid",
+          entityName: "ABC Corporation",
+          entityType: "client",
+          entityId: "client-123",
+          reference: "INV-2023-001",
+          description: "Premium payment"
+        },
+        {
+          id: "2",
+          date: "2023-02-10",
+          amount: 750,
+          type: "commission",
+          category: "income",
+          status: "received",
+          entityName: "XYZ Insurance",
+          entityType: "insurer",
+          entityId: "insurer-456",
+          reference: "COM-2023-002",
+          description: "Commission payment"
+        }
+      ]);
+    }, 500);
+  });
 };
 
-export const exportFinancialReport = (data: FinancialReportData[], filters: FinancialReportFilters): void => {
-  // Implementation for exporting report data to CSV or Excel
-  console.log('Exporting financial report data', { data, filters });
-  
-  // Create a CSV string
-  const headers = ['Date', 'Reference', 'Type', 'Category', 'Entity', 'Amount', 'Status'];
-  const csvRows = [headers];
-  
-  // Add data rows
-  data.forEach(item => {
-    csvRows.push([
-      item.date,
-      item.reference || '',
-      item.type,
-      item.category,
-      item.entityName || '',
-      item.amount.toString(),
-      item.status
-    ]);
+// Format currency with the proper symbol
+export const formatCurrency = (amount: number, currency: string = "USD"): string => {
+  const formatter = new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: currency,
   });
   
-  // Convert to CSV string
-  const csvString = csvRows.map(row => row.join(',')).join('\n');
-  
-  // Create a download link
-  const blob = new Blob([csvString], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `financial-report-${filters.dateFrom}-to-${filters.dateTo}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  return formatter.format(amount);
+};
+
+// Calculate totals from financial data
+export const calculateTotals = (data: FinancialReportData[]): { income: number; expenses: number; balance: number } => {
+  return data.reduce(
+    (acc, transaction) => {
+      if (transaction.type === "income" || transaction.type === "commission") {
+        acc.income += transaction.amount;
+      } else if (transaction.type === "expense") {
+        acc.expenses += transaction.amount;
+      }
+      
+      acc.balance = acc.income - acc.expenses;
+      return acc;
+    },
+    { income: 0, expenses: 0, balance: 0 }
+  );
+};
+
+// Filter financial data based on filters
+export const filterFinancialData = (
+  data: FinancialReportData[],
+  filters: FinancialReportFilters
+): FinancialReportData[] => {
+  return data.filter(item => {
+    // Search term filter
+    if (
+      filters.searchTerm &&
+      !item.reference?.toLowerCase().includes(filters.searchTerm.toLowerCase()) &&
+      !item.entityName?.toLowerCase().includes(filters.searchTerm.toLowerCase())
+    ) {
+      return false;
+    }
+    
+    // Date range filter
+    if (filters.dateFrom && new Date(item.date) < new Date(filters.dateFrom)) {
+      return false;
+    }
+    
+    if (filters.dateTo && new Date(item.date) > new Date(filters.dateTo)) {
+      return false;
+    }
+    
+    // Type filter
+    if (filters.transactionType !== "all" && item.type !== filters.transactionType) {
+      return false;
+    }
+    
+    // Category filter
+    if (filters.category !== "all" && item.category !== filters.category) {
+      return false;
+    }
+    
+    // Status filter
+    if (filters.status !== "all" && item.status !== filters.status) {
+      return false;
+    }
+    
+    // Entity type filter
+    if (filters.entityType !== "all" && item.entityType !== filters.entityType) {
+      return false;
+    }
+    
+    return true;
+  });
 };

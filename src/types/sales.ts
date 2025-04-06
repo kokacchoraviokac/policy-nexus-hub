@@ -78,6 +78,7 @@ export interface ProposalStats {
   pending?: number;
   sent?: number;
   viewed?: number;
+  approved?: number;
 }
 
 export interface SalesProcessDocumentsProps {

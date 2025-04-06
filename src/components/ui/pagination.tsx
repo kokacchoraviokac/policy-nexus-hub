@@ -129,7 +129,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   );
 };
 
-// Also export these subcomponents to fix import errors
+// Export subcomponents for compatibility
 export const PaginationContent: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => (
   <div className={cn("flex items-center gap-1", className)}>{children}</div>
 );

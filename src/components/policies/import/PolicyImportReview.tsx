@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -53,7 +52,6 @@ const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
   const totalItems = displayInvalid ? invalidPolicies.length : policies.length;
   const totalPages = Math.ceil(totalItems / pageSize);
   
-  // Get current page items
   const getCurrentPageItems = () => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -71,7 +69,6 @@ const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
     }
   };
   
-  // Page numbering logic for pagination
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -245,7 +242,13 @@ const PolicyImportReview: React.FC<PolicyImportReviewProps> = ({
       </div>
       
       {totalPages > 1 && (
-        <Pagination className="mt-4">
+        <Pagination 
+          className="mt-4"
+          itemsCount={totalItems}
+          itemsPerPage={pageSize}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+        >
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious

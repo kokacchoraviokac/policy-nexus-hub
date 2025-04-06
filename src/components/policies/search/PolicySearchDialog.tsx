@@ -34,23 +34,33 @@ const PolicySearchDialog: React.FC<PolicySearchDialogProps> = ({
           id: '1',
           policy_number: 'POL-2023-001',
           insurer_name: 'ABC Insurance',
-          client_name: 'John Doe',
+          policyholder_name: 'John Doe',
           start_date: '2023-01-01',
           expiry_date: '2024-01-01',
-          premium_amount: 1200,
+          premium: 1200,
           status: 'active',
-          created_at: '2022-12-15'
+          workflow_status: 'complete',
+          company_id: '1',
+          created_at: '2022-12-15',
+          updated_at: '2022-12-15',
+          currency: 'USD',
+          client_name: 'John Doe'
         },
         {
           id: '2',
           policy_number: 'POL-2023-002',
           insurer_name: 'XYZ Insurance',
-          client_name: 'Jane Smith',
+          policyholder_name: 'Jane Smith',
           start_date: '2023-02-01',
           expiry_date: '2024-02-01',
-          premium_amount: 950,
+          premium: 950,
           status: 'active',
-          created_at: '2023-01-20'
+          workflow_status: 'complete',
+          company_id: '1',
+          created_at: '2023-01-20',
+          updated_at: '2023-01-20',
+          currency: 'USD',
+          client_name: 'Jane Smith'
         }
       ];
       
