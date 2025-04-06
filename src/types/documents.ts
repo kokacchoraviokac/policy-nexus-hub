@@ -12,9 +12,6 @@ export enum DocumentCategory {
   PROPOSAL = 'proposal'
 }
 
-// Re-export EntityType for backward compatibility
-export { EntityType } from './common';
-
 export enum DocumentApprovalStatus {
   PENDING = 'pending',
   APPROVED = 'approved',

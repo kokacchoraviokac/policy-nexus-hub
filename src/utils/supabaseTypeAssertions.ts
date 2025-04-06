@@ -58,7 +58,8 @@ export async function executeQuery<T = any>(
  * Helper to get query builder for document tables specifically
  */
 export function fromDocumentTable(tableName: DocumentTableName) {
-  return fromTable(documentTableToRelation(tableName));
+  const relationName = documentTableToRelation(tableName);
+  return fromTable(relationName);
 }
 
 /**

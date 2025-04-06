@@ -45,5 +45,10 @@ export interface UseFinancialReportReturn {
   isError: boolean;
 }
 
+export interface FinancialReportData {
+  transactions: FinancialTransaction[];
+  summary: FinancialReportSummary;
+}
+
 // Exporting types from sales.ts to avoid circular dependencies
 export type { Proposal } from './sales';

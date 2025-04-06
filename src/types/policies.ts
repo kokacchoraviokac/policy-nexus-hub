@@ -50,7 +50,7 @@ export interface PolicyAddendum {
   effective_date: string;
   description: string;
   premium_adjustment?: number;
-  lien_status?: boolean;
+  lien_status: boolean; // Make this required to match expectations
   status: string;
   workflow_status: string;
   policy_id: string;
@@ -85,4 +85,16 @@ export interface InvalidPolicy {
 
 export interface ValidationErrors {
   [key: string]: string[];
+}
+
+export interface PolicyFilterParams {
+  searchTerm?: string;
+  status?: string;
+  type?: string;
+  dateRange?: {
+    from?: Date;
+    to?: Date;
+  };
+  page: number;
+  pageSize: number;
 }

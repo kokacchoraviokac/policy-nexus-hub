@@ -16,6 +16,7 @@ export interface SalesProcess {
 export type SaleStage = 
   | 'discovery'
   | 'qualification'
+  | 'quote'
   | 'proposal'
   | 'negotiation'
   | 'closing'

@@ -1,9 +1,11 @@
 
 export enum WorkflowStatus {
   DRAFT = 'draft',
+  PENDING_REVIEW = 'pending_review',
   IN_REVIEW = 'in_review',
-  READY = 'ready',
-  COMPLETE = 'complete',
-  REVIEW = 'review',
-  REJECTED = 'rejected'
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  COMPLETED = 'completed',
+  ON_HOLD = 'on_hold',
+  CANCELLED = 'cancelled'
 }

@@ -7,7 +7,8 @@ export enum EntityType {
   AGENT = 'agent',
   INSURER = 'insurer',
   ADDENDUM = 'addendum',
-  INVOICE = 'invoice'
+  INVOICE = 'invoice',
+  SALE = 'sale' // Alias for sales_process
 }
 
 export type RelationName = 
@@ -58,9 +59,16 @@ export const entityToDocumentTable: Record<EntityType, RelationName> = {
   [EntityType.POLICY]: 'policy_documents',
   [EntityType.CLAIM]: 'claim_documents',
   [EntityType.SALES_PROCESS]: 'sales_documents',
+  [EntityType.SALE]: 'sales_documents',
   [EntityType.CLIENT]: 'client_documents',
   [EntityType.AGENT]: 'agent_documents',
   [EntityType.INSURER]: 'insurer_documents',
   [EntityType.ADDENDUM]: 'addendum_documents',
   [EntityType.INVOICE]: 'invoice_documents'
 };
+
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}

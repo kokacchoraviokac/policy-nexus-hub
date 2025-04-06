@@ -1,213 +1,130 @@
 
-import React from 'react';
-import { Button } from './button';
-import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 
 export interface PaginationProps {
-  itemsCount: number;
-  itemsPerPage: number;
   currentPage: number;
   totalPages: number;
+  itemsCount: number;
+  itemsPerPage: number;
   onPageChange: (page: number) => void;
   className?: string;
+  children?: React.ReactNode; // Add this to support legacy components
 }
 
 export function Pagination({
-  itemsCount,
-  itemsPerPage,
   currentPage,
   totalPages,
+  itemsCount,
+  itemsPerPage,
   onPageChange,
-  className = '',
+  className = "",
+  children
 }: PaginationProps) {
-  const generatePagination = () => {
-    // Always show first page, last page, current page, and pages around current
+  // No pages to display
+  if (totalPages <= 0) return null;
+
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, itemsCount);
+
+  // Generate page numbers to display
+  const generatePageNumbers = () => {
     const pages = [];
-    const maxPagesToShow = 5;
     
-    if (totalPages <= maxPagesToShow) {
-      // Show all pages if there are few
-      for (let i = 1; i <= totalPages; i++) {
+    // Always show first page
+    pages.push(1);
+    
+    // Logic for middle pages
+    if (totalPages <= 7) {
+      // If fewer than 7 pages, show all
+      for (let i = 2; i < totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Always include first page
-      pages.push(1);
-      
-      // Determine start and end of the shown pages
-      let start = Math.max(2, currentPage - 1);
-      let end = Math.min(totalPages - 1, currentPage + 1);
-      
-      // Adjust when current page is at the start
-      if (currentPage <= 2) {
-        end = Math.min(totalPages - 1, maxPagesToShow - 1);
+      // Complex logic for many pages
+      if (currentPage <= 3) {
+        // Near start
+        pages.push(2, 3, 4, "ellipsis");
+      } else if (currentPage >= totalPages - 2) {
+        // Near end
+        pages.push("ellipsis", totalPages - 3, totalPages - 2, totalPages - 1);
+      } else {
+        // Middle - show current and neighbors
+        pages.push(
+          "ellipsis",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "ellipsis"
+        );
       }
-      
-      // Adjust when current page is at the end
-      if (currentPage >= totalPages - 1) {
-        start = Math.max(2, totalPages - maxPagesToShow + 2);
-      }
-      
-      // Add ellipsis at the start if needed
-      if (start > 2) {
-        pages.push('ellipsis_start');
-      }
-      
-      // Add the middle pages
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-      
-      // Add ellipsis at the end if needed
-      if (end < totalPages - 1) {
-        pages.push('ellipsis_end');
-      }
-      
-      // Always include last page
-      if (totalPages > 1) {
-        pages.push(totalPages);
-      }
+    }
+    
+    // Always show last page if more than one page
+    if (totalPages > 1) {
+      pages.push(totalPages);
     }
     
     return pages;
   };
-  
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      onPageChange(page);
-    }
-  };
-  
-  const pages = generatePagination();
-  
-  if (totalPages <= 1) return null;
-  
+
+  const pageNumbers = generatePageNumbers();
+
   return (
-    <div className={`flex items-center justify-between mt-6 ${className}`}>
+    <div className={`flex flex-col sm:flex-row justify-between items-center gap-4 ${className}`}>
       <div className="text-sm text-muted-foreground">
-        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, itemsCount)} of {itemsCount} items
+        Showing <span className="font-medium">{startItem}</span> to{" "}
+        <span className="font-medium">{endItem}</span> of{" "}
+        <span className="font-medium">{itemsCount}</span> results
       </div>
-      
-      <div className="flex items-center justify-center gap-1">
+
+      {children}
+
+      <div className="flex items-center space-x-2">
         <Button
           variant="outline"
-          size="icon"
-          onClick={() => handlePageChange(currentPage - 1)}
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="h-8 w-8"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="sr-only">Previous page</span>
+          <span className="sr-only">Previous Page</span>
         </Button>
-        
-        {pages.map((page, index) => {
-          if (page === 'ellipsis_start' || page === 'ellipsis_end') {
+
+        <div className="flex items-center">
+          {pageNumbers.map((page, i) => {
+            if (page === "ellipsis") {
+              return (
+                <div key={`ellipsis-${i}`} className="px-2">
+                  <MoreHorizontal className="h-4 w-4" />
+                </div>
+              );
+            }
+
             return (
-              <Button 
-                key={`ellipsis_${index}`}
-                variant="ghost" 
-                disabled 
-                className="h-8 w-8"
+              <Button
+                key={`page-${page}`}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => onPageChange(Number(page))}
+                className="mx-0.5"
               >
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">More pages</span>
+                {page}
               </Button>
             );
-          }
-          
-          return (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "outline"}
-              onClick={() => handlePageChange(page as number)}
-              className="h-8 w-8"
-            >
-              {page}
-            </Button>
-          );
-        })}
-        
+          })}
+        </div>
+
         <Button
           variant="outline"
-          size="icon"
-          onClick={() => handlePageChange(currentPage + 1)}
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="h-8 w-8"
         >
           <ChevronRight className="h-4 w-4" />
-          <span className="sr-only">Next page</span>
+          <span className="sr-only">Next Page</span>
         </Button>
       </div>
     </div>
   );
 }
-
-// Legacy components for backward compatibility
-export const PaginationContent = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-center gap-1">{children}</div>
-);
-
-export const PaginationItem = ({ children }: { children: React.ReactNode }) => (
-  <div>{children}</div>
-);
-
-export const PaginationLink = ({ 
-  children, 
-  isActive,
-  onClick
-}: { 
-  children: React.ReactNode; 
-  isActive?: boolean;
-  onClick?: () => void;
-}) => (
-  <Button
-    variant={isActive ? "default" : "outline"}
-    onClick={onClick}
-    className="h-8 w-8"
-  >
-    {children}
-  </Button>
-);
-
-export const PaginationEllipsis = () => (
-  <Button variant="ghost" disabled className="h-8 w-8">
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More pages</span>
-  </Button>
-);
-
-export const PaginationNext = ({ 
-  onClick,
-  className
-}: { 
-  onClick?: () => void;
-  className?: string;
-}) => (
-  <Button
-    variant="outline"
-    size="icon"
-    onClick={onClick}
-    className={`h-8 w-8 ${className || ''}`}
-  >
-    <ChevronRight className="h-4 w-4" />
-    <span className="sr-only">Next page</span>
-  </Button>
-);
-
-export const PaginationPrevious = ({ 
-  onClick,
-  className
-}: { 
-  onClick?: () => void;
-  className?: string;
-}) => (
-  <Button
-    variant="outline"
-    size="icon"
-    onClick={onClick}
-    className={`h-8 w-8 ${className || ''}`}
-  >
-    <ChevronLeft className="h-4 w-4" />
-    <span className="sr-only">Previous page</span>
-  </Button>
-);

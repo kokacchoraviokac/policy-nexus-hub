@@ -13,5 +13,19 @@ export interface User {
   email: string;
   role: UserRole;
   avatar_url?: string;
-  company_id?: string;
+  company_id: string;
+  // Alias properties for backward compatibility
+  companyId?: string; 
+  avatar?: string;
+}
+
+// Add CustomPrivilege interface
+export interface CustomPrivilege {
+  id: string;
+  user_id: string;
+  privilege: string;
+  granted_at: string;
+  granted_by: string;
+  expires_at?: string | null;
+  context?: string;
 }
