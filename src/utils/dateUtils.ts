@@ -119,3 +119,6 @@ export const addDaysToDate = (dateString: string, days: number): string => {
     return dateString;
   }
 };
+
+// Alias for backward compatibility
+export const formatDate = formatDateToLocal;

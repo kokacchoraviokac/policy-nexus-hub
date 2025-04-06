@@ -133,3 +133,73 @@ export function Pagination({
     </div>
   );
 }
+
+// Define additional subcomponents for backward compatibility
+export const PaginationContent = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex items-center gap-1">{children}</div>
+);
+
+export const PaginationItem = ({ children }: { children: React.ReactNode }) => (
+  <div>{children}</div>
+);
+
+export const PaginationLink = ({ 
+  children, 
+  isActive,
+  onClick
+}: { 
+  children: React.ReactNode; 
+  isActive?: boolean;
+  onClick?: () => void;
+}) => (
+  <Button
+    variant={isActive ? "default" : "outline"}
+    onClick={onClick}
+    className="h-8 w-8"
+  >
+    {children}
+  </Button>
+);
+
+export const PaginationEllipsis = () => (
+  <Button variant="ghost" disabled className="h-8 w-8">
+    <MoreHorizontal className="h-4 w-4" />
+    <span className="sr-only">More pages</span>
+  </Button>
+);
+
+export const PaginationNext = ({ 
+  onClick,
+  className
+}: { 
+  onClick?: () => void;
+  className?: string;
+}) => (
+  <Button
+    variant="outline"
+    size="icon"
+    onClick={onClick}
+    className={`h-8 w-8 ${className || ''}`}
+  >
+    <ChevronRight className="h-4 w-4" />
+    <span className="sr-only">Next page</span>
+  </Button>
+);
+
+export const PaginationPrevious = ({ 
+  onClick,
+  className
+}: { 
+  onClick?: () => void;
+  className?: string;
+}) => (
+  <Button
+    variant="outline"
+    size="icon"
+    onClick={onClick}
+    className={`h-8 w-8 ${className || ''}`}
+  >
+    <ChevronLeft className="h-4 w-4" />
+    <span className="sr-only">Previous page</span>
+  </Button>
+);
