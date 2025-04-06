@@ -31,4 +31,5 @@ export interface CreateInvitationRequest {
   email: string;
   role: UserRole;
   expiresIn: number;
+  company_id?: string;
 }

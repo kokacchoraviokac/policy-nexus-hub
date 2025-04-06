@@ -90,6 +90,12 @@ export interface DocumentAnalysisPanelProps {
   onCategoryDetected?: (category: DocumentCategory) => void;
 }
 
+// Document PDF viewer props
+export interface DocumentPdfViewerProps {
+  url: string;
+  className?: string;
+}
+
 // Document search parameters
 export interface DocumentSearchParams {
   searchTerm?: string;
@@ -97,13 +103,25 @@ export interface DocumentSearchParams {
   dateFrom?: string;
   dateTo?: string;
   entityType?: EntityType;
+  entityId?: string;
   page?: number;
   pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  approvalStatus?: DocumentApprovalStatus;
 }
 
 // Document search props
 export interface UseDocumentSearchProps {
-  initialSearchParams?: DocumentSearchParams;
+  entityType?: EntityType;
+  entityId?: string;
+  category?: DocumentCategory;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  initialSearchParams?: Partial<DocumentSearchParams>;
   companyId?: string;
 }
 
@@ -120,6 +138,21 @@ export interface UseDocumentSearchReturn {
   setPage: (page: number) => void;
   pageSize: number;
   resetSearch: () => void;
+  searchDocuments: (params?: Partial<DocumentSearchParams>) => Promise<void>;
+  currentPage: number;
+  totalPages: number;
+  handlePageChange: (page: number) => void;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  sortBy: string;
+  setSortBy: (field: string) => void;
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (order: 'asc' | 'desc') => void;
+  selectedCategory?: DocumentCategory;
+  setSelectedCategory: (category?: DocumentCategory) => void;
+  selectedApprovalStatus?: DocumentApprovalStatus;
+  setSelectedApprovalStatus: (status?: DocumentApprovalStatus) => void;
+  refetch: (options?: any) => Promise<any>;
 }
 
 // Document table name type
@@ -130,4 +163,5 @@ export type DocumentTableName =
   | 'client_documents'
   | 'insurer_documents'
   | 'agent_documents'
-  | 'addendum_documents';
+  | 'addendum_documents'
+  | 'invoice_documents';

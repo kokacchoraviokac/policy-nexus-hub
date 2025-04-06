@@ -1,176 +1,242 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { formatDateToLocal } from '@/utils/dateUtils';
-import { Download, FileText, Info, History } from 'lucide-react';
-import { Document } from '@/types/documents';
-import { useDocumentDownload } from '@/hooks/useDocumentDownload';
-import DocumentPdfViewer from './DocumentPdfViewer';
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Document } from "@/types/documents";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Download, FileText, File, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDateToLocal } from "@/utils/dateUtils";
+import DocumentPdfViewer from "./DocumentPdfViewer";
 
 interface DocumentViewDialogProps {
-  document: Document | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  document: Document;
 }
 
 const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
-  document,
   open,
-  onOpenChange
+  onOpenChange,
+  document,
 }) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<string>('preview');
-  const { isDownloading, downloadDocument } = useDocumentDownload();
-  
-  const handleDownload = () => {
-    if (document) {
-      downloadDocument(document);
+  const { toast } = useToast();
+  const [documentUrl, setDocumentUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (open && document) {
+      setIsLoading(true);
+      fetchDocumentUrl();
+    }
+  }, [open, document]);
+
+  const fetchDocumentUrl = async () => {
+    try {
+      if (!document.file_path) {
+        throw new Error("Document has no file path");
+      }
+
+      const { data } = supabase.storage
+        .from("documents")
+        .getPublicUrl(document.file_path);
+
+      if (!data || !data.publicUrl) {
+        throw new Error("Could not get document URL");
+      }
+
+      setDocumentUrl(data.publicUrl);
+    } catch (error) {
+      console.error("Error fetching document:", error);
+      toast({
+        title: t("errorLoadingDocument"),
+        description: t("couldNotLoadDocumentPleaseTryAgain"),
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  if (!document) return null;
-  
-  const isPdf = document.mime_type === 'application/pdf' || 
-                document.file_path.toLowerCase().endsWith('.pdf');
-  
+
+  const downloadDocument = async () => {
+    try {
+      if (!document.file_path) {
+        throw new Error("Document has no file path");
+      }
+
+      const { data, error } = await supabase.storage
+        .from("documents")
+        .download(document.file_path);
+
+      if (error) {
+        throw error;
+      }
+
+      // Create a URL for the blob and trigger a download
+      const url = URL.createObjectURL(data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = document.document_name || "document";
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: t("downloadStarted"),
+        description: t("documentIsBeingDownloaded"),
+      });
+    } catch (error) {
+      console.error("Error downloading document:", error);
+      toast({
+        title: t("downloadFailed"),
+        description: t("couldNotDownloadDocumentPleaseTryAgain"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const renderDocumentPreview = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    if (!documentUrl) {
+      return (
+        <div className="flex flex-col items-center justify-center h-96 text-center">
+          <FileText className="h-16 w-16 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium">{t("documentPreviewNotAvailable")}</h3>
+          <p className="text-sm text-muted-foreground mt-1 max-w-md">
+            {t("documentPreviewNotAvailableDescription")}
+          </p>
+        </div>
+      );
+    }
+
+    // Check if document is a PDF
+    if (document.mime_type?.includes("pdf") || document.document_type?.includes("pdf")) {
+      return <DocumentPdfViewer url={documentUrl} className="w-full h-96" />;
+    }
+
+    // Check if document is an image
+    if (document.mime_type?.includes("image")) {
+      return (
+        <div className="flex justify-center">
+          <img 
+            src={documentUrl} 
+            alt={document.document_name} 
+            className="max-h-96 object-contain" 
+          />
+        </div>
+      );
+    }
+
+    // Default file icon for other types
+    return (
+      <div className="flex flex-col items-center justify-center h-96 text-center">
+        <File className="h-16 w-16 text-primary mb-4" />
+        <h3 className="text-lg font-medium">{document.document_name}</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t("fileCannotBePreviewedDownloadToView")}
+        </p>
+        <Button 
+          onClick={downloadDocument} 
+          className="mt-4" 
+          variant="outline"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          {t("download")}
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            <span>{document.document_name}</span>
-            {document.version && document.version > 1 && (
-              <span className="ml-2 text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">
-                v{document.version}
-              </span>
-            )}
-          </DialogTitle>
+          <DialogTitle>{document.document_name}</DialogTitle>
         </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <div className="flex justify-between items-center mb-2">
-            <TabsList>
-              <TabsTrigger value="preview">
-                <FileText className="h-4 w-4 mr-2" />
-                {t("preview")}
-              </TabsTrigger>
-              <TabsTrigger value="details">
-                <Info className="h-4 w-4 mr-2" />
-                {t("details")}
-              </TabsTrigger>
-              {document.version && document.version > 1 && (
-                <TabsTrigger value="history">
-                  <History className="h-4 w-4 mr-2" />
-                  {t("versionHistory")}
-                </TabsTrigger>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Document preview takes 2/3 of the space on wider screens */}
+          <div className="md:col-span-2 border rounded-lg p-2 bg-muted/20">
+            {renderDocumentPreview()}
+          </div>
+
+          {/* Document details take 1/3 of the space */}
+          <div className="space-y-4">
+            <div className="border rounded-lg p-4 space-y-3">
+              <div>
+                <h4 className="text-sm font-medium">{t("documentType")}</h4>
+                <p className="text-sm text-muted-foreground">{document.document_type}</p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium">{t("uploadedBy")}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {document.uploaded_by_name || t("unknownUser")}
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium">{t("uploadedOn")}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {formatDateToLocal(document.created_at)}
+                </p>
+              </div>
+
+              {document.category && (
+                <div>
+                  <h4 className="text-sm font-medium">{t("category")}</h4>
+                  <p className="text-sm text-muted-foreground">{t(document.category)}</p>
+                </div>
               )}
-            </TabsList>
-            
+
+              {document.version && (
+                <div>
+                  <h4 className="text-sm font-medium">{t("version")}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {document.version}
+                    {document.is_latest_version && (
+                      <span className="ml-2 text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+                        {t("latest")}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+              
+              {document.comments && document.comments.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium">{t("comments")}</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1 mt-1">
+                    {document.comments.map((comment, index) => (
+                      <li key={index} className="bg-muted/30 p-2 rounded">
+                        {comment}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
             <Button 
-              size="sm" 
-              onClick={handleDownload} 
-              disabled={isDownloading}
+              onClick={downloadDocument} 
+              className="w-full" 
+              variant="outline"
             >
               <Download className="h-4 w-4 mr-2" />
-              {t("download")}
+              {t("downloadDocument")}
             </Button>
           </div>
-          
-          <TabsContent value="preview" className="flex-1 data-[state=active]:flex flex-col overflow-hidden">
-            {isPdf ? (
-              <DocumentPdfViewer
-                documentUrl={document.file_path}
-                className="w-full h-full"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full bg-muted/20 rounded-md">
-                <div className="text-center space-y-2">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <p className="text-muted-foreground">{t("previewNotAvailable")}</p>
-                  <Button 
-                    size="sm" 
-                    onClick={handleDownload} 
-                    variant="outline"
-                    className="mt-2"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    {t("downloadToView")}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="details" className="data-[state=active]:flex flex-col space-y-4">
-            <Card className="p-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-2">{t("basicInformation")}</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="text-sm text-muted-foreground">{t("name")}</div>
-                    <div className="text-sm">{document.document_name}</div>
-                    <div className="text-sm text-muted-foreground">{t("type")}</div>
-                    <div className="text-sm">{document.document_type}</div>
-                    <div className="text-sm text-muted-foreground">{t("uploadedOn")}</div>
-                    <div className="text-sm">{formatDateToLocal(document.created_at)}</div>
-                    <div className="text-sm text-muted-foreground">{t("version")}</div>
-                    <div className="text-sm">
-                      {document.version || 1}
-                      {document.is_latest_version && (
-                        <span className="ml-2 text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
-                          {t("latest")}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                {document.description && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">{t("description")}</h3>
-                    <p className="text-sm whitespace-pre-wrap">{document.description}</p>
-                  </div>
-                )}
-                
-                {document.approval_status && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">{t("approvalStatus")}</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="text-sm text-muted-foreground">{t("status")}</div>
-                      <div className="text-sm">{t(document.approval_status)}</div>
-                      {document.approved_at && (
-                        <>
-                          <div className="text-sm text-muted-foreground">
-                            {document.approval_status === "approved" ? t("approvedOn") : t("reviewedOn")}
-                          </div>
-                          <div className="text-sm">{formatDateToLocal(document.approved_at)}</div>
-                        </>
-                      )}
-                      {document.approval_notes && (
-                        <>
-                          <div className="text-sm text-muted-foreground">{t("notes")}</div>
-                          <div className="text-sm whitespace-pre-wrap">{document.approval_notes}</div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="history" className="data-[state=active]:flex flex-col space-y-4">
-            <div className="text-center text-muted-foreground p-8">
-              <History className="h-12 w-12 mx-auto mb-2" />
-              <p>{t("versionHistoryNotAvailable")}</p>
-            </div>
-          </TabsContent>
-        </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,9 +1,16 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Document, EntityType, DocumentCategory, DocumentSearchParams, DocumentApprovalStatus, UseDocumentSearchProps, UseDocumentSearchReturn } from "@/types/documents";
+import { 
+  Document, 
+  EntityType, 
+  DocumentCategory, 
+  DocumentSearchParams,
+  UseDocumentSearchProps,
+  UseDocumentSearchReturn 
+} from "@/types/documents";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
-import { fromTable } from "@/utils/supabaseHelpers";
+import { fromAnyTable } from "@/utils/supabaseTypeAssertions";
 
 export const useDocumentSearch = ({
   entityType,
@@ -15,7 +22,7 @@ export const useDocumentSearch = ({
   initialSearchTerm = '',
   approvalStatus,
   initialSearchParams
-}: UseDocumentSearchProps): UseDocumentSearchReturn => {
+}: UseDocumentSearchProps = {}): UseDocumentSearchReturn => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -26,7 +33,7 @@ export const useDocumentSearch = ({
   const [sortBy, setSortBy] = useState(defaultSortBy);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(defaultSortOrder);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | undefined>(category);
-  const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<DocumentApprovalStatus | undefined>(approvalStatus);
+  const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<string | undefined>(approvalStatus);
   const [isError, setIsError] = useState(false);
   
   const searchDocuments = async (params?: Partial<DocumentSearchParams>) => {
@@ -36,23 +43,16 @@ export const useDocumentSearch = ({
     
     try {
       const searchParams: DocumentSearchParams = {
-        entityType,
-        entityId: params?.entityId || entityId,
-        category: params?.category || selectedCategory,
         searchTerm: params?.searchTerm !== undefined ? params.searchTerm : searchTerm,
+        category: params?.category || selectedCategory,
         page: params?.page || page,
         pageSize: params?.pageSize || pageSize,
+        entityType: params?.entityType || entityType,
+        entityId: params?.entityId || entityId,
         sortBy: params?.sortBy || sortBy,
         sortOrder: params?.sortOrder || sortOrder,
-        approvalStatus: params?.approvalStatus || selectedApprovalStatus
+        approvalStatus: params?.approvalStatus as any || selectedApprovalStatus
       };
-      
-      // Get the table name for this entity type
-      const tableName = getDocumentTableName(searchParams.entityType);
-      
-      if (!tableName) {
-        throw new Error(`Invalid entity type: ${searchParams.entityType}`);
-      }
       
       // For now, we'll mock the document data since there might be issues with the database schema
       // In a real implementation, replace this with proper Supabase queries
@@ -68,11 +68,12 @@ export const useDocumentSearch = ({
           uploaded_by: 'user123',
           file_path: '/documents/policy1.pdf',
           category: 'policy',
-          entity_id: entityId,
-          entity_type: entityType,
+          entity_id: entityId || 'mock-entity-id',
+          entity_type: entityType || 'policy',
           version: 1,
           is_latest_version: true,
-          approval_status: 'approved'
+          approval_status: 'approved',
+          company_id: 'mock-company-id'
         },
         {
           id: '2',
@@ -83,11 +84,12 @@ export const useDocumentSearch = ({
           uploaded_by: 'user123',
           file_path: '/documents/claim1.pdf',
           category: 'claim',
-          entity_id: entityId,
-          entity_type: entityType,
+          entity_id: entityId || 'mock-entity-id',
+          entity_type: entityType || 'claim',
           version: 1,
           is_latest_version: true,
-          approval_status: 'pending'
+          approval_status: 'pending',
+          company_id: 'mock-company-id'
         }
       ];
       
@@ -96,6 +98,10 @@ export const useDocumentSearch = ({
       
       if (searchParams.entityId) {
         filteredDocuments = filteredDocuments.filter(doc => doc.entity_id === searchParams.entityId);
+      }
+      
+      if (searchParams.entityType) {
+        filteredDocuments = filteredDocuments.filter(doc => doc.entity_type === searchParams.entityType);
       }
       
       if (searchParams.category) {
@@ -115,8 +121,8 @@ export const useDocumentSearch = ({
       
       // Sort the documents
       filteredDocuments.sort((a, b) => {
-        const aValue = a[searchParams.sortBy as keyof Document];
-        const bValue = b[searchParams.sortBy as keyof Document];
+        const aValue = (a as any)[searchParams.sortBy || 'created_at'];
+        const bValue = (b as any)[searchParams.sortBy || 'created_at'];
         
         if (typeof aValue === 'string' && typeof bValue === 'string') {
           return searchParams.sortOrder === 'asc' 
@@ -128,8 +134,8 @@ export const useDocumentSearch = ({
       });
       
       // Apply pagination
-      const start = (searchParams.page - 1) * searchParams.pageSize;
-      const end = start + searchParams.pageSize;
+      const start = (searchParams.page || 1 - 1) * (searchParams.pageSize || 10);
+      const end = start + (searchParams.pageSize || 10);
       const paginatedDocuments = filteredDocuments.slice(start, end);
       
       setTotalCount(filteredDocuments.length);
@@ -171,11 +177,24 @@ export const useDocumentSearch = ({
     return () => clearTimeout(handler);
   }, [searchTerm]);
   
+  // Calculate total pages
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  
   // Alias for page to match component expectations
   const currentPage = page;
   
   // Alias for setPage to match component expectations
-  const handlePageChange = setPage;
+  const handlePageChange = (newPage: number) => setPage(newPage);
+  
+  // Build search params for further customization
+  const searchParams: DocumentSearchParams = {
+    searchTerm,
+    category: selectedCategory,
+    page,
+    pageSize,
+    entityType,
+    entityId
+  };
   
   return {
     documents,
@@ -183,7 +202,6 @@ export const useDocumentSearch = ({
     page,
     setPage,
     pageSize,
-    setPageSize,
     isLoading,
     error,
     searchTerm,
@@ -200,6 +218,33 @@ export const useDocumentSearch = ({
     isError,
     searchDocuments,
     currentPage,
-    handlePageChange
+    totalPages,
+    handlePageChange,
+    searchParams,
+    setSearchParams: (params) => {
+      // Update search params
+      if (params.searchTerm !== undefined) setSearchTerm(params.searchTerm);
+      if (params.category !== undefined) setSelectedCategory(params.category);
+      if (params.page !== undefined) setPage(params.page);
+      if (params.sortBy !== undefined) setSortBy(params.sortBy);
+      if (params.sortOrder !== undefined) setSortOrder(params.sortOrder);
+      if (params.approvalStatus !== undefined) setSelectedApprovalStatus(params.approvalStatus as string);
+    },
+    resetSearch: () => {
+      setSearchTerm('');
+      setSelectedCategory(undefined);
+      setSelectedApprovalStatus(undefined);
+      setPage(1);
+      setSortBy(defaultSortBy);
+      setSortOrder(defaultSortOrder);
+      searchDocuments({
+        searchTerm: '',
+        category: undefined,
+        page: 1,
+        sortBy: defaultSortBy,
+        sortOrder: defaultSortOrder,
+        approvalStatus: undefined
+      });
+    }
   };
 };

@@ -1,31 +1,28 @@
 
-import { Proposal, ProposalStatus, ProposalStats } from "@/types/sales";
+import { Proposal, ProposalStatus, ProposalStats } from '@/types/sales';
 
-export function getEmptyProposalStats(): ProposalStats {
-  return {
-    totalCount: 0,
-    pendingCount: 0,
-    approvedCount: 0,
-    rejectedCount: 0,
-    // Legacy properties
-    total: 0,
-    accepted: 0,
-    rejected: 0,
-    draft: 0,
-    pending: 0,
-    sent: 0,
-    viewed: 0,
-    approved: 0
-  };
-}
+export const getDefaultProposalStats = (): ProposalStats => ({
+  totalCount: 0,
+  pendingCount: 0,
+  approvedCount: 0,
+  rejectedCount: 0,
+  total: 0,
+  accepted: 0,
+  rejected: 0,
+  draft: 0,
+  pending: 0,
+  sent: 0,
+  viewed: 0,
+  approved: 0,
+  expired: 0,
+});
 
-export function calculateProposalStats(proposals: Proposal[]): ProposalStats {
-  const stats = {
+export const calculateProposalStats = (proposals: Proposal[]): ProposalStats => {
+  const stats: ProposalStats = {
     totalCount: proposals.length,
     pendingCount: 0,
     approvedCount: 0,
     rejectedCount: 0,
-    // Legacy properties
     total: proposals.length,
     accepted: 0,
     rejected: 0,
@@ -33,86 +30,70 @@ export function calculateProposalStats(proposals: Proposal[]): ProposalStats {
     pending: 0,
     sent: 0,
     viewed: 0,
-    approved: 0
+    approved: 0,
+    expired: 0,
   };
 
   proposals.forEach(proposal => {
     const status = proposal.status.toLowerCase();
     
-    if (status === 'approved') {
-      stats.approvedCount++;
-      stats.approved++;
-    } else if (status === 'rejected') {
-      stats.rejectedCount++;
-      stats.rejected++;
-    } else if (status === 'accepted') {
-      stats.accepted++;
-    } else if (status === 'draft') {
-      stats.draft++;
-    } else if (status === 'pending') {
-      stats.pendingCount++;
-      stats.pending++;
-    } else if (status === 'sent') {
-      stats.sent++;
-    } else if (status === 'viewed') {
-      stats.viewed++;
+    switch (status) {
+      case ProposalStatus.DRAFT.toLowerCase():
+        stats.draft += 1;
+        break;
+      case ProposalStatus.SENT.toLowerCase():
+        stats.sent += 1;
+        break;
+      case ProposalStatus.VIEWED.toLowerCase():
+        stats.viewed += 1;
+        break;
+      case ProposalStatus.ACCEPTED.toLowerCase():
+        stats.accepted += 1;
+        break;
+      case ProposalStatus.REJECTED.toLowerCase():
+        stats.rejected += 1;
+        stats.rejectedCount += 1;
+        break;
+      case ProposalStatus.APPROVED.toLowerCase():
+        stats.approved += 1;
+        stats.approvedCount += 1;
+        break;
+      case ProposalStatus.PENDING.toLowerCase():
+        stats.pending += 1;
+        stats.pendingCount += 1;
+        break;
+      case ProposalStatus.EXPIRED.toLowerCase():
+        stats.expired += 1;
+        break;
     }
   });
 
   return stats;
-}
+};
 
-export function sortProposalsByStatus(proposals: Proposal[]): Record<string, Proposal[]> {
-  const result: Record<string, Proposal[]> = {
-    draft: [],
-    sent: [],
-    viewed: [],
-    accepted: [],
-    rejected: [],
-    pending: [],
-    all: [...proposals]
-  };
-  
-  proposals.forEach(proposal => {
-    const status = proposal.status.toLowerCase();
-    if (result[status]) {
-      result[status].push(proposal);
-    }
-  });
-  
-  return result;
-}
-
-export function getStatusLabel(status: string): string {
+export const getStatusBadgeVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' => {
   switch (status.toLowerCase()) {
-    case 'draft':
-      return 'Draft';
-    case 'sent':
-      return 'Sent';
-    case 'viewed':
-      return 'Viewed';
-    case 'accepted':
-      return 'Accepted';
-    case 'rejected':
-      return 'Rejected';
-    case 'pending':
-      return 'Pending';
-    case 'approved':
-      return 'Approved';
+    case ProposalStatus.DRAFT.toLowerCase():
+      return 'outline';
+    case ProposalStatus.SENT.toLowerCase():
+      return 'secondary';
+    case ProposalStatus.VIEWED.toLowerCase():
+      return 'secondary';
+    case ProposalStatus.ACCEPTED.toLowerCase():
+      return 'success';
+    case ProposalStatus.REJECTED.toLowerCase():
+      return 'destructive';
+    case ProposalStatus.APPROVED.toLowerCase():
+      return 'success';
+    case ProposalStatus.PENDING.toLowerCase():
+      return 'warning';
+    case ProposalStatus.EXPIRED.toLowerCase():
+      return 'destructive';
     default:
-      return status;
+      return 'default';
   }
-}
+};
 
-export function getProposalStatusCounts(proposals: Proposal[]): Record<string, number> {
-  return {
-    all: proposals.length,
-    draft: proposals.filter(p => p.status.toLowerCase() === 'draft').length,
-    sent: proposals.filter(p => p.status.toLowerCase() === 'sent').length,
-    viewed: proposals.filter(p => p.status.toLowerCase() === 'viewed').length,
-    accepted: proposals.filter(p => p.status.toLowerCase() === 'accepted').length,
-    rejected: proposals.filter(p => p.status.toLowerCase() === 'rejected').length,
-    pending: proposals.filter(p => p.status.toLowerCase() === 'pending').length,
-    approved: proposals.filter(p => p.status.toLowerCase() === 'approved').length
-  };
-}
+export const getStatusLabel = (status: string): string => {
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};

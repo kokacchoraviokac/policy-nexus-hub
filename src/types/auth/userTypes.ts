@@ -1,7 +1,16 @@
 
 import { Session } from "@supabase/supabase-js";
-import { UserRole } from "./index";
 
+// Define UserRole as an enum
+export enum UserRole {
+  SUPER_ADMIN = 'superAdmin',
+  ADMIN = 'admin',
+  EMPLOYEE = 'employee',
+  AGENT = 'agent',
+  CLIENT = 'client'
+}
+
+// Define User interface
 export interface User {
   id: string;
   name: string;
@@ -15,16 +24,18 @@ export interface User {
   user_metadata?: Record<string, any>;
 }
 
+// Define CustomPrivilege interface
 export interface CustomPrivilege {
   id: string;
   user_id: string;
   privilege: string;
   granted_at: string;
-  expires_at?: string | null;
   granted_by: string;
+  expires_at?: string | null;
   context?: string;
 }
 
+// Define AuthState interface
 export interface AuthState {
   user: User | null;
   session: Session | null;
@@ -32,4 +43,17 @@ export interface AuthState {
   isInitialized: boolean;
   isAuthenticated: boolean;
   customPrivileges: CustomPrivilege[];
+}
+
+// Define SignupFormValues
+export interface SignupFormValues {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: UserRole;
+  companyOption: 'new' | 'existing' | 'invitation';
+  companyId?: string;
+  companyName?: string;
+  invitationToken?: string;
 }

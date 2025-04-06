@@ -1,81 +1,83 @@
 
-import dayjs from 'dayjs';
+// Install dayjs if needed: npm install dayjs
+import dayjs from "dayjs";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+// Initialize dayjs plugins
+dayjs.extend(localizedFormat);
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 /**
- * Format date to a locale friendly string
- * @param date Date or string to format
- * @param format Optional format string
- * @returns Formatted date string
+ * Format a date to local date string
  */
-export const formatDate = (date: Date | string | null, format: string = 'YYYY-MM-DD'): string => {
-  if (!date) return '';
-  return dayjs(date).format(format);
-};
+export function formatDateToLocal(date: string | Date | null | undefined, format: string = "MMM D, YYYY"): string {
+  if (!date) return "";
+  
+  try {
+    return dayjs(date).format(format);
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return String(date);
+  }
+}
 
 /**
- * Format date to a locale friendly string with time
- * @param date Date or string to format
- * @param format Optional format string
- * @returns Formatted date and time string
+ * Format a date to relative time (e.g., "2 days ago")
  */
-export const formatDateTime = (date: Date | string | null, format: string = 'YYYY-MM-DD HH:mm'): string => {
-  if (!date) return '';
-  return dayjs(date).format(format);
-};
+export function formatRelativeTime(date: string | Date | null | undefined): string {
+  if (!date) return "";
+  
+  try {
+    return dayjs(date).fromNow();
+  } catch (error) {
+    console.error("Error formatting relative time:", error);
+    return String(date);
+  }
+}
 
 /**
- * Format date to a human-readable format for display in UI
- * @param date Date or string to format
- * @returns Formatted date string
+ * Get the difference between two dates in days
  */
-export const formatDateToLocal = (date: Date | string | null): string => {
-  if (!date) return '';
-  return dayjs(date).format('MMM DD, YYYY');
-};
-
-/**
- * Format date and time to a human-readable format for display in UI
- * @param date Date or string to format
- * @returns Formatted date and time string
- */
-export const formatDateTimeToLocal = (date: Date | string | null): string => {
-  if (!date) return '';
-  return dayjs(date).format('MMM DD, YYYY HH:mm');
-};
+export function getDaysDifference(date1: string | Date, date2: string | Date = new Date()): number {
+  return dayjs(date2).diff(dayjs(date1), "day");
+}
 
 /**
  * Check if a date is in the past
- * @param date Date to check
- * @returns Boolean indicating if date is in the past
  */
-export const isDateInPast = (date: Date | string): boolean => {
+export function isDateInPast(date: string | Date): boolean {
   return dayjs(date).isBefore(dayjs());
-};
+}
 
 /**
- * Check if a date is today
- * @param date Date to check
- * @returns Boolean indicating if date is today
+ * Check if a date is in the future
  */
-export const isToday = (date: Date | string): boolean => {
-  return dayjs(date).isSame(dayjs(), 'day');
-};
+export function isDateInFuture(date: string | Date): boolean {
+  return dayjs(date).isAfter(dayjs());
+}
 
 /**
- * Calculate the difference between two dates in days
- * @param dateA First date
- * @param dateB Second date (defaults to current date)
- * @returns Number of days difference
+ * Add days to a date
  */
-export const daysDifference = (dateA: Date | string, dateB: Date | string = new Date()): number => {
-  return dayjs(dateB).diff(dayjs(dateA), 'day');
-};
+export function addDays(date: string | Date, days: number): Date {
+  return dayjs(date).add(days, "day").toDate();
+}
 
 /**
- * Convert a string date to a Date object
- * @param dateStr Date string
- * @returns Date object
+ * Format ISO date to localized date and time
  */
-export const toDate = (dateStr: string): Date => {
-  return dayjs(dateStr).toDate();
-};
+export function formatDateTime(date: string | Date | null | undefined, format: string = "MMM D, YYYY h:mm A"): string {
+  if (!date) return "";
+  
+  try {
+    return dayjs(date).format(format);
+  } catch (error) {
+    console.error("Error formatting date and time:", error);
+    return String(date);
+  }
+}
