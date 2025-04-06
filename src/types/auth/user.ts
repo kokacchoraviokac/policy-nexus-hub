@@ -24,7 +24,7 @@ export interface AuthState {
   isLoading?: boolean;
 }
 
-// Define CustomPrivilege interface
+// Define CustomPrivilege interface - matched with userTypes.ts
 export interface CustomPrivilege {
   id: string;
   user_id: string;

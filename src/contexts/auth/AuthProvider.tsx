@@ -1,10 +1,11 @@
 
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole } from "@/types/auth/userTypes";
-import { AuthState, AuthContextType } from "@/types/auth/contextTypes";
+import { AuthState } from "@/types/auth/contextTypes";
 import useAuthOperations from "@/hooks/useAuthOperations";
 import { fetchUserCustomPrivileges } from "@/utils/authUtils";
+import { AuthContextType } from "./types";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -223,10 +224,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   
   const login = async (email: string, password: string): Promise<{ error?: any }> => {
     try {
-      const result = await signIn(email, password);
+      await signIn(email, password);
       return { error: undefined };
     } catch (error) {
-      // Rethrow to let caller handle it
+      // Return error to let caller handle it
       return { error };
     }
   };
@@ -260,8 +261,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const authContextValue: AuthContextType = {
     user,
     session,
-    role: user?.role,
-    companyId: user?.companyId,
+    role: user?.role || null,
+    companyId: user?.companyId || null,
     isAuthenticated: !!user,
     isLoading,
     signUp: register,

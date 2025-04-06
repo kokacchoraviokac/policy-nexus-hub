@@ -1,5 +1,16 @@
 
-import { FinancialReportData } from '@/utils/reports/financialReportUtils';
+export interface FinancialReportData {
+  id: string;
+  date: string;
+  amount: number;
+  type: string;
+  category: string;
+  status: string;
+  reference?: string;
+  entityId?: string;
+  entityType?: string;
+  entityName?: string;
+}
 
 export interface FinancialReportFilters {
   searchTerm: string;
@@ -19,6 +30,14 @@ export interface ProposalStats {
   pending: number;
   approved: number;
   rejected: number;
+  draft: number;
+  sent: number;
+  viewed: number;
+  accepted: number;
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+  totalCount: number;
 }
 
 export interface Proposal {
@@ -60,17 +79,20 @@ export interface SalesProcess {
 export interface PageHeaderProps {
   title: string;
   action?: React.ReactNode;
+  description?: string;
 }
 
 export interface FilterBarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
+  children?: React.ReactNode;
 }
 
 export interface FinancialReportFiltersProps {
   filters: FinancialReportFilters;
   onApply: () => void;
+  onChange?: (filters: FinancialReportFilters) => void;
 }
 
 export interface PaginationProps {
@@ -88,4 +110,10 @@ export interface PolicyImportReviewProps {
   invalidPolicies: any[];
   onSubmit?: () => void;
   isSubmitting?: boolean;
+  onBack?: () => void;
+  onImport?: () => void;
+}
+
+export interface PolicyImportInstructionsProps {
+  className?: string;
 }

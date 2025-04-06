@@ -17,7 +17,8 @@ export const fetchUserPrivileges = async (userId: string): Promise<UserPrivilege
       return [];
     }
     
-    return (data || []) as UserPrivilege[];
+    // Use type assertion to handle possible unknown types
+    return (data || []) as unknown as UserPrivilege[];
   } catch (error) {
     console.error('Exception fetching user privileges:', error);
     return [];
@@ -108,6 +109,7 @@ export const hasPrivilegeWithContext = (
     
     if (!p.context || !context) return false;
     
+    // Parse context if it's a string
     const privilegeContext = typeof p.context === 'string' 
       ? JSON.parse(p.context) 
       : p.context;

@@ -1,92 +1,106 @@
 
-import { FinancialReportFilters } from '@/types/reports';
+import { FinancialReportData, FinancialReportFilters } from "@/types/reports";
+import { supabase } from "@/integrations/supabase/client";
 
-// Define FinancialReportData interface
 export interface FinancialReportData {
   id: string;
   date: string;
-  type: string;
-  description: string;
-  reference: string;
   amount: number;
-  currency: string;
-  entity_id: string;
-  entity_type: string;
-  status: string;
+  type: string;
   category: string;
+  status: string;
+  reference?: string;
+  entityId?: string;
+  entityType?: string;
+  entityName?: string;
 }
 
-// Export the FinancialTransaction type for components
-export type { FinancialReportData as FinancialTransaction };
+export const fetchFinancialReportData = async (
+  filters: FinancialReportFilters
+): Promise<FinancialReportData[]> => {
+  try {
+    // Sample implementation - replace with actual data fetching logic
+    const { data: invoices, error: invoicesError } = await supabase
+      .from('invoices')
+      .select('*')
+      .gte('issue_date', filters.dateFrom)
+      .lte('issue_date', filters.dateTo);
 
-// Set of default filters for financial reports
-export const defaultFinancialFilters: FinancialReportFilters = {
-  searchTerm: '',
-  dateFrom: '',
-  dateTo: '',
-  transactionType: 'all',
-  category: 'all',
-  status: 'all',
-  entityType: 'all',
-  // Aliases
-  startDate: '',
-  endDate: ''
-};
+    if (invoicesError) {
+      console.error('Error fetching invoice data:', invoicesError);
+      return [];
+    }
 
-// Mock function for fetching financial reports - replace with actual API call
-export const fetchFinancialReports = async (filters: FinancialReportFilters): Promise<FinancialReportData[]> => {
-  console.log('Fetching financial reports with filters:', filters);
-  // This would be replaced with an actual API call in a real implementation
-  return mockFinancialData;
-};
+    // Transform invoice data to FinancialReportData format
+    const reportData: FinancialReportData[] = invoices.map((invoice: any) => ({
+      id: invoice.id,
+      date: invoice.issue_date,
+      amount: invoice.total_amount,
+      type: 'invoice',
+      category: invoice.entity_type || 'client',
+      status: invoice.status,
+      reference: invoice.invoice_number,
+      entityId: invoice.entity_id,
+      entityType: invoice.entity_type,
+      entityName: invoice.entity_name
+    }));
 
-// Format currency values for display
-export const formatCurrency = (amount: number, currency: string = 'EUR'): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-  }).format(amount);
-};
-
-// Mock data for testing
-const mockFinancialData: FinancialReportData[] = [
-  {
-    id: '1',
-    date: '2023-01-15',
-    type: 'income',
-    description: 'Policy Premium Payment',
-    reference: 'POL-123456',
-    amount: 1200.00,
-    currency: 'EUR',
-    entity_id: 'client-001',
-    entity_type: 'client',
-    status: 'completed',
-    category: 'policy'
-  },
-  {
-    id: '2',
-    date: '2023-02-01',
-    type: 'expense',
-    description: 'Claim Payment',
-    reference: 'CLM-789012',
-    amount: 800.00,
-    currency: 'EUR',
-    entity_id: 'claim-001',
-    entity_type: 'claim',
-    status: 'completed',
-    category: 'claim'
-  },
-  {
-    id: '3',
-    date: '2023-02-15',
-    type: 'commission',
-    description: 'Agent Commission',
-    reference: 'COM-345678',
-    amount: 150.00,
-    currency: 'EUR',
-    entity_id: 'agent-001',
-    entity_type: 'agent',
-    status: 'pending',
-    category: 'commission'
+    return reportData;
+  } catch (error) {
+    console.error('Error generating financial report:', error);
+    return [];
   }
-];
+};
+
+export const getDefaultFinancialReportFilters = (): FinancialReportFilters => {
+  const today = new Date();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  
+  return {
+    searchTerm: '',
+    dateFrom: firstDayOfMonth.toISOString().split('T')[0],
+    dateTo: today.toISOString().split('T')[0],
+    transactionType: 'all',
+    category: 'all',
+    status: 'all',
+    entityType: 'all',
+    startDate: firstDayOfMonth.toISOString().split('T')[0],
+    endDate: today.toISOString().split('T')[0]
+  };
+};
+
+export const exportFinancialReport = (data: FinancialReportData[], filters: FinancialReportFilters): void => {
+  // Implementation for exporting report data to CSV or Excel
+  console.log('Exporting financial report data', { data, filters });
+  
+  // Create a CSV string
+  const headers = ['Date', 'Reference', 'Type', 'Category', 'Entity', 'Amount', 'Status'];
+  const csvRows = [headers];
+  
+  // Add data rows
+  data.forEach(item => {
+    csvRows.push([
+      item.date,
+      item.reference || '',
+      item.type,
+      item.category,
+      item.entityName || '',
+      item.amount.toString(),
+      item.status
+    ]);
+  });
+  
+  // Convert to CSV string
+  const csvString = csvRows.map(row => row.join(',')).join('\n');
+  
+  // Create a download link
+  const blob = new Blob([csvString], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `financial-report-${filters.dateFrom}-to-${filters.dateTo}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};

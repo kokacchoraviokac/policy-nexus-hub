@@ -129,4 +129,62 @@ export const Pagination: React.FC<PaginationProps> = ({
   );
 };
 
+// Also export these subcomponents to fix import errors
+export const PaginationContent: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => (
+  <div className={cn("flex items-center gap-1", className)}>{children}</div>
+);
+
+export const PaginationItem: React.FC<{children: React.ReactNode}> = ({children}) => (
+  <div>{children}</div>
+);
+
+export const PaginationLink: React.FC<{isActive?: boolean, children: React.ReactNode, onClick: () => void}> = ({
+  isActive, children, onClick
+}) => (
+  <Button
+    variant={isActive ? "default" : "outline"}
+    size="sm"
+    onClick={onClick}
+    className="px-2.5"
+  >
+    {children}
+  </Button>
+);
+
+export const PaginationPrevious: React.FC<{className?: string, onClick: () => void}> = ({className, onClick}) => (
+  <Button 
+    variant="outline" 
+    size="sm" 
+    onClick={onClick}
+    className={className}
+  >
+    <ChevronLeft className="h-4 w-4" />
+    <span className="sr-only">Previous page</span>
+  </Button>
+);
+
+export const PaginationNext: React.FC<{className?: string, onClick: () => void}> = ({className, onClick}) => (
+  <Button 
+    variant="outline" 
+    size="sm" 
+    onClick={onClick}
+    className={className}
+  >
+    <ChevronRight className="h-4 w-4" />
+    <span className="sr-only">Next page</span>
+  </Button>
+);
+
+export const PaginationEllipsis: React.FC = () => (
+  <Button 
+    variant="outline" 
+    size="sm"
+    disabled
+    className="px-2.5"
+  >
+    <MoreHorizontal className="h-4 w-4" />
+    <span className="sr-only">More pages</span>
+  </Button>
+);
+
 export default Pagination;

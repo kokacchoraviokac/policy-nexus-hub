@@ -84,7 +84,7 @@ export interface PolicyAddendum {
   updated_at: string;
   company_id: string;
   created_by?: string;
-  lien_status?: boolean;
+  lien_status: boolean; // Changed from optional to required
 }
 
 export interface UnlinkedPaymentType {
@@ -116,4 +116,10 @@ export enum WorkflowStatus {
   READY = 'ready',
   COMPLETE = 'complete',
   REJECTED = 'rejected'
+}
+
+// Add export for interface used in policy import
+export interface InvalidPolicy {
+  policy: Partial<Policy>;
+  errors: string[];
 }

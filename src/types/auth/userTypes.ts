@@ -19,5 +19,5 @@ export interface CustomPrivilege {
   granted_at: string;
   granted_by: string;
   expires_at?: string;
-  context?: string | Record<string, any>;
+  context?: string; // Changed from string | Record<string, any> to string
 }

@@ -28,11 +28,15 @@ export const usePolicyAddendums = (policyId: string) => {
     enabled: !!policyId
   });
   
+  // Calculate addendum count for components that need it
+  const addendumCount = addendums?.length || 0;
+  
   return {
-    addendums,
+    addendums: addendums || [],
     isLoading,
     isError,
     error,
-    refetch
+    refetch,
+    addendumCount
   };
 };
