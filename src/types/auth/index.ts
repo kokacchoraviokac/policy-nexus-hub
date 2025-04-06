@@ -1,21 +1,38 @@
 
 import { Session } from "@supabase/supabase-js";
 
-// Define UserRole
-export type UserRole = 'superAdmin' | 'admin' | 'employee' | 'agent' | 'client' | 'super_admin';
+// Define UserRole as an enum to avoid string/UserRole type conflicts
+export enum UserRole {
+  SUPER_ADMIN = 'superAdmin',
+  ADMIN = 'admin',
+  EMPLOYEE = 'employee',
+  AGENT = 'agent',
+  CLIENT = 'client'
+}
 
-// Define User interface
+// Define User interface with consistent property types
 export interface User {
   id: string;
   email?: string;
   name: string;
-  role: UserRole;
+  role: UserRole | string;
   companyId?: string;
-  company_id?: string; // For backward compatibility
+  company_id?: string; // For backward compatibility 
   avatar?: string;
   avatarUrl?: string; // For backward compatibility
   avatar_url?: string; // For backward compatibility
   user_metadata?: Record<string, any>;
+}
+
+// Define CustomPrivilege with string-only context
+export interface CustomPrivilege {
+  id: string;
+  user_id: string;
+  privilege: string;
+  granted_at: string;
+  granted_by: string;
+  expires_at?: string | null;
+  context?: string; // Only string type to resolve conflicts
 }
 
 // Define AuthState interface
@@ -28,17 +45,6 @@ export interface AuthState {
   customPrivileges: CustomPrivilege[];
 }
 
-// Define CustomPrivilege interface
-export interface CustomPrivilege {
-  id: string;
-  user_id: string;
-  privilege: string;
-  granted_at: string;
-  granted_by: string;
-  expires_at?: string | null;
-  context?: string; // Changed to only allow string, not Record<string, any>
-}
-
-// Export old types for backward compatibility
+// Export type definitions from other auth modules
 export * from './userTypes';
 export * from './user';

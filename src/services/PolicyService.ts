@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Policy, InvalidPolicy, PolicyAddendum } from "@/types/policies";
 import { User } from "@/types/auth/userTypes";
@@ -226,5 +225,173 @@ export class PolicyService {
     }
   }
 }
+
+/**
+ * Update policy status
+ * @param policyId Policy ID
+ * @param status New workflow status
+ * @returns Updated policy data
+ */
+export const updatePolicyStatus = async (policyId: string, status: string) => {
+  try {
+    // Use existing updatePolicy method with just the status update
+    return await updatePolicy(policyId, { workflow_status: status });
+  } catch (error) {
+    console.error("Error updating policy status:", error);
+    throw error;
+  }
+};
+
+/**
+ * Create policy with validation
+ * 
+ * @param policyData Partial policy data
+ * @returns Created policy or error
+ */
+export const createPolicy = async (policyData: Partial<Policy>) => {
+  try {
+    // Ensure required fields have values
+    const required = [
+      'policy_number', 
+      'policyholder_name', 
+      'insurer_name', 
+      'start_date', 
+      'expiry_date', 
+      'premium', 
+      'policy_type'
+    ];
+    
+    const missingFields = required.filter(field => !policyData[field]);
+    
+    if (missingFields.length > 0) {
+      return {
+        success: false,
+        error: `Missing required fields: ${missingFields.join(', ')}`,
+        invalidPolicy: {
+          errors: [`Missing required fields: ${missingFields.join(', ')}`],
+          row: 0,
+          data: policyData
+        }
+      };
+    }
+    
+    // Prepare data with defaults
+    const data = {
+      ...policyData,
+      created_by: policyData.created_by || 'system',
+      created_at: policyData.created_at || new Date().toISOString(),
+      updated_at: policyData.updated_at || new Date().toISOString(),
+      company_id: policyData.company_id || '',
+      workflow_status: policyData.workflow_status || 'draft',
+      status: policyData.status || 'active',
+      currency: policyData.currency || 'EUR',
+    };
+    
+    // Ensure expiry_date is present for the supabase insertion
+    if (!data.expiry_date) {
+      data.expiry_date = '';
+    }
+    
+    const { data: createdPolicy, error } = await supabase
+      .from('policies')
+      .insert(data)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("Error creating policy:", error);
+      return {
+        success: false,
+        error: error.message,
+        invalidPolicy: {
+          errors: [error.message],
+          row: 0,
+          data: policyData
+        }
+      };
+    }
+    
+    return {
+      success: true,
+      data: createdPolicy
+    };
+  } catch (error) {
+    console.error("Error in createPolicy:", error);
+    return {
+      success: false,
+      error: error.message,
+      invalidPolicy: {
+        errors: [error.message],
+        row: 0,
+        data: policyData
+      }
+    };
+  }
+};
+
+/**
+ * Create policy addendum
+ */
+export const createAddendum = async (addendumData: Partial<PolicyAddendum>) => {
+  try {
+    // Ensure required fields have values
+    const required = [
+      'policy_id',
+      'addendum_number',
+      'effective_date',
+      'description'
+    ];
+    
+    const missingFields = required.filter(field => !addendumData[field]);
+    
+    if (missingFields.length > 0) {
+      return {
+        success: false,
+        error: `Missing required fields: ${missingFields.join(', ')}`
+      };
+    }
+    
+    // Prepare data with defaults
+    const data = {
+      ...addendumData,
+      created_by: addendumData.created_by || 'system',
+      created_at: addendumData.created_at || new Date().toISOString(),
+      updated_at: addendumData.updated_at || new Date().toISOString(),
+      company_id: addendumData.company_id || '',
+      status: addendumData.status || 'active',
+      workflow_status: addendumData.workflow_status || 'draft',
+      addendum_number: addendumData.addendum_number || '',
+      lien_status: addendumData.lien_status || false,
+      description: addendumData.description || '', // Ensure description is present
+      effective_date: addendumData.effective_date || '', // Ensure effective_date is present 
+      policy_id: addendumData.policy_id || '', // Ensure policy_id is present
+    };
+    
+    const { data: createdAddendum, error } = await supabase
+      .from('policy_addendums')
+      .insert(data)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("Error creating addendum:", error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+    
+    return {
+      success: true,
+      data: createdAddendum
+    };
+  } catch (error) {
+    console.error("Error in createAddendum:", error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
 
 export default PolicyService;

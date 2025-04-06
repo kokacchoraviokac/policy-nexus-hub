@@ -47,7 +47,7 @@ export interface PolicyAddendum {
   status: string;
   workflow_status: string;
   lien_status: boolean;
-  created_by: string;
+  created_by?: string; // Make optional to match implementation
   created_at: string;
   updated_at: string;
   company_id: string;
@@ -56,7 +56,7 @@ export interface PolicyAddendum {
 export interface PolicyImportReviewProps {
   policies: Partial<Policy>[];
   invalidPolicies: InvalidPolicy[];
-  onSubmit: () => Promise<void>;
+  onSubmit: () => Promise<void>; // Add missing prop
   isSubmitting: boolean;
   errors?: ValidationErrors;
 }
@@ -69,6 +69,7 @@ export interface InvalidPolicy {
   row: number;
   errors: string[];
   data: Partial<Policy>;
+  policy?: Partial<Policy>; // Support for older code
 }
 
 export interface ValidationErrors {
@@ -83,9 +84,21 @@ export interface FilterBarProps {
   className?: string;
 }
 
-// Add missing types referenced in errors
-export type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
-export type PolicyStatus = 'active' | 'pending' | 'expired' | 'cancelled';
+// Define WorkflowStatus as an enum to be used as a value
+export enum WorkflowStatus {
+  DRAFT = 'draft',
+  IN_REVIEW = 'in_review',
+  READY = 'ready',
+  COMPLETE = 'complete'
+}
+
+// Define PolicyStatus as an enum to be used as a value
+export enum PolicyStatus {
+  ACTIVE = 'active',
+  PENDING = 'pending',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled'
+}
 
 export interface PolicyFilterParams {
   page?: number;
@@ -97,6 +110,15 @@ export interface PolicyFilterParams {
   dateTo?: string;
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
+  // Additional fields needed by usePoliciesWorkflow
+  clientId?: string;
+  insurerId?: string;
+  productId?: string;
+  assignedTo?: string;
+  startDateFrom?: string;
+  startDateTo?: string;
+  expiryDateFrom?: string;
+  expiryDateTo?: string;
 }
 
 export interface UnlinkedPaymentType {
@@ -113,4 +135,10 @@ export interface UnlinkedPaymentType {
   company_id: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface WorkflowPoliciesListProps {
+  policies: Policy[];
+  isLoading: boolean;
+  onReviewPolicy?: (policyId: string) => void; // Add missing prop
 }

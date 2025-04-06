@@ -1,5 +1,6 @@
 
 import { EntityType } from "@/types/common";
+import { DocumentTableName } from "@/types/documents";
 
 // Map entity types to their corresponding document table names
 export const entityToDocumentTable: Record<EntityType, string> = {
@@ -44,8 +45,8 @@ export function mapEntityToDocumentTable(entityType: EntityType): string {
   return getDocumentTableName(entityType);
 }
 
-// Use export type for DocumentTableName to avoid isolatedModules error
-export type { DocumentTableName } from "@/types/documents";
+// Use export type for isolated modules
+export type { DocumentTableName };
 
 /**
  * Utility interface for document upload options
@@ -59,6 +60,6 @@ export interface DocumentUploadOptions {
   entityId: string;
   originalDocumentId?: string | null;
   currentVersion?: number;
-  salesStage?: string;
+  salesStage?: string; // Add this property
   description?: string;
 }

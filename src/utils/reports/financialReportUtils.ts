@@ -1,5 +1,5 @@
 
-import { FinancialReportData, FinancialReportFilters, FinancialTransaction } from "@/types/reports";
+import type { FinancialReportData, FinancialReportFilters, FinancialTransaction } from "@/types/reports";
 import { supabase } from "@/integrations/supabase/client";
 
 export const defaultFinancialFilters: FinancialReportFilters = {
@@ -72,5 +72,5 @@ export function formatCurrency(amount: number, currency: string = 'EUR'): string
   }).format(amount);
 }
 
-// Export the types - use 'export type' with isolatedModules enabled
-export type { FinancialTransaction, FinancialReportFilters };
+// Export types with type modifier
+export type { FinancialTransaction, FinancialReportFilters, FinancialReportData };

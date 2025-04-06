@@ -1,7 +1,8 @@
 
+// Re-export EntityType from common
 import { EntityType } from './common';
 
-export type { EntityType }; // Re-export from common for backward compatibility
+export { EntityType }; // Explicitly export EntityType for imports
 
 export type DocumentCategory = 
   | 'policy' 
@@ -9,6 +10,7 @@ export type DocumentCategory =
   | 'invoice' 
   | 'contract' 
   | 'identification' 
+  | 'proposal' // Add missing category
   | 'other';
 
 export type DocumentApprovalStatus = 
@@ -38,6 +40,7 @@ export interface Document {
   approved_by?: string;
   approved_at?: string;
   approval_notes?: string;
+  description?: string; // Add missing description field
 }
 
 export interface DocumentUploadDialogProps {
@@ -69,4 +72,37 @@ export enum DocumentTableName {
   AGENT = "agent_documents",
   INVOICE = "invoice_documents",
   ADDENDUM = "addendum_documents"
+}
+
+// Add missing interfaces for document search
+export interface DocumentSearchParams {
+  searchTerm?: string;
+  entityType?: EntityType;
+  entityId?: string;
+  category?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface UseDocumentSearchProps {
+  entityType?: EntityType;
+  entityId?: string;
+  initialParams?: DocumentSearchParams;
+}
+
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  isLoading: boolean;
+  isError?: boolean;
+  error?: Error | null;
+  searchDocuments: (params?: DocumentSearchParams) => Promise<void>;
+  handlePageChange: (page: number) => void;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalCount: number;
+  searchParams: DocumentSearchParams;
+  setSearchParams: (params: Partial<DocumentSearchParams>) => void;
 }

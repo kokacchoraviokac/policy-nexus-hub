@@ -1,14 +1,15 @@
 
-export type ProposalStatus = 
-  | 'draft'
-  | 'sent'
-  | 'viewed'
-  | 'accepted'
-  | 'rejected'
-  | 'expired'
-  | 'all'  // Added 'all' for filtering
-  | 'pending'
-  | 'approved'; // Added for compatibility
+export enum ProposalStatus {
+  DRAFT = 'draft',
+  SENT = 'sent',
+  VIEWED = 'viewed',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired',
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  ALL = 'all'  // Added 'all' for filtering
+}
 
 export interface Proposal {
   id: string;
@@ -16,7 +17,7 @@ export interface Proposal {
   client_name: string;
   sales_process_id: string;
   created_at: string;
-  status: ProposalStatus;
+  status: ProposalStatus | string;
   insurer_name?: string;
   coverage_details?: string;
   premium?: string;
@@ -60,7 +61,7 @@ export interface SalesProcess {
 
 export interface UseProposalsDataProps {
   sales_process_id?: string;
-  status?: ProposalStatus;
+  status?: ProposalStatus | string;
   salesProcessId?: string; // Alias for sales_process_id
   searchQuery?: string;    // Added for search functionality
   statusFilter?: string;   // Added for filtering by status
@@ -80,7 +81,7 @@ export interface ProposalStats {
   pending?: number;
   sent?: number;
   viewed?: number;
-  approved: number; // Required field
+  approved?: number;
 }
 
 export interface SalesProcessDocumentsProps {

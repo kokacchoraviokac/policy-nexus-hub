@@ -1,4 +1,3 @@
-
 export interface FinancialReportFilters {
   searchTerm: string;
   dateFrom: string;
@@ -75,8 +74,13 @@ export interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  
+  // Support for alternative naming convention
   totalItems?: number;
   itemsPerPage?: number;
+  itemsCount?: number; // Support older implementations
+  children?: React.ReactNode; // Support children prop
+  
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: number[];
   className?: string;

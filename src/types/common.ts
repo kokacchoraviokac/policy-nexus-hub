@@ -12,4 +12,12 @@ export type EntityType =
   | 'invoice' 
   | 'addendum';
 
+// Additional common types
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
 // Add any other shared common types here
