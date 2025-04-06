@@ -16,6 +16,11 @@ export function fromDocumentTable(tableName: RelationName): PostgrestQueryBuilde
 }
 
 /**
+ * Alternative name for fromDocumentTable for use in other contexts
+ */
+export const fromTable = fromDocumentTable;
+
+/**
  * Cast an unknown type (usually from a database query) to a specific type
  * This does not perform any runtime validation - it's just a TypeScript helper
  * 
@@ -55,6 +60,7 @@ export function fromDatabaseTable(tableName: RelationName): PostgrestQueryBuilde
  * @returns A standardized error message
  */
 export function handleSupabaseError(error: any): string {
+  if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   if (error?.message) return error.message;
   if (error?.details) return error.details;

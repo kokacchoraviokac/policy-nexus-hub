@@ -37,4 +37,5 @@ export interface CreateInvitationRequest {
   email: string;
   role: UserRole;
   company_id?: string;
+  expires_in_days?: number; // Add missing property
 }

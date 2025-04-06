@@ -43,6 +43,8 @@ export interface UseFinancialReportReturn {
   defaultFilters: FinancialReportFilters;
   isLoading: boolean;
   isError: boolean;
+  // Add missing property for compatibility with existing code
+  reports?: any[];
 }
 
 export interface FinancialReportData {

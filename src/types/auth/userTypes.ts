@@ -28,5 +28,16 @@ export interface UserProfile {
   updated_at: string;
 }
 
+// Adding missing CustomPrivilege interface
+export interface CustomPrivilege {
+  id: string;
+  user_id: string;
+  privilege: string;
+  granted_at: string;
+  granted_by: string;
+  expires_at?: string | null;
+  context?: string;
+}
+
 // Export the UserRole for use in other modules
 export { UserRole as default };

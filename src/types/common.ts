@@ -100,5 +100,8 @@ export enum DocumentCategory {
   LEGAL = 'legal',
   FINANCIAL = 'financial',
   CORRESPONDENCE = 'correspondence',
-  OTHER = 'other'
+  OTHER = 'other',
+  // Adding missing DocumentCategory values from errors
+  DRAFT = 'draft',
+  INFO = 'info' 
 }

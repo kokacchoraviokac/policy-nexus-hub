@@ -1,93 +1,88 @@
 
-import { CustomPrivilege } from "@/types/auth";
-import { ResourceContext } from "@/types/auth/contextTypes";
-import { UserRole } from "@/types/auth/user";
+import { UserRole } from "@/types/auth/userTypes";
 
-// Mock data for demonstration (replace with actual implementation)
-const rolePrivilegeMap: Record<UserRole, string[]> = {
-  superAdmin: ['*'], // superAdmin can do everything
-  super_admin: ['*'], // alternative naming
-  admin: [
-    'policies:view', 'policies:create', 'policies:edit',
-    'claims:view', 'claims:create',
-    'finances:view',
-    'users:manage'
+// Default privileges by role - these are used when no custom privileges are set
+const DEFAULT_PRIVILEGES_BY_ROLE: Record<UserRole, string[]> = {
+  [UserRole.ADMIN]: [
+    "read:all",
+    "write:all",
+    "delete:all",
+    "manage:users",
+    "manage:settings",
   ],
-  employee: [
-    'policies:view',
-    'claims:view'
+  [UserRole.SUPER_ADMIN]: [
+    "read:all",
+    "write:all",
+    "delete:all",
+    "manage:users",
+    "manage:companies",
+    "manage:settings",
+    "system:admin",
   ],
-  agent: [
-    'policies:view',
-    'clients:view',
-    'commissions:view'
+  [UserRole.EMPLOYEE]: [
+    "read:policies",
+    "write:policies",
+    "read:clients",
+    "write:clients",
+    "read:claims",
+    "write:claims",
   ],
-  client: [
-    'policies.own:view',
-    'claims.own:view',
-    'documents.own:view'
-  ]
+  [UserRole.AGENT]: [
+    "read:policies",
+    "read:clients",
+    "write:clients",
+    "read:commissions",
+  ],
+  [UserRole.CLIENT]: [
+    "read:own_policies",
+    "read:own_claims",
+    "write:own_claims",
+  ],
 };
 
-// Check if a given role has a specific privilege
-export function checkPrivilege(userRole: UserRole, privilege: string): boolean {
-  if (!userRole || !privilege) return false;
-  
-  const rolePrivileges = rolePrivilegeMap[userRole] || [];
-  
-  // Wildcard check
-  if (rolePrivileges.includes('*')) return true;
-  
-  // Exact match
-  if (rolePrivileges.includes(privilege)) return true;
-  
-  // Category wildcard (e.g., "policies:*" matches "policies:view")
-  const categoryWildcard = privilege.split(':')[0] + ':*';
-  if (rolePrivileges.includes(categoryWildcard)) return true;
-  
-  return false;
+/**
+ * Check if a user role has a specific privilege by default
+ * @param role User role to check
+ * @param privilege Privilege string to check
+ * @returns boolean indicating if the role has the privilege
+ */
+export function roleHasPrivilege(role: UserRole, privilege: string): boolean {
+  // Admin roles have all privileges by default
+  if (role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN) {
+    return true;
+  }
+
+  // Check if the role's default privileges include the requested privilege
+  const rolePrivileges = DEFAULT_PRIVILEGES_BY_ROLE[role] || [];
+  return rolePrivileges.includes(privilege);
 }
 
-// Check if a role has a privilege with context awareness
-export function checkPrivilegeWithContext(
-  userRole: UserRole, 
-  privilege: string, 
-  context: ResourceContext
+/**
+ * Get all default privileges for a specific role
+ * @param role User role
+ * @returns Array of privilege strings
+ */
+export function getDefaultPrivilegesForRole(role: UserRole): string[] {
+  return DEFAULT_PRIVILEGES_BY_ROLE[role] || [];
+}
+
+/**
+ * Check if a user can access a particular resource based on role
+ * @param resource Resource string (e.g., "policies", "claims")
+ * @param action Action string (e.g., "read", "write", "delete")
+ * @param userRole User's role
+ * @returns boolean indicating if the user can access the resource
+ */
+export function canAccessResource(
+  resource: string,
+  action: string,
+  userRole: UserRole
 ): boolean {
-  // For superAdmin, bypass all checks
-  if (userRole === 'superAdmin' || userRole === 'super_admin') return true;
-  
-  // Check standard privileges first
-  if (checkPrivilege(userRole, privilege)) return true;
-  
-  // Resource ownership check
-  if (privilege.includes('.own:') && context.ownerId === context.currentUserId) {
-    const basePrivilege = privilege.replace('.own:', ':');
-    return checkPrivilege(userRole, basePrivilege);
+  // Admins can access everything
+  if (userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN) {
+    return true;
   }
-  
-  // Company resource check
-  if (privilege.includes('.company:') && context.companyId === context.currentUserCompanyId) {
-    const basePrivilege = privilege.replace('.company:', ':');
-    return checkPrivilege(userRole, basePrivilege);
-  }
-  
-  return false;
-}
 
-// Fetch user's custom privileges from the database
-export async function fetchUserCustomPrivileges(userId: string): Promise<CustomPrivilege[]> {
-  // Mock implementation - replace with actual API call or database query
-  const mockCustomPrivileges: CustomPrivilege[] = [
-    {
-      id: "cp1",
-      user_id: userId,
-      privilege: "reports.export:all",
-      granted_at: new Date().toISOString(),
-      granted_by: "admin1",
-      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-    }
-  ];
-  
-  return mockCustomPrivileges;
+  const privilege = `${action}:${resource}`;
+  return roleHasPrivilege(userRole, privilege);
 }
