@@ -1,6 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { EntityType } from "@/types/documents";
+import { safeQueryCast } from "@/utils/safeSupabaseQuery";
+import { fromTable } from "@/utils/supabaseTypeAssertions";
 
 /**
  * Safe wrapper for Supabase queries to handle errors consistently
@@ -35,17 +37,21 @@ export const queryDocuments = async (entityType: EntityType, entityId: string) =
   }
   
   // Use the safe query function to fetch documents
-  const { data, error } = await supabase
-    .from(documentTable)
-    .select("*")
-    .eq("entity_id", entityId)
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await fromTable(documentTable)
+      .select("*")
+      .eq("entity_id", entityId)
+      .order("created_at", { ascending: false });
+      
+    if (error) {
+      throw new Error(`Error fetching documents: ${error.message}`);
+    }
     
-  if (error) {
-    throw new Error(`Error fetching documents: ${error.message}`);
+    return data;
+  } catch (error) {
+    console.error("Error in queryDocuments:", error);
+    throw error;
   }
-  
-  return data;
 };
 
 /**

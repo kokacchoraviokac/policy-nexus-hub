@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Sparkles } from "lucide-react";
-import { EntityType } from "@/types/documents";
+import { EntityType, DocumentCategory } from "@/types/documents";
 import DocumentUploadDialog from "./unified/DocumentUploadDialog";
 import DocumentAnalysisPanel from "./DocumentAnalysisPanel";
 
@@ -27,6 +27,11 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
   
   const handleFileSelected = (file: File | null) => {
     setSelectedFile(file);
+  };
+  
+  const handleCategoryDetected = (category: DocumentCategory) => {
+    console.log("Category detected:", category);
+    // You can update the form with the detected category
   };
   
   return (
@@ -75,10 +80,8 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
               {selectedFile && (
                 <DocumentAnalysisPanel
                   file={selectedFile}
-                  documentType={selectedFile?.type || ""}
-                  onCategoryDetected={(category) => {
-                    // Handle category detection
-                  }}
+                  onCategoryDetected={handleCategoryDetected}
+                  onAnalysisComplete={() => console.log("Analysis complete")}
                 />
               )}
             </div>

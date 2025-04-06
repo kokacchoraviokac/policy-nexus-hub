@@ -1,141 +1,120 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { Proposal, ProposalStatus, UseProposalsDataProps } from '@/types/sales';
-import { ProposalStats } from '@/types/reports';
-import * as proposalService from '@/services/proposalService';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Proposal, ProposalStatus, ProposalStats } from '@/types/sales';
 
-export function useProposalsData({ sales_process_id, status }: UseProposalsDataProps = {}) {
-  const [loading, setLoading] = useState(true);
+export const useProposalsData = (salesProcessId?: string, statusFilter?: ProposalStatus) => {
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [stats, setStats] = useState<ProposalStats>({
     totalCount: 0,
     pendingCount: 0,
     approvedCount: 0,
     rejectedCount: 0,
+    
+    // Legacy stats
     total: 0,
     accepted: 0,
     rejected: 0,
     pending: 0,
     draft: 0,
     sent: 0,
-    viewed: 0
+    viewed: 0,
+    approved: 0  // Added to satisfy TypeScript
   });
-  const [error, setError] = useState<Error | null>(null);
-  
-  // Calculate statistics based on current proposals
-  const calculateStats = (proposals: Proposal[]): ProposalStats => {
-    const newStats: ProposalStats = {
-      totalCount: proposals.length,
-      pendingCount: 0,
-      approvedCount: 0,
-      rejectedCount: 0,
-      // Legacy stats for compatibility
-      total: proposals.length,
-      accepted: 0,
-      rejected: 0,
-      pending: 0,
-      draft: 0,
-      sent: 0,
-      viewed: 0
-    };
-    
-    proposals.forEach(proposal => {
-      if (proposal.status === 'accepted') {
-        newStats.approvedCount++;
-        newStats.accepted!++;
-      } else if (proposal.status === 'rejected') {
-        newStats.rejectedCount++;
-        newStats.rejected!++;
-      } else if (proposal.status === 'draft') {
-        newStats.draft!++;
-        newStats.pending!++;
-        newStats.pendingCount++;
-      } else if (proposal.status === 'sent') {
-        newStats.sent!++;
-        newStats.pending!++;
-        newStats.pendingCount++;
-      } else if (proposal.status === 'viewed') {
-        newStats.viewed!++;
-        newStats.pending!++;
-        newStats.pendingCount++;
-      } else if (proposal.status === 'expired') {
-        newStats.pending!++;
-        newStats.pendingCount++;
-      }
-    });
-    
-    return newStats;
-  };
-  
-  // Fetch proposals
-  const fetchProposals = useCallback(async () => {
+
+  const fetchProposals = async () => {
     setLoading(true);
-    setError(null);
-    
     try {
-      const data = await proposalService.getProposals(sales_process_id, status);
-      setProposals(data);
-      setStats(calculateStats(data));
+      let query = supabase.from('proposals').select('*');
+      
+      if (salesProcessId) {
+        query = query.eq('sales_process_id', salesProcessId);
+      }
+      
+      if (statusFilter && statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Calculate stats
+      const totalCount = data.length;
+      const pendingCount = data.filter(item => item.status === 'pending').length;
+      const approvedCount = data.filter(item => item.status === 'approved').length;
+      const rejectedCount = data.filter(item => item.status === 'rejected').length;
+      const draftCount = data.filter(item => item.status === 'draft').length;
+      const sentCount = data.filter(item => item.status === 'sent').length;
+      const viewedCount = data.filter(item => item.status === 'viewed').length;
+      const acceptedCount = data.filter(item => item.status === 'accepted').length;
+      
+      setProposals(data as Proposal[]);
+      setStats({
+        totalCount,
+        pendingCount,
+        approvedCount,
+        rejectedCount,
+        
+        // Legacy stats
+        total: totalCount,
+        pending: pendingCount,
+        approved: approvedCount,
+        rejected: rejectedCount,
+        draft: draftCount,
+        sent: sentCount,
+        viewed: viewedCount,
+        accepted: acceptedCount
+      });
+      
     } catch (err) {
+      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
       console.error('Error fetching proposals:', err);
-      setError(err instanceof Error ? err : new Error('Failed to fetch proposals'));
     } finally {
       setLoading(false);
     }
-  }, [sales_process_id, status]);
-  
-  // Update a proposal
+  };
+
   const updateProposal = async (proposalId: string, updates: Partial<Proposal>) => {
     try {
-      const updated = await proposalService.updateProposal(proposalId, updates);
+      const { error } = await supabase
+        .from('proposals')
+        .update(updates)
+        .eq('id', proposalId);
+        
+      if (error) throw error;
       
-      setProposals(prev => 
-        prev.map(p => p.id === proposalId ? updated : p)
-      );
-      
-      setStats(calculateStats(
-        proposals.map(p => p.id === proposalId ? updated : p)
-      ));
-      
-      return updated;
+      // Refresh data
+      await fetchProposals();
+      return true;
     } catch (err) {
       console.error('Error updating proposal:', err);
-      throw err;
+      return false;
     }
   };
-  
-  // Update proposal status
+
   const updateProposalStatus = async (proposalId: string, newStatus: ProposalStatus) => {
-    try {
-      const updated = await proposalService.updateProposalStatus(proposalId, newStatus);
-      
-      setProposals(prev => 
-        prev.map(p => p.id === proposalId ? updated : p)
-      );
-      
-      setStats(calculateStats(
-        proposals.map(p => p.id === proposalId ? updated : p)
-      ));
-      
-      return updated;
-    } catch (err) {
-      console.error('Error updating proposal status:', err);
-      throw err;
-    }
+    return updateProposal(proposalId, { status: newStatus });
   };
-  
-  // Load proposals on component mount and when dependencies change
+
+  // Initial fetch on mount
   useEffect(() => {
     fetchProposals();
-  }, [fetchProposals]);
-  
+  }, [salesProcessId, statusFilter]);
+
+  const refreshProposals = async () => {
+    await fetchProposals();
+  };
+
   return {
     proposals,
     stats,
     loading,
     error,
-    refreshProposals: fetchProposals,
+    refreshProposals,
     updateProposal,
     updateProposalStatus
   };
-}
+};

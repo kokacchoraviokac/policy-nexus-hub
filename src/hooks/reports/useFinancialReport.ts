@@ -1,7 +1,12 @@
 
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { FinancialReportData, FinancialReportFilters, fetchFinancialReportData, defaultFinancialFilters } from "@/utils/reports/financialReportUtils";
+import { 
+  FinancialReportData, 
+  FinancialReportFilters, 
+  fetchFinancialReportData, 
+  defaultFinancialFilters
+} from "@/utils/reports/financialReportUtils";
 
 export const useFinancialReport = (initialFilters?: Partial<FinancialReportFilters>) => {
   // Merge initial filters with defaults

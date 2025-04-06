@@ -7,9 +7,6 @@ import { DocumentAnalysisPanelProps, DocumentCategory } from "@/types/documents"
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   document,
-  documentId,
-  documentUrl,
-  documentType,
   file,
   onAnalysisComplete,
   onCategoryDetected

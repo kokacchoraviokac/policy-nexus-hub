@@ -6,6 +6,7 @@ export const entityTablesMap: Record<EntityType, string> = {
   'policy': 'policy_documents',
   'claim': 'claim_documents',
   'sales_process': 'sales_documents',
+  'sale': 'sales_documents', // Make sure 'sale' is included
   'client': 'client_documents',
   'insurer': 'insurer_documents',
   'agent': 'agent_documents',
@@ -31,6 +32,13 @@ export const getDocumentTypeOptions = (entityType: EntityType) => {
       { label: 'Other', value: 'other' }
     ],
     'sales_process': [
+      { label: 'Quote', value: 'quote' },
+      { label: 'Proposal', value: 'proposal' },
+      { label: 'Client Authorization', value: 'authorization' },
+      { label: 'Requirements', value: 'requirements' },
+      { label: 'Other', value: 'other' }
+    ],
+    'sale': [  // Make sure 'sale' is included
       { label: 'Quote', value: 'quote' },
       { label: 'Proposal', value: 'proposal' },
       { label: 'Client Authorization', value: 'authorization' },

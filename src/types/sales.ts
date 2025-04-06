@@ -37,10 +37,10 @@ export interface Proposal {
 
 export interface SalesProcess {
   id: string;
-  title?: string;
-  stage?: string;
   company_id: string;
   client_id: string;
+  title?: string;
+  stage?: string;
   created_at: string;
   updated_at: string;
   current_step: string;

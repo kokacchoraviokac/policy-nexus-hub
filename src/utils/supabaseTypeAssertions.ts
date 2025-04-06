@@ -38,6 +38,7 @@ export function fromEntityTable(entityType: string) {
       tableName = 'claim_documents';
       break;
     case 'sales_process':
+    case 'sale':
       tableName = 'sales_documents';
       break;
     case 'client':

@@ -4,17 +4,22 @@ import React from 'react';
 export interface PageHeaderProps {
   title: string;
   subtitle?: string;
+  description?: string;
   actions?: React.ReactNode;
+  action?: React.ReactNode; // Alternative prop name
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, actions }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, description, actions, action }) => {
+  const actionContent = actions || action;
+  const subtitleContent = subtitle || description;
+  
   return (
     <div className="flex justify-between items-start mb-6">
       <div>
         <h1 className="text-2xl font-bold">{title}</h1>
-        {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+        {subtitleContent && <p className="text-muted-foreground mt-1">{subtitleContent}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actionContent && <div className="flex items-center gap-2">{actionContent}</div>}
     </div>
   );
 };

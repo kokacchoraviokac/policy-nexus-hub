@@ -1,3 +1,4 @@
+
 export interface Policy {
   id: string;
   policy_number: string;
@@ -53,21 +54,15 @@ export interface ValidationErrors {
   [key: string]: string[];
 }
 
-export interface WorkflowPolicy {
-  id: string;
-  policyNumber: string;
-  policyholder: string;
-  insurer: string;
-  startDate: string;
-  expiryDate: string;
-  premium: number;
-  currency?: string;
-  assignedTo?: string;
-  status: string;
-  workflowStatus: string;
+export interface WorkflowPolicy extends Policy {
+  policyNumber?: string;
+  policyholder?: string;
+  insurer?: string;
+  startDate?: string;
+  expiryDate?: string;
+  endDate?: string;
   client?: string;
   product?: string;
-  endDate?: string;
 }
 
 export interface PolicyAddendum {

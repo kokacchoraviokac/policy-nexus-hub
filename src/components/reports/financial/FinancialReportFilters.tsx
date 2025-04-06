@@ -1,8 +1,9 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Search, Calendar } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { 
   Select, 
   SelectContent, 
@@ -10,201 +11,203 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
+import { Calendar as CalendarIcon, Filter, X } from "lucide-react";
+import { format } from "date-fns";
+import { FinancialReportFilters } from "@/utils/reports/financialReportUtils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FinancialReportFilters as FinancialReportFiltersType } from "@/types/reports";
 
 export interface FinancialReportFiltersProps {
-  filters: FinancialReportFiltersType;
-  updateFilters: (newFilters: Partial<FinancialReportFiltersType>) => void;
-  onApply: () => Promise<void>;
+  filters: FinancialReportFilters;
+  setFilters: (filters: FinancialReportFilters) => void;
+  onApply: () => void;
+  onReset?: () => void;
 }
 
 const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
   filters,
-  updateFilters,
-  onApply
+  setFilters,
+  onApply,
+  onReset
 }) => {
   const { t } = useLanguage();
-  const [localFilters, setLocalFilters] = useState<FinancialReportFiltersType>({
-    ...filters,
-    searchTerm: filters.searchTerm || '',
-    startDate: filters.dateFrom,
-    endDate: filters.dateTo
-  });
-  const [isApplying, setIsApplying] = useState(false);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setLocalFilters((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+  
+  const handleChange = (field: keyof FinancialReportFilters, value: string) => {
+    setFilters({ ...filters, [field]: value });
   };
-
-  const handleSelectChange = (field: keyof FinancialReportFiltersType, value: string) => {
-    setLocalFilters((prev) => ({
-      ...prev,
-      [field]: value
-    }));
+  
+  const handleDateChange = (field: 'dateFrom' | 'dateTo', date: Date) => {
+    setFilters({
+      ...filters,
+      [field]: format(date, 'yyyy-MM-dd')
+    });
   };
-
-  const handleDateChange = (field: 'startDate' | 'endDate', date: Date | undefined) => {
-    if (date) {
-      setLocalFilters((prev) => ({
-        ...prev,
-        [field]: date.toISOString().split('T')[0]
-      }));
-    }
-  };
-
-  const handleApply = async () => {
-    setIsApplying(true);
-    try {
-      updateFilters({
-        searchTerm: localFilters.searchTerm,
-        dateFrom: localFilters.startDate,
-        dateTo: localFilters.endDate,
-        transactionType: localFilters.transactionType,
-        category: localFilters.category,
-        status: localFilters.status
-      });
-      await onApply();
-    } finally {
-      setIsApplying(false);
-    }
-  };
-
+  
   const handleReset = () => {
-    const defaultFilters: FinancialReportFiltersType = {
-      dateFrom: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
-      dateTo: new Date().toISOString().split('T')[0],
-      transactionType: 'all',
-      category: 'all',
-      status: 'all',
-      searchTerm: '',
-      startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0],
-      endDate: new Date().toISOString().split('T')[0]
-    };
-    
-    setLocalFilters(defaultFilters);
-    updateFilters(defaultFilters);
+    if (onReset) {
+      onReset();
+    }
   };
-
+  
   return (
-    <div className="space-y-4 mb-6">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="w-full sm:w-1/3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+    <Card>
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          {/* Date Range Selection */}
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("startDate")}</label>
+            <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filters.dateFrom
+                    ? format(new Date(filters.dateFrom), 'PPP')
+                    : t("selectDate")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={new Date(filters.dateFrom)}
+                  onSelect={(date) => {
+                    if (date) {
+                      handleDateChange('dateFrom', date);
+                      setStartDateOpen(false);
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("endDate")}</label>
+            <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {filters.dateTo
+                    ? format(new Date(filters.dateTo), 'PPP')
+                    : t("selectDate")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={new Date(filters.dateTo)}
+                  onSelect={(date) => {
+                    if (date) {
+                      handleDateChange('dateTo', date);
+                      setEndDateOpen(false);
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          {/* Transaction Type Filter */}
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("transactionType")}</label>
+            <Select
+              value={filters.transactionType}
+              onValueChange={(value) => handleChange('transactionType', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("allTypes")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allTypes")}</SelectItem>
+                <SelectItem value="income">{t("income")}</SelectItem>
+                <SelectItem value="expense">{t("expense")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Entity Type Filter */}
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("entityType")}</label>
+            <Select
+              value={filters.entityType}
+              onValueChange={(value) => handleChange('entityType', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("allTypes")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allEntities")}</SelectItem>
+                <SelectItem value="policy">{t("policies")}</SelectItem>
+                <SelectItem value="invoice">{t("invoices")}</SelectItem>
+                <SelectItem value="claim">{t("claims")}</SelectItem>
+                <SelectItem value="commission">{t("commissions")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Status Filter */}
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("status")}</label>
+            <Select
+              value={filters.status}
+              onValueChange={(value) => handleChange('status', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t("allStatuses")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allStatuses")}</SelectItem>
+                <SelectItem value="completed">{t("completed")}</SelectItem>
+                <SelectItem value="pending">{t("pending")}</SelectItem>
+                <SelectItem value="canceled">{t("canceled")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Search Field */}
+          <div>
+            <label className="text-sm font-medium mb-1 block">{t("search")}</label>
             <Input
-              name="searchTerm"
-              placeholder={t("searchByDescriptionOrRef")}
-              className="pl-8"
-              value={localFilters.searchTerm}
-              onChange={handleInputChange}
+              value={filters.searchTerm}
+              onChange={(e) => handleChange('searchTerm', e.target.value)}
+              placeholder={t("searchTransactions")}
             />
           </div>
         </div>
         
-        <div className="w-full sm:w-1/3 space-y-2">
-          <Label className="text-xs">{t("dateRange")}</Label>
-          <div className="flex gap-2 items-center">
-            <DatePicker
-              date={localFilters.startDate ? new Date(localFilters.startDate) : undefined}
-              onSelect={(date) => handleDateChange('startDate', date)}
-              placeholder={t("from")}
-            />
-            <span>-</span>
-            <DatePicker
-              date={localFilters.endDate ? new Date(localFilters.endDate) : undefined}
-              onSelect={(date) => handleDateChange('endDate', date)}
-              placeholder={t("to")}
-            />
-          </div>
-        </div>
-        
-        <div className="w-full sm:w-1/3 flex items-end gap-2">
-          <Button 
-            onClick={handleApply} 
-            className="flex-1"
-            disabled={isApplying}
-          >
-            {isApplying ? t("applying") : t("applyFilters")}
-          </Button>
-          <Button 
-            variant="outline" 
+        <div className="flex justify-between">
+          <Button
+            variant="outline"
             onClick={handleReset}
-            className="flex-1"
+            className="flex items-center gap-1"
           >
-            {t("reset")}
+            <X className="h-4 w-4" />
+            {t("resetFilters")}
+          </Button>
+          
+          <Button
+            onClick={onApply}
+            className="flex items-center gap-1"
+          >
+            <Filter className="h-4 w-4" />
+            {t("applyFilters")}
           </Button>
         </div>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="w-full sm:w-1/3">
-          <Label htmlFor="transactionType" className="text-xs">
-            {t("transactionType")}
-          </Label>
-          <Select
-            value={localFilters.transactionType}
-            onValueChange={(value) => handleSelectChange('transactionType', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t("allTypes")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("allTypes")}</SelectItem>
-              <SelectItem value="income">{t("income")}</SelectItem>
-              <SelectItem value="expense">{t("expense")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="w-full sm:w-1/3">
-          <Label htmlFor="category" className="text-xs">
-            {t("category")}
-          </Label>
-          <Select
-            value={localFilters.category}
-            onValueChange={(value) => handleSelectChange('category', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t("allCategories")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("allCategories")}</SelectItem>
-              <SelectItem value="premium">{t("premium")}</SelectItem>
-              <SelectItem value="commission">{t("commission")}</SelectItem>
-              <SelectItem value="fee">{t("fee")}</SelectItem>
-              <SelectItem value="claim">{t("claim")}</SelectItem>
-              <SelectItem value="other">{t("other")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="w-full sm:w-1/3">
-          <Label htmlFor="status" className="text-xs">
-            {t("status")}
-          </Label>
-          <Select
-            value={localFilters.status}
-            onValueChange={(value) => handleSelectChange('status', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t("allStatuses")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("allStatuses")}</SelectItem>
-              <SelectItem value="pending">{t("pending")}</SelectItem>
-              <SelectItem value="completed">{t("completed")}</SelectItem>
-              <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

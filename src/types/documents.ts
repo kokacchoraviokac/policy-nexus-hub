@@ -85,14 +85,16 @@ export interface Document {
 }
 
 export interface DocumentUploadOptions {
-  entityId: string;
+  file: File;
+  documentName: string;
+  documentType: string;
+  category: string;
   entityType: EntityType;
-  defaultCategory?: DocumentCategory;
-  selectedDocument?: Document;
-  onSuccess?: () => void;
-  salesStage?: string;
-  originalDocumentId?: string;
+  entityId: string;
+  originalDocumentId?: string | null;
   currentVersion?: number;
+  salesStage?: string;
+  description?: string;
 }
 
 export interface DocumentUploadDialogProps {
@@ -109,8 +111,14 @@ export interface DocumentUploadDialogProps {
 }
 
 export interface DocumentAnalysisPanelProps {
-  document: Document;
+  document?: Document;
+  documentId?: string;
+  documentUrl?: string;
+  documentType?: string;
+  file?: File;
   onAnalyze?: () => void;
+  onAnalysisComplete?: () => void;
+  onCategoryDetected?: (category: DocumentCategory) => void;
 }
 
 export interface DocumentSearchParams {

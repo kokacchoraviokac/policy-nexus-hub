@@ -38,6 +38,13 @@ export function getEntityTypeFromTable(tableName: string): EntityType {
 }
 
 /**
+ * Get document table name from entity type - legacy API
+ */
+export function mapEntityToDocumentTable(entityType: EntityType): string {
+  return getDocumentTableName(entityType);
+}
+
+/**
  * Utility interface for document upload options
  */
 export interface DocumentUploadOptions {
