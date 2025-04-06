@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
-import { SalesProcess } from "@/types/salesProcess";
+import { SalesProcess } from "@/types/sales";
 import { useProposalsData } from "@/hooks/sales/useProposalsData";
 import ProposalsList from "../../proposals/ProposalsList";
 import CreateProposalDialog from "../../proposals/CreateProposalDialog";
@@ -25,7 +25,7 @@ const ProposalsTab: React.FC<ProposalsTabProps> = ({ process }) => {
     updateProposal,
     updateProposalStatus
   } = useProposalsData({
-    sales_process_id: process.id
+    salesProcessId: process.id
   });
   
   const handleProposalCreated = () => {

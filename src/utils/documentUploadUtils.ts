@@ -1,27 +1,28 @@
 
-import { EntityType, DocumentTableName } from "@/types/documents";
+import { EntityType } from "@/types/common";
+import { DocumentTableName } from "@/types/documents";
 
 /**
  * Get the appropriate document table name for a given entity type
  */
 export const getDocumentTableName = (entityType: EntityType): DocumentTableName => {
   switch (entityType) {
-    case 'policy':
+    case EntityType.POLICY:
       return 'policy_documents';
-    case 'claim':
+    case EntityType.CLAIM:
       return 'claim_documents';
-    case 'sales_process':
-    case 'sale':
+    case EntityType.SALES_PROCESS:
+    case EntityType.SALE:
       return 'sales_documents';
-    case 'client':
+    case EntityType.CLIENT:
       return 'client_documents';
-    case 'insurer':
+    case EntityType.INSURER:
       return 'insurer_documents';
-    case 'agent':
+    case EntityType.AGENT:
       return 'agent_documents';
-    case 'addendum':
+    case EntityType.ADDENDUM:
       return 'addendum_documents';
-    case 'invoice':
+    case EntityType.INVOICE:
       return 'invoice_documents';
     default:
       // Default to policy_documents if unknown
@@ -35,23 +36,23 @@ export const getDocumentTableName = (entityType: EntityType): DocumentTableName 
 export const tableNameToEntityType = (tableName: DocumentTableName): EntityType => {
   switch (tableName) {
     case 'policy_documents':
-      return 'policy';
+      return EntityType.POLICY;
     case 'claim_documents':
-      return 'claim';
+      return EntityType.CLAIM;
     case 'sales_documents':
-      return 'sales_process';
+      return EntityType.SALES_PROCESS;
     case 'client_documents':
-      return 'client';
+      return EntityType.CLIENT;
     case 'insurer_documents':
-      return 'insurer';
+      return EntityType.INSURER;
     case 'agent_documents':
-      return 'agent';
+      return EntityType.AGENT;
     case 'addendum_documents':
-      return 'addendum';
+      return EntityType.ADDENDUM;
     case 'invoice_documents':
-      return 'invoice';
+      return EntityType.INVOICE;
     default:
-      return 'policy';
+      return EntityType.POLICY;
   }
 };
 
@@ -60,22 +61,22 @@ export const tableNameToEntityType = (tableName: DocumentTableName): EntityType 
  */
 export const getEntityIdColumn = (entityType: EntityType): string => {
   switch (entityType) {
-    case 'policy':
+    case EntityType.POLICY:
       return 'policy_id';
-    case 'claim':
+    case EntityType.CLAIM:
       return 'claim_id';
-    case 'sales_process':
-    case 'sale':
+    case EntityType.SALES_PROCESS:
+    case EntityType.SALE:
       return 'sales_process_id';
-    case 'client':
+    case EntityType.CLIENT:
       return 'client_id';
-    case 'insurer':
+    case EntityType.INSURER:
       return 'insurer_id';
-    case 'agent':
+    case EntityType.AGENT:
       return 'agent_id';
-    case 'addendum':
+    case EntityType.ADDENDUM:
       return 'addendum_id';
-    case 'invoice':
+    case EntityType.INVOICE:
       return 'invoice_id';
     default:
       return 'entity_id';

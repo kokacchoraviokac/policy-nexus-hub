@@ -5,9 +5,10 @@ import { Loader2, FileX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import DocumentListItem from "../DocumentListItem";
+import DocumentListItem from "./DocumentListItem";
 import DocumentUploadDialog from "./DocumentUploadDialog";
-import { Document, EntityType, DocumentCategory, DocumentApprovalStatus } from "@/types/documents";
+import { PolicyDocument, DocumentCategory } from "@/types/documents";
+import { EntityType } from "@/types/common";
 
 interface DocumentListProps {
   entityType: EntityType;
@@ -16,16 +17,13 @@ interface DocumentListProps {
   showUploadButton?: boolean;
   showApproval?: boolean;
   filterCategory?: string;
-  documents?: Document[];
+  documents?: PolicyDocument[];
   isLoading?: boolean;
   isError?: boolean;
   error?: Error;
-  onDelete?: (documentId: string | Document) => void;
+  onDelete?: (documentId: string | PolicyDocument) => void;
   isDeleting?: boolean;
-  onUploadVersion?: (document: Document) => void;
-  refetch?: () => void;
-  updateDocumentApproval?: (documentId: string, status: DocumentApprovalStatus, notes?: string) => Promise<void>;
-  deleteDocument?: (docId: string) => void;
+  onUploadVersion?: (document: PolicyDocument) => void;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ 
@@ -41,14 +39,11 @@ const DocumentList: React.FC<DocumentListProps> = ({
   error: providedError,
   onDelete: providedOnDelete,
   isDeleting: providedIsDeleting,
-  onUploadVersion: providedOnUploadVersion,
-  refetch: providedRefetch,
-  updateDocumentApproval,
-  deleteDocument: providedDeleteDocument
+  onUploadVersion
 }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
+  const [selectedDocument, setSelectedDocument] = useState<PolicyDocument | undefined>(undefined);
   
   // Use provided props if available, otherwise fetch documents using the hook
   const { 
@@ -57,7 +52,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
     error: errorFetched, 
     deleteDocument: deleteDocumentFetched, 
     isDeletingDocument: isDeletingFetched,
-    refetch: refetchFetched
+    refresh: refreshDocuments
   } = useDocuments(entityType, entityId);
   
   const documents = providedDocuments || fetchedDocuments;
@@ -65,37 +60,25 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const isError = providedIsError !== undefined ? providedIsError : !!errorFetched;
   const error = providedError || errorFetched;
   const isDeleting = providedIsDeleting !== undefined ? providedIsDeleting : isDeletingFetched;
-  const refetch = providedRefetch || refetchFetched;
-  const deleteDocument = providedDeleteDocument || deleteDocumentFetched;
 
   // Custom delete document handler that manages both string IDs and Document objects
-  const handleDeleteDocument = (documentIdOrObject: string | Document) => {
+  const handleDeleteDocument = (documentIdOrObject: string | PolicyDocument) => {
     if (providedOnDelete) {
       providedOnDelete(documentIdOrObject);
-    } else if (deleteDocument) {
+    } else if (deleteDocumentFetched) {
       // Extract document ID if a Document object was passed
       const documentId = typeof documentIdOrObject === 'string' 
         ? documentIdOrObject 
         : documentIdOrObject.id;
       
-      deleteDocument(documentId);
-    }
-  };
-
-  // Handle document version upload
-  const handleUploadVersion = (document: Document) => {
-    if (providedOnUploadVersion) {
-      providedOnUploadVersion(document);
-    } else {
-      setSelectedDocument(document);
-      setUploadDialogOpen(true);
+      deleteDocumentFetched(documentId);
     }
   };
 
   // Filter documents by category if filterCategory is provided
   const filteredDocuments = useMemo(() => {
     if (!filterCategory) return documents;
-    return documents?.filter(doc => doc.category === filterCategory) || [];
+    return documents.filter(doc => doc.category === filterCategory);
   }, [documents, filterCategory]);
 
   const handleUploadClick = () => {
@@ -103,6 +86,15 @@ const DocumentList: React.FC<DocumentListProps> = ({
       onUploadClick();
     } else {
       setSelectedDocument(undefined);
+      setUploadDialogOpen(true);
+    }
+  };
+  
+  const handleUploadVersion = (document: PolicyDocument) => {
+    if (onUploadVersion) {
+      onUploadVersion(document);
+    } else {
+      setSelectedDocument(document);
       setUploadDialogOpen(true);
     }
   };
@@ -179,9 +171,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
         entityType={entityType}
         entityId={entityId}
         selectedDocument={selectedDocument}
-        onUploadComplete={refetch}
-        defaultCategory={filterCategory as DocumentCategory}
-        salesStage=""
+        onUploadComplete={refreshDocuments}
       />
     </div>
   );

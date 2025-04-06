@@ -1,69 +1,53 @@
 
-import { Proposal, ProposalStatus, ProposalStats } from '@/types/sales';
+import { Proposal } from "@/types/reports";
+import { ProposalStats, ProposalStatus } from "@/types/sales";
 
-export const getDefaultProposalStats = (): ProposalStats => ({
-  totalCount: 0,
-  pendingCount: 0,
-  approvedCount: 0,
-  rejectedCount: 0,
-  total: 0,
-  accepted: 0,
-  rejected: 0,
-  draft: 0,
-  pending: 0,
-  sent: 0,
-  viewed: 0,
-  approved: 0,
-  expired: 0,
-});
-
+/**
+ * Calculate statistics for a list of proposals
+ */
 export const calculateProposalStats = (proposals: Proposal[]): ProposalStats => {
+  // Initialize stats
   const stats: ProposalStats = {
-    totalCount: proposals.length,
-    pendingCount: 0,
-    approvedCount: 0,
-    rejectedCount: 0,
     total: proposals.length,
+    draft: 0,
+    sent: 0,
     accepted: 0,
     rejected: 0,
-    draft: 0,
-    pending: 0,
-    sent: 0,
-    viewed: 0,
-    approved: 0,
     expired: 0,
+    pending: 0,
+    viewed: 0,
+    approved: 0
   };
 
+  // Count proposals by status
   proposals.forEach(proposal => {
-    const status = proposal.status.toLowerCase();
-    
-    switch (status) {
-      case ProposalStatus.DRAFT.toLowerCase():
-        stats.draft += 1;
+    switch (proposal.status) {
+      case ProposalStatus.DRAFT:
+        stats.draft++;
         break;
-      case ProposalStatus.SENT.toLowerCase():
-        stats.sent += 1;
+      case ProposalStatus.SENT:
+        stats.sent++;
         break;
-      case ProposalStatus.VIEWED.toLowerCase():
-        stats.viewed += 1;
+      case ProposalStatus.ACCEPTED:
+        stats.accepted++;
         break;
-      case ProposalStatus.ACCEPTED.toLowerCase():
-        stats.accepted += 1;
+      case ProposalStatus.REJECTED:
+        stats.rejected++;
         break;
-      case ProposalStatus.REJECTED.toLowerCase():
-        stats.rejected += 1;
-        stats.rejectedCount += 1;
+      case ProposalStatus.EXPIRED:
+        stats.expired++;
         break;
-      case ProposalStatus.APPROVED.toLowerCase():
-        stats.approved += 1;
-        stats.approvedCount += 1;
+      case ProposalStatus.VIEWED:
+        stats.viewed++;
         break;
-      case ProposalStatus.PENDING.toLowerCase():
-        stats.pending += 1;
-        stats.pendingCount += 1;
+      case ProposalStatus.APPROVED:
+        stats.approved++;
         break;
-      case ProposalStatus.EXPIRED.toLowerCase():
-        stats.expired += 1;
+      case ProposalStatus.PENDING:
+        stats.pending++;
+        break;
+      default:
+        // Ignore unknown statuses
         break;
     }
   });
@@ -71,29 +55,35 @@ export const calculateProposalStats = (proposals: Proposal[]): ProposalStats => 
   return stats;
 };
 
-export const getStatusBadgeVariant = (status: string): 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' => {
-  switch (status.toLowerCase()) {
-    case ProposalStatus.DRAFT.toLowerCase():
-      return 'outline';
-    case ProposalStatus.SENT.toLowerCase():
-      return 'secondary';
-    case ProposalStatus.VIEWED.toLowerCase():
-      return 'secondary';
-    case ProposalStatus.ACCEPTED.toLowerCase():
-      return 'success';
-    case ProposalStatus.REJECTED.toLowerCase():
-      return 'destructive';
-    case ProposalStatus.APPROVED.toLowerCase():
-      return 'success';
-    case ProposalStatus.PENDING.toLowerCase():
-      return 'warning';
-    case ProposalStatus.EXPIRED.toLowerCase():
-      return 'destructive';
+/**
+ * Get badge variant for a proposal status
+ */
+export const getProposalStatusBadgeVariant = (status: ProposalStatus): string => {
+  switch (status) {
+    case ProposalStatus.DRAFT:
+      return "secondary";
+    case ProposalStatus.SENT:
+      return "info";
+    case ProposalStatus.VIEWED:
+      return "info";
+    case ProposalStatus.ACCEPTED:
+      return "success";
+    case ProposalStatus.REJECTED:
+      return "destructive";
+    case ProposalStatus.APPROVED:
+      return "success";
+    case ProposalStatus.PENDING:
+      return "warning";
+    case ProposalStatus.EXPIRED:
+      return "default";
     default:
-      return 'default';
+      return "default";
   }
 };
 
-export const getStatusLabel = (status: string): string => {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+/**
+ * Determine if a proposal status allows editing
+ */
+export const canEditProposal = (status: ProposalStatus): boolean => {
+  return status === ProposalStatus.DRAFT;
 };

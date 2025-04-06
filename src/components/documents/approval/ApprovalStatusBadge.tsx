@@ -18,15 +18,15 @@ export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status
   const { t } = useLanguage();
   
   switch (status) {
-    case "approved":
+    case DocumentApprovalStatus.APPROVED:
       return (
         <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{t("approved")}</Badge>
       );
-    case "rejected":
+    case DocumentApprovalStatus.REJECTED:
       return (
         <Badge variant="destructive">{t("rejected")}</Badge>
       );
-    case "needs_review":
+    case DocumentApprovalStatus.NEEDS_REVIEW:
       return (
         <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-100">{t("needsReview")}</Badge>
       );
@@ -39,11 +39,11 @@ export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status
 
 export const getStatusIcon = (status: DocumentApprovalStatus) => {
   switch (status) {
-    case "approved":
+    case DocumentApprovalStatus.APPROVED:
       return <ShieldCheck className="h-5 w-5 text-green-500" />;
-    case "rejected":
+    case DocumentApprovalStatus.REJECTED:
       return <ShieldX className="h-5 w-5 text-red-500" />;
-    case "needs_review":
+    case DocumentApprovalStatus.NEEDS_REVIEW:
       return <ShieldQuestion className="h-5 w-5 text-amber-500" />;
     default:
       return <Clock className="h-5 w-5 text-muted-foreground" />;

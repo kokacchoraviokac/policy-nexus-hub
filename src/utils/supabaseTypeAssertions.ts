@@ -1,44 +1,55 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { RelationName } from '@/types/common';
 import { DocumentTableName } from '@/types/documents';
 
 /**
- * Type-safe function to get a Supabase query builder for document tables
+ * Type-safe function to get a Supabase query builder for any table
+ * This ensures the table name is one of the allowed RelationName types
  */
-export const fromDocumentTable = (tableName: DocumentTableName) => {
+export function fromTable(tableName: RelationName) {
   return supabase.from(tableName);
-};
+}
 
 /**
- * Type-safe function to get a Supabase storage bucket
+ * Helper to safely cast a DocumentTableName to RelationName
+ * This ensures we only use valid table names for document operations
  */
-export const fromStorageBucket = (bucketName: string) => {
-  return supabase.storage.from(bucketName);
-};
+export function documentTableToRelation(tableName: DocumentTableName): RelationName {
+  // Validate that the provided table name is a valid RelationName
+  const validTableNames: RelationName[] = [
+    'policy_documents',
+    'claim_documents',
+    'sales_documents',
+    'client_documents',
+    'insurer_documents',
+    'agent_documents',
+    'addendum_documents',
+    'invoice_documents'
+  ];
 
-/**
- * Type-safe wrapper for Supabase authentication functions
- */
-export const supabaseAuth = {
-  signIn: (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
-  },
-  signUp: (email: string, password: string, userData?: any) => {
-    return supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: userData
-      }
-    });
-  },
-  signOut: () => {
-    return supabase.auth.signOut();
-  },
-  getUser: () => {
-    return supabase.auth.getUser();
-  },
-  getSession: () => {
-    return supabase.auth.getSession();
+  if (validTableNames.includes(tableName as RelationName)) {
+    return tableName as RelationName;
   }
-};
+
+  // Default to policy_documents if not valid
+  console.warn(`Invalid table name: ${tableName}, using policy_documents as fallback`);
+  return 'policy_documents';
+}
+
+/**
+ * Helper for safely executing queries with proper type checking
+ */
+export async function executeQuery<T = any>(
+  tableName: RelationName,
+  queryFn: (queryBuilder: ReturnType<typeof fromTable>) => Promise<{ data: any; error: any }>
+): Promise<{ data: T | null; error: any }> {
+  try {
+    const queryBuilder = fromTable(tableName);
+    const result = await queryFn(queryBuilder);
+    return result as { data: T | null; error: any };
+  } catch (error) {
+    console.error(`Error executing query on ${tableName}:`, error);
+    return { data: null, error: error };
+  }
+}

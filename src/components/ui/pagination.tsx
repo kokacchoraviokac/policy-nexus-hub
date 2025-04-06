@@ -9,6 +9,7 @@ export interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  className?: string;
 }
 
 export function Pagination({
@@ -17,6 +18,7 @@ export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
+  className = '',
 }: PaginationProps) {
   const generatePagination = () => {
     // Always show first page, last page, current page, and pages around current
@@ -81,60 +83,66 @@ export function Pagination({
   if (totalPages <= 1) return null;
   
   return (
-    <div className="flex items-center justify-center mt-6 gap-1">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => handlePageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="h-8 w-8"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        <span className="sr-only">Previous page</span>
-      </Button>
+    <div className={`flex items-center justify-between mt-6 ${className}`}>
+      <div className="text-sm text-muted-foreground">
+        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, itemsCount)} of {itemsCount} items
+      </div>
       
-      {pages.map((page, index) => {
-        if (page === 'ellipsis_start' || page === 'ellipsis_end') {
+      <div className="flex items-center justify-center gap-1">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="h-8 w-8"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="sr-only">Previous page</span>
+        </Button>
+        
+        {pages.map((page, index) => {
+          if (page === 'ellipsis_start' || page === 'ellipsis_end') {
+            return (
+              <Button 
+                key={`ellipsis_${index}`}
+                variant="ghost" 
+                disabled 
+                className="h-8 w-8"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">More pages</span>
+              </Button>
+            );
+          }
+          
           return (
-            <Button 
-              key={`ellipsis_${index}`}
-              variant="ghost" 
-              disabled 
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              onClick={() => handlePageChange(page as number)}
               className="h-8 w-8"
             >
-              <MoreHorizontal className="h-4 w-4" />
-              <span className="sr-only">More pages</span>
+              {page}
             </Button>
           );
-        }
+        })}
         
-        return (
-          <Button
-            key={page}
-            variant={currentPage === page ? "default" : "outline"}
-            onClick={() => handlePageChange(page as number)}
-            className="h-8 w-8"
-          >
-            {page}
-          </Button>
-        );
-      })}
-      
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => handlePageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="h-8 w-8"
-      >
-        <ChevronRight className="h-4 w-4" />
-        <span className="sr-only">Next page</span>
-      </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="h-8 w-8"
+        >
+          <ChevronRight className="h-4 w-4" />
+          <span className="sr-only">Next page</span>
+        </Button>
+      </div>
     </div>
   );
 }
 
-// Define additional subcomponents for backward compatibility
+// Legacy components for backward compatibility
 export const PaginationContent = ({ children }: { children: React.ReactNode }) => (
   <div className="flex items-center gap-1">{children}</div>
 );

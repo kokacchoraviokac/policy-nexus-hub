@@ -1,30 +1,27 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Proposal, ProposalStatus, ProposalStats, UseProposalsDataProps } from '@/types/sales';
+import { Proposal } from '@/types/reports';
+import { ProposalStats, ProposalStatus, UseProposalsDataProps } from '@/types/sales';
 import { getProposals, updateProposalStatus as apiUpdateProposalStatus } from '@/services/proposalService';
 import mockProposals from '@/data/mockProposals';
 import { calculateProposalStats } from '@/utils/proposalUtils';
 
 export function useProposalsData(props: UseProposalsDataProps = {}) {
-  const { sales_process_id, searchQuery, statusFilter } = props;
+  const { salesProcessId, searchQuery, statusFilter } = props;
   
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [stats, setStats] = useState<ProposalStats>({
-    totalCount: 0,
-    pendingCount: 0,
-    approvedCount: 0,
-    rejectedCount: 0,
     total: 0,
+    draft: 0,
+    sent: 0,
     accepted: 0,
     rejected: 0,
-    draft: 0,
+    expired: 0,
     pending: 0,
-    sent: 0,
     viewed: 0,
-    approved: 0,
-    expired: 0
+    approved: 0
   });
   
   // Calculate proposal counts by status
@@ -45,15 +42,15 @@ export function useProposalsData(props: UseProposalsDataProps = {}) {
       let data: Proposal[];
       
       // In production, use the API call
-      // const { data: apiData } = await getProposals({ sales_process_id, status: statusFilter });
+      // const { data: apiData } = await getProposals({ salesProcessId, status: statusFilter });
       // data = apiData;
       
       // For development/testing use mock data
       data = [...mockProposals];
       
       // Filter by sales process if specified
-      if (sales_process_id) {
-        data = data.filter(p => p.sales_process_id === sales_process_id);
+      if (salesProcessId) {
+        data = data.filter(p => p.sales_process_id === salesProcessId);
       }
       
       // Apply search filter if provided
@@ -83,7 +80,7 @@ export function useProposalsData(props: UseProposalsDataProps = {}) {
     } finally {
       setLoading(false);
     }
-  }, [sales_process_id, searchQuery, statusFilter]);
+  }, [salesProcessId, searchQuery, statusFilter]);
   
   useEffect(() => {
     refreshProposals();

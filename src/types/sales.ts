@@ -12,6 +12,7 @@ export interface SalesProcess {
   assignedName?: string;
   notes?: string;
   status: SalesProcessStatus;
+  client_name?: string;
 }
 
 export type SaleStage = 
@@ -48,11 +49,20 @@ export type QuoteStatus =
   | 'rejected'
   | 'expired';
 
-// Export ProposalStatus for use in components
-export { ProposalStatus } from './reports';
+// Export ProposalStatus as enum for use in components
+export enum ProposalStatus {
+  DRAFT = 'draft',
+  SENT = 'sent',
+  VIEWED = 'viewed',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  APPROVED = 'approved',
+  PENDING = 'pending',
+  EXPIRED = 'expired'
+}
 
-// Use the Proposal interface from reports for consistency
-export { Proposal } from './reports';
+// For backward compatibility
+export type { Proposal } from './reports';
 
 // Add any sales-specific extensions to Proposal here
 export interface SalesProposal extends Proposal {
@@ -67,13 +77,16 @@ export interface ProposalStats {
   accepted: number;
   rejected: number;
   expired: number;
+  pending: number;
+  viewed: number;
+  approved: number;
 }
 
 // Export UseProposalsDataProps interface
 export interface UseProposalsDataProps {
-  clientId?: string;
   salesProcessId?: string;
-  status?: ProposalStatus;
+  searchQuery?: string;
+  statusFilter?: string | ProposalStatus;
 }
 
 export interface SalesFilters {
