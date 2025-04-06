@@ -1,3 +1,4 @@
+
 export interface FinancialReportData {
   id: string;
   date: string;
@@ -10,7 +11,11 @@ export interface FinancialReportData {
   entityType?: string;
   entityName?: string;
   description?: string;
-  transactions?: any[];
+  currency?: string;
+}
+
+export interface FinancialTransaction extends FinancialReportData {
+  // This is an alias for FinancialReportData to maintain backward compatibility
 }
 
 export interface FinancialReportFilters {
@@ -81,6 +86,8 @@ export interface PageHeaderProps {
   title: string;
   action?: React.ReactNode;
   description?: string;
+  subtitle?: string;
+  actions?: React.ReactNode;
 }
 
 export interface FilterBarProps {
@@ -104,18 +111,4 @@ export interface PaginationProps {
   onPageSizeChange?: (pageSize: number) => void;
   className?: string;
   children?: React.ReactNode;
-}
-
-export interface PolicyImportReviewProps {
-  policies: Partial<import('@/types/policies').Policy>[];
-  invalidPolicies: any[];
-  onSubmit?: () => void;
-  isSubmitting?: boolean;
-  onBack?: () => void;
-  onImport?: () => void;
-  errors?: any;
-}
-
-export interface PolicyImportInstructionsProps {
-  className?: string;
 }

@@ -54,6 +54,8 @@ export interface SalesProcess {
   expected_close_date?: string;
   sales_number?: string;
   lead_id?: string;
+  assigned_to?: string;
+  estimated_value?: number;
 }
 
 export interface UseProposalsDataProps {
@@ -78,7 +80,7 @@ export interface ProposalStats {
   pending?: number;
   sent?: number;
   viewed?: number;
-  approved: number; // Added to fix the error
+  approved: number; // Required field
 }
 
 export interface SalesProcessDocumentsProps {

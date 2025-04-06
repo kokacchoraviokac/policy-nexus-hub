@@ -11,6 +11,7 @@ export type AuthState = {
   userProfile: any | null;
   role: string | null;
   companyId: string | null;
+  customPrivileges: any[];
 };
 
 export type AuthAction = 
@@ -19,7 +20,12 @@ export type AuthAction =
   | { type: 'LOGOUT' }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER_PROFILE'; payload: any }
-  | { type: 'UPDATE_USER'; payload: Partial<User> };
+  | { type: 'UPDATE_USER'; payload: Partial<User> }
+  | { type: 'AUTH_SUCCESS'; payload: { session: Session; user: any; customPrivileges?: any[] } }
+  | { type: 'AUTH_FAIL' }
+  | { type: 'AUTH_START' }
+  | { type: 'SIGN_OUT' }
+  | { type: 'AUTH_INITIALIZED' };
 
 export const initialState: AuthState = {
   user: null,
@@ -29,7 +35,8 @@ export const initialState: AuthState = {
   isLoading: true,
   userProfile: null,
   role: null,
-  companyId: null
+  companyId: null,
+  customPrivileges: []
 };
 
 export const authReducer = (state: AuthState, action: AuthAction): AuthState => {
@@ -52,6 +59,7 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
         isLoading: false
       };
     case 'LOGOUT':
+    case 'SIGN_OUT':
       return {
         ...state,
         isAuthenticated: false,
@@ -59,7 +67,8 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
         session: null,
         userProfile: null,
         role: null,
-        companyId: null
+        companyId: null,
+        customPrivileges: []
       };
     case 'SET_LOADING':
       return {
@@ -79,6 +88,31 @@ export const authReducer = (state: AuthState, action: AuthAction): AuthState => 
       return {
         ...state,
         user: { ...state.user, ...action.payload }
+      };
+    case 'AUTH_SUCCESS':
+      return {
+        ...state,
+        isAuthenticated: true,
+        user: action.payload.user,
+        session: action.payload.session,
+        isLoading: false,
+        customPrivileges: action.payload.customPrivileges || []
+      };
+    case 'AUTH_FAIL':
+      return {
+        ...state,
+        isLoading: false
+      };
+    case 'AUTH_START':
+      return {
+        ...state,
+        isLoading: true
+      };
+    case 'AUTH_INITIALIZED':
+      return {
+        ...state,
+        isInitialized: true,
+        isLoading: false
       };
     default:
       return state;

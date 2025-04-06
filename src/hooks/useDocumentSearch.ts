@@ -1,21 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Document, EntityType, DocumentCategory, DocumentSearchParams, DocumentApprovalStatus } from "@/types/documents";
+import { Document, EntityType, DocumentCategory, DocumentSearchParams, DocumentApprovalStatus, UseDocumentSearchProps, UseDocumentSearchReturn } from "@/types/documents";
 import { safeQueryCast } from "@/utils/safeSupabaseQuery";
 import { fromTable } from "@/utils/supabaseHelpers";
 import { mapEntityToDocumentTable } from "@/utils/supabaseQueryHelper";
-
-interface UseDocumentSearchProps {
-  entityType: EntityType;
-  entityId?: string;
-  category?: DocumentCategory;
-  defaultPageSize?: number;
-  defaultSortBy?: string;
-  defaultSortOrder?: 'asc' | 'desc';
-  initialSearchTerm?: string;
-  approvalStatus?: DocumentApprovalStatus;
-}
 
 export const useDocumentSearch = ({
   entityType,
@@ -26,7 +15,7 @@ export const useDocumentSearch = ({
   defaultSortOrder = 'desc',
   initialSearchTerm = '',
   approvalStatus
-}: UseDocumentSearchProps) => {
+}: UseDocumentSearchProps): UseDocumentSearchReturn => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -38,10 +27,12 @@ export const useDocumentSearch = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(defaultSortOrder);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | undefined>(category);
   const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<DocumentApprovalStatus | undefined>(approvalStatus);
+  const [isError, setIsError] = useState(false);
   
-  const fetchDocuments = async (params?: Partial<DocumentSearchParams>) => {
+  const searchDocuments = async (params?: Partial<DocumentSearchParams>) => {
     setIsLoading(true);
     setError(null);
+    setIsError(false);
     
     try {
       const searchParams: DocumentSearchParams = {
@@ -63,8 +54,8 @@ export const useDocumentSearch = ({
         throw new Error(`Invalid entity type: ${searchParams.entityType}`);
       }
       
-      // Build the query
-      let query = fromTable(tableName);
+      // Build the query using the safe query helper
+      let query = supabase.from(tableName);
       
       // Apply entity ID filter if provided
       if (searchParams.entityId) {
@@ -87,36 +78,31 @@ export const useDocumentSearch = ({
       }
       
       // Get the total count first
-      const { count, error: countError } = await query.count();
+      const countResult = await query.count();
+      const count = countResult.count || 0;
       
-      if (countError) {
-        throw new Error(`Error counting documents: ${countError.message}`);
-      }
-      
-      setTotalCount(count || 0);
+      setTotalCount(count);
       
       // Apply pagination and sorting
-      query = query
+      const dataResult = await query
         .order(searchParams.sortBy, { ascending: searchParams.sortOrder === 'asc' })
         .range(
           (searchParams.page - 1) * searchParams.pageSize,
           searchParams.page * searchParams.pageSize - 1
         );
       
-      // Execute the query
-      const { data, error: queryError } = await query;
-      
-      if (queryError) {
-        throw new Error(`Error fetching documents: ${queryError.message}`);
+      if (dataResult.error) {
+        throw new Error(`Error fetching documents: ${dataResult.error.message}`);
       }
       
       // Convert the query result to Document[]
-      const documentData = data as unknown as Document[];
+      const documentData = dataResult.data as unknown as Document[];
       setDocuments(documentData || []);
       
     } catch (error) {
       console.error('Error in fetchDocuments:', error);
       setError(error instanceof Error ? error : new Error('Unknown error occurred'));
+      setIsError(true);
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +110,7 @@ export const useDocumentSearch = ({
   
   // Initial fetch and when dependencies change
   useEffect(() => {
-    fetchDocuments();
+    searchDocuments();
   }, [
     entityType,
     entityId,
@@ -142,12 +128,18 @@ export const useDocumentSearch = ({
       if (page !== 1) {
         setPage(1); // Reset to first page on new search
       } else {
-        fetchDocuments({ searchTerm });
+        searchDocuments({ searchTerm });
       }
     }, 300);
     
     return () => clearTimeout(handler);
   }, [searchTerm]);
+  
+  // Alias for page to match component expectations
+  const currentPage = page;
+  
+  // Alias for setPage to match component expectations
+  const handlePageChange = setPage;
   
   return {
     documents,
@@ -168,6 +160,10 @@ export const useDocumentSearch = ({
     setSelectedCategory,
     selectedApprovalStatus,
     setSelectedApprovalStatus,
-    refetch: fetchDocuments
+    refetch: searchDocuments,
+    isError,
+    searchDocuments,
+    currentPage,
+    handlePageChange
   };
 };

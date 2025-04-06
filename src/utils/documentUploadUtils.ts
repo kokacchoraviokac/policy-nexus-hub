@@ -1,5 +1,5 @@
 
-import { EntityType } from "@/types/documents";
+import { EntityType } from "@/types/common";
 
 // Map entity types to their corresponding document table names
 export const entityToDocumentTable: Record<EntityType, string> = {

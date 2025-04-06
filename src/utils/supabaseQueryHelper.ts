@@ -1,8 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { EntityType } from "@/types/documents";
+import { EntityType } from "@/types/common";
 import { safeQueryCast } from "@/utils/safeSupabaseQuery";
-import { fromTable } from "@/utils/supabaseTypeAssertions";
+import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 /**
  * Safe wrapper for Supabase queries to handle errors consistently
@@ -38,7 +38,8 @@ export const queryDocuments = async (entityType: EntityType, entityId: string) =
   
   // Use the safe query function to fetch documents
   try {
-    const { data, error } = await fromTable(documentTable)
+    const { data, error } = await supabase
+      .from(documentTable)
       .select("*")
       .eq("entity_id", entityId)
       .order("created_at", { ascending: false });
@@ -58,19 +59,7 @@ export const queryDocuments = async (entityType: EntityType, entityId: string) =
  * Map entity type to the corresponding document table
  */
 export const mapEntityToDocumentTable = (entityType: EntityType): string => {
-  const mapping: Record<EntityType, string> = {
-    "policy": "policy_documents",
-    "claim": "claim_documents",
-    "sale": "sales_documents",
-    "sales_process": "sales_documents",
-    "client": "client_documents",
-    "insurer": "insurer_documents",
-    "agent": "agent_documents",
-    "invoice": "invoice_documents",
-    "addendum": "addendum_documents"
-  };
-  
-  return mapping[entityType] || "";
+  return getDocumentTableName(entityType);
 };
 
 /**

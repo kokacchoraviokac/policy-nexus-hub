@@ -1,14 +1,5 @@
 
-export type EntityType = 
-  | 'policy'
-  | 'claim'
-  | 'sale'
-  | 'client'
-  | 'insurer'
-  | 'agent'
-  | 'invoice'
-  | 'addendum'
-  | 'sales_process';
+import { EntityType } from "./common";
 
 export type DocumentCategory = 
   | 'policy'
@@ -82,6 +73,7 @@ export interface Document {
   description?: string;
   uploaded_by_name?: string;
   company_id?: string;
+  salesStage?: string;
 }
 
 export interface DocumentUploadOptions {
@@ -131,4 +123,42 @@ export interface DocumentSearchParams {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   approvalStatus?: DocumentApprovalStatus;
+}
+
+export interface UseDocumentSearchProps {
+  entityType: EntityType;
+  entityId?: string;
+  category?: DocumentCategory;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  pageSize?: number;
+}
+
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  totalCount: number;
+  page: number;
+  setPage: (page: number) => void;
+  pageSize: number;
+  setPageSize: (size: number) => void;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  sortBy: string;
+  setSortBy: (field: string) => void;
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (order: 'asc' | 'desc') => void;
+  selectedCategory: DocumentCategory | undefined;
+  setSelectedCategory: (category?: DocumentCategory) => void;
+  selectedApprovalStatus: DocumentApprovalStatus | undefined;
+  setSelectedApprovalStatus: (status?: DocumentApprovalStatus) => void;
+  searchDocuments: (params?: Partial<DocumentSearchParams>) => Promise<void>;
+  currentPage: number;
+  handlePageChange: (page: number) => void;
+  refetch: (params?: Partial<DocumentSearchParams>) => Promise<void>;
 }

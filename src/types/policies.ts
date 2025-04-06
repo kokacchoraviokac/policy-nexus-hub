@@ -55,6 +55,7 @@ export interface ValidationErrors {
 }
 
 export interface WorkflowPolicy extends Policy {
+  // Additional workflow-specific fields
   policyNumber?: string;
   policyholder?: string;
   insurer?: string;
@@ -112,8 +113,21 @@ export enum WorkflowStatus {
   REJECTED = 'rejected'
 }
 
-// Add export for interface used in policy import
 export interface InvalidPolicy {
   policy: Partial<Policy>;
   errors: string[];
+}
+
+export interface PolicyImportInstructionsProps {
+  className?: string;
+}
+
+export interface PolicyImportReviewProps {
+  policies: Partial<Policy>[];
+  invalidPolicies: any[];
+  onSubmit?: () => void;
+  isSubmitting?: boolean;
+  onBack?: () => void;
+  onImport?: () => void;
+  errors?: any;
 }

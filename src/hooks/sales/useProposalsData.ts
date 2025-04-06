@@ -1,9 +1,15 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Proposal, ProposalStatus, ProposalStats } from '@/types/sales';
+import { Proposal, ProposalStatus, ProposalStats, UseProposalsDataProps } from '@/types/sales';
+import { safeSupabaseQuery } from '@/utils/safeSupabaseQuery';
 
-export const useProposalsData = (salesProcessId?: string, statusFilter?: ProposalStatus) => {
+export const useProposalsData = ({ 
+  sales_process_id, 
+  status: statusFilter, 
+  searchQuery, 
+  statusFilter: legacyStatusFilter 
+}: UseProposalsDataProps = {}) => {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -21,37 +27,50 @@ export const useProposalsData = (salesProcessId?: string, statusFilter?: Proposa
     draft: 0,
     sent: 0,
     viewed: 0,
-    approved: 0  // Added to satisfy TypeScript
+    approved: 0
   });
 
   const fetchProposals = async () => {
     setLoading(true);
     try {
-      let query = supabase.from('proposals').select('*');
-      
-      if (salesProcessId) {
-        query = query.eq('sales_process_id', salesProcessId);
-      }
-      
-      if (statusFilter && statusFilter !== 'all') {
-        query = query.eq('status', statusFilter);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
+      // Use a safe type assertion with the helper function
+      const { data, error } = await safeSupabaseQuery(
+        async () => {
+          let query = supabase.from('proposals').select('*');
+          
+          if (sales_process_id) {
+            query = query.eq('sales_process_id', sales_process_id);
+          }
+          
+          const status = statusFilter || legacyStatusFilter;
+          if (status && status !== 'all') {
+            query = query.eq('status', status);
+          }
+          
+          if (searchQuery) {
+            query = query.or(`title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%`);
+          }
+          
+          return await query.order('created_at', { ascending: false });
+        }
+      );
       
       if (error) throw error;
       
-      // Calculate stats
-      const totalCount = data.length;
-      const pendingCount = data.filter(item => item.status === 'pending').length;
-      const approvedCount = data.filter(item => item.status === 'approved').length;
-      const rejectedCount = data.filter(item => item.status === 'rejected').length;
-      const draftCount = data.filter(item => item.status === 'draft').length;
-      const sentCount = data.filter(item => item.status === 'sent').length;
-      const viewedCount = data.filter(item => item.status === 'viewed').length;
-      const acceptedCount = data.filter(item => item.status === 'accepted').length;
+      // Type-safe cast of the data array
+      const typedData = data as Proposal[];
       
-      setProposals(data as Proposal[]);
+      // Calculate stats
+      const totalCount = typedData.length;
+      const pendingCount = typedData.filter(item => item.status === 'pending').length;
+      const approvedCount = typedData.filter(item => item.status === 'approved').length;
+      const rejectedCount = typedData.filter(item => item.status === 'rejected').length;
+      const draftCount = typedData.filter(item => item.status === 'draft').length;
+      const sentCount = typedData.filter(item => item.status === 'sent').length;
+      const viewedCount = typedData.filter(item => item.status === 'viewed').length;
+      const acceptedCount = typedData.filter(item => item.status === 'accepted').length;
+      
+      setProposals(typedData);
       setStats({
         totalCount,
         pendingCount,
@@ -79,11 +98,15 @@ export const useProposalsData = (salesProcessId?: string, statusFilter?: Proposa
 
   const updateProposal = async (proposalId: string, updates: Partial<Proposal>) => {
     try {
-      const { error } = await supabase
-        .from('proposals')
-        .update(updates)
-        .eq('id', proposalId);
-        
+      const { error } = await safeSupabaseQuery(
+        async () => {
+          return await supabase
+            .from('proposals')
+            .update(updates)
+            .eq('id', proposalId);
+        }
+      );
+      
       if (error) throw error;
       
       // Refresh data
@@ -102,7 +125,7 @@ export const useProposalsData = (salesProcessId?: string, statusFilter?: Proposa
   // Initial fetch on mount
   useEffect(() => {
     fetchProposals();
-  }, [salesProcessId, statusFilter]);
+  }, [sales_process_id, statusFilter, searchQuery, legacyStatusFilter]);
 
   const refreshProposals = async () => {
     await fetchProposals();
