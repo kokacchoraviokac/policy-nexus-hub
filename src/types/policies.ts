@@ -102,3 +102,17 @@ export interface PolicyImportReviewProps {
 export interface ValidationErrors {
   [index: string]: string[];
 }
+
+export interface PolicyFilterParams {
+  searchTerm?: string;
+  status?: PolicyStatus | string;
+  dateFrom?: string;
+  dateTo?: string;
+  insurerId?: string;
+  clientId?: string;
+  agentId?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}

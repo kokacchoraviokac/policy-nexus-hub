@@ -1,4 +1,5 @@
 
+import { supabase } from "@/integrations/supabase/client";
 import { EntityType, DocumentTableName, DOCUMENT_TABLES } from "@/types/documents";
 
 // Map entity types to their corresponding document table names
@@ -56,5 +57,14 @@ export function queryDocuments(entityType: EntityType) {
  */
 export function fromTable(tableName: string) {
   // We need to use type assertion to handle dynamic table names
-  return (window as any).supabase.from(tableName);
+  return supabase.from(tableName as any);
+}
+
+/**
+ * A safer wrapper for Supabase queries that works with dynamic table names
+ * by using type assertions to avoid TypeScript errors
+ */
+export function safeSupabaseQuery(tableName: string) {
+  // Use type assertion to avoid TypeScript limitations with dynamic table names
+  return supabase.from(tableName as any);
 }

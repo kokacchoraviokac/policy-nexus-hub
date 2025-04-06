@@ -108,5 +108,16 @@ export const fetchFinancialReports = async (filters: FinancialReportFilters): Pr
   }
 };
 
+// Format currency values
+export const formatCurrency = (amount: number, currency: string = 'EUR') => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+};
+
 // Export the type alias to match import expectations
 export type { FinancialReportData };
+export type { FinancialTransaction } from "@/types/reports";

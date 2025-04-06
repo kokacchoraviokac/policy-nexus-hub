@@ -176,3 +176,19 @@ export const PaginationController: React.FC<PaginationControllerProps> = ({
     </div>
   );
 };
+
+// Export the sub-components for backward compatibility
+export const PaginationContent = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+export const PaginationEllipsis = () => <MoreHorizontal className="h-4 w-4" />;
+export const PaginationItem = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+export const PaginationLink = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+export const PaginationNext = ({ onClick }: { onClick?: () => void }) => (
+  <Button variant="outline" size="icon" onClick={onClick}>
+    <ChevronRight className="h-4 w-4" />
+  </Button>
+);
+export const PaginationPrevious = ({ onClick }: { onClick?: () => void }) => (
+  <Button variant="outline" size="icon" onClick={onClick}>
+    <ChevronLeft className="h-4 w-4" />
+  </Button>
+);

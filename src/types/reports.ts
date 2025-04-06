@@ -12,6 +12,7 @@ export interface FinancialReportData {
   entity_type?: string;
   status?: string;
   category?: string;
+  transactions?: any[];
 }
 
 // Define filters for financial reports
@@ -66,3 +67,33 @@ export interface FinancialReportFiltersProps {
   onFiltersChange: (filters: FinancialReportFilters) => void;
   onApply: () => void;
 }
+
+// Proposal types
+export interface ProposalStats {
+  totalCount: number;
+  pendingCount: number;
+  approvedCount: number;
+  rejectedCount: number;
+}
+
+export interface Proposal {
+  id: string;
+  title: string;
+  status: string;
+  amount: number;
+  client_id: string;
+  client_name: string;
+  created_at: string;
+  updated_at: string;
+  company_id: string;
+}
+
+export type ProposalStatus = 
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'expired'
+  | 'all';
+
+// Export type for Financial Transaction
+export type FinancialTransaction = FinancialReportData;

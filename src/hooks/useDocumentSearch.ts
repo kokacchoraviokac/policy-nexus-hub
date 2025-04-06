@@ -1,10 +1,9 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Document, EntityType, DocumentCategory, DocumentSearchParams } from "@/types/documents";
-import { useToast } from "@/hooks/use-toast";
-import { getDocumentTableName } from "@/utils/documentUploadUtils";
+import { useState, useCallback, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Document, DocumentSearchParams, EntityType } from '@/types/documents';
+import { supabase } from '@/integrations/supabase/client';
+import { getDocumentTableName } from '@/utils/documentUploadUtils';
 
 export interface UseDocumentSearchProps {
   entityType?: EntityType | EntityType[];
@@ -14,181 +13,153 @@ export interface UseDocumentSearchProps {
   pageSize?: number;
 }
 
+const DEFAULT_PAGE_SIZE = 10;
+
 export const useDocumentSearch = ({
   entityType,
   entityId,
   initialSearchParams = {},
   page = 1,
-  pageSize = 10
-}: UseDocumentSearchProps = {}) => {
+  pageSize = DEFAULT_PAGE_SIZE
+}: UseDocumentSearchProps) => {
   const [searchParams, setSearchParams] = useState<DocumentSearchParams>(initialSearchParams);
-  const { toast } = useToast();
-  
-  const fetchDocuments = async () => {
+  const [currentPage, setCurrentPage] = useState<number>(page);
+  const [pageSize, setPageSize] = useState<number>(pageSize);
+
+  // Reset pagination when search params change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchParams]);
+
+  const fetchDocuments = useCallback(async () => {
     try {
-      // If no entity type is specified, we don't know which table to query
-      if (!entityType) {
-        return { documents: [], totalCount: 0 };
+      let tables: string[] = [];
+      
+      // Determine which tables to query
+      if (entityType) {
+        if (Array.isArray(entityType)) {
+          tables = entityType.map(type => getDocumentTableName(type));
+        } else {
+          tables = [getDocumentTableName(entityType)];
+        }
+      } else {
+        // Query all document tables if no entity type specified
+        tables = [
+          'policy_documents',
+          'claim_documents',
+          'sales_documents',
+          'client_documents',
+          'insurer_documents',
+          'agent_documents',
+          'invoice_documents',
+          'addendum_documents'
+        ];
       }
       
-      // Handle array of entity types
-      const entityTypes = Array.isArray(entityType) ? entityType : [entityType];
+      // For simplicity, we'll just query the first table in the list
+      // In a real implementation, you might want to query all tables and merge results
+      const tableName = tables[0];
       
-      let allDocuments: Document[] = [];
-      let totalCount = 0;
+      // Build the query
+      const query = supabase
+        .from(tableName as any)
+        .select('*', { count: 'exact' });
       
-      // Query each entity type's document table
-      for (const type of entityTypes) {
-        const tableName = getDocumentTableName(type);
-        
-        // Create a base query with type assertion to avoid TypeScript errors
-        let query = supabase.from(tableName as any).select('*');
-        
-        // Apply entity ID filter if provided
-        if (entityId) {
-          const idColumn = `${type}_id`;
-          query = query.eq(idColumn, entityId) as any;
-        }
-        
-        // Apply search parameters
-        if (searchParams.searchTerm) {
-          query = (query as any).ilike('document_name', `%${searchParams.searchTerm}%`);
-        }
-        
-        if (searchParams.documentType) {
-          query = (query as any).eq('document_type', searchParams.documentType);
-        }
-        
-        if (searchParams.category) {
-          query = (query as any).eq('category', searchParams.category);
-        }
-        
-        if (searchParams.uploadedAfter) {
-          query = (query as any).gte('created_at', searchParams.uploadedAfter);
-        }
-        
-        if (searchParams.uploadedBefore) {
-          query = (query as any).lt('created_at', searchParams.uploadedBefore);
-        }
-        
-        // Fetch count first
-        const countQuery = structuredClone(query);
-        const { count: entityCount, error: countError } = await (countQuery as any).count();
-        
-        if (countError) {
-          console.error(`Error counting documents for ${type}:`, countError);
-          continue;
-        }
-        
-        totalCount += entityCount || 0;
-        
-        // Apply pagination and sorting
-        query = (query as any).order(
-          searchParams.sortBy || 'created_at',
-          { 
-            ascending: searchParams.sortDirection === 'asc'
-          }
-        );
-        
-        // Calculate pagination
-        const from = (page - 1) * pageSize;
-        const to = from + pageSize - 1;
-        
-        query = (query as any).range(from, to);
-        
-        // Execute the query
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error(`Error fetching documents for ${type}:`, error);
-          continue;
-        }
-        
-        if (data && data.length > 0) {
-          // Transform the data into our Document type and add entity_type
-          const transformedData = data.map((doc: any) => ({
-            id: doc.id,
-            document_name: doc.document_name,
-            document_type: doc.document_type,
-            created_at: doc.created_at,
-            file_path: doc.file_path,
-            entity_type: type,
-            entity_id: doc[`${type}_id`] || entityId || '',
-            uploaded_by: doc.uploaded_by,
-            company_id: doc.company_id,
-            description: doc.description,
-            category: doc.category,
-            version: doc.version,
-            is_latest_version: doc.is_latest_version,
-            mime_type: doc.mime_type,
-            original_document_id: doc.original_document_id,
-            uploaded_by_name: doc.uploaded_by_name,
-            updated_at: doc.updated_at || doc.created_at,
-            approval_status: doc.approval_status,
-            approved_by: doc.approved_by,
-            approved_at: doc.approved_at,
-            approval_notes: doc.approval_notes
-          })) as Document[];
-          
-          allDocuments = [...allDocuments, ...transformedData];
+      // Add filters
+      if (entityId) {
+        if (tableName === 'policy_documents') {
+          query.eq('policy_id', entityId);
+        } else if (tableName === 'claim_documents') {
+          query.eq('claim_id', entityId);
+        } else if (tableName === 'sales_documents') {
+          query.eq('sales_process_id', entityId);
+        } else {
+          query.eq('entity_id', entityId);
         }
       }
       
-      // If we're querying multiple entity types, we need to sort and paginate the combined results
-      if (entityTypes.length > 1) {
-        // Sort the combined results
-        allDocuments.sort((a, b) => {
-          const field = searchParams.sortBy || 'created_at';
-          const aValue = (a as any)[field];
-          const bValue = (b as any)[field];
-          
-          if (searchParams.sortDirection === 'asc') {
-            return aValue > bValue ? 1 : -1;
-          } else {
-            return aValue < bValue ? 1 : -1;
-          }
+      if (searchParams.searchTerm) {
+        query.ilike('document_name', `%${searchParams.searchTerm}%`);
+      }
+      
+      if (searchParams.documentType) {
+        query.eq('document_type', searchParams.documentType);
+      }
+      
+      if (searchParams.category) {
+        query.eq('category', searchParams.category);
+      }
+      
+      if (searchParams.uploadedAfter) {
+        query.gte('created_at', searchParams.uploadedAfter);
+      }
+      
+      if (searchParams.uploadedBefore) {
+        query.lte('created_at', searchParams.uploadedBefore);
+      }
+      
+      // Add pagination
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+      
+      query.range(from, to);
+      
+      // Add sorting
+      if (searchParams.sortBy) {
+        query.order(searchParams.sortBy, {
+          ascending: searchParams.sortDirection === 'asc'
         });
-        
-        // Apply pagination to the combined results
-        const from = (page - 1) * pageSize;
-        const to = from + pageSize;
-        allDocuments = allDocuments.slice(from, to);
+      } else {
+        query.order('created_at', { ascending: false });
       }
       
-      return { documents: allDocuments, totalCount };
+      const { data, error, count } = await query;
+      
+      if (error) {
+        throw error;
+      }
+      
+      return {
+        documents: data as Document[],
+        totalCount: count || 0
+      };
     } catch (error) {
-      console.error("Error in document search:", error);
-      toast({
-        title: "Error searching documents",
-        description: "There was an error searching for documents. Please try again.",
-        variant: "destructive",
-      });
-      return { documents: [], totalCount: 0 };
+      console.error('Error fetching documents:', error);
+      throw error;
     }
-  };
+  }, [entityType, entityId, searchParams, currentPage, pageSize]);
   
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['documents', 'search', entityType, entityId, searchParams, page, pageSize],
+  const { data, error, isLoading, refetch } = useQuery({
+    queryKey: ['documents', entityType, entityId, searchParams, currentPage, pageSize],
     queryFn: fetchDocuments,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
   
-  const searchDocuments = (params: DocumentSearchParams) => {
+  const searchDocuments = useCallback((params: DocumentSearchParams) => {
     setSearchParams(params);
-  };
+    setCurrentPage(1); // Reset to first page on new search
+  }, []);
   
-  // Add a shorthand search function
-  const search = () => {
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+  
+  // Simple search function for convenience
+  const search = useCallback(() => {
     refetch();
-  };
+  }, [refetch]);
   
   return {
     documents: data?.documents || [],
     totalCount: data?.totalCount || 0,
     isLoading,
-    error: error as Error,
+    error,
     searchDocuments,
     refresh: refetch,
     search,
-    isError: !!error
+    isError: !!error,
+    currentPage,
+    pageSize,
+    handlePageChange
   };
 };

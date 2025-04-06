@@ -31,22 +31,14 @@ const LoginForm: React.FC = () => {
 
   type LoginFormValues = z.infer<typeof loginSchema>;
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
   const handleLogin = async (values: LoginFormValues) => {
     setIsSubmitting(true);
     
     try {
-      const result = await login(values.email, values.password);
+      const result = await login?.(values.email, values.password);
       
       if (result && result.error) {
-        throw result.error;
+        throw new Error(result.error.message || t("invalidCredentials"));
       }
       
       toast.success(t("loginSuccessful"));
@@ -68,10 +60,16 @@ const LoginForm: React.FC = () => {
     setIsResetting(true);
     
     try {
-      const success = await initiatePasswordReset(resetEmail);
-      if (success) {
-        setResetPasswordDialogOpen(false);
-        toast.success("Password reset email sent. Check your inbox for instructions.");
+      if (initiatePasswordReset) {
+        const success = await initiatePasswordReset(resetEmail);
+        if (success) {
+          setResetPasswordDialogOpen(false);
+          toast.success("Password reset email sent. Check your inbox for instructions.");
+        } else {
+          toast.error("Failed to send password reset email. Please try again.");
+        }
+      } else {
+        toast.error("Password reset functionality is not available");
       }
     } catch (error) {
       console.error("Password reset error:", error);

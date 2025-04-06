@@ -14,7 +14,7 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   // Additional methods
-  login?: (email: string, password: string) => Promise<void>;
+  login?: (email: string, password: string) => Promise<{ error?: any }>;
   logout?: () => Promise<void>;
   updateUser?: (data: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
@@ -22,6 +22,11 @@ export interface AuthContextType {
   session: any;
   hasPrivilege: (privilege: string) => boolean;
   hasPrivilegeWithContext: (privilege: string, resourceContext?: ResourceContext) => boolean;
+  hasRole?: (role: string | string[]) => boolean;
+  role?: string;
+  initiatePasswordReset?: (email: string) => Promise<boolean>;
+  updatePassword?: (newPassword: string) => Promise<boolean>;
+  customPrivileges?: any[];
 }
 
 export interface ResourceContext {
@@ -29,6 +34,10 @@ export interface ResourceContext {
   resourceId?: string;
   companyId?: string;
   ownerId?: string;
+  currentUserId?: string;
+  currentUserCompanyId?: string;
+  resourceValue?: any;
+  [key: string]: any;
 }
 
 export interface UserPrivilege {
