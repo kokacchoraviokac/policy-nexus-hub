@@ -1,7 +1,7 @@
 
 // Define available user roles
 export enum UserRole {
-  SUPER_ADMIN = 'superAdmin',
+  SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
   EMPLOYEE = 'employee',
   AGENT = 'agent',
@@ -42,4 +42,5 @@ export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
   error: string | null;
+  session?: any; // Adding session property for compatibility
 }

@@ -79,10 +79,8 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
       const a = document.createElement("a");
       a.href = url;
       a.download = document.document_name || "document";
-      document.body.appendChild(a);
       a.click();
       URL.revokeObjectURL(url);
-      document.body.removeChild(a);
 
       toast({
         title: t("downloadStarted"),

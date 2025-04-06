@@ -30,3 +30,27 @@ export interface ServiceResponse<T = any> {
   data?: T;
   error?: Error | string;
 }
+
+// Define Supabase relation names to ensure type safety
+export type RelationName =
+  | 'policy_documents'
+  | 'claim_documents'
+  | 'sales_documents'
+  | 'client_documents'
+  | 'insurer_documents'
+  | 'agent_documents'
+  | 'addendum_documents'
+  | 'invoice_documents'
+  | 'activity_logs'
+  | 'agent_payouts'
+  | 'agents'
+  | 'companies'
+  | 'bank_statements'
+  | 'bank_transactions'
+  | 'invoices'
+  | 'policies'
+  | 'claims'
+  | 'clients'
+  | 'insurers'
+  | 'commissions'
+  | 'user_custom_privileges';

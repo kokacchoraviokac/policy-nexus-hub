@@ -7,9 +7,9 @@ export interface User {
   id: string;
   email?: string;
   name: string;
-  role: UserRole | string;
-  companyId?: string;
-  company_id?: string; // For backward compatibility
+  role: UserRole;
+  company_id: string;
+  companyId?: string; // For backward compatibility
   avatar?: string;
   avatarUrl?: string; // For backward compatibility
   avatar_url?: string; // For backward compatibility

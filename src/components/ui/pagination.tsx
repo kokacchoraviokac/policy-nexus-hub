@@ -108,3 +108,73 @@ export const Pagination: React.FC<PaginationProps> = ({
     </nav>
   );
 };
+
+// Add the required pagination components for shadcn/ui compatibility
+export const PaginationContent = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex items-center gap-1">{children}</div>
+);
+
+export const PaginationItem = ({ children }: { children: React.ReactNode }) => (
+  <div>{children}</div>
+);
+
+export const PaginationLink = ({ 
+  isActive, 
+  children,
+  onClick
+}: { 
+  isActive?: boolean;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) => (
+  <Button
+    variant={isActive ? "default" : "outline"}
+    size="sm"
+    className="h-8 w-8 p-0"
+    onClick={onClick}
+  >
+    {children}
+  </Button>
+);
+
+export const PaginationEllipsis = () => (
+  <span className="flex items-center justify-center h-8 w-8">
+    <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+  </span>
+);
+
+export const PaginationNext = ({ 
+  className, 
+  onClick 
+}: { 
+  className?: string;
+  onClick: () => void;
+}) => (
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={onClick}
+    className={className}
+    aria-label="Next page"
+  >
+    <ChevronRight className="h-4 w-4" />
+  </Button>
+);
+
+export const PaginationPrevious = ({ 
+  className, 
+  onClick 
+}: { 
+  className?: string;
+  onClick: () => void;
+}) => (
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={onClick}
+    className={className}
+    aria-label="Previous page"
+  >
+    <ChevronLeft className="h-4 w-4" />
+  </Button>
+);

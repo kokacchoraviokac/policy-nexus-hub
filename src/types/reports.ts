@@ -2,6 +2,8 @@
 export interface FinancialReportFilters {
   startDate: Date | null;
   endDate: Date | null;
+  dateFrom?: Date | string | null; // Adding dateFrom for backward compatibility
+  dateTo?: Date | string | null; // Adding dateTo for backward compatibility
   type?: string;
   category?: string;
   status?: string;
@@ -48,4 +50,63 @@ export interface FinancialTransactionsProps {
   isLoading: boolean;
   onExport?: () => void;
   isExporting?: boolean;
+}
+
+// Added missing types for useFfnancialReport
+export interface FinancialReportData {
+  transactions: FinancialTransaction[];
+  summary: FinancialReportSummary;
+}
+
+export interface UseFinancialReportReturn {
+  data: FinancialReportData;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  refetch: () => void;
+  filters: FinancialReportFilters;
+  setFilters: (filters: FinancialReportFilters) => void;
+  applyFilters: () => void;
+}
+
+// Proposals related types
+export type ProposalStatus = 
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'sent'
+  | 'viewed'
+  | 'accepted'
+  | 'expired';
+
+export interface Proposal {
+  id: string;
+  title: string;
+  description?: string;
+  status: ProposalStatus;
+  created_at: string;
+  updated_at: string;
+  client_id: string;
+  client_name: string;
+  amount: number;
+  currency: string;
+  valid_until: string;
+  sales_process_id: string;
+}
+
+export interface ProposalsListProps {
+  proposals: Proposal[];
+  onStatusChange?: (proposalId: string, newStatus: ProposalStatus) => Promise<boolean>;
+}
+
+export interface UpdateProposalStatusDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentStatus: ProposalStatus;
+  onUpdate: (status: ProposalStatus) => Promise<void>;
+}
+
+export interface DocumentsTabProps {
+  process: any;
 }
