@@ -8,7 +8,8 @@ export enum DocumentCategory {
   LIEN = 'lien',
   NOTIFICATION = 'notification',
   CONTRACT = 'contract',
-  MISCELLANEOUS = 'miscellaneous'
+  MISCELLANEOUS = 'miscellaneous',
+  PROPOSAL = 'proposal'
 }
 
 // Re-export EntityType for backward compatibility
@@ -99,24 +100,49 @@ export interface DocumentSearchParams {
   endDate?: string;
   page?: number;
   limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  approvalStatus?: DocumentApprovalStatus;
 }
 
 export interface UseDocumentSearchProps {
-  defaultParams?: DocumentSearchParams;
+  entityType?: EntityType;
+  entityId?: string;
+  category?: DocumentCategory;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  initialSearchParams?: Partial<DocumentSearchParams>;
   autoFetch?: boolean;
 }
 
 export interface UseDocumentSearchReturn {
   documents: PolicyDocument[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
-  totalCount: number;
-  totalPages: number;
-  currentPage: number;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  selectedCategory: DocumentCategory | undefined;
+  setSelectedCategory: (category: DocumentCategory | undefined) => void;
+  selectedApprovalStatus: DocumentApprovalStatus | undefined;
+  setSelectedApprovalStatus: (status: DocumentApprovalStatus | undefined) => void;
+  sortBy: string;
+  setSortBy: (field: string) => void;
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (order: 'asc' | 'desc') => void;
+  searchDocuments: (params?: Partial<DocumentSearchParams>) => Promise<void>;
   setPage: (page: number) => void;
-  search: (params: DocumentSearchParams) => void;
   refresh: () => void;
+  handlePageChange: (page: number) => void;
+  itemsCount: number;
+  itemsPerPage: number;
 }
 
 export interface DocumentAnalysisPanelProps {

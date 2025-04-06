@@ -1,16 +1,15 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useCallback } from "react";
 import { 
-  Document, 
-  EntityType, 
+  PolicyDocument, 
   DocumentCategory, 
+  DocumentApprovalStatus,
   DocumentSearchParams,
   UseDocumentSearchProps,
   UseDocumentSearchReturn 
 } from "@/types/documents";
-import { getDocumentTableName } from "@/utils/documentUploadUtils";
-import { fromAnyTable } from "@/utils/supabaseTypeAssertions";
+import { EntityType } from "@/types/common";
+import { fromTable } from "@/utils/supabaseTypeAssertions";
 
 export const useDocumentSearch = ({
   entityType,
@@ -21,22 +20,23 @@ export const useDocumentSearch = ({
   defaultSortOrder = 'desc',
   initialSearchTerm = '',
   approvalStatus,
-  initialSearchParams
+  initialSearchParams,
+  autoFetch = true
 }: UseDocumentSearchProps = {}): UseDocumentSearchReturn => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<PolicyDocument[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const [pageSize] = useState(defaultPageSize);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [sortBy, setSortBy] = useState(defaultSortBy);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(defaultSortOrder);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | undefined>(category);
-  const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<string | undefined>(approvalStatus);
+  const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<DocumentApprovalStatus | undefined>(approvalStatus);
   const [isError, setIsError] = useState(false);
   
-  const searchDocuments = async (params?: Partial<DocumentSearchParams>) => {
+  const searchDocuments = useCallback(async (params?: Partial<DocumentSearchParams>) => {
     setIsLoading(true);
     setError(null);
     setIsError(false);
@@ -46,19 +46,19 @@ export const useDocumentSearch = ({
         searchTerm: params?.searchTerm !== undefined ? params.searchTerm : searchTerm,
         category: params?.category || selectedCategory,
         page: params?.page || page,
-        pageSize: params?.pageSize || pageSize,
+        limit: params?.limit || pageSize,
         entityType: params?.entityType || entityType,
         entityId: params?.entityId || entityId,
         sortBy: params?.sortBy || sortBy,
         sortOrder: params?.sortOrder || sortOrder,
-        approvalStatus: params?.approvalStatus as any || selectedApprovalStatus
+        approvalStatus: params?.approvalStatus || selectedApprovalStatus
       };
       
       // For now, we'll mock the document data since there might be issues with the database schema
       // In a real implementation, replace this with proper Supabase queries
       
       // Mock document data
-      const mockDocuments: Document[] = [
+      const mockDocuments: PolicyDocument[] = [
         {
           id: '1',
           document_name: 'Policy Document',
@@ -69,10 +69,10 @@ export const useDocumentSearch = ({
           file_path: '/documents/policy1.pdf',
           category: 'policy',
           entity_id: entityId || 'mock-entity-id',
-          entity_type: entityType || 'policy',
+          entity_type: entityType || EntityType.POLICY,
           version: 1,
           is_latest_version: true,
-          approval_status: 'approved',
+          approval_status: DocumentApprovalStatus.APPROVED,
           company_id: 'mock-company-id'
         },
         {
@@ -85,10 +85,10 @@ export const useDocumentSearch = ({
           file_path: '/documents/claim1.pdf',
           category: 'claim',
           entity_id: entityId || 'mock-entity-id',
-          entity_type: entityType || 'claim',
+          entity_type: entityType || EntityType.CLAIM,
           version: 1,
           is_latest_version: true,
-          approval_status: 'pending',
+          approval_status: DocumentApprovalStatus.PENDING,
           company_id: 'mock-company-id'
         }
       ];
@@ -134,8 +134,8 @@ export const useDocumentSearch = ({
       });
       
       // Apply pagination
-      const start = (searchParams.page || 1 - 1) * (searchParams.pageSize || 10);
-      const end = start + (searchParams.pageSize || 10);
+      const start = ((searchParams.page || 1) - 1) * (searchParams.limit || 10);
+      const end = start + (searchParams.limit || 10);
       const paginatedDocuments = filteredDocuments.slice(start, end);
       
       setTotalCount(filteredDocuments.length);
@@ -148,11 +148,6 @@ export const useDocumentSearch = ({
     } finally {
       setIsLoading(false);
     }
-  };
-  
-  // Initial fetch and when dependencies change
-  useEffect(() => {
-    searchDocuments();
   }, [
     entityType,
     entityId,
@@ -161,45 +156,26 @@ export const useDocumentSearch = ({
     sortBy,
     sortOrder,
     selectedCategory,
-    selectedApprovalStatus
+    selectedApprovalStatus,
+    searchTerm
   ]);
   
-  // Handle search with debounce
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (page !== 1) {
-        setPage(1); // Reset to first page on new search
-      } else {
-        searchDocuments({ searchTerm });
-      }
-    }, 300);
-    
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+  const refresh = useCallback(() => {
+    searchDocuments();
+  }, [searchDocuments]);
   
-  // Calculate total pages
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  
-  // Alias for page to match component expectations
-  const currentPage = page;
-  
-  // Alias for setPage to match component expectations
-  const handlePageChange = (newPage: number) => setPage(newPage);
-  
-  // Build search params for further customization
-  const searchParams: DocumentSearchParams = {
-    searchTerm,
-    category: selectedCategory,
-    page,
-    pageSize,
-    entityType,
-    entityId
+  // Handle page changes
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    searchDocuments({ page: newPage });
   };
+  
+  // Compute total pages
+  const totalPages = Math.ceil(totalCount / pageSize);
   
   return {
     documents,
     totalCount,
-    page,
     setPage,
     pageSize,
     isLoading,
@@ -214,37 +190,13 @@ export const useDocumentSearch = ({
     setSelectedCategory,
     selectedApprovalStatus,
     setSelectedApprovalStatus,
-    refetch: searchDocuments,
-    isError,
     searchDocuments,
-    currentPage,
+    refresh,
+    isError,
+    currentPage: page,
     totalPages,
     handlePageChange,
-    searchParams,
-    setSearchParams: (params) => {
-      // Update search params
-      if (params.searchTerm !== undefined) setSearchTerm(params.searchTerm);
-      if (params.category !== undefined) setSelectedCategory(params.category);
-      if (params.page !== undefined) setPage(params.page);
-      if (params.sortBy !== undefined) setSortBy(params.sortBy);
-      if (params.sortOrder !== undefined) setSortOrder(params.sortOrder);
-      if (params.approvalStatus !== undefined) setSelectedApprovalStatus(params.approvalStatus as string);
-    },
-    resetSearch: () => {
-      setSearchTerm('');
-      setSelectedCategory(undefined);
-      setSelectedApprovalStatus(undefined);
-      setPage(1);
-      setSortBy(defaultSortBy);
-      setSortOrder(defaultSortOrder);
-      searchDocuments({
-        searchTerm: '',
-        category: undefined,
-        page: 1,
-        sortBy: defaultSortBy,
-        sortOrder: defaultSortOrder,
-        approvalStatus: undefined
-      });
-    }
+    itemsCount: totalCount,
+    itemsPerPage: pageSize
   };
 };

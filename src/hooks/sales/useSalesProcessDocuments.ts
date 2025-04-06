@@ -1,9 +1,10 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DocumentService } from "@/services/DocumentService";
-import { Document, DocumentApprovalStatus } from "@/types/documents";
+import { PolicyDocument, DocumentApprovalStatus } from "@/types/documents";
 import { getErrorMessage } from "@/utils/errorHandling";
 import { toast } from "sonner";
+import { EntityType } from "@/types/common";
 
 /**
  * Hook to fetch documents for a specific sales process
@@ -19,13 +20,13 @@ export const useSalesProcessDocuments = (salesProcessId: string) => {
   } = useQuery({
     queryKey: ['sales-documents', salesProcessId],
     queryFn: async () => {
-      const response = await DocumentService.getDocuments('sales_process', salesProcessId);
+      const response = await DocumentService.getDocuments(EntityType.SALES_PROCESS, salesProcessId);
       if (!response.success) {
         throw new Error(getErrorMessage(response.error) || "Failed to fetch documents");
       }
       
       // Here we make sure all required fields for Document type are present by casting
-      return response.data as Document[];
+      return response.data as PolicyDocument[];
     },
     enabled: !!salesProcessId,
   });
@@ -33,7 +34,7 @@ export const useSalesProcessDocuments = (salesProcessId: string) => {
   // Delete document mutation
   const deleteMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      const response = await DocumentService.deleteDocument(documentId, 'sales_process');
+      const response = await DocumentService.deleteDocument(documentId, EntityType.SALES_PROCESS);
       if (!response.success) {
         throw new Error(getErrorMessage(response.error) || "Failed to delete document");
       }
@@ -58,7 +59,7 @@ export const useSalesProcessDocuments = (salesProcessId: string) => {
       // Assuming this method exists in DocumentService
       const response = await DocumentService.updateDocumentApproval(
         documentId,
-        'sales_process',
+        EntityType.SALES_PROCESS,
         status,
         notes || "",
         "current-user-id" // This should be replaced with the actual user ID

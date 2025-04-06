@@ -1,27 +1,6 @@
 
 import { ProposalStatus } from "./sales";
 
-export interface Proposal {
-  id: string;
-  title: string;
-  client_name: string;
-  client_id?: string;
-  insurer_id?: string;
-  insurer_name?: string;
-  sales_process_id?: string;
-  description?: string;
-  amount: number;
-  currency: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-  status: ProposalStatus;
-  expiry_date?: string;
-  valid_until?: string;
-  version?: number;
-  is_latest?: boolean;
-}
-
 export interface FinancialReportFilters {
   dateFrom: string;
   dateTo: string;
@@ -30,6 +9,7 @@ export interface FinancialReportFilters {
   entityFilter?: string;
   minAmount?: number;
   maxAmount?: number;
+  status?: string;
 }
 
 export interface FinancialTransaction {
@@ -64,3 +44,6 @@ export interface UseFinancialReportReturn {
   isLoading: boolean;
   isError: boolean;
 }
+
+// Exporting types from sales.ts to avoid circular dependencies
+export type { Proposal } from './sales';

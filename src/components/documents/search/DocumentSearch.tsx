@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/table';
 import { formatDateToLocal } from '@/utils/dateUtils';
 import { useDocumentSearch } from '@/hooks/useDocumentSearch';
-import { Document, DocumentCategory, EntityType } from '@/types/documents';
+import { PolicyDocument, DocumentCategory } from '@/types/documents';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Pagination } from '@/components/ui/pagination';
 import DocumentViewDialog from '../DocumentViewDialog';
@@ -30,7 +30,7 @@ import DocumentViewDialog from '../DocumentViewDialog';
 const DocumentSearch: React.FC = () => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>('all');
-  const [viewDocument, setViewDocument] = useState<Document | null>(null);
+  const [viewDocument, setViewDocument] = useState<PolicyDocument | null>(null);
   
   const {
     documents,
@@ -44,7 +44,9 @@ const DocumentSearch: React.FC = () => {
     currentPage,
     totalCount,
     totalPages,
-    handlePageChange
+    handlePageChange,
+    itemsCount,
+    itemsPerPage
   } = useDocumentSearch({
     defaultPageSize: 10
   });
@@ -63,7 +65,7 @@ const DocumentSearch: React.FC = () => {
     }
   };
   
-  const handleViewDocument = (document: Document) => {
+  const handleViewDocument = (document: PolicyDocument) => {
     setViewDocument(document);
   };
   
@@ -137,6 +139,8 @@ const DocumentSearch: React.FC = () => {
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
+              itemsCount={itemsCount}
+              itemsPerPage={itemsPerPage}
             />
           </div>
         )}
@@ -175,12 +179,11 @@ const DocumentSearch: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">{t("allCategories")}</SelectItem>
-                  <SelectItem value="policy">{t("policy")}</SelectItem>
-                  <SelectItem value="claim">{t("claim")}</SelectItem>
-                  <SelectItem value="invoice">{t("invoice")}</SelectItem>
-                  <SelectItem value="contract">{t("contract")}</SelectItem>
-                  <SelectItem value="client">{t("client")}</SelectItem>
-                  <SelectItem value="other">{t("other")}</SelectItem>
+                  <SelectItem value={DocumentCategory.POLICY}>{t("policy")}</SelectItem>
+                  <SelectItem value={DocumentCategory.CLAIM}>{t("claim")}</SelectItem>
+                  <SelectItem value={DocumentCategory.INVOICE}>{t("invoice")}</SelectItem>
+                  <SelectItem value={DocumentCategory.CONTRACT}>{t("contract")}</SelectItem>
+                  <SelectItem value={DocumentCategory.MISCELLANEOUS}>{t("other")}</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -201,11 +204,11 @@ const DocumentSearch: React.FC = () => {
           <div className="px-6">
             <TabsList className="w-full justify-start mb-4 overflow-x-auto">
               <TabsTrigger value="all">{t("allDocuments")}</TabsTrigger>
-              <TabsTrigger value="policy">{t("policies")}</TabsTrigger>
-              <TabsTrigger value="claim">{t("claims")}</TabsTrigger>
-              <TabsTrigger value="invoice">{t("invoices")}</TabsTrigger>
-              <TabsTrigger value="contract">{t("contracts")}</TabsTrigger>
-              <TabsTrigger value="client">{t("clients")}</TabsTrigger>
+              <TabsTrigger value={DocumentCategory.POLICY}>{t("policies")}</TabsTrigger>
+              <TabsTrigger value={DocumentCategory.CLAIM}>{t("claims")}</TabsTrigger>
+              <TabsTrigger value={DocumentCategory.INVOICE}>{t("invoices")}</TabsTrigger>
+              <TabsTrigger value={DocumentCategory.CONTRACT}>{t("contracts")}</TabsTrigger>
+              <TabsTrigger value={DocumentCategory.MISCELLANEOUS}>{t("other")}</TabsTrigger>
             </TabsList>
           </div>
           

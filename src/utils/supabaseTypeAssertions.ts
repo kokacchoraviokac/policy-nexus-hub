@@ -53,3 +53,18 @@ export async function executeQuery<T = any>(
     return { data: null, error: error };
   }
 }
+
+/**
+ * Helper to get query builder for document tables specifically
+ */
+export function fromDocumentTable(tableName: DocumentTableName) {
+  return fromTable(documentTableToRelation(tableName));
+}
+
+/**
+ * Helper for querying any table by name string (use with caution)
+ * This is a fallback for when we need to query tables dynamically
+ */
+export function fromAnyTable(tableName: string) {
+  return supabase.from(tableName as RelationName);
+}

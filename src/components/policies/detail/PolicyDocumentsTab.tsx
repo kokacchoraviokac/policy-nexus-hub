@@ -7,6 +7,7 @@ import { Upload } from "lucide-react";
 import { useDocumentManager } from "@/hooks/useDocumentManager";
 import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
 import DocumentList from "@/components/documents/unified/DocumentList";
+import { EntityType } from "@/types/common";
 
 interface PolicyDocumentsTabProps {
   policyId: string;
@@ -27,7 +28,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
     isDeleting,
     updateDocumentApproval
   } = useDocumentManager({ 
-    entityType: "policy",
+    entityType: EntityType.POLICY,
     entityId: policyId
   });
   
@@ -71,14 +72,14 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
           isDeleting={isDeleting}
           showUploadButton={false}
           onUploadVersion={handleUploadVersion}
-          entityType="policy"
+          entityType={EntityType.POLICY}
           entityId={policyId}
         />
         
         <DocumentUploadDialog
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
-          entityType="policy"
+          entityType={EntityType.POLICY}
           entityId={policyId}
           selectedDocument={selectedDocument}
           onUploadComplete={refreshDocuments}

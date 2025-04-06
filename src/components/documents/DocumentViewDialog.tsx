@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Document } from "@/types/documents";
+import { PolicyDocument } from "@/types/documents";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Download, FileText, File, Loader2 } from "lucide-react";
@@ -13,7 +13,7 @@ import DocumentPdfViewer from "./DocumentPdfViewer";
 interface DocumentViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  document: Document;
+  document: PolicyDocument;
 }
 
 const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
@@ -76,7 +76,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
 
       // Create a URL for the blob and trigger a download
       const url = URL.createObjectURL(data);
-      const a = document.createElement("a");
+      const a = window.document.createElement("a");
       a.href = url;
       a.download = document.document_name || "document";
       a.click();
@@ -217,7 +217,8 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
                   <ul className="text-sm text-muted-foreground space-y-1 mt-1">
                     {document.comments.map((comment, index) => (
                       <li key={index} className="bg-muted/30 p-2 rounded">
-                        {comment}
+                        <div className="text-xs">{comment.author}</div>
+                        <div>{comment.text}</div>
                       </li>
                     ))}
                   </ul>

@@ -1,6 +1,4 @@
 
-import { ProposalStatus } from './reports';
-
 export interface SalesProcess {
   id: string;
   title: string;
@@ -61,12 +59,34 @@ export enum ProposalStatus {
   EXPIRED = 'expired'
 }
 
-// For backward compatibility
-export type { Proposal } from './reports';
-
-// Add any sales-specific extensions to Proposal here
-export interface SalesProposal extends Proposal {
-  // Additional sales-specific properties if needed
+export interface Proposal {
+  id: string;
+  title: string;
+  client_name: string;
+  client_id?: string;
+  insurer_id?: string;
+  insurer_name?: string;
+  sales_process_id?: string;
+  description?: string;
+  amount: number;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  status: ProposalStatus;
+  expiry_date?: string;
+  valid_until?: string;
+  version?: number;
+  is_latest?: boolean;
+  coverage_details?: string;
+  premium?: number;
+  notes?: string;
+  document_ids?: string[];
+  sent_at?: string;
+  viewed_at?: string;
+  expires_at?: string;
+  accepted_at?: string;
+  rejected_at?: string;
 }
 
 // Export ProposalStats interface

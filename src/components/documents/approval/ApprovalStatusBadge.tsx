@@ -30,6 +30,7 @@ export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status
       return (
         <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-100">{t("needsReview")}</Badge>
       );
+    case DocumentApprovalStatus.PENDING:
     default:
       return (
         <Badge variant="outline" className="bg-slate-100">{t("pending")}</Badge>
@@ -45,6 +46,7 @@ export const getStatusIcon = (status: DocumentApprovalStatus) => {
       return <ShieldX className="h-5 w-5 text-red-500" />;
     case DocumentApprovalStatus.NEEDS_REVIEW:
       return <ShieldQuestion className="h-5 w-5 text-amber-500" />;
+    case DocumentApprovalStatus.PENDING:
     default:
       return <Clock className="h-5 w-5 text-muted-foreground" />;
   }
