@@ -25,7 +25,7 @@ const ProposalsTab: React.FC<ProposalsTabProps> = ({ process }) => {
     updateProposal,
     updateProposalStatus
   } = useProposalsData({
-    salesProcessId: process.id
+    sales_process_id: process.id
   });
   
   const handleProposalCreated = () => {

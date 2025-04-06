@@ -1,5 +1,5 @@
 
-import { UserRole } from "./auth";
+import { UserRole } from "./auth/userTypes";
 
 export enum InvitationStatus {
   PENDING = "pending",

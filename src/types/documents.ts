@@ -11,7 +11,7 @@ export type DocumentStatus = "active" | "archived" | "deleted";
 // Document approval status
 export type DocumentApprovalStatus = "pending" | "approved" | "rejected" | "needs_review";
 
-// Base Document interface
+// Base Document interface 
 export interface Document {
   id: string;
   document_name: string;

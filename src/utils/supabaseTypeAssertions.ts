@@ -6,7 +6,7 @@ import { DocumentTableName } from "@/types/documents";
  * Helper function to create a type-safe query builder for document tables
  */
 export function fromDocumentTable(tableName: DocumentTableName) {
-  return supabase.from(tableName);
+  return supabase.from(tableName as any);
 }
 
 /**

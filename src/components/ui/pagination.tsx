@@ -9,13 +9,17 @@ interface PaginationProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   siblingCount?: number;
+  itemsCount?: number;
+  itemsPerPage?: number;
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,
   onPageChange,
-  siblingCount = 1
+  siblingCount = 1,
+  itemsCount,
+  itemsPerPage
 }) => {
   const { t } = useLanguage();
 

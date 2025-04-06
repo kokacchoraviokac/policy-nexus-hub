@@ -81,3 +81,10 @@ export function formatDateTime(date: string | Date | null | undefined, format: s
     return String(date);
   }
 }
+
+/**
+ * Simple alias for formatDateToLocal for backward compatibility
+ */
+export function formatDate(date: string | Date | null | undefined, format?: string): string {
+  return formatDateToLocal(date, format);
+}
