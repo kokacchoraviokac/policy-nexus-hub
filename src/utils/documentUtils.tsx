@@ -1,75 +1,87 @@
 
-import { FileText, FileImage, FileSpreadsheet, FileArchive, File } from 'lucide-react';
-import { Document, DocumentCategory } from '@/types/documents';
+import React from 'react';
+import { FileText, FileImage, FileArchive, FileCode, File, FileSpreadsheet } from 'lucide-react';
+import { DocumentCategory, PolicyDocument } from '@/types/documents';
 
+// Document type options for dropdowns
 export const supportedDocumentTypes = [
-  { value: 'policy', label: 'policyDocument' },
+  { value: 'policy', label: 'policy' },
   { value: 'invoice', label: 'invoice' },
-  { value: 'proposal', label: 'proposal' },
-  { value: 'quote', label: 'quote' },
-  { value: 'contract', label: 'contract' },
-  { value: 'identification', label: 'identification' },
-  { value: 'letter', label: 'letter' },
-  { value: 'email', label: 'email' },
   { value: 'amendment', label: 'amendment' },
+  { value: 'contract', label: 'contract' },
+  { value: 'certificate', label: 'certificate' },
   { value: 'claim', label: 'claim' },
+  { value: 'legal', label: 'legal' },
+  { value: 'correspondence', label: 'correspondence' },
   { value: 'report', label: 'report' },
-  { value: 'form', label: 'form' },
-  { value: 'miscellaneous', label: 'miscellaneous' },
   { value: 'other', label: 'other' }
 ];
 
+// Document categories for dropdowns
 export const documentCategories = [
   { value: 'policy', label: 'policy' },
   { value: 'claim', label: 'claim' },
   { value: 'client', label: 'client' },
   { value: 'invoice', label: 'invoice' },
-  { value: 'proposal', label: 'proposal' },
-  { value: 'quote', label: 'quote' },
-  { value: 'identification', label: 'identification' },
+  { value: 'claim_evidence', label: 'claimEvidence' },
+  { value: 'medical', label: 'medical' },
+  { value: 'legal', label: 'legal' },
+  { value: 'financial', label: 'financial' },
+  { value: 'lien', label: 'lien' },
+  { value: 'notification', label: 'notification' },
+  { value: 'correspondence', label: 'correspondence' },
   { value: 'other', label: 'other' }
 ];
 
-export const getDocumentIcon = (document: Document) => {
-  const fileType = document.mime_type || document.file_path.split('.').pop()?.toLowerCase();
-  
-  if (fileType?.includes('pdf')) {
-    return <FileText className="h-5 w-5" />;
-  } else if (fileType?.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileType || '')) {
-    return <FileImage className="h-5 w-5" />;
-  } else if (fileType?.includes('excel') || fileType?.includes('spreadsheet') || ['xls', 'xlsx', 'csv'].includes(fileType || '')) {
-    return <FileSpreadsheet className="h-5 w-5" />;
-  } else if (fileType?.includes('zip') || fileType?.includes('archive') || ['zip', 'rar', '7z'].includes(fileType || '')) {
-    return <FileArchive className="h-5 w-5" />;
+// Get an appropriate icon based on mime type
+export const getDocumentIcon = (document: PolicyDocument) => {
+  if (document.mime_type?.includes('pdf')) {
+    return <FileText className="h-6 w-6" />;
+  } else if (document.mime_type?.includes('image')) {
+    return <FileImage className="h-6 w-6" />;
+  } else if (document.mime_type?.includes('zip') || document.mime_type?.includes('compressed')) {
+    return <FileArchive className="h-6 w-6" />;
+  } else if (document.mime_type?.includes('spreadsheet') || document.mime_type?.includes('excel')) {
+    return <FileSpreadsheet className="h-6 w-6" />;
+  } else if (document.mime_type?.includes('javascript') || document.mime_type?.includes('html')) {
+    return <FileCode className="h-6 w-6" />;
   } else {
-    return <File className="h-5 w-5" />;
+    return <File className="h-6 w-6" />;
   }
 };
 
-export const getDocumentTypeLabel = (documentType: string): string => {
-  const found = supportedDocumentTypes.find(type => type.value === documentType);
-  return found ? found.label : documentType;
+// Get a human-readable label for a document type
+export const getDocumentTypeLabel = (type: string): string => {
+  const typeOption = supportedDocumentTypes.find(option => option.value === type);
+  return typeOption ? typeOption.label : type;
 };
 
-export const getCategoryLabel = (category: DocumentCategory): string => {
-  const found = documentCategories.find(cat => cat.value === category);
-  return found ? found.label : category;
+// Get a human-readable label for a document category
+export const getCategoryLabel = (category?: DocumentCategory): string => {
+  if (!category) return 'Other';
+  const categoryOption = documentCategories.find(option => option.value === category);
+  return categoryOption ? categoryOption.label : category;
 };
 
-// Table mapping entity types to their document tables
-export const entityToDocumentTable: Record<string, string> = {
-  'policy': 'policy_documents',
-  'claim': 'claim_documents',
-  'sales_process': 'sales_documents',
-  'sale': 'sales_documents',
-  'client': 'client_documents',
-  'insurer': 'insurer_documents',
-  'agent': 'agent_documents',
-  'invoice': 'invoice_documents',
-  'addendum': 'addendum_documents'
+// Format a file size to a human-readable string
+export const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 };
 
-// Helper for determining if a document should be previewed in a specific tab
-export const isDocumentInCategory = (document: Document, category: DocumentCategory): boolean => {
-  return document.category === category;
+// Get the file extension from a filename
+export const getFileExtension = (filename: string): string => {
+  return filename.slice(((filename.lastIndexOf('.') - 1) >>> 0) + 2);
+};
+
+// Check if a file is an image
+export const isImageFile = (filename: string): boolean => {
+  const ext = getFileExtension(filename).toLowerCase();
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext);
+};
+
+// Check if a file is a PDF
+export const isPdfFile = (filename: string): boolean => {
+  return getFileExtension(filename).toLowerCase() === 'pdf';
 };

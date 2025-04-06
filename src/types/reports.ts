@@ -99,6 +99,16 @@ export interface Proposal {
   sales_process_id: string;
   created_by?: string;
   company_id?: string;
+  insurer_name?: string;
+  coverage_details?: string;
+  premium?: number;
+  notes?: string;
+  document_ids?: string[];
+  sent_at?: string;
+  viewed_at?: string;
+  expires_at?: string;
+  accepted_at?: string;
+  rejected_at?: string;
 }
 
 export interface ProposalsListProps {

@@ -5,7 +5,7 @@ export interface Invitation {
   id: string;
   email: string;
   role: UserRole;
-  status: "pending" | "accepted" | "expired";
+  status: InvitationStatus;
   token: string;
   expires_at: string;
   created_at: string;
@@ -14,7 +14,11 @@ export interface Invitation {
   company_id: string | null;
 }
 
-export type InvitationStatus = "pending" | "accepted" | "expired";
+export enum InvitationStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  EXPIRED = 'expired'
+}
 
 export interface CreateInvitationRequest {
   email: string;

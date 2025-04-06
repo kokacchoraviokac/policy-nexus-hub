@@ -48,20 +48,32 @@ export type QuoteStatus =
   | 'rejected'
   | 'expired';
 
-export interface Proposal {
-  id: string;
-  title: string;
-  description?: string;
-  status: ProposalStatus;
-  created_at: string;
-  updated_at: string;
-  client_id: string;
-  client_name: string;
-  amount: number;
-  currency: string;
-  sales_process_id: string;
-  created_by?: string;
-  company_id?: string;
+// Export ProposalStatus for use in components
+export { ProposalStatus } from './reports';
+
+// Use the Proposal interface from reports for consistency
+export { Proposal } from './reports';
+
+// Add any sales-specific extensions to Proposal here
+export interface SalesProposal extends Proposal {
+  // Additional sales-specific properties if needed
+}
+
+// Export ProposalStats interface
+export interface ProposalStats {
+  total: number;
+  draft: number;
+  sent: number;
+  accepted: number;
+  rejected: number;
+  expired: number;
+}
+
+// Export UseProposalsDataProps interface
+export interface UseProposalsDataProps {
+  clientId?: string;
+  salesProcessId?: string;
+  status?: ProposalStatus;
 }
 
 export interface SalesFilters {

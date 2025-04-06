@@ -39,6 +39,7 @@ export interface InvalidPolicy {
   policy?: Partial<Policy>;
   errors: string[] | any[];
   row?: any; // Added for compatibility
+  data?: any; // Added based on error in usePolicyImport.ts
 }
 
 export interface PolicyImportProps {
@@ -57,9 +58,25 @@ export interface PolicyImportProps {
   importSuccess?: boolean;
 }
 
-// Add missing types
-export type WorkflowStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
-export type PolicyStatus = 'active' | 'expired' | 'pending' | 'cancelled';
+// Convert WorkflowStatus from type to enum for use as values
+export enum WorkflowStatus {
+  PENDING = 'pending',
+  IN_REVIEW = 'in_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  READY = 'ready',
+  COMPLETE = 'complete',
+  REVIEW = 'review',
+  DRAFT = 'draft'
+}
+
+// Convert PolicyStatus from type to enum for use as values
+export enum PolicyStatus {
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  PENDING = 'pending',
+  CANCELLED = 'cancelled'
+}
 
 export interface PolicyAddendum {
   id: string;
@@ -105,4 +122,13 @@ export interface PolicyFilterParams {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  workflowStatus?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  sortDirection?: 'asc' | 'desc';
+  productId?: string;
+  startDateFrom?: string;
+  startDateTo?: string;
+  expiryDateFrom?: string;
+  expiryDateTo?: string;
 }

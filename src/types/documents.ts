@@ -11,7 +11,7 @@ export type DocumentStatus = "active" | "archived" | "deleted";
 // Document approval status
 export type DocumentApprovalStatus = "pending" | "approved" | "rejected" | "needs_review";
 
-// Base Document interface 
+// Base Document interface - renamed to PolicyDocument to avoid DOM collision
 export interface PolicyDocument {
   id: string;
   document_name: string;
@@ -38,7 +38,7 @@ export interface PolicyDocument {
   comments?: string[]; // Added for DocumentViewDialog
 }
 
-// For backward compatibility, export as Document as well
+// For backward compatibility, export type Document as PolicyDocument
 export type Document = PolicyDocument;
 
 // Document list display options
@@ -77,7 +77,7 @@ export interface DocumentUploadDialogProps {
   onOpenChange: (open: boolean) => void;
   entityType: EntityType;
   entityId: string;
-  selectedDocument?: Document;
+  selectedDocument?: PolicyDocument;
   onUploadComplete?: () => void;
   embedMode?: boolean;
   onFileSelected?: (file: File | null) => void;
@@ -87,7 +87,7 @@ export interface DocumentUploadDialogProps {
 
 // Document analysis panel props
 export interface DocumentAnalysisPanelProps {
-  document?: Document;
+  document?: PolicyDocument;
   file?: File;
   onAnalysisComplete?: () => void;
   onCategoryDetected?: (category: DocumentCategory) => void;
@@ -130,7 +130,7 @@ export interface UseDocumentSearchProps {
 
 // Document search return
 export interface UseDocumentSearchReturn {
-  documents: Document[];
+  documents: PolicyDocument[];
   isLoading: boolean;
   isError: boolean;
   error: Error | null;

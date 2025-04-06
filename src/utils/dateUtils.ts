@@ -1,83 +1,121 @@
 
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
-import localizedFormat from 'dayjs/plugin/localizedFormat';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-// Initialize dayjs plugins
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.extend(localizedFormat);
-dayjs.extend(relativeTime);
-
-// Format date to user's local timezone
-export const formatDateToLocal = (
-  date: string | Date | null | undefined,
-  format: string = 'YYYY-MM-DD'
-): string => {
-  if (!date) return 'N/A';
-  return dayjs(date).format(format);
+/**
+ * Format a date string to a localized date string
+ */
+export const formatDateToLocal = (dateString: string, locale = 'en-US'): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return dateString;
+  }
 };
 
-// Format date with time
-export const formatDateTime = (
-  date: string | Date | null | undefined,
-  format: string = 'YYYY-MM-DD HH:mm'
-): string => {
-  if (!date) return 'N/A';
-  return dayjs(date).format(format);
+/**
+ * Format a date string to a localized date and time string
+ */
+export const formatDateTimeToLocal = (dateString: string, locale = 'en-US'): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    console.error('Error formatting date and time:', error);
+    return dateString;
+  }
 };
 
-// Get relative time (e.g., "2 days ago")
-export const getRelativeTime = (date: string | Date | null | undefined): string => {
-  if (!date) return 'N/A';
-  return dayjs(date).fromNow();
+/**
+ * Get a relative time string (e.g., "2 days ago")
+ */
+export const getRelativeTimeString = (dateString: string, locale = 'en-US'): string => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    
+    // Convert to seconds
+    const diffSec = Math.round(diffMs / 1000);
+    
+    // Less than a minute
+    if (diffSec < 60) {
+      return 'just now';
+    }
+    
+    // Less than an hour
+    if (diffSec < 3600) {
+      const minutes = Math.floor(diffSec / 60);
+      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    }
+    
+    // Less than a day
+    if (diffSec < 86400) {
+      const hours = Math.floor(diffSec / 3600);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    }
+    
+    // Less than a week
+    if (diffSec < 604800) {
+      const days = Math.floor(diffSec / 86400);
+      return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+    }
+    
+    // Default to formatted date
+    return formatDateToLocal(dateString, locale);
+  } catch (error) {
+    console.error('Error calculating relative time:', error);
+    return dateString;
+  }
 };
 
-// Check if a date is in the past
-export const isDateInPast = (date: string | Date | null | undefined): boolean => {
-  if (!date) return false;
-  return dayjs(date).isBefore(dayjs());
+/**
+ * Check if a date is in the past
+ */
+export const isDateInPast = (dateString: string): boolean => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    return date < now;
+  } catch (error) {
+    console.error('Error checking if date is in past:', error);
+    return false;
+  }
 };
 
-// Check if a date is in the future
-export const isDateInFuture = (date: string | Date | null | undefined): boolean => {
-  if (!date) return false;
-  return dayjs(date).isAfter(dayjs());
+/**
+ * Check if a date is in the future
+ */
+export const isDateInFuture = (dateString: string): boolean => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    return date > now;
+  } catch (error) {
+    console.error('Error checking if date is in future:', error);
+    return false;
+  }
 };
 
-// Get formatted date for API calls (ISO format)
-export const getISODateString = (date: Date | null): string | null => {
-  if (!date) return null;
-  return dayjs(date).toISOString();
-};
-
-// Add days to a date
-export const addDaysToDate = (date: Date | string, days: number): Date => {
-  return dayjs(date).add(days, 'day').toDate();
-};
-
-// Subtract days from a date
-export const subtractDaysFromDate = (date: Date | string, days: number): Date => {
-  return dayjs(date).subtract(days, 'day').toDate();
-};
-
-// Get start of day
-export const getStartOfDay = (date: Date | string): Date => {
-  return dayjs(date).startOf('day').toDate();
-};
-
-// Get end of day
-export const getEndOfDay = (date: Date | string): Date => {
-  return dayjs(date).endOf('day').toDate();
-};
-
-// Format date based on locale
-export const formatDate = (
-  date: string | Date | null | undefined,
-  format: string = 'LL'
-): string => {
-  if (!date) return 'N/A';
-  return dayjs(date).format(format);
+/**
+ * Add days to a date and return a new date
+ */
+export const addDaysToDate = (dateString: string, days: number): string => {
+  try {
+    const date = new Date(dateString);
+    date.setDate(date.getDate() + days);
+    return date.toISOString();
+  } catch (error) {
+    console.error('Error adding days to date:', error);
+    return dateString;
+  }
 };

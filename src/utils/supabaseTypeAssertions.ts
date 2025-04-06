@@ -1,27 +1,44 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { DocumentTableName } from "@/types/documents";
+import { supabase } from '@/integrations/supabase/client';
+import { DocumentTableName } from '@/types/documents';
 
 /**
- * Helper function to create a type-safe query builder for document tables
+ * Type-safe function to get a Supabase query builder for document tables
  */
-export function fromDocumentTable(tableName: DocumentTableName) {
-  return supabase.from(tableName as any);
-}
+export const fromDocumentTable = (tableName: DocumentTableName) => {
+  return supabase.from(tableName);
+};
 
 /**
- * Helper function to create a type-safe query builder for any table
- * Use with caution as it bypasses TypeScript's type checking
+ * Type-safe function to get a Supabase storage bucket
  */
-export function fromAnyTable(tableName: string) {
-  // Using type assertion to allow any string
-  return supabase.from(tableName as any);
-}
+export const fromStorageBucket = (bucketName: string) => {
+  return supabase.storage.from(bucketName);
+};
 
 /**
- * Get storage URL for a file path
+ * Type-safe wrapper for Supabase authentication functions
  */
-export function getStorageUrl(bucket: string, filePath: string) {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-  return data.publicUrl;
-}
+export const supabaseAuth = {
+  signIn: (email: string, password: string) => {
+    return supabase.auth.signInWithPassword({ email, password });
+  },
+  signUp: (email: string, password: string, userData?: any) => {
+    return supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData
+      }
+    });
+  },
+  signOut: () => {
+    return supabase.auth.signOut();
+  },
+  getUser: () => {
+    return supabase.auth.getUser();
+  },
+  getSession: () => {
+    return supabase.auth.getSession();
+  }
+};

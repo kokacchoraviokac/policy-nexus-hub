@@ -1,56 +1,65 @@
 
-// Basic types that can be shared across the application
-
-// Entity types for documents and other related functionalities
+// Entity types used throughout the application
 export type EntityType = 
-  | 'policy'
-  | 'claim'
-  | 'client'
-  | 'insurer'
-  | 'sales_process'
-  | 'sale' // Added this alias
-  | 'agent'
-  | 'invoice'
-  | 'addendum';
+  | 'policy' 
+  | 'claim' 
+  | 'client' 
+  | 'invoice' 
+  | 'addendum' 
+  | 'sales_process' 
+  | 'sale' 
+  | 'agent' 
+  | 'insurer';
 
 // Document categories
 export type DocumentCategory = 
-  | 'policy'
-  | 'claim'
-  | 'client'
-  | 'invoice'
-  | 'proposal'
-  | 'quote'
-  | 'identification'
-  | 'other';
+  | 'policy' 
+  | 'claim' 
+  | 'client' 
+  | 'invoice' 
+  | 'other' 
+  | 'claim_evidence' 
+  | 'medical' 
+  | 'legal' 
+  | 'financial' 
+  | 'lien' 
+  | 'notification' 
+  | 'correspondence' 
+  | 'discovery' 
+  | 'quote' 
+  | 'proposal' 
+  | 'contract' 
+  | 'closeout';
 
-// Service response type for API calls
-export interface ServiceResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: Error | string;
+// Generic pagination interface
+export interface PaginationData {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 }
 
-// Define Supabase relation names to ensure type safety
-export type RelationName =
-  | 'policy_documents'
-  | 'claim_documents'
-  | 'sales_documents'
-  | 'client_documents'
-  | 'insurer_documents'
-  | 'agent_documents'
-  | 'addendum_documents'
-  | 'invoice_documents'
-  | 'activity_logs'
-  | 'agent_payouts'
-  | 'agents'
-  | 'companies'
-  | 'bank_statements'
-  | 'bank_transactions'
-  | 'invoices'
-  | 'policies'
-  | 'claims'
-  | 'clients'
-  | 'insurers'
-  | 'commissions'
-  | 'user_custom_privileges';
+// Generic filters interface
+export interface FilterOptions {
+  [key: string]: any;
+}
+
+// Generic sort options
+export interface SortOptions {
+  field: string;
+  order: 'asc' | 'desc';
+}
+
+// Generic response format for API calls
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+// Generic list response with pagination
+export interface PaginatedResponse<T> {
+  items: T[];
+  pagination: PaginationData;
+}
