@@ -4,8 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatDateToLocal } from "@/utils/dateUtils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { InvitationStatus } from "@/types/invitation";
-import { Invitation } from "@/types/invitation";
+import { Invitation, InvitationStatus } from "@/types/invitation";
 import { Clock, CheckCircle, XCircle } from "lucide-react";
 import { UserRole } from "@/types/auth";
 import InvitationActions from "./InvitationActions";
@@ -80,3 +79,6 @@ export const useInvitationColumns = (): ColumnDef<Invitation>[] => {
     },
   ];
 };
+
+// Export columns for backward compatibility
+export const columns = useInvitationColumns();

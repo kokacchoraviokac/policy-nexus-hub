@@ -8,7 +8,8 @@ export type EntityType =
   | "insurer"
   | "agent"
   | "addendum"
-  | "invoice";
+  | "invoice"
+  | "sale";  // Added 'sale' as an alias for sales_process
 
 // Document categories
 export type DocumentCategory = 

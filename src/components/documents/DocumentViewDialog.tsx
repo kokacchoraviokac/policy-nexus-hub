@@ -1,139 +1,179 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { formatDate, formatDateTime, formatDateToLocal } from '@/utils/dateUtils';
-import { Badge } from '@/components/ui/badge';
-import { Download, File, FileCheck, FileWarning } from 'lucide-react';
-import { Document } from '@/types/documents';
+import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatDateToLocal } from '@/utils/dateUtils';
+import { Download, FileText, Info, History } from 'lucide-react';
+import { Document } from '@/types/documents';
+import { useDocumentDownload } from '@/hooks/useDocumentDownload';
+import DocumentPdfViewer from './DocumentPdfViewer';
 
 interface DocumentViewDialogProps {
-  document: Document;
+  document: Document | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDownload?: () => void;
-  onDelete?: () => void;
-  onNewVersion?: () => void;
-  disableVersioning?: boolean;
-  disableDelete?: boolean;
 }
 
-export function DocumentViewDialog({
+const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
   document,
   open,
-  onOpenChange,
-  onDownload,
-  onDelete,
-  onNewVersion,
-  disableVersioning = false,
-  disableDelete = false
-}: DocumentViewDialogProps) {
+  onOpenChange
+}) => {
   const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState<string>('preview');
+  const { isDownloading, downloadDocument } = useDocumentDownload();
   
-  const getStatusBadge = () => {
-    if (!document.approval_status) return null;
-    
-    switch (document.approval_status) {
-      case 'approved':
-        return (
-          <Badge variant="success" className="ml-2 gap-1">
-            <FileCheck className="h-3.5 w-3.5" />
-            {t('approved')}
-          </Badge>
-        );
-      case 'rejected':
-        return (
-          <Badge variant="destructive" className="ml-2 gap-1">
-            <FileWarning className="h-3.5 w-3.5" />
-            {t('rejected')}
-          </Badge>
-        );
-      case 'pending':
-        return (
-          <Badge variant="warning" className="ml-2 gap-1">
-            <File className="h-3.5 w-3.5" />
-            {t('pending')}
-          </Badge>
-        );
-      default:
-        return null;
+  const handleDownload = () => {
+    if (document) {
+      downloadDocument(document);
     }
   };
   
+  if (!document) return null;
+  
+  const isPdf = document.mime_type === 'application/pdf' || 
+                document.file_path.toLowerCase().endsWith('.pdf');
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            {document.document_name}
-            {getStatusBadge()}
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            <span>{document.document_name}</span>
+            {document.version && document.version > 1 && (
+              <span className="ml-2 text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">
+                v{document.version}
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="py-4 space-y-4">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">{t('documentType')}</div>
-              <div>{t(document.document_type)}</div>
-            </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <div className="flex justify-between items-center mb-2">
+            <TabsList>
+              <TabsTrigger value="preview">
+                <FileText className="h-4 w-4 mr-2" />
+                {t("preview")}
+              </TabsTrigger>
+              <TabsTrigger value="details">
+                <Info className="h-4 w-4 mr-2" />
+                {t("details")}
+              </TabsTrigger>
+              {document.version && document.version > 1 && (
+                <TabsTrigger value="history">
+                  <History className="h-4 w-4 mr-2" />
+                  {t("versionHistory")}
+                </TabsTrigger>
+              )}
+            </TabsList>
             
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">{t('category')}</div>
-              <div>{t(document.category)}</div>
-            </div>
-            
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">{t('uploadedBy')}</div>
-              <div>{document.uploaded_by_name || document.uploaded_by}</div>
-            </div>
-            
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">{t('uploadedAt')}</div>
-              <div>{formatDateToLocal(document.created_at)}</div>
-            </div>
-            
-            {document.version > 1 && (
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">{t('version')}</div>
-                <div>{document.version}</div>
+            <Button 
+              size="sm" 
+              onClick={handleDownload} 
+              disabled={isDownloading}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {t("download")}
+            </Button>
+          </div>
+          
+          <TabsContent value="preview" className="flex-1 data-[state=active]:flex flex-col overflow-hidden">
+            {isPdf ? (
+              <DocumentPdfViewer
+                documentUrl={document.file_path}
+                className="w-full h-full"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full bg-muted/20 rounded-md">
+                <div className="text-center space-y-2">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
+                  <p className="text-muted-foreground">{t("previewNotAvailable")}</p>
+                  <Button 
+                    size="sm" 
+                    onClick={handleDownload} 
+                    variant="outline"
+                    className="mt-2"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {t("downloadToView")}
+                  </Button>
+                </div>
               </div>
             )}
-          </div>
+          </TabsContent>
           
-          {document.comments && (
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">{t('comments')}</div>
-              <div className="bg-muted p-3 rounded-md text-sm">{document.comments}</div>
+          <TabsContent value="details" className="data-[state=active]:flex flex-col space-y-4">
+            <Card className="p-4">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-2">{t("basicInformation")}</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-sm text-muted-foreground">{t("name")}</div>
+                    <div className="text-sm">{document.document_name}</div>
+                    <div className="text-sm text-muted-foreground">{t("type")}</div>
+                    <div className="text-sm">{document.document_type}</div>
+                    <div className="text-sm text-muted-foreground">{t("uploadedOn")}</div>
+                    <div className="text-sm">{formatDateToLocal(document.created_at)}</div>
+                    <div className="text-sm text-muted-foreground">{t("version")}</div>
+                    <div className="text-sm">
+                      {document.version || 1}
+                      {document.is_latest_version && (
+                        <span className="ml-2 text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
+                          {t("latest")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                {document.description && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">{t("description")}</h3>
+                    <p className="text-sm whitespace-pre-wrap">{document.description}</p>
+                  </div>
+                )}
+                
+                {document.approval_status && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">{t("approvalStatus")}</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="text-sm text-muted-foreground">{t("status")}</div>
+                      <div className="text-sm">{t(document.approval_status)}</div>
+                      {document.approved_at && (
+                        <>
+                          <div className="text-sm text-muted-foreground">
+                            {document.approval_status === "approved" ? t("approvedOn") : t("reviewedOn")}
+                          </div>
+                          <div className="text-sm">{formatDateToLocal(document.approved_at)}</div>
+                        </>
+                      )}
+                      {document.approval_notes && (
+                        <>
+                          <div className="text-sm text-muted-foreground">{t("notes")}</div>
+                          <div className="text-sm whitespace-pre-wrap">{document.approval_notes}</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="history" className="data-[state=active]:flex flex-col space-y-4">
+            <div className="text-center text-muted-foreground p-8">
+              <History className="h-12 w-12 mx-auto mb-2" />
+              <p>{t("versionHistoryNotAvailable")}</p>
             </div>
-          )}
-        </div>
-        
-        <DialogFooter className="flex justify-between sm:justify-between">
-          <div>
-            {!disableDelete && onDelete && (
-              <Button variant="destructive" onClick={onDelete}>
-                {t('delete')}
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex gap-2 justify-end">
-            {!disableVersioning && onNewVersion && (
-              <Button variant="outline" onClick={onNewVersion}>
-                {t('uploadNewVersion')}
-              </Button>
-            )}
-            
-            {onDownload && (
-              <Button onClick={onDownload}>
-                <Download className="mr-2 h-4 w-4" />
-                {t('download')}
-              </Button>
-            )}
-          </div>
-        </DialogFooter>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default DocumentViewDialog;

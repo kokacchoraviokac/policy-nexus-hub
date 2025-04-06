@@ -1,5 +1,6 @@
 
-import { Proposal, ProposalStatus } from './sales';
+// Re-export the Proposal type and ProposalStatus enum from sales.ts
+export type { Proposal, ProposalStatus } from '@/types/sales';
 
 export interface FinancialTransaction {
   id: string;
@@ -23,6 +24,8 @@ export interface FinancialReportFilters {
   searchTerm?: string;
   transactionType?: string;
   status?: string;
+  dateFrom?: string | Date;  // Added to match component usage
+  dateTo?: string | Date;    // Added to match component usage
 }
 
 export interface FinancialReportData {
@@ -33,7 +36,7 @@ export interface FinancialReportData {
   type: string;
   category?: string;
   reference?: string;
-  status?: string;
+  status?: string;  // Added to match component usage
 }
 
 export interface FinancialReportSummary {
@@ -78,8 +81,7 @@ export interface UseFinancialReportReturn {
   applyFilters: () => void;
   exportReport: () => void;
   isExporting: boolean;
+  defaultFilters?: FinancialReportFilters;  // Added to match component usage
+  resetFilters?: () => void;  // Added to match component usage
+  reports?: any[];  // Added to match component usage
 }
-
-// Re-export Proposal-related types
-export type { Proposal };
-export { ProposalStatus };

@@ -12,7 +12,7 @@ import PolicyImportInstructions from "./PolicyImportInstructions";
 import { useNavigate } from "react-router-dom";
 import { Policy } from "@/types/policies";
 
-interface InvalidPolicy {
+interface PolicyImportReviewData {
   policy: Partial<Policy>;
   errors: string[];
 }
@@ -31,8 +31,12 @@ const PolicyImportPage: React.FC = () => {
     invalidPolicies
   } = usePolicyImport();
 
-  // Convert validation errors to the expected format
-  const convertedInvalidPolicies: InvalidPolicy[] = invalidPolicies || 
+  // Convert validation errors to the expected format for PolicyImportReview
+  const convertedInvalidPolicies: PolicyImportReviewData[] = invalidPolicies ? 
+    invalidPolicies.map(item => ({
+      policy: item.policy || {},
+      errors: Array.isArray(item.errors) ? item.errors : [item.errors.toString()]
+    })) : 
     Object.entries(validationErrors).map(
       ([index, errors]) => ({
         policy: importedPolicies[parseInt(index, 10)] || {},
@@ -48,11 +52,14 @@ const PolicyImportPage: React.FC = () => {
     }
   };
 
-  const handleImportComplete = async () => {
-    const success = await submitPolicies();
-    if (success) {
-      navigate("/policies/workflow");
-    }
+  const handleImportComplete = () => {
+    const promise = submitPolicies();
+    
+    promise.then(success => {
+      if (success) {
+        navigate("/policies/workflow");
+      }
+    });
   };
 
   const handleCancel = () => {

@@ -1,20 +1,28 @@
 
+import { UserRole } from "./auth";
+
+export enum InvitationStatus {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled"
+}
+
 export interface Invitation {
   id: string;
   email: string;
-  role: string;
-  company_id: string;
+  role: UserRole;
+  status: InvitationStatus;
   token: string;
-  status: 'pending' | 'accepted' | 'expired';
-  expires_at: string;
-  created_by: string | null;
   created_at: string;
   updated_at: string;
+  expires_at: string;
+  created_by?: string;
+  company_id?: string;
 }
 
-export interface CreateInvitationRequest {
+export interface InvitationFormData {
   email: string;
-  role: string;
-  company_id: string;
-  expiry_days?: number;
+  role: UserRole;
+  expiresIn: number; // days
 }

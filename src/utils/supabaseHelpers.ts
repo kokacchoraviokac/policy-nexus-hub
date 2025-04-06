@@ -1,19 +1,22 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestQueryBuilder } from "@supabase/postgrest-js";
 
 /**
  * Helper function to create a query builder for a specific table
  * This helps avoid TypeScript errors with dynamic table names
  */
 export function fromTable(tableName: string) {
-  return supabase.from(tableName);
+  // Use type assertion to handle dynamic table names
+  return supabase.from(tableName as any);
 }
 
 /**
  * Safe query builder that handles string table names properly 
  */
 export function safeFrom(tableName: string) {
-  return supabase.from(tableName);
+  // Use type assertion to handle dynamic table names
+  return supabase.from(tableName as any);
 }
 
 /**
@@ -21,7 +24,8 @@ export function safeFrom(tableName: string) {
  */
 export function filterQuery(tableName: string, filterColumn: string, value: any) {
   const query = safeFrom(tableName);
-  return query.eq(filterColumn, value);
+  // Cast to any to avoid TypeScript errors with dynamic methods
+  return (query as any).eq(filterColumn, value);
 }
 
 /**
@@ -29,7 +33,8 @@ export function filterQuery(tableName: string, filterColumn: string, value: any)
  */
 export function searchQuery(tableName: string, column: string, searchTerm: string) {
   const query = safeFrom(tableName);
-  return query.ilike(String(column), `%${searchTerm}%`);
+  // Cast to any to avoid TypeScript errors with dynamic methods
+  return (query as any).ilike(String(column), `%${searchTerm}%`);
 }
 
 /**
@@ -37,7 +42,8 @@ export function searchQuery(tableName: string, column: string, searchTerm: strin
  */
 export function sortQuery(tableName: string, column: string, direction: 'asc' | 'desc' = 'asc') {
   const query = safeFrom(tableName);
-  return query.order(String(column), { ascending: direction === 'asc' });
+  // Cast to any to avoid TypeScript errors with dynamic methods
+  return (query as any).order(String(column), { ascending: direction === 'asc' });
 }
 
 /**

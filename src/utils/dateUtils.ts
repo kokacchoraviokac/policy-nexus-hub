@@ -1,123 +1,81 @@
-/**
- * Formats a date string into a localized format
- */
-export function formatDate(dateString: string, locale = 'en-US'): string {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  
-  if (isNaN(date.getTime())) {
-    return dateString; // Return original if invalid
-  }
-  
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  }).format(date);
-}
+
+import dayjs from 'dayjs';
 
 /**
- * Formats a date string into a localized datetime format
+ * Format date to a locale friendly string
+ * @param date Date or string to format
+ * @param format Optional format string
+ * @returns Formatted date string
  */
-export function formatDateTime(dateString: string, locale = 'en-US'): string {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  
-  if (isNaN(date.getTime())) {
-    return dateString; // Return original if invalid
-  }
-  
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
-}
-
-/**
- * Formats a date to ISO date string (YYYY-MM-DD)
- */
-export function toISODateString(date: Date | string | null): string {
+export const formatDate = (date: Date | string | null, format: string = 'YYYY-MM-DD'): string => {
   if (!date) return '';
-  
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(dateObj.getTime())) {
-    return typeof date === 'string' ? date : '';
-  }
-  
-  return dateObj.toISOString().split('T')[0];
-}
+  return dayjs(date).format(format);
+};
 
 /**
- * Formats a date to a localized string for display
- * This is the missing function that's referenced in several places
+ * Format date to a locale friendly string with time
+ * @param date Date or string to format
+ * @param format Optional format string
+ * @returns Formatted date and time string
  */
-export function formatDateToLocal(dateString: string | Date, locale = 'en-US'): string {
-  if (!dateString) return '';
-  
-  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-  
-  if (isNaN(date.getTime())) {
-    return typeof dateString === 'string' ? dateString : '';
-  }
-  
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric'
-  }).format(date);
-}
+export const formatDateTime = (date: Date | string | null, format: string = 'YYYY-MM-DD HH:mm'): string => {
+  if (!date) return '';
+  return dayjs(date).format(format);
+};
 
 /**
- * Calculates days remaining from today to the given date
+ * Format date to a human-readable format for display in UI
+ * @param date Date or string to format
+ * @returns Formatted date string
  */
-export function daysRemaining(dateString: string): number {
-  if (!dateString) return 0;
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const targetDate = new Date(dateString);
-  targetDate.setHours(0, 0, 0, 0);
-  
-  const diffTime = targetDate.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  return diffDays;
-}
+export const formatDateToLocal = (date: Date | string | null): string => {
+  if (!date) return '';
+  return dayjs(date).format('MMM DD, YYYY');
+};
 
 /**
- * Checks if a date is in the past
+ * Format date and time to a human-readable format for display in UI
+ * @param date Date or string to format
+ * @returns Formatted date and time string
  */
-export function isPastDate(dateString: string): boolean {
-  if (!dateString) return false;
-  
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const date = new Date(dateString);
-  date.setHours(0, 0, 0, 0);
-  
-  return date < today;
-}
+export const formatDateTimeToLocal = (date: Date | string | null): string => {
+  if (!date) return '';
+  return dayjs(date).format('MMM DD, YYYY HH:mm');
+};
 
 /**
- * Gets the first day of the current month
+ * Check if a date is in the past
+ * @param date Date to check
+ * @returns Boolean indicating if date is in the past
  */
-export function getFirstDayOfMonth(): Date {
-  const today = new Date();
-  return new Date(today.getFullYear(), today.getMonth(), 1);
-}
+export const isDateInPast = (date: Date | string): boolean => {
+  return dayjs(date).isBefore(dayjs());
+};
 
 /**
- * Gets the last day of the current month
+ * Check if a date is today
+ * @param date Date to check
+ * @returns Boolean indicating if date is today
  */
-export function getLastDayOfMonth(): Date {
-  const today = new Date();
-  return new Date(today.getFullYear(), today.getMonth() + 1, 0);
-}
+export const isToday = (date: Date | string): boolean => {
+  return dayjs(date).isSame(dayjs(), 'day');
+};
+
+/**
+ * Calculate the difference between two dates in days
+ * @param dateA First date
+ * @param dateB Second date (defaults to current date)
+ * @returns Number of days difference
+ */
+export const daysDifference = (dateA: Date | string, dateB: Date | string = new Date()): number => {
+  return dayjs(dateB).diff(dayjs(dateA), 'day');
+};
+
+/**
+ * Convert a string date to a Date object
+ * @param dateStr Date string
+ * @returns Date object
+ */
+export const toDate = (dateStr: string): Date => {
+  return dayjs(dateStr).toDate();
+};

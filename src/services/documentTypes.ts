@@ -1,12 +1,13 @@
 
-import { EntityType } from "@/types/documents";
+import { EntityType } from "@/types/common";
+import { DocumentCategory } from "@/types/documents";
 
 // Maps entity types to their corresponding tables
-export const entityTablesMap: Record<EntityType, string> = {
+export const entityTablesMap: Record<string, string> = {
   'policy': 'policy_documents',
   'claim': 'claim_documents',
   'sales_process': 'sales_documents',
-  'sale': 'sales_documents', // Make sure 'sale' is included
+  'sale': 'sales_documents', // Include 'sale' as an alias for sales_process
   'client': 'client_documents',
   'insurer': 'insurer_documents',
   'agent': 'agent_documents',
@@ -16,7 +17,7 @@ export const entityTablesMap: Record<EntityType, string> = {
 
 // Get the document type options for a specific entity type
 export const getDocumentTypeOptions = (entityType: EntityType) => {
-  const typeOptionsMap: Record<EntityType, Array<{ label: string; value: string }>> = {
+  const typeOptionsMap: Record<string, Array<{ label: string; value: string }>> = {
     'policy': [
       { label: 'Policy Document', value: 'policy' },
       { label: 'Certificate', value: 'certificate' },
@@ -38,7 +39,7 @@ export const getDocumentTypeOptions = (entityType: EntityType) => {
       { label: 'Requirements', value: 'requirements' },
       { label: 'Other', value: 'other' }
     ],
-    'sale': [  // Make sure 'sale' is included
+    'sale': [  // Include options for 'sale' alias
       { label: 'Quote', value: 'quote' },
       { label: 'Proposal', value: 'proposal' },
       { label: 'Client Authorization', value: 'authorization' },

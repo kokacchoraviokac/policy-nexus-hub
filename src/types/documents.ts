@@ -1,123 +1,55 @@
 
-// Re-export EntityType from common
-import { EntityType } from './common';
+import { EntityType, DocumentCategory as CommonDocumentCategory } from "@/types/common";
 
-// Explicitly export the type
-export type { EntityType };
+// Re-export the DocumentCategory from common types
+export type DocumentCategory = CommonDocumentCategory;
 
-export type DocumentCategory = 
-  | 'policy' 
-  | 'claim' 
-  | 'invoice' 
-  | 'contract' 
-  | 'identification' 
-  | 'proposal' 
-  | 'other';
+// Document status types
+export type DocumentStatus = "active" | "archived" | "deleted";
 
-export type DocumentApprovalStatus = 
-  | 'approved' 
-  | 'rejected' 
-  | 'pending' 
-  | 'needs_review';
+// Document approval status
+export type DocumentApprovalStatus = "pending" | "approved" | "rejected" | "needs_review";
 
+// Base Document interface
 export interface Document {
   id: string;
   document_name: string;
   document_type: string;
   file_path: string;
-  entity_type: EntityType;
+  entity_type: EntityType; // Reference from common types
   entity_id: string;
+  created_at: string;
+  updated_at?: string;
   uploaded_by: string;
   uploaded_by_name?: string;
-  version?: number;
-  is_latest_version?: boolean;
-  original_document_id?: string;
-  category?: string;
-  created_at: string;
-  updated_at: string;
   company_id: string;
   mime_type?: string;
+  description?: string;
+  category?: DocumentCategory;
+  status?: DocumentStatus;
   approval_status?: DocumentApprovalStatus;
   approved_by?: string;
   approved_at?: string;
   approval_notes?: string;
-  description?: string;
+  version?: number;
+  is_latest_version?: boolean;
+  original_document_id?: string | null;
 }
 
-export interface DocumentUploadDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  entityType: EntityType;
-  entityId: string;
-  onUploadComplete?: () => void;
-  defaultCategory?: DocumentCategory;
-  salesStage?: string;
-  selectedDocument?: Document;
-  embedMode?: boolean;
-  onFileSelected?: (file: File | null) => void;
+// Document list display options
+export interface DocumentListOptions {
+  showUploadButton?: boolean;
+  showApprovalStatus?: boolean;
+  showFilters?: boolean;
+  filterCategory?: DocumentCategory;
+  emptyMessage?: string;
 }
 
-export interface DocumentAnalysisPanelProps {
-  document?: Document;
-  file?: File;
-  onAnalysisComplete?: () => void;
-  onCategoryDetected?: (category: DocumentCategory) => void;
-}
-
-export enum DocumentTableName {
-  POLICY = "policy_documents",
-  CLAIM = "claim_documents",
-  SALES = "sales_documents",
-  CLIENT = "client_documents",
-  INSURER = "insurer_documents",
-  AGENT = "agent_documents",
-  INVOICE = "invoice_documents",
-  ADDENDUM = "addendum_documents"
-}
-
-// Document search types
-export interface DocumentSearchParams {
-  searchTerm?: string;
-  entityType?: EntityType;
-  entityId?: string;
-  category?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  page?: number;
-  pageSize?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-  approvalStatus?: DocumentApprovalStatus;
-}
-
-export interface UseDocumentSearchProps {
-  entityType?: EntityType;
-  entityId?: string;
-  initialParams?: DocumentSearchParams;
-  category?: string;
-  defaultPageSize?: number;
-  defaultSortBy?: string;
-  defaultSortOrder?: 'asc' | 'desc';
-  initialSearchTerm?: string;
-  approvalStatus?: DocumentApprovalStatus;
-  pageSize?: number;
-}
-
-export interface UseDocumentSearchReturn {
-  documents: Document[];
-  isLoading: boolean;
-  isError?: boolean;
-  error?: Error | null;
-  searchDocuments: (params?: DocumentSearchParams) => Promise<void>;
-  handlePageChange: (page: number) => void;
-  currentPage: number;
-  totalPages: number;
-  pageSize: number;
-  totalCount: number;
-  searchParams: DocumentSearchParams;
-  setSearchParams: (params: Partial<DocumentSearchParams>) => void;
-  page?: number;
-  setPage?: (page: number) => void;
+// File upload options
+export interface FileOptions {
+  fileName?: string;
+  contentType?: string;
+  cacheControl?: string;
 }
 
 // Document upload options
@@ -126,8 +58,24 @@ export interface DocumentUploadOptions {
   entityId: string;
   documentName: string;
   documentType: string;
-  category?: string;
-  salesStage?: string;
-  originalDocumentId?: string;
   file: File;
+  category?: DocumentCategory;
+  description?: string;
+  originalDocumentId?: string;
+  currentVersion?: number;
+  salesStage?: string;
+}
+
+// Interface for document upload dialog props
+export interface DocumentUploadDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entityType: EntityType;
+  entityId: string;
+  selectedDocument?: Document;
+  onUploadComplete?: () => void;
+  embedMode?: boolean;
+  onFileSelected?: (file: File | null) => void;
+  defaultCategory?: DocumentCategory;
+  salesStage?: string;
 }

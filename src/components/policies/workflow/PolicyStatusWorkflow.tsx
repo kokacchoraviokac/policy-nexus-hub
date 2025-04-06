@@ -19,8 +19,16 @@ import {
   Clock,
   Loader2
 } from 'lucide-react';
-import { WorkflowStatus } from '@/types/policies';
 import PolicyService from '@/services/PolicyService';
+
+// Define workflow status constants
+const WORKFLOW_STATUS = {
+  PENDING: 'pending',
+  IN_REVIEW: 'in_review',
+  NEEDS_INFO: 'needs_info',
+  APPROVED: 'approved',
+  REJECTED: 'rejected'
+};
 
 export interface PolicyStatusWorkflowProps {
   policyId: string;
@@ -61,23 +69,23 @@ export function PolicyStatusWorkflow({
     let icon = null;
 
     switch (status) {
-      case WorkflowStatus.PENDING:
+      case WORKFLOW_STATUS.PENDING:
         variant = "warning";
         icon = <Clock className="h-4 w-4 mr-1" />;
         break;
-      case WorkflowStatus.APPROVED:
+      case WORKFLOW_STATUS.APPROVED:
         variant = "success";
         icon = <CheckCircle className="h-4 w-4 mr-1" />;
         break;
-      case WorkflowStatus.REJECTED:
+      case WORKFLOW_STATUS.REJECTED:
         variant = "destructive";
         icon = <XCircle className="h-4 w-4 mr-1" />;
         break;
-      case WorkflowStatus.IN_REVIEW:
+      case WORKFLOW_STATUS.IN_REVIEW:
         variant = "secondary";
         icon = <AlertCircle className="h-4 w-4 mr-1" />;
         break;
-      case WorkflowStatus.NEEDS_INFO:
+      case WORKFLOW_STATUS.NEEDS_INFO:
         variant = "outline";
         icon = <AlertTriangle className="h-4 w-4 mr-1" />;
         break;
@@ -107,51 +115,51 @@ export function PolicyStatusWorkflow({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {currentStatus !== WorkflowStatus.PENDING && (
+        {currentStatus !== WORKFLOW_STATUS.PENDING && (
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleOpenDialog(WorkflowStatus.PENDING)}
+            onClick={() => handleOpenDialog(WORKFLOW_STATUS.PENDING)}
           >
             {t('markAsPending')}
           </Button>
         )}
 
-        {currentStatus !== WorkflowStatus.IN_REVIEW && (
+        {currentStatus !== WORKFLOW_STATUS.IN_REVIEW && (
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleOpenDialog(WorkflowStatus.IN_REVIEW)}
+            onClick={() => handleOpenDialog(WORKFLOW_STATUS.IN_REVIEW)}
           >
             {t('markAsInReview')}
           </Button>
         )}
 
-        {currentStatus !== WorkflowStatus.NEEDS_INFO && (
+        {currentStatus !== WORKFLOW_STATUS.NEEDS_INFO && (
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleOpenDialog(WorkflowStatus.NEEDS_INFO)}
+            onClick={() => handleOpenDialog(WORKFLOW_STATUS.NEEDS_INFO)}
           >
             {t('markAsNeedsInfo')}
           </Button>
         )}
 
-        {currentStatus !== WorkflowStatus.APPROVED && (
+        {currentStatus !== WORKFLOW_STATUS.APPROVED && (
           <Button
             size="sm"
-            variant="success"
-            onClick={() => handleOpenDialog(WorkflowStatus.APPROVED)}
+            variant="default"
+            onClick={() => handleOpenDialog(WORKFLOW_STATUS.APPROVED)}
           >
             {t('approve')}
           </Button>
         )}
 
-        {currentStatus !== WorkflowStatus.REJECTED && (
+        {currentStatus !== WORKFLOW_STATUS.REJECTED && (
           <Button
             size="sm"
             variant="destructive"
-            onClick={() => handleOpenDialog(WorkflowStatus.REJECTED)}
+            onClick={() => handleOpenDialog(WORKFLOW_STATUS.REJECTED)}
           >
             {t('reject')}
           </Button>
