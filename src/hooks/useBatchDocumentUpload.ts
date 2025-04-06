@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { EntityType, DocumentCategory } from "@/types/documents";
-import { getDocumentTableName } from "@/utils/documentUploadUtils";
+import { getDocumentTableName, asTableName } from "@/utils/documentUploadUtils";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface BatchDocumentFile {
   file: File;
@@ -33,6 +34,7 @@ export const useBatchDocumentUpload = ({
   onFileError
 }: UseBatchDocumentUploadProps) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const queryClient = useQueryClient();
 
@@ -41,7 +43,6 @@ export const useBatchDocumentUpload = ({
       const results = [];
       
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
       
       for (const fileInfo of files) {
@@ -80,20 +81,26 @@ export const useBatchDocumentUpload = ({
             document_type: fileInfo.documentType,
             file_path: filePath,
             uploaded_by: user.id,
-            company_id: user?.user_metadata?.company_id,
+            company_id: user?.company_id || user?.companyId,
             category: fileInfo.category,
             version: 1,
             is_latest_version: true,
             mime_type: fileInfo.file.type
           };
           
-          // Add entity-specific fields
-          if (tableName === "policy_documents") {
+          // Add entity-specific ID field
+          if (entityType === "policy") {
             documentData.policy_id = entityId;
-          } else if (tableName === "claim_documents") {
+          } else if (entityType === "claim") {
             documentData.claim_id = entityId;
-          } else if (tableName === "sales_documents") {
+          } else if (entityType === "sales_process") {
             documentData.sales_process_id = entityId;
+          } else if (entityType === "client") {
+            documentData.client_id = entityId;
+          } else if (entityType === "insurer") {
+            documentData.insurer_id = entityId;
+          } else if (entityType === "agent") {
+            documentData.agent_id = entityId;
           }
           
           if (onProgress) {
@@ -101,7 +108,7 @@ export const useBatchDocumentUpload = ({
           }
           
           const { data, error: dbError } = await supabase
-            .from(tableName)
+            .from(asTableName(tableName))
             .insert(documentData)
             .select()
             .single();

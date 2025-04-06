@@ -9,11 +9,12 @@ import { useDocuments } from "@/hooks/useDocuments";
 import DocumentList from "@/components/documents/DocumentList";
 import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
 
-interface SalesProcessDocumentsProps {
+export interface SalesProcessDocumentsProps {
   process: SalesProcess;
+  salesStage?: string;
 }
 
-const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ process }) => {
+const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ process, salesStage = 'default' }) => {
   const { t } = useLanguage();
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -22,7 +23,10 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ process }
     documents, 
     isLoading, 
     error, 
-    refetch
+    refetch,
+    deleteDocument,
+    isDeletingDocument,
+    isError
   } = useDocuments("sales_process", process.id);
   
   const handleOpenUploadDialog = () => {
@@ -67,9 +71,11 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ process }
           entityId={process.id}
           documents={documents}
           isLoading={isLoading}
-          isError={!!error}
+          isError={isError}
           error={error}
           onUploadClick={handleOpenUploadDialog}
+          onDelete={deleteDocument}
+          isDeleting={isDeletingDocument}
         />
         
         {showUploadDialog && (
@@ -79,6 +85,7 @@ const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({ process }
             entityType="sales_process"
             entityId={process.id}
             onUploadComplete={handleUploadComplete}
+            salesStage={salesStage}
           />
         )}
       </CardContent>

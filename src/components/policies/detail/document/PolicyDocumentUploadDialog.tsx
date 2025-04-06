@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { EntityType } from "@/types/documents";
-import { useDocumentUploadState } from "@/components/documents/unified/hooks/useDocumentUploadState";
+import { Button } from "@/components/ui/button";
+import { Loader2, Upload } from "lucide-react";
+import { useDocumentUpload } from "@/hooks/useDocumentUpload";
 import DocumentUploadForm from "@/components/documents/unified/DocumentUploadForm";
-import DocumentUploadActions from "./DocumentUploadActions";
 
 interface PolicyDocumentUploadDialogProps {
   open: boolean;
@@ -23,6 +24,52 @@ interface PolicyDocumentUploadDialogProps {
   originalDocumentId?: string | null;
   currentVersion?: number;
 }
+
+interface DocumentUploadActionsProps {
+  onClose: () => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  isValid: boolean;
+}
+
+const DocumentUploadActions: React.FC<DocumentUploadActionsProps> = ({
+  onClose,
+  onSubmit,
+  isSubmitting,
+  isValid
+}) => {
+  const { t } = useLanguage();
+  
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onClose}
+        disabled={isSubmitting}
+      >
+        {t("cancel")}
+      </Button>
+      <Button
+        type="button"
+        onClick={onSubmit}
+        disabled={!isValid || isSubmitting}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {t("uploading")}
+          </>
+        ) : (
+          <>
+            <Upload className="mr-2 h-4 w-4" />
+            {t("upload")}
+          </>
+        )}
+      </Button>
+    </>
+  );
+};
 
 const PolicyDocumentUploadDialog: React.FC<PolicyDocumentUploadDialogProps> = ({
   open,
@@ -45,16 +92,25 @@ const PolicyDocumentUploadDialog: React.FC<PolicyDocumentUploadDialogProps> = ({
     file,
     handleFileChange,
     uploading: isSubmitting,
-    isValid,
-    handleSubmit
-  } = useDocumentUploadState({
-    entityId,
+    handleUpload
+  } = useDocumentUpload({ 
     entityType,
+    entityId,
     onSuccess: () => {
       onSuccess();
       onClose();
-    }
+    },
+    originalDocumentId: originalDocumentId || undefined,
+    currentVersion
   });
+
+  const isValid = !!file && !!documentName && !!documentType;
+
+  const handleSubmit = () => {
+    if (isValid) {
+      handleUpload();
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

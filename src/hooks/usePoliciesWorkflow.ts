@@ -3,7 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import PolicyService from "@/services/PolicyService";
 import { Policy, PolicyFilterParams } from "@/types/policies";
-import { usePolicyFilters } from "./usePolicyFilters";
+
+// Create a basic usePolicyFilters hook since the import is missing
+const usePolicyFilters = (initialFilters: Partial<PolicyFilterParams>) => {
+  const [filters, setFiltersState] = useState<Partial<PolicyFilterParams>>(initialFilters);
+  
+  const setFilter = (key: keyof PolicyFilterParams, value: any) => {
+    setFiltersState(prev => ({ ...prev, [key]: value }));
+  };
+  
+  const resetFilters = () => {
+    setFiltersState(initialFilters);
+  };
+  
+  return { filters, setFilter, resetFilters };
+};
 
 export function usePoliciesWorkflow() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,14 +35,15 @@ export function usePoliciesWorkflow() {
     dateTo: filters.dateTo,
     sortBy: filters.sortBy,
     sortDirection: filters.sortDirection as 'asc' | 'desc',
-    clientId: filters.clientId,
-    insurerId: filters.insurerId,
-    productId: filters.productId,
-    assignedTo: filters.assignedTo,
-    startDateFrom: filters.startDateFrom,
-    startDateTo: filters.startDateTo,
-    expiryDateFrom: filters.expiryDateFrom,
-    expiryDateTo: filters.expiryDateTo
+    // Optional filters that might be missing from type, but we'll include them anyway
+    clientId: filters.clientId as any,
+    insurerId: filters.insurerId as any,
+    productId: filters.productId as any,
+    assignedTo: filters.assignedTo as any,
+    startDateFrom: filters.startDateFrom as any,
+    startDateTo: filters.startDateTo as any,
+    expiryDateFrom: filters.expiryDateFrom as any,
+    expiryDateTo: filters.expiryDateTo as any
   };
   
   const {

@@ -69,7 +69,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   // Set default category if provided
   useEffect(() => {
     if (defaultCategory && documentCategory === "") {
-      setDocumentCategory(defaultCategory as DocumentCategory);
+      setDocumentCategory(defaultCategory);
     }
   }, [defaultCategory, documentCategory, setDocumentCategory]);
 

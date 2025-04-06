@@ -1,153 +1,196 @@
 
-import { SupabaseClient } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
-// Helper function to extract table name from entity type
-export function getTableNameFromEntityType(entityType: string): string {
-  const tableMappings: Record<string, string> = {
-    'policy': 'policy_documents',
-    'claim': 'claim_documents',
-    'sales_process': 'sales_documents',
-    'client': 'client_documents',
-    'insurer': 'insurer_documents',
-    'agent': 'agent_documents',
-    'addendum': 'addendum_documents',
-    'invoice': 'invoice_documents',
-    'sale': 'sales_documents', // Alias for sales_process
-  };
-  
-  return tableMappings[entityType] || `${entityType}_documents`;
+/**
+ * Helper function to safely cast table names for supabase operations
+ * To avoid TypeScript errors when using dynamic table names
+ */
+export function getTable(tableName: string) {
+  return supabase.from(tableName as any);
 }
 
-// Function to safely convert symbol to string
-export function convertSymbolToString(symbol: symbol | string): string {
-  if (typeof symbol === 'symbol') {
-    return String(symbol);
+/**
+ * Get a record by ID from any table
+ */
+export async function getById(table: string, id: string) {
+  const { data, error } = await getTable(table)
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error(`Error fetching ${table} by ID:`, error);
+    throw error;
   }
-  return symbol;
+
+  return data;
 }
 
-// Generic function to paginate results
-export async function paginateQuery<T>(
-  query: any,
-  page = 1,
-  pageSize = 10
-): Promise<{ data: T[]; count: number }> {
-  try {
-    // Get count first
-    const countQuery = query.clone();
-    const { count, error: countError } = await countQuery.count();
-    
-    if (countError) throw countError;
-    
-    // Add pagination to original query
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-    
-    const { data, error } = await query
-      .range(from, to);
-    
-    if (error) throw error;
-    
-    return { data: data || [], count };
-  } catch (error) {
-    console.error('Error paginating query:', error);
-    return { data: [], count: 0 };
-  }
-}
+/**
+ * Get all records from any table with optional filtering
+ */
+export async function getAll(table: string, filters?: Record<string, any>) {
+  let query = getTable(table).select("*");
 
-// Function to execute safely from table
-export async function safeFromTable(
-  client: SupabaseClient,
-  table: string | symbol,
-  options?: { select?: string }
-) {
-  const tableName = typeof table === 'symbol' ? String(table) : table;
-  let query = client.from(tableName);
-  
-  if (options?.select) {
-    query = query.select(options.select);
-  }
-  
-  return query;
-}
-
-// Function to create a generic filter builder
-export function buildFilteredQuery(
-  client: SupabaseClient,
-  table: string | symbol,
-  filters: Record<string, any>,
-  options?: { select?: string; order?: { column: string; ascending?: boolean } }
-) {
-  const tableName = typeof table === 'symbol' ? String(table) : table;
-  let query = client.from(tableName);
-  
-  if (options?.select) {
-    query = query.select(options.select);
-  }
-  
-  // Apply filters
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      if (typeof value === 'string' && value.includes('%')) {
-        query = query.ilike(key, value);
-      } else {
+  if (filters) {
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null) {
         query = query.eq(key, value);
       }
     }
-  });
-  
-  // Apply ordering
-  if (options?.order) {
-    const { column, ascending = true } = options.order;
-    query = query.order(column, { ascending });
   }
-  
-  return query;
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error(`Error fetching all ${table}:`, error);
+    throw error;
+  }
+
+  return data || [];
 }
 
-// Function to create entity with safe error handling
-export async function createEntitySafely<T>(
-  client: SupabaseClient,
-  table: string | symbol,
-  data: Partial<T>
-): Promise<T | null> {
-  try {
-    const tableName = typeof table === 'symbol' ? String(table) : table;
-    const { data: createdData, error } = await client
-      .from(tableName)
-      .insert(data)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return createdData as T;
-  } catch (error) {
-    console.error(`Error creating entity in ${String(table)}:`, error);
-    return null;
+/**
+ * Search records in any table by text field
+ */
+export async function searchByField(
+  table: string,
+  field: string,
+  searchTerm: string
+) {
+  const { data, error } = await getTable(table)
+    .select("*")
+    .ilike(field, `%${searchTerm}%`);
+
+  if (error) {
+    console.error(`Error searching ${table} by ${field}:`, error);
+    throw error;
   }
+
+  return data || [];
 }
 
-// Function to update entity with safe error handling
-export async function updateEntitySafely<T>(
-  client: SupabaseClient,
-  table: string | symbol,
-  id: string,
-  data: Partial<T>
-): Promise<T | null> {
-  try {
-    const tableName = typeof table === 'symbol' ? String(table) : table;
-    const { data: updatedData, error } = await client
-      .from(tableName)
-      .update(data)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return updatedData as T;
-  } catch (error) {
-    console.error(`Error updating entity in ${String(table)}:`, error);
-    return null;
+/**
+ * Get records by foreign key reference
+ */
+export async function getByForeignKey(
+  table: string,
+  foreignKey: string,
+  foreignValue: string
+) {
+  const { data, error } = await getTable(table)
+    .select("*")
+    .eq(foreignKey, foreignValue);
+
+  if (error) {
+    console.error(`Error fetching ${table} by ${foreignKey}:`, error);
+    throw error;
   }
+
+  return data || [];
+}
+
+/**
+ * Get records with pagination and sorting
+ */
+export async function getPaginated(
+  table: string,
+  page = 1,
+  pageSize = 10,
+  sortField = "created_at",
+  sortDirection: "asc" | "desc" = "desc",
+  filters?: Record<string, any>
+) {
+  // Calculate range
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // Start building query
+  let query = getTable(table).select("*", { count: "exact" });
+
+  // Apply filters if provided
+  if (filters) {
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null) {
+        query = query.eq(key, value);
+      }
+    }
+  }
+
+  // Apply ordering and pagination
+  query = query.order(sortField, { ascending: sortDirection === "asc" }).range(from, to);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error(`Error fetching paginated ${table}:`, error);
+    throw error;
+  }
+
+  return {
+    data: data || [],
+    totalCount: count || 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((count || 0) / pageSize),
+  };
+}
+
+/**
+ * Create a new record in any table
+ */
+export async function create(table: string, data: any) {
+  const { data: result, error } = await getTable(table)
+    .insert(data)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error creating record in ${table}:`, error);
+    throw error;
+  }
+
+  return result;
+}
+
+/**
+ * Update a record in any table
+ */
+export async function update(table: string, id: string, data: any) {
+  const { data: result, error } = await getTable(table)
+    .update(data)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error(`Error updating record in ${table}:`, error);
+    throw error;
+  }
+
+  return result;
+}
+
+/**
+ * Delete a record from any table
+ */
+export async function remove(table: string, id: string) {
+  const { error } = await getTable(table).delete().eq("id", id);
+
+  if (error) {
+    console.error(`Error deleting record from ${table}:`, error);
+    throw error;
+  }
+
+  return true;
+}
+
+/**
+ * Convert error object to string for user-friendly messages
+ */
+export function errorToString(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
 }

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import SalesProcessDocuments from '@/components/sales/documents/SalesProcessDocuments';
+import SalesProcessDocuments, { SalesProcessDocumentsProps } from '@/components/sales/documents/SalesProcessDocuments';
 import { SalesProcess } from '@/types/sales';
 
 export interface DocumentsTabProps {
@@ -18,7 +18,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({ salesProcess, process, sale
     <Card>
       <CardContent className="pt-6">
         <SalesProcessDocuments 
-          salesProcess={effectiveProcess}
+          process={effectiveProcess}
           salesStage={salesStage}
         />
       </CardContent>

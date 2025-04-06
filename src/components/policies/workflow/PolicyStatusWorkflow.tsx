@@ -1,98 +1,145 @@
 
-import React from "react";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Policy } from "@/types/policies";
-import { useActivityLogger } from "@/utils/activityLogger";
-import { useApiService } from "@/hooks/useApiService";
-import { PolicyService } from "@/services/PolicyService";
+import { Badge } from "@/components/ui/badge";
+import { AlertCircle, ArrowRight, CheckCircle2, ClipboardCheck, XCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { WorkflowStatus } from "@/types/policies";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/components/ui/use-toast";
+import PolicyService from "@/services/PolicyService";
+import { mapPolicyStatusToBadgeVariant, mapPolicyStatusToText } from "@/utils/policies/policyMappers";
 
 interface PolicyStatusWorkflowProps {
-  policy: Policy;
-  onStatusUpdated?: () => void;
+  status: string;
+  id: string;
+  onStatusChange?: (newStatus: string) => void;
 }
 
-// Define valid workflow status values
-type WorkflowStatus = 'draft' | 'in_review' | 'ready' | 'complete';
-
-const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ policy, onStatusUpdated }) => {
+const PolicyStatusWorkflow: React.FC<PolicyStatusWorkflowProps> = ({ status, id, onStatusChange }) => {
   const { t } = useLanguage();
-  const { logActivity } = useActivityLogger();
-  const { isLoading, executeService } = useApiService();
+  const { toast } = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  const handleStatusChange = async (status: string) => {
-    if (status === policy.workflow_status) return;
+  const updateStatus = async (newStatus: string) => {
+    setIsUpdating(true);
+    setError(null);
     
-    const result = await executeService(
-      () => PolicyService.updatePolicyStatus(policy.id, status as WorkflowStatus),
-      {
-        successMessage: t("statusUpdated"),
-        errorMessage: t("errorUpdatingStatus"),
-        invalidateQueryKeys: [['policy', policy.id], ['policies-workflow']]
-      }
-    );
-    
-    if (result) {
-      // Log the activity
-      logActivity({
-        entity_type: "policy",
-        entity_id: policy.id,
-        action: "update",
-        details: {
-          previous_status: policy.workflow_status,
-          new_status: status,
-          timestamp: new Date().toISOString()
-        }
+    try {
+      await PolicyService.updatePolicy(id, { workflow_status: newStatus });
+      
+      toast({
+        title: t("statusUpdated"),
+        description: t("policyStatusUpdatedSuccessfully"),
       });
       
-      if (onStatusUpdated) {
-        onStatusUpdated();
+      if (onStatusChange) {
+        onStatusChange(newStatus);
       }
+    } catch (err: any) {
+      console.error("Error updating policy status:", err);
+      setError(err.message || t("errorUpdatingPolicyStatus"));
+      
+      toast({
+        variant: "destructive",
+        title: t("updateFailed"),
+        description: err.message || t("errorUpdatingPolicyStatus"),
+      });
+    } finally {
+      setIsUpdating(false);
     }
   };
   
+  const statusBadgeVariant = mapPolicyStatusToBadgeVariant(status);
+  const statusText = mapPolicyStatusToText(status);
+  
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2">
-          <Select 
-            value={policy.workflow_status}
-            onValueChange={handleStatusChange}
-            disabled={isLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t("selectStatus")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">{t("draft")}</SelectItem>
-              <SelectItem value="in_review">{t("inReview")}</SelectItem>
-              <SelectItem value="ready">{t("ready")}</SelectItem>
-              <SelectItem value="complete">{t("complete")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <Button 
-          variant="outline" 
-          disabled
-          className="col-span-1"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            t("history")
+    <Card className="mb-4">
+      <CardContent className="pt-6">
+        <div className="flex flex-col space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium">{t("workflowStatus")}</h3>
+            <Badge variant={statusBadgeVariant}>{statusText}</Badge>
+          </div>
+          
+          <Separator />
+          
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           )}
-        </Button>
-      </div>
-    </div>
+          
+          <div className="flex flex-col space-y-2">
+            {status === WorkflowStatus.DRAFT && (
+              <Button 
+                onClick={() => updateStatus(WorkflowStatus.IN_REVIEW)}
+                className="w-full"
+                variant="outline"
+                disabled={isUpdating}
+              >
+                <ClipboardCheck className="mr-2 h-4 w-4" />
+                {t("sendForReview")}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+            
+            {status === WorkflowStatus.IN_REVIEW && (
+              <>
+                <Button 
+                  onClick={() => updateStatus(WorkflowStatus.READY)}
+                  className="w-full"
+                  variant="outline"
+                  disabled={isUpdating}
+                >
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  {t("markAsReady")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                
+                <Button 
+                  onClick={() => updateStatus(WorkflowStatus.REJECTED)}
+                  className="w-full"
+                  variant="outline"
+                  disabled={isUpdating}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  {t("reject")}
+                </Button>
+              </>
+            )}
+            
+            {status === WorkflowStatus.READY && (
+              <Button 
+                onClick={() => updateStatus(WorkflowStatus.COMPLETE)}
+                className="w-full"
+                variant="outline"
+                disabled={isUpdating}
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                {t("markAsComplete")}
+              </Button>
+            )}
+            
+            {(status === WorkflowStatus.COMPLETE || status === WorkflowStatus.REJECTED) && (
+              <Button 
+                onClick={() => updateStatus(WorkflowStatus.IN_REVIEW)}
+                className="w-full"
+                variant="outline"
+                disabled={isUpdating}
+              >
+                <ArrowRight className="mr-2 h-4 w-4" />
+                {t("reopenForReview")}
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

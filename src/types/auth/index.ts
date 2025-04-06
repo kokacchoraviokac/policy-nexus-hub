@@ -45,10 +45,20 @@ export interface AuthState {
   customPrivileges: CustomPrivilege[];
 }
 
-// Export the types
-export type { User, CustomPrivilege, AuthState };
-export { UserRole };
+// Export these types directly, don't use export * to avoid conflicts
+export { User, UserRole, CustomPrivilege, AuthState };
 
-// Export type definitions from other auth modules
-export * from './userTypes';
-export * from './user';
+// Import and re-export types from other auth modules explicitly
+// avoiding conflicts with the exported interfaces above
+import * as userTypes from './userTypes';
+import * as userExports from './user';
+
+// Export specific types that don't conflict
+export type { 
+  SignupFormValues 
+} from './userTypes';
+
+export type {
+  AuthContextType,
+  AuthProviderProps
+} from './contextTypes';

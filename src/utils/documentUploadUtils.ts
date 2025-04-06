@@ -1,65 +1,61 @@
 
-import { EntityType } from "@/types/common";
-import { DocumentTableName } from "@/types/documents";
-
-// Map entity types to their corresponding document table names
-export const entityToDocumentTable: Record<EntityType, string> = {
-  policy: "policy_documents",
-  claim: "claim_documents",
-  sales_process: "sales_documents",
-  sale: "sales_documents", // Alias for backward compatibility
-  client: "client_documents",
-  insurer: "insurer_documents",
-  agent: "agent_documents",
-  invoice: "invoice_documents",
-  addendum: "addendum_documents"
-};
+import { EntityType } from "@/types/documents";
 
 /**
- * Get the document table name for a specific entity type
+ * Returns the Supabase table name for the given entity type
  */
 export function getDocumentTableName(entityType: EntityType): string {
-  return entityToDocumentTable[entityType];
-}
-
-/**
- * Get entity type from document table name
- */
-export function getEntityTypeFromTable(tableName: string): EntityType {
-  const entries = Object.entries(entityToDocumentTable);
-  const match = entries.find(([_entityType, docTableName]) => docTableName === tableName);
-  
-  if (!match) {
-    // Default to policy as fallback
-    console.warn(`No entity type found for table: ${tableName}, defaulting to 'policy'`);
-    return "policy";
+  switch (entityType) {
+    case "policy":
+      return "policy_documents";
+    case "claim":
+      return "claim_documents";
+    case "sales_process":
+      return "sales_documents";
+    case "client":
+      return "client_documents";
+    case "insurer":
+      return "insurer_documents";
+    case "agent":
+      return "agent_documents";
+    case "addendum":
+      return "addendum_documents";
+    case "invoice":
+      return "invoice_documents";
+    default:
+      return "policy_documents"; // Default to policy_documents as fallback
   }
-  
-  return match[0] as EntityType;
 }
 
 /**
- * Get document table name from entity type - legacy API
+ * Returns the column name for entity ID based on entity type
  */
-export function mapEntityToDocumentTable(entityType: EntityType): string {
-  return getDocumentTableName(entityType);
+export function getEntityIdColumn(entityType: EntityType): string {
+  switch (entityType) {
+    case "policy":
+      return "policy_id";
+    case "claim":
+      return "claim_id";
+    case "sales_process":
+      return "sales_process_id";
+    case "client":
+      return "client_id";
+    case "insurer":
+      return "insurer_id";
+    case "agent":
+      return "agent_id";
+    case "addendum":
+      return "addendum_id";
+    case "invoice":
+      return "invoice_id";
+    default:
+      return "entity_id";
+  }
 }
 
-// Use export type for isolated modules
-export type { DocumentTableName };
-
 /**
- * Utility interface for document upload options
+ * Safe type casting for table names to handle Supabase type constraints
  */
-export interface DocumentUploadOptions {
-  file: File;
-  documentName: string;
-  documentType: string;
-  category: string;
-  entityType: EntityType;
-  entityId: string;
-  originalDocumentId?: string | null;
-  currentVersion?: number;
-  salesStage?: string; // Add this property
-  description?: string;
+export function asTableName(tableName: string): any {
+  return tableName as any;
 }
