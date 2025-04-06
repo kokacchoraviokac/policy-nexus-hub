@@ -6,6 +6,7 @@ import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogger } from "@/utils/activityLogger";
+import { EntityType } from "@/types/common";
 
 interface EditInsurerDialogProps {
   open: boolean;
@@ -47,7 +48,7 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
       
       // Log update activity
       await logActivity({
-        entity_type: "insurer",
+        entity_type: EntityType.INSURER,
         entity_id: insurer.id,
         action: "update",
         details: { changes }

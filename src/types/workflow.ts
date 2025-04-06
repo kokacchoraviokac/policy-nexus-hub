@@ -7,5 +7,9 @@ export enum WorkflowStatus {
   REJECTED = 'rejected',
   COMPLETED = 'completed',
   ON_HOLD = 'on_hold',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
+  // Adding missing status values
+  READY = 'ready',
+  REVIEW = 'review',
+  COMPLETE = 'complete'
 }

@@ -1,16 +1,5 @@
 
-import { EntityType } from './common';
-
-export enum DocumentCategory {
-  POLICY = 'policy',
-  CLAIM = 'claim',
-  INVOICE = 'invoice',
-  LIEN = 'lien',
-  NOTIFICATION = 'notification',
-  CONTRACT = 'contract',
-  MISCELLANEOUS = 'miscellaneous',
-  PROPOSAL = 'proposal'
-}
+import { EntityType, DocumentCategory } from './common';
 
 export enum DocumentApprovalStatus {
   PENDING = 'pending',
@@ -26,7 +15,7 @@ export interface PolicyDocument {
   file_path: string;
   entity_type: EntityType;
   entity_id: string;
-  category?: string;
+  category?: DocumentCategory;
   created_at: string;
   updated_at: string;
   uploaded_by: string;
@@ -140,6 +129,7 @@ export interface UseDocumentSearchReturn {
   handlePageChange: (page: number) => void;
   itemsCount: number;
   itemsPerPage: number;
+  isRefetching?: boolean;
 }
 
 export interface DocumentAnalysisPanelProps {

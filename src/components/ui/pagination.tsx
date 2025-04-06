@@ -128,3 +128,45 @@ export function Pagination({
     </div>
   );
 }
+
+// Add missing pagination components
+export const PaginationContent = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex items-center gap-1">{children}</div>
+);
+
+export const PaginationEllipsis = () => <div className="px-2"><MoreHorizontal className="h-4 w-4" /></div>;
+
+export const PaginationItem = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+
+export const PaginationLink = ({ href, children, isActive }: { href: string; children: React.ReactNode; isActive?: boolean }) => (
+  <Button 
+    variant={isActive ? "default" : "outline"} 
+    size="sm" 
+    className="mx-0.5"
+    asChild
+  >
+    <a href={href}>{children}</a>
+  </Button>
+);
+
+export const PaginationNext = ({ href, children }: { href: string; children?: React.ReactNode }) => (
+  <Button variant="outline" size="sm" asChild>
+    <a href={href}>
+      {children || <>
+        <span className="sr-only">Next Page</span>
+        <ChevronRight className="h-4 w-4" />
+      </>}
+    </a>
+  </Button>
+);
+
+export const PaginationPrevious = ({ href, children }: { href: string; children?: React.ReactNode }) => (
+  <Button variant="outline" size="sm" asChild>
+    <a href={href}>
+      {children || <>
+        <ChevronLeft className="h-4 w-4" />
+        <span className="sr-only">Previous Page</span>
+      </>}
+    </a>
+  </Button>
+);

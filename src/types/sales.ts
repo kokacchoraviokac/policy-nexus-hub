@@ -21,7 +21,8 @@ export type SaleStage =
   | 'negotiation'
   | 'closing'
   | 'won'
-  | 'lost';
+  | 'lost'
+  | 'authorization'; // Added missing stage
 
 export type SalesProcessStatus = 
   | 'active'
@@ -57,7 +58,10 @@ export enum ProposalStatus {
   REJECTED = 'rejected',
   APPROVED = 'approved',
   PENDING = 'pending',
-  EXPIRED = 'expired'
+  EXPIRED = 'expired',
+  WITHDRAWN = 'withdrawn',
+  SUBMITTED = 'submitted',
+  REVIEWED = 'reviewed'
 }
 
 export interface Proposal {
@@ -119,4 +123,23 @@ export interface SalesFilters {
     to?: Date;
   };
   status?: SalesProcessStatus | 'all';
+}
+
+// Interface for ProposalsListProps
+export interface ProposalsListProps {
+  proposals: Proposal[];
+  onStatusChange?: (proposalId: string, newStatus: ProposalStatus) => Promise<boolean>;
+}
+
+// Interface for UpdateProposalStatusDialogProps
+export interface UpdateProposalStatusDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate?: (status: ProposalStatus) => Promise<void>;
+  currentStatus: ProposalStatus;
+}
+
+// Interface for DocumentsTabProps
+export interface DocumentsTabProps {
+  process?: SalesProcess;
 }

@@ -8,7 +8,10 @@ export enum EntityType {
   INSURER = 'insurer',
   ADDENDUM = 'addendum',
   INVOICE = 'invoice',
-  SALE = 'sale' // Alias for sales_process
+  SALE = 'sale', // Alias for sales_process
+  PRODUCT = 'product',
+  COMMISSION = 'commission',
+  PAYMENT = 'payment'
 }
 
 export type RelationName = 
@@ -64,11 +67,26 @@ export const entityToDocumentTable: Record<EntityType, RelationName> = {
   [EntityType.AGENT]: 'agent_documents',
   [EntityType.INSURER]: 'insurer_documents',
   [EntityType.ADDENDUM]: 'addendum_documents',
-  [EntityType.INVOICE]: 'invoice_documents'
+  [EntityType.INVOICE]: 'invoice_documents',
+  [EntityType.PRODUCT]: 'policy_documents', // Map product to policy_documents for now
+  [EntityType.COMMISSION]: 'policy_documents', // Map commission to policy_documents for now
+  [EntityType.PAYMENT]: 'policy_documents' // Map payment to policy_documents for now
 };
 
 export interface ServiceResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+// Export DocumentCategory from common.ts
+export enum DocumentCategory {
+  POLICY = 'policy',
+  CLAIM = 'claim',
+  INVOICE = 'invoice',
+  LIEN = 'lien',
+  NOTIFICATION = 'notification',
+  CONTRACT = 'contract',
+  MISCELLANEOUS = 'miscellaneous',
+  PROPOSAL = 'proposal'
 }

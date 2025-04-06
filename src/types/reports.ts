@@ -16,7 +16,7 @@ export interface FinancialTransaction {
   id: string;
   date: string;
   amount: number;
-  currency: string;
+  currency: string; // Added currency field
   description: string;
   type: string;
   category: string;
@@ -52,3 +52,4 @@ export interface FinancialReportData {
 
 // Exporting types from sales.ts to avoid circular dependencies
 export type { Proposal } from './sales';
+export { ProposalStatus } from './sales';

@@ -79,7 +79,7 @@ export interface UnlinkedPayment {
 export type UnlinkedPaymentType = UnlinkedPayment;
 
 export interface InvalidPolicy {
-  policy?: Partial<Policy>;
+  policy: Partial<Policy>; // Changed to required property
   errors: string[];
 }
 
@@ -97,4 +97,18 @@ export interface PolicyFilterParams {
   };
   page: number;
   pageSize: number;
+  // Add missing properties used in usePoliciesWorkflow.ts
+  workflowStatus?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+  clientId?: string;
+  insurerId?: string;
+  productId?: string;
+  assignedTo?: string;
+  startDateFrom?: string;
+  startDateTo?: string;
+  expiryDateFrom?: string;
+  expiryDateTo?: string;
 }
