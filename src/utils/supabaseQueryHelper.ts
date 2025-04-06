@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { EntityType } from "@/types/common";
-import { safeQueryCast } from "@/utils/safeSupabaseQuery";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 /**
@@ -25,6 +24,11 @@ export const safeSupabaseQuery = async <T,>(
   }
 };
 
+// This function is a workaround for type safety in query building
+export const safeQueryCast = <T = any>(value: any): T => {
+  return value as T;
+};
+
 /**
  * Helper to fetch documents based on entity type and ID
  */
@@ -38,17 +42,18 @@ export const queryDocuments = async (entityType: EntityType, entityId: string) =
   
   // Use the safe query function to fetch documents
   try {
-    const { data, error } = await supabase
+    // Assuming we have a type-safe query builder helper
+    const response = await supabase
       .from(documentTable)
       .select("*")
       .eq("entity_id", entityId)
       .order("created_at", { ascending: false });
       
-    if (error) {
-      throw new Error(`Error fetching documents: ${error.message}`);
+    if (response.error) {
+      throw new Error(`Error fetching documents: ${response.error.message}`);
     }
     
-    return data;
+    return response.data;
   } catch (error) {
     console.error("Error in queryDocuments:", error);
     throw error;
@@ -75,4 +80,22 @@ export const formatSupabaseDate = (dateString: string): string => {
     console.error("Error formatting date:", error);
     return dateString;
   }
+};
+
+/**
+ * Perform a safe query for a specific document table
+ */
+export const safeDocumentQuery = async <T = any>(
+  entityType: EntityType,
+  queryBuilder: (tableName: string) => Promise<{ data: any, error: any }>
+): Promise<T> => {
+  const tableName = getDocumentTableName(entityType);
+  const { data, error } = await queryBuilder(tableName);
+  
+  if (error) {
+    console.error(`Error querying ${tableName}:`, error);
+    throw error;
+  }
+  
+  return data as T;
 };

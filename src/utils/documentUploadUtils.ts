@@ -44,6 +44,8 @@ export function mapEntityToDocumentTable(entityType: EntityType): string {
   return getDocumentTableName(entityType);
 }
 
+export { DocumentTableName } from "@/types/documents";
+
 /**
  * Utility interface for document upload options
  */

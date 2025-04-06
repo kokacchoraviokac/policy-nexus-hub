@@ -135,6 +135,7 @@ export interface UseDocumentSearchProps {
   initialSearchTerm?: string;
   approvalStatus?: DocumentApprovalStatus;
   pageSize?: number;
+  initialSearchParams?: Partial<DocumentSearchParams>;
 }
 
 export interface UseDocumentSearchReturn {

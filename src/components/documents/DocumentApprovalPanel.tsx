@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, ShieldCheck, ShieldX, Shield } from "lucide-react";
 import { Document, DocumentApprovalStatus } from "@/types/documents";
+import { EntityType } from "@/types/common"; // Import from common types
 
 interface DocumentApprovalPanelProps {
   document: Document;
@@ -29,13 +30,15 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
   
   // Determine the table based on entity type
   const getDocumentTable = () => {
-    switch (document.entity_type) {
+    switch (document.entity_type as EntityType) {
       case "policy":
         return "policy_documents";
       case "claim":
         return "claim_documents";
       case "sales_process":
         return "sales_documents";
+      case "sale":
+        return "sales_documents"; // Alias
       default:
         return "policy_documents"; // Default fallback
     }
@@ -50,8 +53,8 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       
       // Log the activity
       await logActivity({
-        entity_type: document.entity_type,
-        entity_id: document.entity_id,
+        entity_type: document.entity_type as EntityType,
+        entity_id: document.entity_id || "",
         action: "update",
         details: {
           action_type: `document_${newStatus}`,

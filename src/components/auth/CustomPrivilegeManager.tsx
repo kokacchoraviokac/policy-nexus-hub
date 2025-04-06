@@ -62,7 +62,8 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
     
     // If we're looking at the current user, use the context value
     if (targetUserId === user?.id) {
-      setPrivileges(customPrivileges);
+      // Cast to ensure type compatibility
+      setPrivileges([...customPrivileges]);
       return;
     }
     
@@ -71,7 +72,8 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
       setIsLoading(true);
       try {
         const userPrivileges = await fetchUserCustomPrivileges(targetUserId);
-        setPrivileges(userPrivileges);
+        // Cast to ensure type compatibility
+        setPrivileges([...userPrivileges]);
       } catch (error) {
         console.error("Error loading privileges:", error);
         toast.error("Failed to load custom privileges");
@@ -100,7 +102,8 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
       
       // Refresh privileges
       const updatedPrivileges = await fetchUserCustomPrivileges(values.userId);
-      setPrivileges(updatedPrivileges);
+      // Cast to ensure type compatibility
+      setPrivileges([...updatedPrivileges]);
       setIsDialogOpen(false);
       form.reset();
       toast.success("Privilege granted successfully");

@@ -3,11 +3,12 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { 
   FinancialReportData, 
-  FinancialReportFilters
+  FinancialReportFilters,
+  UseFinancialReportReturn
 } from "@/types/reports";
 import { fetchFinancialReportData, defaultFinancialFilters } from "@/utils/reports/financialReportUtils";
 
-export const useFinancialReport = (initialFilters?: Partial<FinancialReportFilters>) => {
+export const useFinancialReport = (initialFilters?: Partial<FinancialReportFilters>): UseFinancialReportReturn => {
   // Merge initial filters with defaults
   const mergedFilters = {
     ...defaultFinancialFilters,
@@ -64,7 +65,7 @@ export const useFinancialReport = (initialFilters?: Partial<FinancialReportFilte
   };
   
   return {
-    reports,
+    reports: reports || { data: [] },
     isLoading,
     error,
     filters,

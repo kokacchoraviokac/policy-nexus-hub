@@ -1,7 +1,8 @@
 
-import { DocumentTableName } from "@/utils/documentUploadUtils";
-import { EntityType, Document } from "@/types/documents";
-import { ServiceResponse } from "@/types/services";
+import { DocumentTableName } from "@/types/documents";
+import { EntityType } from "@/types/common";
+import { ServiceResponse } from "@/types/common";
+import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 /**
  * Safe type assertion for dealing with Supabase polymorphic return types
@@ -25,37 +26,8 @@ export async function executeDocumentQuery<T>(
   query: (tableName: string) => Promise<{ data: any; error: any }>
 ): Promise<ServiceResponse<T>> {
   try {
-    let tableName: string;
-    
-    // Map entity type to table name
-    switch (entityType) {
-      case 'policy':
-        tableName = 'policy_documents';
-        break;
-      case 'claim':
-        tableName = 'claim_documents';
-        break;
-      case 'sales_process':
-        tableName = 'sales_documents';
-        break;
-      case 'client':
-        tableName = 'client_documents';
-        break;
-      case 'insurer':
-        tableName = 'insurer_documents';
-        break;
-      case 'agent':
-        tableName = 'agent_documents';
-        break;
-      case 'invoice':
-        tableName = 'invoice_documents';
-        break;
-      case 'addendum':
-        tableName = 'addendum_documents';
-        break;
-      default:
-        throw new Error(`Unsupported entity type: ${entityType}`);
-    }
+    // Get table name from entity type
+    const tableName = getDocumentTableName(entityType);
     
     const { data, error } = await query(tableName);
     

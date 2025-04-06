@@ -1,19 +1,23 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Type guard to help Typescript with dynamic table names
+type TableName = keyof typeof supabase["_Tables"] | string;
+
 /**
  * Generic function to safely query any table with proper type assertions
  * This helps avoid TypeScript's deep type instantiation errors
  */
-export function fromTable<T = any>(tableName: string) {
-  return supabase.from(tableName);
+export function fromTable<T = any>(tableName: TableName) {
+  // Using type assertion to avoid TypeScript's strict table name checking
+  return supabase.from(tableName as any);
 }
 
 /**
  * Generic function to safely select data from a specified table
  */
 export async function selectFromTable<T = any>(
-  tableName: string,
+  tableName: TableName,
   options: {
     columns?: string;
     eq?: { column: string; value: any };
@@ -62,7 +66,7 @@ export async function selectFromTable<T = any>(
  * Generic function to safely insert data into a specified table
  */
 export async function insertIntoTable<T = any>(
-  tableName: string,
+  tableName: TableName,
   data: any,
   options: {
     returning?: boolean;
@@ -95,7 +99,7 @@ export async function insertIntoTable<T = any>(
  * Generic function to safely update data in a specified table
  */
 export async function updateInTable<T = any>(
-  tableName: string,
+  tableName: TableName,
   data: any,
   options: {
     eq: { column: string; value: any };
@@ -131,7 +135,7 @@ export async function updateInTable<T = any>(
  * Generic function to safely delete data from a specified table
  */
 export async function deleteFromTable(
-  tableName: string,
+  tableName: TableName,
   options: {
     eq: { column: string; value: any };
   }

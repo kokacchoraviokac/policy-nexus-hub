@@ -117,7 +117,7 @@ const PolicyImportPage: React.FC = () => {
                 </div>
               </div>
               
-              <PolicyImportInstructions className="mt-6" />
+              <PolicyImportInstructions />
             </CardContent>
           </Card>
         </TabsContent>
@@ -125,10 +125,11 @@ const PolicyImportPage: React.FC = () => {
         <TabsContent value="review">
           <PolicyImportReview 
             policies={importedPolicies}
-            errors={validationErrors}
             invalidPolicies={invalidPolicies || []}
             onSubmit={handleSavePolicies}
             isSubmitting={isImporting}
+            // Pass validation errors if needed
+            validationErrors={validationErrors}
           />
         </TabsContent>
         
