@@ -1,6 +1,8 @@
 
 import { EntityType, DocumentCategory } from './common';
 
+export { EntityType, DocumentCategory };
+
 export enum DocumentApprovalStatus {
   PENDING = 'pending',
   APPROVED = 'approved',

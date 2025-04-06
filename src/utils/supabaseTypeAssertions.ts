@@ -1,71 +1,63 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { RelationName } from '@/types/common';
-import { DocumentTableName } from '@/types/documents';
+import { supabase } from "@/integrations/supabase/client";
+import { RelationName } from "@/types/common";
+import { PostgrestQueryBuilder } from "@supabase/postgrest-js";
 
 /**
- * Type-safe function to get a Supabase query builder for any table
- * This ensures the table name is one of the allowed RelationName types
+ * A safer way to perform a FROM operation on tables with proper type checking
+ * Use when you need to access a table that is in the RelationName type
+ * 
+ * @param tableName The name of the table to query
+ * @returns A PostgrestQueryBuilder with the correct table context
  */
-export function fromTable(tableName: RelationName) {
-  return supabase.from(tableName);
+export function fromDocumentTable(tableName: RelationName): PostgrestQueryBuilder<any, any, any> {
+  // Use a type assertion to handle the situation where Supabase expects an exact string literal
+  return supabase.from(tableName as any);
 }
 
 /**
- * Helper to safely cast a DocumentTableName to RelationName
- * This ensures we only use valid table names for document operations
+ * Cast an unknown type (usually from a database query) to a specific type
+ * This does not perform any runtime validation - it's just a TypeScript helper
+ * 
+ * @param data The data to cast
+ * @returns The same data but with the specified type
  */
-export function documentTableToRelation(tableName: DocumentTableName): RelationName {
-  // Validate that the provided table name is a valid RelationName
-  const validTableNames: RelationName[] = [
-    'policy_documents',
-    'claim_documents',
-    'sales_documents',
-    'client_documents',
-    'insurer_documents',
-    'agent_documents',
-    'addendum_documents',
-    'invoice_documents'
-  ];
-
-  if (validTableNames.includes(tableName as RelationName)) {
-    return tableName as RelationName;
-  }
-
-  // Default to policy_documents if not valid
-  console.warn(`Invalid table name: ${tableName}, using policy_documents as fallback`);
-  return 'policy_documents';
+export function castDocumentData<T>(data: unknown): T {
+  return data as T;
 }
 
 /**
- * Helper for safely executing queries with proper type checking
+ * Safe wrapper for Supabase's storage.from() function
+ * 
+ * @param bucketName The name of the storage bucket
+ * @returns The storage bucket
  */
-export async function executeQuery<T = any>(
-  tableName: RelationName,
-  queryFn: (queryBuilder: ReturnType<typeof fromTable>) => Promise<{ data: any; error: any }>
-): Promise<{ data: T | null; error: any }> {
-  try {
-    const queryBuilder = fromTable(tableName);
-    const result = await queryFn(queryBuilder);
-    return result as { data: T | null; error: any };
-  } catch (error) {
-    console.error(`Error executing query on ${tableName}:`, error);
-    return { data: null, error: error };
-  }
+export function fromStorageBucket(bucketName: string) {
+  return supabase.storage.from(bucketName);
 }
 
 /**
- * Helper to get query builder for document tables specifically
+ * A safer way to perform database-wide operations with proper type checking
+ * Use when you need to access a specific table for CRUD operations
+ * 
+ * @param tableName The name of the table to query
+ * @returns A PostgrestQueryBuilder with the correct table context
  */
-export function fromDocumentTable(tableName: DocumentTableName) {
-  const relationName = documentTableToRelation(tableName);
-  return fromTable(relationName);
+export function fromDatabaseTable(tableName: RelationName): PostgrestQueryBuilder<any, any, any> {
+  // Use a type assertion to handle the situation where Supabase expects an exact string literal
+  return supabase.from(tableName as any);
 }
 
 /**
- * Helper for querying any table by name string (use with caution)
- * This is a fallback for when we need to query tables dynamically
+ * Safely handle Supabase errors by converting them to a standard format
+ * 
+ * @param error The error from Supabase
+ * @returns A standardized error message
  */
-export function fromAnyTable(tableName: string) {
-  return supabase.from(tableName as RelationName);
+export function handleSupabaseError(error: any): string {
+  if (typeof error === 'string') return error;
+  if (error?.message) return error.message;
+  if (error?.details) return error.details;
+  if (error?.error_description) return error.error_description;
+  return 'An unknown error occurred';
 }

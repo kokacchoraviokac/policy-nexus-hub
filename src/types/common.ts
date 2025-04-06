@@ -11,7 +11,8 @@ export enum EntityType {
   SALE = 'sale', // Alias for sales_process
   PRODUCT = 'product',
   COMMISSION = 'commission',
-  PAYMENT = 'payment'
+  PAYMENT = 'payment',
+  PROPOSAL = 'proposal'
 }
 
 export type RelationName = 
@@ -70,7 +71,8 @@ export const entityToDocumentTable: Record<EntityType, RelationName> = {
   [EntityType.INVOICE]: 'invoice_documents',
   [EntityType.PRODUCT]: 'policy_documents', // Map product to policy_documents for now
   [EntityType.COMMISSION]: 'policy_documents', // Map commission to policy_documents for now
-  [EntityType.PAYMENT]: 'policy_documents' // Map payment to policy_documents for now
+  [EntityType.PAYMENT]: 'policy_documents', // Map payment to policy_documents for now
+  [EntityType.PROPOSAL]: 'sales_documents' // Map proposal to sales_documents
 };
 
 export interface ServiceResponse<T = any> {
@@ -88,5 +90,15 @@ export enum DocumentCategory {
   NOTIFICATION = 'notification',
   CONTRACT = 'contract',
   MISCELLANEOUS = 'miscellaneous',
-  PROPOSAL = 'proposal'
+  PROPOSAL = 'proposal',
+  DISCOVERY = 'discovery',
+  QUOTE = 'quote',
+  CLOSEOUT = 'closeout',
+  CLIENT = 'client',
+  CLAIM_EVIDENCE = 'claim_evidence',
+  MEDICAL = 'medical',
+  LEGAL = 'legal',
+  FINANCIAL = 'financial',
+  CORRESPONDENCE = 'correspondence',
+  OTHER = 'other'
 }

@@ -32,3 +32,9 @@ export interface AcceptInvitationParams {
   name: string;
   password: string;
 }
+
+export interface CreateInvitationRequest {
+  email: string;
+  role: UserRole;
+  company_id?: string;
+}

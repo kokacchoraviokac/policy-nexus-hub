@@ -2,8 +2,8 @@
 import { ProposalStatus } from "./sales";
 
 export interface FinancialReportFilters {
-  dateFrom: string;
-  dateTo: string;
+  dateFrom: string | Date;
+  dateTo: string | Date;
   categoryFilter?: string;
   statusFilter?: string;
   entityFilter?: string;

@@ -1,31 +1,32 @@
 
 export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
   EMPLOYEE = 'employee',
+  SUPER_ADMIN = 'superAdmin',  // Keep this as 'superAdmin' to match existing code
   AGENT = 'agent',
   CLIENT = 'client'
 }
 
 export interface User {
   id: string;
-  name: string;
   email: string;
+  name: string;
   role: UserRole;
-  avatar_url?: string;
   company_id: string;
-  // Alias properties for backward compatibility
-  companyId?: string; 
   avatar?: string;
+  companyId?: string; // Alias for company_id to maintain compatibility
 }
 
-// Add CustomPrivilege interface
-export interface CustomPrivilege {
+export interface UserProfile {
   id: string;
-  user_id: string;
-  privilege: string;
-  granted_at: string;
-  granted_by: string;
-  expires_at?: string | null;
-  context?: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  company_id: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
 }
+
+// Export the UserRole for use in other modules
+export { UserRole as default };

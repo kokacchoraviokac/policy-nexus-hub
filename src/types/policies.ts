@@ -97,7 +97,7 @@ export interface PolicyFilterParams {
   };
   page: number;
   pageSize: number;
-  // Add missing properties used in usePoliciesWorkflow.ts
+  // Add the properties used in usePoliciesWorkflow.ts
   workflowStatus?: string;
   dateFrom?: string;
   dateTo?: string;
