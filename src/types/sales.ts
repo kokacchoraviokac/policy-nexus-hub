@@ -1,116 +1,76 @@
 
-import { DocumentCategory } from '@/types/common';
+import { ProposalStatus } from './reports';
 
-// Define the Proposal Status enum
-export enum ProposalStatus {
-  DRAFT = 'draft',
-  SENT = 'sent',
-  VIEWED = 'viewed',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
-  APPROVED = 'approved',
-  PENDING = 'pending',
-  EXPIRED = 'expired'
+export interface SalesProcess {
+  id: string;
+  title: string;
+  company?: string;
+  stage: SaleStage;
+  estimatedValue?: number;
+  expectedCloseDate?: string;
+  assignedTo?: string;
+  assignedName?: string;
+  notes?: string;
+  status: SalesProcessStatus;
 }
 
-// Define the Proposal interface
+export type SaleStage = 
+  | 'discovery'
+  | 'qualification'
+  | 'proposal'
+  | 'negotiation'
+  | 'closing'
+  | 'won'
+  | 'lost';
+
+export type SalesProcessStatus = 
+  | 'active'
+  | 'won'
+  | 'lost'
+  | 'on_hold'
+  | 'cancelled';
+
+export interface Quote {
+  id: string;
+  title: string;
+  insurer: string;
+  amount: number;
+  currency: string;
+  expiryDate: string;
+  status: QuoteStatus;
+  isSelected?: boolean;
+}
+
+export type QuoteStatus = 
+  | 'draft'
+  | 'sent'
+  | 'accepted'
+  | 'rejected'
+  | 'expired';
+
 export interface Proposal {
   id: string;
   title: string;
   description?: string;
-  client_id: string;
-  client_name: string;
-  sales_process_id?: string;
-  created_by: string;
-  created_at: string;
-  updated_at?: string;
   status: ProposalStatus;
-  amount: number;
-  currency?: string;
-  expiry_date?: string;
-  document_ids?: string[];
-  insurer_id?: string;
-  insurer_name?: string;
-  coverage_details?: string;
-  premium?: number;
-  notes?: string;
-  sent_at?: string;
-  viewed_at?: string;
-  expires_at?: string;
-  accepted_at?: string;
-  rejected_at?: string;
-  company_id: string;
-}
-
-// Define the SalesProcess interface
-export interface SalesProcess {
-  id: string;
-  title: string;
-  stage: string;
-  client_id: string;
-  client_name: string;
-  company_id: string;
   created_at: string;
   updated_at: string;
-  created_by: string;
-  insurance_type: string;
-  estimated_value?: number;
-  expected_close_date?: string;
-  assigned_to?: string;
-  current_step: string;
-  status: "active" | "closed" | "lost";
-  product_id?: string;
-  insurer_id?: string;
+  client_id: string;
+  client_name: string;
+  amount: number;
+  currency: string;
+  sales_process_id: string;
+  created_by?: string;
+  company_id?: string;
 }
 
-// Define the ProposalStats interface
-export interface ProposalStats {
-  totalCount: number;
-  pendingCount: number;
-  approvedCount: number;
-  rejectedCount: number;
-  expired: number;
-  total: number;
-  pending: number;
-  sent: number;
-  viewed: number;
-  accepted: number;
-  rejected: number;
-  approved: number;
-  draft: number;
-}
-
-// Define the UseProposalsDataProps interface
-export interface UseProposalsDataProps {
-  client_id?: string;
-  sales_process_id?: string;
-  status?: ProposalStatus | 'all';
-  limit?: number;
-  searchQuery?: string;
-  statusFilter?: string;
-}
-
-// Define SalesProcessDocumentsProps
-export interface SalesProcessDocumentsProps {
-  process: SalesProcess;
-  salesStage?: string;
-}
-
-// Define ProposalsListProps
-export interface ProposalsListProps {
-  proposals: Proposal[];
-  onStatusChange?: (proposalId: string, newStatus: ProposalStatus) => Promise<boolean>;
-}
-
-// Define UpdateProposalStatusDialogProps
-export interface UpdateProposalStatusDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  currentStatus: ProposalStatus;
-  onUpdate: (status: ProposalStatus) => Promise<void>;
-}
-
-// Define the DocumentsTabProps
-export interface DocumentsTabProps {
-  process: SalesProcess;
+export interface SalesFilters {
+  searchTerm?: string;
+  stage?: SaleStage | 'all';
+  assignedTo?: string;
+  dateRange?: {
+    from?: Date;
+    to?: Date;
+  };
+  status?: SalesProcessStatus | 'all';
 }

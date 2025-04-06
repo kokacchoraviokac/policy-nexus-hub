@@ -19,6 +19,7 @@ export interface Policy {
   updated_at: string;
   company_id: string;
   client_id?: string;
+  client_name?: string; // Added for compatibility with search dialogs
   insured_id?: string;
   insurer_id?: string;
   product_id?: string;
@@ -27,6 +28,7 @@ export interface Policy {
   assigned_to?: string;
   created_by?: string;
   payment_frequency?: string;
+  notes?: string; // Added for compatibility with policy forms
 }
 
 export interface ValidationErrors {
@@ -36,6 +38,7 @@ export interface ValidationErrors {
 export interface InvalidPolicy {
   policy?: Partial<Policy>;
   errors: string[] | any[];
+  row?: any; // Added for compatibility
 }
 
 export interface PolicyImportProps {
@@ -52,4 +55,54 @@ export interface PolicyImportProps {
   isImporting?: boolean;
   isValidating?: boolean;
   importSuccess?: boolean;
+}
+
+// Add missing types
+export type WorkflowStatus = 'pending' | 'in_review' | 'approved' | 'rejected';
+export type PolicyStatus = 'active' | 'expired' | 'pending' | 'cancelled';
+
+export interface PolicyAddendum {
+  id: string;
+  policy_id: string;
+  addendum_number: string;
+  effective_date: string;
+  description: string;
+  premium_adjustment?: number;
+  lien_status?: boolean;
+  status: string;
+  workflow_status: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  company_id: string;
+}
+
+export interface UnlinkedPaymentType {
+  id: string;
+  amount: number;
+  payment_date: string;
+  reference?: string;
+  payer_name?: string;
+  status: string;
+  currency: string;
+  linked_policy_id?: string;
+  linked_at?: string;
+  linked_by?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PolicyFilterParams {
+  searchTerm?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  insurerId?: string;
+  clientId?: string;
+  assignedTo?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }

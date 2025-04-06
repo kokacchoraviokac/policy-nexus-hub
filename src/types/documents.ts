@@ -12,7 +12,7 @@ export type DocumentStatus = "active" | "archived" | "deleted";
 export type DocumentApprovalStatus = "pending" | "approved" | "rejected" | "needs_review";
 
 // Base Document interface 
-export interface Document {
+export interface PolicyDocument {
   id: string;
   document_name: string;
   document_type: string;
@@ -37,6 +37,9 @@ export interface Document {
   original_document_id?: string | null;
   comments?: string[]; // Added for DocumentViewDialog
 }
+
+// For backward compatibility, export as Document as well
+export type Document = PolicyDocument;
 
 // Document list display options
 export interface DocumentListOptions {

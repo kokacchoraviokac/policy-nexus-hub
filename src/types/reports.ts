@@ -52,7 +52,7 @@ export interface FinancialTransactionsProps {
   isExporting?: boolean;
 }
 
-// Added missing types for useFfnancialReport
+// Added missing types for useFinancialReport
 export interface FinancialReportData {
   transactions: FinancialTransaction[];
   summary: FinancialReportSummary;
@@ -67,6 +67,10 @@ export interface UseFinancialReportReturn {
   filters: FinancialReportFilters;
   setFilters: (filters: FinancialReportFilters) => void;
   applyFilters: () => void;
+  summary: FinancialReportSummary;
+  reports?: any;
+  resetFilters?: () => void;
+  defaultFilters?: FinancialReportFilters;
 }
 
 // Proposals related types
@@ -93,6 +97,8 @@ export interface Proposal {
   currency: string;
   valid_until: string;
   sales_process_id: string;
+  created_by?: string;
+  company_id?: string;
 }
 
 export interface ProposalsListProps {

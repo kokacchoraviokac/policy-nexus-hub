@@ -14,6 +14,8 @@ export interface Invitation {
   company_id: string | null;
 }
 
+export type InvitationStatus = "pending" | "accepted" | "expired";
+
 export interface CreateInvitationRequest {
   email: string;
   role: UserRole;
