@@ -1,6 +1,6 @@
 
 import { Session } from "@supabase/supabase-js";
-import { UserRole } from "./index";
+import { UserRole } from "./userTypes";
 
 // Define User interface
 export interface User {

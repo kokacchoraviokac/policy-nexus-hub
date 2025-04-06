@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Proposal, ProposalStatus, ProposalStats, UseProposalsDataProps } from '@/types/sales';
 import { getProposals, updateProposalStatus as apiUpdateProposalStatus } from '@/services/proposalService';
-import { mockProposals } from '@/data/mockProposals';
+import mockProposals from '@/data/mockProposals';
 import { calculateProposalStats } from '@/utils/proposalUtils';
 
 export function useProposalsData(props: UseProposalsDataProps = {}) {

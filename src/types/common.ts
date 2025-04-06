@@ -8,6 +8,7 @@ export type EntityType =
   | 'client'
   | 'insurer'
   | 'sales_process'
+  | 'sale' // Added this alias
   | 'agent'
   | 'invoice'
   | 'addendum';
@@ -22,3 +23,10 @@ export type DocumentCategory =
   | 'quote'
   | 'identification'
   | 'other';
+
+// Service response type for API calls
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: Error | string;
+}

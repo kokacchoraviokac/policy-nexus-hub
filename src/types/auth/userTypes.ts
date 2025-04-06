@@ -1,7 +1,7 @@
 
 // Define available user roles
 export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
+  SUPER_ADMIN = 'superAdmin',
   ADMIN = 'admin',
   EMPLOYEE = 'employee',
   AGENT = 'agent',
@@ -15,7 +15,10 @@ export interface User {
   name: string;
   role: UserRole;
   company_id: string;
+  companyId?: string; // For backward compatibility
   avatar_url?: string;
+  avatar?: string; // For backward compatibility
+  avatarUrl?: string; // For backward compatibility
   created_at?: string;
   updated_at?: string;
   last_sign_in_at?: string;
@@ -30,6 +33,7 @@ export interface CustomPrivilege {
   granted_at: string;
   expires_at?: string;
   granted_by: string;
+  context?: string; // Added context property
 }
 
 // Auth state representation

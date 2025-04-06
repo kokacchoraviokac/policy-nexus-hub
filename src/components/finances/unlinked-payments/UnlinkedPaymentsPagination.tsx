@@ -57,6 +57,7 @@ const UnlinkedPaymentsPagination: React.FC<UnlinkedPaymentsPaginationProps> = ({
           itemsPerPage={pageSize}
           currentPage={safeCurrentPage}
           onPageChange={onPageChange}
+          totalPages={totalPages}
         />
       </div>
     </div>

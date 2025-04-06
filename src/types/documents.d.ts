@@ -29,6 +29,7 @@ declare module '@/types/documents' {
     approved_by?: string;
     approved_at?: string;
     approval_notes?: string;
+    comments?: string[];
   }
 
   export interface DocumentUploadRequest {
@@ -42,5 +43,28 @@ declare module '@/types/documents' {
     file: File;
   }
 
-  export type EntityType = 'policy' | 'claim' | 'client' | 'invoice' | 'addendum' | 'sales_process' | 'agent' | 'insurer';
+  export type EntityType = 'policy' | 'claim' | 'client' | 'invoice' | 'addendum' | 'sales_process' | 'sale' | 'agent' | 'insurer';
+
+  export type DocumentTableName = 
+    | 'policy_documents'
+    | 'claim_documents'
+    | 'sales_documents'
+    | 'client_documents'
+    | 'insurer_documents'
+    | 'agent_documents'
+    | 'invoice_documents'
+    | 'addendum_documents';
+
+  export interface DocumentUploadDialogProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    entityType: EntityType;
+    entityId: string;
+    onUploadComplete?: () => void;
+    defaultCategory?: string;
+    salesStage?: string;
+    selectedDocument?: Document;
+    embedMode?: boolean;
+    onFileSelected?: (file: File | null) => void;
+  }
 }

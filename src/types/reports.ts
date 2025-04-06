@@ -1,42 +1,31 @@
 
-// Re-export the Proposal type and ProposalStatus enum from sales.ts
-export type { Proposal, ProposalStatus } from '@/types/sales';
+export interface FinancialReportFilters {
+  startDate: Date | null;
+  endDate: Date | null;
+  type?: string;
+  category?: string;
+  status?: string;
+  currency?: string;
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+export interface FinancialReportFiltersProps {
+  filters: FinancialReportFilters;
+  setFilters: (filters: FinancialReportFilters) => void;
+  onApply: () => void;
+}
 
 export interface FinancialTransaction {
   id: string;
   date: string;
   amount: number;
   description: string;
-  type: 'income' | 'expense';
-  category?: string;
-  paymentMethod?: string;
-  reference?: string;
-  status?: string;
-}
-
-export interface FinancialReportFilters {
-  startDate: string | Date;
-  endDate: string | Date;
-  type?: string;
-  category?: string;
-  minAmount?: number;
-  maxAmount?: number;
-  searchTerm?: string;
-  transactionType?: string;
-  status?: string;
-  dateFrom?: string | Date;  
-  dateTo?: string | Date;    
-}
-
-export interface FinancialReportData {
-  id: string;
-  date: string;
-  amount: number;
-  description: string;
   type: string;
-  category?: string;
-  reference?: string;
-  status?: string;  
+  category: string;
+  reference: string;
+  status: string;
+  currency: string;
 }
 
 export interface FinancialReportSummary {
@@ -45,42 +34,18 @@ export interface FinancialReportSummary {
   netAmount: number;
 }
 
+export interface FinancialReportSummaryProps {
+  summary: FinancialReportSummary;
+}
+
 export interface FinancialReportTableProps {
-  data: FinancialReportData[];
+  data: FinancialTransaction[];
   isLoading: boolean;
 }
 
 export interface FinancialTransactionsProps {
   data: FinancialTransaction[];
   isLoading: boolean;
-  onExport: () => void;
-  isExporting: boolean;
-}
-
-export interface FinancialReportSummaryProps extends FinancialReportSummary {
-  // Directly extend FinancialReportSummary
-}
-
-export interface FinancialReportFiltersProps {
-  filters: FinancialReportFilters;
-  setFilters: (filters: FinancialReportFilters) => void;
-  onApply: () => void;
-  onChange?: (filters: Partial<FinancialReportFilters>) => void;
-}
-
-export interface UseFinancialReportReturn {
-  data: FinancialReportData[];
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-  summary: FinancialReportSummary;
-  filters: FinancialReportFilters;
-  setFilters: (filters: FinancialReportFilters) => void;
-  applyFilters: () => void;
-  exportReport: () => void;
-  isExporting: boolean;
-  defaultFilters?: FinancialReportFilters;
-  resetFilters?: () => void;
-  reports?: any[];
-  refetch?: () => void;
+  onExport?: () => void;
+  isExporting?: boolean;
 }

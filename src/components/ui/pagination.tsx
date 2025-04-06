@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PaginationProps {
   currentPage: number;
-  totalPages: number;
+  totalPages?: number;
   onPageChange: (page: number) => void;
   siblingCount?: number;
   itemsCount?: number;
@@ -15,13 +15,17 @@ interface PaginationProps {
 
 export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
-  totalPages,
+  totalPages: propsTotalPages,
   onPageChange,
   siblingCount = 1,
   itemsCount,
   itemsPerPage
 }) => {
   const { t } = useLanguage();
+  
+  // Calculate totalPages if not provided directly
+  const totalPages = propsTotalPages || 
+    (itemsCount && itemsPerPage ? Math.ceil(itemsCount / itemsPerPage) : 1);
 
   // Function to create a range of pages
   const range = (start: number, end: number) => {
