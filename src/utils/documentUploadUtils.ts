@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentTableName, DocumentUploadOptions } from "@/types/documents";
-import { EntityType, DocumentCategory } from "@/types/common";
+import { EntityType, DocumentCategory, RelationName } from "@/types/common";
 
 /**
  * Get the document table name based on entity type
@@ -66,8 +66,8 @@ export const getEntityIdColumn = (entityType: EntityType): string => {
 /**
  * Convert a DocumentTableName to a Supabase table name for type safety
  */
-export const asTableName = (tableName: DocumentTableName): string => {
-  return tableName;
+export const asTableName = (tableName: DocumentTableName): RelationName => {
+  return tableName as RelationName;
 };
 
 /**

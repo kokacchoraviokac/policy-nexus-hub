@@ -8,6 +8,7 @@ export enum ProposalStatus {
   VIEWED = "viewed",
   ACCEPTED = "accepted",
   REJECTED = "rejected",
+  APPROVED = "approved",   // Added APPROVED status
   EXPIRED = "expired"
 }
 
@@ -38,12 +39,12 @@ export interface SalesProcess {
 export interface Proposal {
   id: string;
   title: string;
-  client_name: string;
+  description?: string;
   client_id: string;
-  insurer_name: string;
+  client_name: string;
   insurer_id: string;
-  sales_process_id: string;
-  description: string;
+  insurer_name: string;
+  sales_process_id?: string;
   amount: number;
   currency: string;
   created_at: string;
@@ -58,10 +59,10 @@ export interface Proposal {
   expires_at?: string;
   accepted_at?: string;
   rejected_at?: string;
+  expiry_date?: string;
   is_latest?: boolean;
   coverage_details?: string;
   document_ids?: string[];
-  expiry_date?: string;
 }
 
 export interface CreateProposalRequest {
@@ -87,6 +88,7 @@ export interface ProposalStats {
   viewed: number;
   accepted: number;
   rejected: number;
+  approved: number; // Added approved count
   expired: number;
 }
 
@@ -94,4 +96,12 @@ export interface UseProposalsDataProps {
   salesProcessId?: string;
   filter?: string;
   initialLimit?: number;
+  searchQuery?: string; // Added searchQuery
+  statusFilter?: string; // Added statusFilter
+}
+
+// Added DocumentsTabProps interface
+export interface DocumentsTabProps {
+  salesProcess: SalesProcess;
+  salesStage?: string;
 }

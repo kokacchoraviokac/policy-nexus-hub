@@ -22,6 +22,7 @@ export enum DocumentCategory {
   CONTRACT = "contract",
   INVOICE = "invoice",
   MISCELLANEOUS = "miscellaneous",
+  PROPOSAL = "proposal", // Adding missing PROPOSAL type
   OTHER = "other"
 }
 
@@ -49,7 +50,7 @@ export type RelationName =
   | "bank_transactions"
   | "invoices"
   | "policies"
-  | "policy_addendums"
+  | "policy_addendums" 
   | "policy_types"
   | "profiles"
   | "report_schedules"
@@ -59,3 +60,11 @@ export type RelationName =
   | "saved_reports"
   | "unlinked_payments"
   | "user_custom_privileges";
+
+// Add ServiceResponse type which is missing
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
