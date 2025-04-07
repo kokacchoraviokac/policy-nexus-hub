@@ -8,23 +8,9 @@ import { DocumentTableName } from "@/types/documents";
  * This ensures we get proper typing in the response
  */
 export const fromDocumentTable = (tableName: DocumentTableName) => {
-  // Create a safer RelationName by restricting to known document tables
-  const validTables: Record<DocumentTableName, RelationName> = {
-    'policy_documents': 'policy_documents',
-    'claim_documents': 'claim_documents', 
-    'sales_documents': 'sales_documents',
-    'client_documents': 'client_documents',
-    'insurer_documents': 'insurer_documents',
-    'agent_documents': 'agent_documents',
-    'invoice_documents': 'invoice_documents',
-    'addendum_documents': 'addendum_documents'
-  };
-
-  // Ensure we're using a valid table name
-  const relationName = validTables[tableName];
-  
-  // This is now type safe since we've mapped to a valid relation name
-  return supabase.from(relationName);
+  // Since our tableName is already a valid string that exists in the supabase client,
+  // we'll use a direct approach for now
+  return supabase.from(tableName);
 };
 
 /**

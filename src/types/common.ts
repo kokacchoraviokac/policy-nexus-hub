@@ -25,7 +25,14 @@ export enum DocumentCategory {
   IDENTIFICATION = "identification",
   AUTHORIZATION = "authorization",
   PROPOSAL = "proposal",
-  OTHER = "other"
+  OTHER = "other",
+  // Adding missing categories referenced in errors
+  SALES = "sales",
+  FINANCIAL = "financial",
+  LEGAL = "legal",
+  MISCELLANEOUS = "miscellaneous",
+  LIEN = "lien",
+  NOTIFICATION = "notification"
 }
 
 // Approval status
@@ -41,7 +48,8 @@ export enum UserRole {
   ADMIN = "admin",
   EMPLOYEE = "employee",
   AGENT = "agent",
-  CLIENT = "client"
+  CLIENT = "client",
+  SUPER_ADMIN = "super_admin" // Adding this since it's referenced in the code
 }
 
 // Document comment
@@ -96,7 +104,8 @@ export type RelationName =
   | "saved_filters"
   | "payout_items"
   | "invoice_items"
-  | "user_custom_privileges";
+  | "user_custom_privileges"
+  | "document_comments"; // Adding this since it's used in the code
 
 // Location of document/attachment
 export interface Location {
@@ -113,6 +122,7 @@ export interface User {
   avatar_url?: string;
   role: UserRole;
   company_id: string;
+  companyId?: string; // Compatibility field
 }
 
 // Generic Pagination Model
@@ -131,4 +141,12 @@ export enum WorkflowStatus {
   REVIEW = "review",
   COMPLETED = "completed",
   CANCELLED = "cancelled"
+}
+
+// Service response generic type (added for missing reference)
+export interface ServiceResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }

@@ -1,157 +1,126 @@
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Insurer } from "@/types/codebook";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useActivityLogger } from "@/utils/activityLogger";
-import { EntityType } from "@/types/common";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
-export function useInsurersCrud(onSuccess: () => void) {
+export const useInsurersCrud = () => {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { t } = useLanguage();
-  const { logActivity } = useActivityLogger();
+  const { user } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
-  // Add new insurer
   const addInsurerMutation = useMutation({
-    mutationFn: async (insurer: Partial<Insurer>) => {
-      // Create a new insurer record
+    mutationFn: async (insurerData: Partial<Insurer>) => {
+      // Ensure company_id is set
+      const newInsurer = {
+        ...insurerData,
+        company_id: user?.company_id || ""
+      };
+
       const { data, error } = await supabase
-        .from('insurers')
-        .insert(insurer)
-        .select('*')
+        .from("insurers")
+        .insert(newInsurer)
+        .select()
         .single();
 
       if (error) throw error;
-
-      // Log the activity
-      await logActivity({
-        entity_type: EntityType.INSURER,
-        entity_id: data.id,
-        action: 'create',
-        details: {
-          name: data.name,
-          contact_person: data.contact_person
-        }
-      });
-
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["insurers"] });
       toast({
-        title: t('insurerAddedSuccess'),
-        description: t('insurerAddedDescription'),
+        title: "Insurer added",
+        description: "The insurer has been added successfully.",
       });
-      onSuccess();
+      setError(null);
     },
     onError: (error: any) => {
+      console.error("Error adding insurer:", error);
+      setError(error.message || "Failed to add insurer");
       toast({
-        title: t('insurerAddedError'),
-        description: error.message,
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to add insurer",
+        variant: "destructive",
       });
     }
   });
 
-  // Update existing insurer
+  // Type definition for the update parameters
+  type UpdateInsurerParams = {
+    id: string;
+    updateData: Partial<Insurer>;
+  };
+
   const updateInsurerMutation = useMutation({
-    mutationFn: async ({
-      id,
-      updateData
-    }: {
-      id: string;
-      updateData: Partial<Insurer>;
-    }) => {
-      // Update the insurer record
+    mutationFn: async ({ id, updateData }: UpdateInsurerParams) => {
       const { data, error } = await supabase
-        .from('insurers')
+        .from("insurers")
         .update(updateData)
-        .eq('id', id)
-        .select('*')
+        .eq("id", id)
+        .select()
         .single();
 
       if (error) throw error;
-
-      // Log the activity
-      await logActivity({
-        entity_type: EntityType.INSURER,
-        entity_id: id,
-        action: 'update',
-        details: updateData
-      });
-
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["insurers"] });
       toast({
-        title: t('insurerUpdatedSuccess'),
-        description: t('insurerUpdatedDescription'),
+        title: "Insurer updated",
+        description: "The insurer has been updated successfully.",
       });
-      onSuccess();
+      setError(null);
     },
     onError: (error: any) => {
+      console.error("Error updating insurer:", error);
+      setError(error.message || "Failed to update insurer");
       toast({
-        title: t('insurerUpdatedError'),
-        description: error.message,
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to update insurer",
+        variant: "destructive",
       });
     }
   });
 
-  // Delete insurer
   const deleteInsurerMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Get insurer data before deletion for logging
-      const { data: insurer, error: fetchError } = await supabase
-        .from('insurers')
-        .select('name')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Delete the insurer
       const { error } = await supabase
-        .from('insurers')
+        .from("insurers")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
-
-      // Log the activity
-      await logActivity({
-        entity_type: EntityType.INSURER,
-        entity_id: id,
-        action: 'delete',
-        details: {
-          name: insurer.name
-        }
-      });
-
       return true;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["insurers"] });
       toast({
-        title: t('insurerDeletedSuccess'),
-        description: t('insurerDeletedDescription'),
+        title: "Insurer deleted",
+        description: "The insurer has been deleted successfully.",
       });
-      onSuccess();
+      setError(null);
     },
     onError: (error: any) => {
+      console.error("Error deleting insurer:", error);
+      setError(error.message || "Failed to delete insurer");
       toast({
-        title: t('insurerDeletedError'),
-        description: error.message,
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to delete insurer",
+        variant: "destructive",
       });
     }
   });
 
   return {
-    addInsurer: addInsurerMutation.mutateAsync,
-    updateInsurer: updateInsurerMutation.mutateAsync,
-    deleteInsurer: deleteInsurerMutation.mutateAsync,
-    isAddingInsurer: addInsurerMutation.isLoading,
-    isUpdatingInsurer: updateInsurerMutation.isLoading,
-    isDeletingInsurer: deleteInsurerMutation.isLoading,
+    addInsurer: addInsurerMutation.mutate,
+    updateInsurer: updateInsurerMutation.mutate,
+    deleteInsurer: deleteInsurerMutation.mutate,
+    isAdding: addInsurerMutation.isPending,
+    isUpdating: updateInsurerMutation.isPending,
+    isDeleting: deleteInsurerMutation.isPending,
+    error
   };
-}
+};

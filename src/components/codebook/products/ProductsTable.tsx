@@ -31,39 +31,35 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   
   const columns = [
     {
+      accessorKey: "code",
       header: t("code"),
-      accessorKey: "code" as keyof InsuranceProduct,
-      sortable: true
     },
     {
+      accessorKey: "name",
       header: t("name"),
-      accessorKey: "name" as keyof InsuranceProduct,
-      sortable: true
     },
     {
+      accessorKey: "category",
       header: t("category"),
-      accessorKey: "category" as keyof InsuranceProduct,
       cell: (row: InsuranceProduct) => row.category || "-",
-      sortable: true
     },
     {
+      accessorKey: "insurer_name",
       header: t("insurer"),
-      accessorKey: "insurer_name" as keyof InsuranceProduct,
-      sortable: true
     },
     {
+      accessorKey: "is_active",
       header: t("status"),
-      accessorKey: "is_active" as keyof InsuranceProduct,
       cell: (row: InsuranceProduct) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
           {row.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
-      sortable: true
     },
     {
+      accessorKey: "id",
       header: t("actions"),
-      accessorKey: (row: InsuranceProduct) => (
+      cell: (row: InsuranceProduct) => (
         <div className="flex gap-2 justify-end">
           <Button 
             variant="outline" 
@@ -108,6 +104,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
     <DataTable
       data={products || []}
       columns={columns}
+      keyField="id"
       isLoading={isLoading}
       emptyState={{
         title: t("noProductsFound"),

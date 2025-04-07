@@ -12,38 +12,32 @@ export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id:
   
   return [
     {
-      key: "name",
-      header: t("name"),
       accessorKey: "name",
+      header: t("name"),
     },
     {
-      key: "contact_person",
-      header: t("contactPerson"),
       accessorKey: "contact_person",
+      header: t("contactPerson"),
       cell: (row: Insurer) => row.contact_person || "-",
     },
     {
-      key: "email",
-      header: t("email"),
       accessorKey: "email",
+      header: t("email"),
       cell: (row: Insurer) => row.email || "-",
     },
     {
-      key: "phone",
-      header: t("phone"),
       accessorKey: "phone",
+      header: t("phone"),
       cell: (row: Insurer) => row.phone || "-",
     },
     {
-      key: "country",
-      header: t("country"),
       accessorKey: "country",
+      header: t("country"),
       cell: (row: Insurer) => row.country || "-",
     },
     {
-      key: "status",
-      header: t("status"),
       accessorKey: "is_active",
+      header: t("status"),
       cell: (row: Insurer) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
           {row.is_active ? t("active") : t("inactive")}
@@ -52,9 +46,8 @@ export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id:
     },
     ...(onEdit || onDelete ? [
       {
-        key: "actions",
-        header: t("actions"),
         accessorKey: "id",
+        header: t("actions"),
         cell: (row: Insurer) => (
           <div className="flex gap-2 justify-end">
             {onEdit && (

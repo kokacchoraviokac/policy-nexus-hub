@@ -25,46 +25,52 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
   
   const columns = [
     {
+      accessorKey: "name",
       header: t("name"),
-      accessorKey: "name" as keyof Client,
-      sortable: true
+      cell: (row: Client) => (
+        <div>
+          <span className="font-medium">{row.name}</span>
+          {!row.is_active && (
+            <Badge variant="outline" className="ml-2 bg-muted text-muted-foreground">
+              {t("inactive")}
+            </Badge>
+          )}
+        </div>
+      )
     },
     {
+      accessorKey: "contact_person",
       header: t("contactPerson"),
-      accessorKey: "contact_person" as keyof Client,
       cell: (row: Client) => row.contact_person || "-",
-      sortable: true
     },
     {
+      accessorKey: "email",
       header: t("email"),
-      accessorKey: "email" as keyof Client,
       cell: (row: Client) => row.email || "-",
-      sortable: true
     },
     {
+      accessorKey: "phone",
       header: t("phone"),
-      accessorKey: "phone" as keyof Client,
       cell: (row: Client) => row.phone || "-",
     },
     {
+      accessorKey: "city",
       header: t("city"),
-      accessorKey: "city" as keyof Client,
       cell: (row: Client) => row.city || "-",
-      sortable: true
     },
     {
+      accessorKey: "is_active",
       header: t("status"),
-      accessorKey: "is_active" as keyof Client,
       cell: (row: Client) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
           {row.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
-      sortable: true
     },
     {
+      accessorKey: "id",
       header: t("actions"),
-      accessorKey: (row: Client) => (
+      cell: (row: Client) => (
         <div className="flex gap-2 justify-end">
           <Button 
             variant="outline" 
@@ -108,6 +114,7 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
     <DataTable
       data={clients || []}
       columns={columns}
+      keyField="id"
       isLoading={isLoading}
       emptyState={{
         title: t("noClientsFound"),

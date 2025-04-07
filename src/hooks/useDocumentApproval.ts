@@ -5,7 +5,6 @@ import { DocumentApprovalStatus, EntityType } from "@/types/documents";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { fromDocumentTable } from "@/utils/supabaseTypeAssertions";
 
 interface UpdateApprovalParams {
   documentId: string;
@@ -39,8 +38,9 @@ export const useDocumentApproval = ({ onSuccess }: UseDocumentApprovalProps = {}
           approved_at: new Date().toISOString()
         };
         
-        // Use our safe wrapper for supabase queries
-        const { data, error } = await fromDocumentTable(tableName)
+        // Use direct supabase call for now
+        const { data, error } = await supabase
+          .from(tableName)
           .update(updateData)
           .eq('id', documentId)
           .select()

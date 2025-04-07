@@ -23,13 +23,13 @@ export function useDocumentManager({
     error,
     refetch: refreshDocuments,
     deleteDocument,
-    isDeleting
+    isDeletingDocument: isDeleting
   } = useDocuments(entityType, entityId);
 
   // Use the document approval hook for approval operations
   const { 
-    updateDocumentApproval,
-    isUpdatingApproval
+    updateApprovalStatus: updateDocumentApproval,
+    isUpdating: isUpdatingApproval
   } = useDocumentApproval();
 
   return {

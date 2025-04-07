@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { DocumentUploadOptions } from "@/types/documents";
 import { EntityType } from "@/types/common";
 import { getDocumentTableName, getEntityIdColumn } from "@/utils/documentUploadUtils";
-import { fromDocumentTable } from "@/utils/supabaseTypeAssertions";
 
 /**
  * Hook for uploading documents with file handling and database operations
@@ -85,7 +84,7 @@ export const useUploadDocument = () => {
         documentRecord.step = salesStage;
       }
       
-      // Insert document record
+      // Insert document record using direct supabase call
       const { data: insertedData, error: documentError } = await supabase
         .from(tableName)
         .insert(documentRecord)

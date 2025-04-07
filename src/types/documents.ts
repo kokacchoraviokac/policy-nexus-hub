@@ -34,6 +34,18 @@ export interface Document {
   status?: string;
   comments?: DocumentComment[];
   uploaded_by_name?: string;
+  approval_notes?: string;
+  approved_by?: string;
+  approved_at?: string;
+  // Fields needed for document operations
+  policy_id?: string;
+  claim_id?: string;
+  sales_process_id?: string;
+  invoice_id?: string;
+  addendum_id?: string;
+  client_id?: string;
+  insurer_id?: string;
+  agent_id?: string;
 }
 
 // Type alias for backward compatibility
@@ -69,6 +81,16 @@ export interface DocumentSearchParams {
 // Props for document search hook
 export interface UseDocumentSearchProps {
   defaultParams?: DocumentSearchParams;
+  entityType?: EntityType;
+  entityId?: string;
+  category?: DocumentCategory;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  initialSearchParams?: DocumentSearchParams;
+  autoFetch?: boolean;
 }
 
 // Return type for document search hook
@@ -79,6 +101,18 @@ export interface UseDocumentSearchReturn {
   searchParams: DocumentSearchParams;
   setSearchParams: (params: DocumentSearchParams) => void;
   refresh: () => void;
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void;
+  selectedCategory?: DocumentCategory;
+  setSelectedCategory?: (category: DocumentCategory) => void;
+  searchDocuments?: () => void;
+  currentPage?: number;
+  totalPages?: number;
+  itemsCount?: number;
+  itemsPerPage?: number;
+  handlePageChange?: (page: number) => void;
+  isError?: boolean;
+  totalCount?: number;
 }
 
 // Document upload options

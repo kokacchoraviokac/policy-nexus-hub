@@ -21,7 +21,7 @@ interface UseDocumentsReturn {
 
 export function useDocuments(entityType: EntityType | string, entityId: string): UseDocumentsReturn {
   const queryClient = useQueryClient();
-  const tableName = getDocumentTableName(entityType);
+  const tableName = getDocumentTableName(entityType as EntityType);
   
   const {
     data: documents = [],
@@ -34,8 +34,9 @@ export function useDocuments(entityType: EntityType | string, entityId: string):
     queryKey: ['documents', entityType, entityId],
     queryFn: async () => {
       try {
-        // Cast as any first to bypass TypeScript error with string literal type
-        const query = fromDocumentTable(tableName as DocumentTableName)
+        // Use the supabase client directly for now until we fix the utility functions
+        const query = supabase
+          .from(tableName)
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -94,7 +95,8 @@ export function useDocuments(entityType: EntityType | string, entityId: string):
   // Mutation for deleting a document
   const deleteDocumentMutation = useMutation({
     mutationFn: async (documentId: string) => {
-      const { error } = await fromDocumentTable(tableName as DocumentTableName)
+      const { error } = await supabase
+        .from(tableName)
         .delete()
         .eq('id', documentId);
       

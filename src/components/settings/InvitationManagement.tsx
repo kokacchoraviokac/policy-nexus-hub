@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useInvitations } from '@/hooks/useInvitations';
 import { useCreateInvitation } from '@/hooks/useCreateInvitation';
 import DataTable from '@/components/ui/data-table';
-import { columns } from './invitations/InvitationColumns';
+import { columns as invitationColumns } from './invitations/InvitationColumns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -13,6 +14,7 @@ import { createInviteFormSchema } from './invitations/CreateInvitationForm';
 import CreateInvitationForm from './invitations/CreateInvitationForm';
 import { useAuth } from '@/contexts/auth/AuthContext';
 import { Pagination } from '@/components/ui/pagination';
+import { UserRole } from '@/types/common';
 
 const InvitationManagement: React.FC = () => {
   const { t } = useLanguage();
@@ -23,7 +25,7 @@ const InvitationManagement: React.FC = () => {
   
   const { user } = useAuth();
   const authContext = useAuth();
-  const isSuperAdmin = authContext.role === 'superAdmin' || authContext.role === 'super_admin';
+  const isSuperAdmin = authContext.role === UserRole.SUPER_ADMIN;
   
   const { companies, loading: isLoadingCompanies } = useCompanies();
   const { 
@@ -33,6 +35,7 @@ const InvitationManagement: React.FC = () => {
   } = useInvitations();
   
   const totalInvitations = invitations.length;
+  const totalPages = Math.ceil(totalInvitations / itemsPerPage);
   
   const { createInvitation, isSubmitting } = useCreateInvitation();
   
@@ -65,6 +68,13 @@ const InvitationManagement: React.FC = () => {
     setCurrentPage(page);
   };
 
+  // Adapt the columns to match our DataTable component interface
+  const adaptedColumns = invitationColumns.map(col => ({
+    accessorKey: col.accessorKey || col.id,
+    header: col.header ? col.header : (typeof col.id === 'string' ? col.id : 'Unknown'),
+    cell: col.cell ? (col.cell as any) : undefined
+  }));
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -83,7 +93,7 @@ const InvitationManagement: React.FC = () => {
             <CreateInvitationForm
               companies={companies || []}
               isSuperAdmin={isSuperAdmin}
-              defaultCompanyId={user?.companyId}
+              defaultCompanyId={user?.company_id}
               isSubmitting={isSubmitting}
               onSubmit={handleCreateInvitation}
             />
@@ -92,16 +102,23 @@ const InvitationManagement: React.FC = () => {
       </CardHeader>
       <CardContent>
         <DataTable 
-          columns={columns} 
+          columns={adaptedColumns} 
           data={invitations || []} 
           isLoading={isLoadingInvitations}
+          keyField="id"
+          emptyState={{
+            title: t("noInvitationsFound"),
+            description: t("noInvitationsPending"),
+            action: null
+          }}
         />
         {totalInvitations > 0 && (
           <div className="mt-4 flex items-center justify-end space-x-2">
             <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
               itemsCount={totalInvitations}
               itemsPerPage={itemsPerPage}
-              currentPage={currentPage}
               onPageChange={handlePageChange}
             />
           </div>

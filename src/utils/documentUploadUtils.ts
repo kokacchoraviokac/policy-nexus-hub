@@ -1,53 +1,76 @@
 
-import { EntityType } from "@/types/common";
-import { DocumentTableName } from "@/types/documents";
+import { EntityType } from '@/types/common';
+import { DocumentTableName } from '@/types/documents';
 
 /**
- * Maps entity types to their corresponding document table names
+ * Gets the document table name for a given entity type
  */
-export function getDocumentTableName(entityType: EntityType | string): DocumentTableName {
-  const mapping: Record<string, DocumentTableName> = {
-    [EntityType.POLICY]: "policy_documents",
-    [EntityType.CLAIM]: "claim_documents",
-    [EntityType.SALES_PROCESS]: "sales_documents",
-    [EntityType.SALE]: "sales_documents", // Alias for sales_process
-    [EntityType.CLIENT]: "client_documents",
-    [EntityType.INSURER]: "insurer_documents",
-    [EntityType.AGENT]: "agent_documents",
-    [EntityType.INVOICE]: "invoice_documents",
-    [EntityType.ADDENDUM]: "addendum_documents",
-  };
-
-  const tableName = mapping[entityType];
-  if (!tableName) {
-    console.warn(`Unknown entity type: ${entityType}, defaulting to policy_documents`);
-    return "policy_documents";
+export function getDocumentTableName(entityType: EntityType): DocumentTableName {
+  switch (entityType) {
+    case EntityType.POLICY:
+      return 'policy_documents';
+    case EntityType.CLAIM:
+      return 'claim_documents';
+    case EntityType.SALES_PROCESS:
+    case EntityType.SALE:
+      return 'sales_documents';
+    case EntityType.CLIENT:
+      return 'client_documents';
+    case EntityType.INSURER:
+      return 'insurer_documents';
+    case EntityType.AGENT:
+      return 'agent_documents';
+    case EntityType.INVOICE:
+      return 'invoice_documents';
+    case EntityType.ADDENDUM:
+      return 'addendum_documents';
+    default:
+      throw new Error(`No document table mapping for entity type: ${entityType}`);
   }
-
-  return tableName;
 }
 
 /**
- * Maps entity types to their corresponding ID column names in document tables
+ * Gets the entity ID column name for a given entity type
  */
-export function getEntityIdColumn(entityType: EntityType | string): string {
-  const mapping: Record<string, string> = {
-    [EntityType.POLICY]: "policy_id",
-    [EntityType.CLAIM]: "claim_id",
-    [EntityType.SALES_PROCESS]: "sales_process_id",
-    [EntityType.SALE]: "sales_process_id", // Alias for sales_process
-    [EntityType.CLIENT]: "client_id",
-    [EntityType.INSURER]: "insurer_id",
-    [EntityType.AGENT]: "agent_id",
-    [EntityType.INVOICE]: "invoice_id",
-    [EntityType.ADDENDUM]: "addendum_id",
-  };
-
-  const columnName = mapping[entityType];
-  if (!columnName) {
-    console.warn(`Unknown entity type: ${entityType}, defaulting to entity_id`);
-    return "entity_id";
+export function getEntityIdColumn(entityType: EntityType): string {
+  switch (entityType) {
+    case EntityType.POLICY:
+      return 'policy_id';
+    case EntityType.CLAIM:
+      return 'claim_id';
+    case EntityType.SALES_PROCESS:
+    case EntityType.SALE:
+      return 'sales_process_id';
+    case EntityType.CLIENT:
+      return 'client_id';
+    case EntityType.INSURER:
+      return 'insurer_id';
+    case EntityType.AGENT:
+      return 'agent_id';
+    case EntityType.INVOICE:
+      return 'invoice_id';
+    case EntityType.ADDENDUM:
+      return 'addendum_id';
+    default:
+      throw new Error(`No entity ID column mapping for entity type: ${entityType}`);
   }
+}
 
-  return columnName;
+/**
+ * Helper to safely convert a string to a DocumentTableName
+ */
+export function asTableName(name: string): DocumentTableName {
+  if (
+    name === 'policy_documents' ||
+    name === 'claim_documents' ||
+    name === 'sales_documents' ||
+    name === 'client_documents' ||
+    name === 'insurer_documents' ||
+    name === 'agent_documents' ||
+    name === 'invoice_documents' ||
+    name === 'addendum_documents'
+  ) {
+    return name as DocumentTableName;
+  }
+  throw new Error(`Invalid document table name: ${name}`);
 }
