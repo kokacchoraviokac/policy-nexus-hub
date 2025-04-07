@@ -68,3 +68,42 @@ export interface ServiceResponse<T = any> {
   error?: string;
   message?: string;
 }
+
+// Add UserRole enum for consistency
+export enum UserRole {
+  SUPER_ADMIN = "super_admin",
+  ADMIN = "admin",
+  EMPLOYEE = "employee",
+  AGENT = "agent",
+  CLIENT = "client"
+}
+
+// DocumentComment interface for structured comments
+export interface DocumentComment {
+  author: string;
+  text: string;
+  created_at: string;
+  user_id?: string;
+}
+
+// Financial transaction types
+export enum TransactionType {
+  INCOME = "income",
+  EXPENSE = "expense"
+}
+
+// Common pagination related interfaces
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}

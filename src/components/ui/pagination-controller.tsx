@@ -1,63 +1,170 @@
 
 import React from "react";
-import { cn } from "@/utils/shadcn";
-import { Pagination } from "./pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface PaginationControllerProps {
-  itemsCount: number;
-  itemsPerPage: number;
   currentPage: number;
+  totalPages: number;
+  itemsPerPage: number;
+  totalItems: number;
+  itemsCount: number;
   onPageChange: (page: number) => void;
-  className?: string;
-  pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
-  totalPages?: number;
-  totalItems?: number;
+  pageSizeOptions?: number[];
+  showItemCount?: boolean;
+  className?: string;
 }
 
-/**
- * A controller component that handles pagination logic and renders a Pagination component
- * with the correct props. This abstraction is useful for components that need pagination
- * but don't want to deal with calculating total pages.
- */
-const PaginationController: React.FC<PaginationControllerProps> = ({
-  itemsCount,
-  itemsPerPage,
+export const PaginationController: React.FC<PaginationControllerProps> = ({
   currentPage,
-  onPageChange,
-  className,
-  pageSizeOptions,
-  onPageSizeChange,
-  totalPages: providedTotalPages,
+  totalPages,
+  itemsPerPage,
   totalItems,
+  itemsCount,
+  onPageChange,
+  onPageSizeChange,
+  pageSizeOptions = [10, 25, 50, 100],
+  showItemCount = true,
+  className,
 }) => {
-  // Calculate total pages if not provided
-  const totalPages = providedTotalPages || Math.max(1, Math.ceil(itemsCount / itemsPerPage));
-
-  // If there's only 1 page, don't show pagination
-  if (totalPages <= 1) {
-    return null;
-  }
-
-  // Make sure current page is within bounds
-  const boundedCurrentPage = Math.max(1, Math.min(currentPage, totalPages));
+  const { t } = useLanguage();
   
-  // If current page is out of bounds, auto-correct by changing page
-  if (boundedCurrentPage !== currentPage) {
-    onPageChange(boundedCurrentPage);
-  }
-
+  // Generate visible page numbers
+  const getPageNumbers = () => {
+    // Always show first, last, current page and pages around current
+    const delta = 1; // Pages to show before and after current
+    
+    let pages: (number | 'ellipsis')[] = [];
+    
+    // Always add page 1
+    pages.push(1);
+    
+    // Check if we need to add first ellipsis
+    if (currentPage - delta > 2) {
+      pages.push('ellipsis');
+    }
+    
+    // Add pages around current page
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      pages.push(i);
+    }
+    
+    // Check if we need to add last ellipsis
+    if (currentPage + delta < totalPages - 1) {
+      pages.push('ellipsis');
+    }
+    
+    // Always add the last page if there is more than one page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+  
+  const renderPaginationItems = () => {
+    const pageNumbers = getPageNumbers();
+    
+    return pageNumbers.map((page, index) => {
+      if (page === 'ellipsis') {
+        return (
+          <PaginationItem key={`ellipsis-${index}`}>
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+      
+      return (
+        <PaginationItem key={page}>
+          <PaginationLink
+            isActive={page === currentPage}
+            onClick={(e) => {
+              e.preventDefault();
+              onPageChange(page);
+            }}
+          >
+            {page}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    });
+  };
+  
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(startItem + itemsCount - 1, totalItems);
+  
   return (
-    <div className={cn("flex items-center justify-center pt-4", className)}>
-      <Pagination
-        totalPages={totalPages}
-        currentPage={boundedCurrentPage}
-        onPageChange={onPageChange}
-        itemsCount={totalItems || itemsCount}
-        itemsPerPage={itemsPerPage}
-      />
+    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}>
+      {showItemCount && totalItems > 0 && (
+        <div className="text-sm text-muted-foreground">
+          {t("showingItems", { start: startItem, end: endItem, total: totalItems })}
+        </div>
+      )}
+      
+      <div className="flex items-center gap-2">
+        {onPageSizeChange && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{t("rowsPerPage")}</span>
+            <Select
+              value={String(itemsPerPage)}
+              onValueChange={(value) => onPageSizeChange(Number(value))}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue placeholder={String(itemsPerPage)} />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizeOptions.map((option) => (
+                  <SelectItem key={option} value={String(option)}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage > 1) {
+                    onPageChange(currentPage - 1);
+                  }
+                }}
+                tabIndex={0}
+                className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            
+            {renderPaginationItems()}
+            
+            <PaginationItem>
+              <PaginationNext
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (currentPage < totalPages) {
+                    onPageChange(currentPage + 1);
+                  }
+                }}
+                tabIndex={0}
+                className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 };
-
-export default PaginationController;

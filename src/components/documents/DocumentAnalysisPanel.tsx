@@ -1,122 +1,93 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Tag, AlertCircle, FileText } from "lucide-react";
-import { DocumentAnalysisPanelProps, DocumentCategory } from "@/types/documents";
-import { DocumentCategory as DocCategory } from "@/types/common";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { DocumentAnalysisPanelProps } from "@/types/documents";
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
-  document,
   file,
   onAnalysisComplete,
   onCategoryDetected
 }) => {
-  const [analyzing, setAnalyzing] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
+  const [progress, setProgress] = useState(0);
+  const [analyzing, setAnalyzing] = useState(true);
   
-  // Simulate document analysis
+  // Simulate document analysis process
   useEffect(() => {
-    if (file) {
-      setAnalyzing(true);
-      setError(null);
+    let timer: NodeJS.Timeout;
+    let currentProgress = 0;
+    
+    const incrementProgress = () => {
+      currentProgress += 5;
+      setProgress(currentProgress);
       
-      // Mock analysis process
-      const timer = setTimeout(() => {
+      if (currentProgress >= 100) {
+        clearInterval(timer);
         setAnalyzing(false);
-        setCompleted(true);
-        
-        // Mock detection result based on file type
-        let detectedCategories: string[] = [];
-        
-        if (file.type.includes('pdf')) {
-          detectedCategories = [DocCategory.POLICY, DocCategory.INVOICE];
-        } else if (file.type.includes('image')) {
-          detectedCategories = ['identification', DocCategory.OTHER];
-        } else if (file.type.includes('word')) {
-          detectedCategories = [DocCategory.CONTRACT, 'amendment'];
-        }
-        
-        setCategories(detectedCategories);
-        
-        // Notify parent about detected category
-        if (detectedCategories.length > 0 && onCategoryDetected) {
-          onCategoryDetected(detectedCategories[0] as DocumentCategory);
-        }
-        
-        if (onAnalysisComplete) {
-          onAnalysisComplete();
-        }
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [file, onCategoryDetected, onAnalysisComplete]);
+        onAnalysisComplete();
+        // Simulate a detected category
+        onCategoryDetected('policy');
+      }
+    };
+    
+    timer = setInterval(incrementProgress, 200);
+    
+    return () => {
+      clearInterval(timer);
+    };
+  }, [onAnalysisComplete, onCategoryDetected]);
   
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center">
-          <Sparkles className="mr-2 h-4 w-4" />
-          Document Analysis
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {file ? (
-          <>
-            <div className="text-sm mb-4">
-              <div className="font-medium">File:</div>
-              <div className="flex items-center text-muted-foreground">
-                <FileText className="h-4 w-4 mr-1" />
-                {file.name}
-              </div>
+    <Card className="w-full">
+      <CardContent className="pt-6">
+        <div className="flex items-start space-x-4">
+          <div className="flex-shrink-0">
+            <FileText className="h-8 w-8 text-primary" />
+          </div>
+          
+          <div className="flex-1 space-y-4">
+            <div>
+              <h3 className="font-medium">{file.name}</h3>
+              <p className="text-sm text-muted-foreground">
+                {(file.size / 1024 / 1024).toFixed(2)} MB · {file.type || "Unknown type"}
+              </p>
             </div>
             
             {analyzing ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="animate-pulse flex items-center">
-                  <Sparkles className="mr-2 h-4 w-4 text-blue-500" />
-                  <p>Analyzing document...</p>
-                </div>
-              </div>
-            ) : error ? (
-              <div className="flex items-center text-destructive py-4">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                {error}
-              </div>
-            ) : completed ? (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium mb-1">
-                    <Tag className="h-4 w-4 inline mr-1" />
-                    Detected Categories:
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">
+                    {t("analyzingDocument")}
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    {categories.length > 0 ? (
-                      categories.map((category) => (
-                        <Badge 
-                          key={category} 
-                          variant="outline" 
-                          className="bg-blue-50"
-                        >
-                          {category}
-                        </Badge>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No categories detected</p>
-                    )}
-                  </div>
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                </div>
+                <Progress value={progress} className="h-2" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">
+                    {t("analysisComplete")}
+                  </p>
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Badge variant="outline" className="bg-primary/10">
+                    {t("policy")}
+                  </Badge>
+                  <Badge variant="outline" className="bg-primary/10">
+                    {t("invoice")}
+                  </Badge>
                 </div>
               </div>
-            ) : null}
-          </>
-        ) : (
-          <div className="text-sm text-muted-foreground py-4 text-center">
-            Upload a document to start analysis
+            )}
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );

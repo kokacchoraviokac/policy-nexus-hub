@@ -1,114 +1,146 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { WorkflowPolicy } from "@/hooks/useWorkflowPolicies";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { PaginationController } from "@/components/ui/pagination-controller";
 import { Button } from "@/components/ui/button";
-import { Eye, Loader2 } from "lucide-react";
-import WorkflowStatusBadge from "./WorkflowStatusBadge";
-import { formatCurrency, formatDate } from "@/utils/format";
-import PaginationController from "@/components/ui/pagination-controller";
+import { FileEdit, Loader2, Info } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Policy, PolicyWorkflowStatus } from "@/types/policies";
+
+// Helper function to get status badge by workflow status
+const getStatusBadge = (status: PolicyWorkflowStatus) => {
+  switch (status) {
+    case PolicyWorkflowStatus.PENDING:
+      return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>;
+    case PolicyWorkflowStatus.PROCESSING:
+      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Processing</Badge>;
+    case PolicyWorkflowStatus.FINALIZED:
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Finalized</Badge>;
+    case PolicyWorkflowStatus.NEEDS_REVIEW:
+      return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Needs Review</Badge>;
+    default:
+      return <Badge variant="outline">Unknown</Badge>;
+  }
+};
 
 interface PolicyWorkflowListProps {
-  policies: WorkflowPolicy[];
+  policies: Policy[];
   isLoading: boolean;
-  totalCount: number;
-  page: number;
-  pageSize: number;
+  onEditPolicy: (policy: Policy) => void;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  pageSizeOptions: number[];
 }
 
 const PolicyWorkflowList: React.FC<PolicyWorkflowListProps> = ({
   policies,
   isLoading,
-  totalCount,
-  page,
-  pageSize,
+  onEditPolicy,
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange,
+  pageSizeOptions,
 }) => {
   const { t } = useLanguage();
-  const totalPages = Math.ceil(totalCount / pageSize);
 
   if (isLoading) {
     return (
-      <div className="py-8 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (policies.length === 0) {
-    return (
-      <div className="py-8 text-center">
-        <h3 className="font-medium text-lg">{t("noPoliciesFound")}</h3>
-        <p className="text-muted-foreground">{t("tryAdjustingYourFilters")}</p>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-center items-center min-h-[300px]">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t("policyNumber")}</TableHead>
-              <TableHead>{t("client")}</TableHead>
-              <TableHead>{t("insurer")}</TableHead>
-              <TableHead>{t("product")}</TableHead>
-              <TableHead>{t("startDate")}</TableHead>
-              <TableHead>{t("expiryDate")}</TableHead>
-              <TableHead>{t("premium")}</TableHead>
-              <TableHead>{t("status")}</TableHead>
-              <TableHead className="w-[100px]">{t("actions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {policies.map((policy) => (
-              <TableRow key={policy.id}>
-                <TableCell className="font-medium">{policy.policyNumber}</TableCell>
-                <TableCell>{policy.client}</TableCell>
-                <TableCell>{policy.insurer}</TableCell>
-                <TableCell>{policy.product}</TableCell>
-                <TableCell>{formatDate(policy.startDate)}</TableCell>
-                <TableCell>{formatDate(policy.endDate)}</TableCell>
-                <TableCell>{formatCurrency(policy.premium, policy.currency)}</TableCell>
-                <TableCell>
-                  <WorkflowStatusBadge status={policy.status} />
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      // We would typically navigate to the review page here
-                      window.location.href = `/policies/workflow/review/${policy.id}`;
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                    <span className="sr-only">{t("review")}</span>
-                  </Button>
-                </TableCell>
+    <Card>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("policyNumber")}</TableHead>
+                <TableHead>{t("policyType")}</TableHead>
+                <TableHead>{t("insurer")}</TableHead>
+                <TableHead>{t("client")}</TableHead>
+                <TableHead>{t("premium")}</TableHead>
+                <TableHead>{t("startDate")}</TableHead>
+                <TableHead>{t("expiryDate")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {policies.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center h-24">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <Info className="h-10 w-10 mb-2" />
+                      <p>{t("noPoliciesFound")}</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                policies.map((policy) => (
+                  <TableRow
+                    key={policy.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                  >
+                    <TableCell className="font-medium">{policy.policy_number}</TableCell>
+                    <TableCell>{policy.policy_type}</TableCell>
+                    <TableCell>{policy.insurer_name}</TableCell>
+                    <TableCell>{policy.policyholder_name}</TableCell>
+                    <TableCell>{formatCurrency(policy.premium, policy.currency)}</TableCell>
+                    <TableCell>{formatDate(policy.start_date)}</TableCell>
+                    <TableCell>{formatDate(policy.expiry_date)}</TableCell>
+                    <TableCell>{getStatusBadge(policy.workflow_status as PolicyWorkflowStatus)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" onClick={() => onEditPolicy(policy)}>
+                        <FileEdit className="h-4 w-4 mr-2" />
+                        {t("edit")}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-      {totalCount > 0 && (
-        <PaginationController
-          currentPage={page}
-          totalPages={totalPages}
-          totalItems={totalCount}
-          itemsPerPage={pageSize}
-          onPageChange={onPageChange}
-          onPageSizeChange={onPageSizeChange}
-          pageSizeOptions={[10, 25, 50, 100]}
-        />
-      )}
-    </div>
+        <div className="p-4 border-t">
+          <PaginationController
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={itemsPerPage}
+            totalItems={totalItems}
+            itemsCount={policies.length}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
+            pageSizeOptions={pageSizeOptions}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

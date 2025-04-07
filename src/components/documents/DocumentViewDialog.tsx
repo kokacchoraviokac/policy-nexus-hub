@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Document, DocumentApprovalStatus } from "@/types/documents";
-import { formatDate } from "@/lib/utils";
+import { Document, DocumentApprovalStatus, EntityType } from "@/types/documents";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle, AlertTriangle, Clock, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useDocumentApproval } from "@/hooks/useDocumentApproval";
 import { toast } from "sonner";
+
+interface Comment {
+  author: string;
+  text: string;
+  created_at: string;
+}
 
 interface DocumentViewDialogProps {
   open: boolean;
@@ -38,7 +45,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
   const handleApproval = (status: DocumentApprovalStatus) => {
     updateApprovalStatus({
       documentId: document.id,
-      entityType: document.entity_type,
+      entityType: document.entity_type as EntityType,
       status: status,
       notes: approvalNotes
     });
@@ -89,7 +96,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
     );
   };
 
-  // Fix only the part that renders comments
+  // Fix the rendering of comments
   const renderComments = () => {
     if (!document.comments || document.comments.length === 0) {
       return (
@@ -99,9 +106,21 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
       );
     }
     
+    // Handle both string[] and Comment[] types for comments
+    const comments = document.comments.map(comment => {
+      if (typeof comment === 'string') {
+        return { 
+          author: 'System', 
+          text: comment,
+          created_at: new Date().toISOString()
+        };
+      }
+      return comment as Comment;
+    });
+    
     return (
       <div className="space-y-4">
-        {document.comments.map((comment, index) => (
+        {comments.map((comment, index) => (
           <div key={index} className="bg-muted p-3 rounded-lg">
             <div className="flex justify-between mb-1">
               <span className="text-sm font-medium">{comment.author}</span>

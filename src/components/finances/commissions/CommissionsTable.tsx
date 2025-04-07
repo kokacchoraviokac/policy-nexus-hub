@@ -1,140 +1,138 @@
-
-import React from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { CommissionType } from '@/types/finances';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import CommissionStatusBadge from './CommissionStatusBadge';
-import { Button } from '@/components/ui/button';
-import { Pencil } from 'lucide-react';
-import UpdateCommissionStatusDialog from './UpdateCommissionStatusDialog';
-import CreateInvoiceFromCommissionButton from './CreateInvoiceFromCommissionButton';
-import PaginationController from '@/components/ui/pagination-controller';
+import React, { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { PaginationController } from "@/components/ui/pagination-controller";
+import { Button } from "@/components/ui/button";
+import { Loader2, Info } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { formatCurrency, formatDate } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Commission, CommissionStatus } from "@/types/finances";
 
 interface CommissionsTableProps {
-  commissions: (CommissionType & {
-    policy_number?: string;
-    policyholder_name?: string;
-    insurer_name?: string;
-    product_name?: string;
-    agent_name?: string | null;
-    currency?: string;
-  })[];
+  commissions: Commission[];
   isLoading: boolean;
-  updateCommissionStatus: (data: { commissionId: string; status: CommissionType['status']; paymentDate?: string; paidAmount?: number }) => void;
-  isUpdating: boolean;
-  pagination?: {
-    currentPage: number;
-    totalPages: number;
-    itemsPerPage: number;
-    totalItems: number;
-    onPageChange: (page: number) => void;
-    onPageSizeChange: (pageSize: number) => void;
-  };
+  onCommissionClick: (commission: Commission) => void;
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
 }
 
 const CommissionsTable: React.FC<CommissionsTableProps> = ({
   commissions,
   isLoading,
-  updateCommissionStatus,
-  isUpdating,
-  pagination,
+  onCommissionClick,
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsPerPage,
+  onPageChange,
+  onPageSizeChange,
 }) => {
-  const { t, formatCurrency, formatDate } = useLanguage();
-  const [selectedCommission, setSelectedCommission] = React.useState<CommissionType | null>(null);
+  const { t } = useLanguage();
+
+  // Status badge rendering
+  const getStatusBadge = (status: CommissionStatus) => {
+    switch (status) {
+      case CommissionStatus.PAID:
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Paid</Badge>;
+      case CommissionStatus.PENDING:
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>;
+      case CommissionStatus.INVOICED:
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Invoiced</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (commissions.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">{t('noCommissionsFound')}</p>
-        <p className="text-sm text-muted-foreground mt-2">{t('adjustFiltersForCommissions')}</p>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-center items-center min-h-[300px]">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <>
-      <div className="rounded-md border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('policyNumber')}</TableHead>
-              <TableHead>{t('policyholder')}</TableHead>
-              <TableHead>{t('insurer')}</TableHead>
-              <TableHead className="text-right">{t('baseAmount')}</TableHead>
-              <TableHead className="text-right">{t('rate')}</TableHead>
-              <TableHead className="text-right">{t('calculatedCommission')}</TableHead>
-              <TableHead>{t('status')}</TableHead>
-              <TableHead>{t('actions')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {commissions.map((commission) => (
-              <TableRow key={commission.id}>
-                <TableCell>{commission.policy_number}</TableCell>
-                <TableCell>{commission.policyholder_name}</TableCell>
-                <TableCell>{commission.insurer_name}</TableCell>
-                <TableCell className="text-right">{formatCurrency(commission.base_amount)}</TableCell>
-                <TableCell className="text-right">{commission.rate}%</TableCell>
-                <TableCell className="text-right font-medium">{formatCurrency(commission.calculated_amount)}</TableCell>
-                <TableCell>
-                  <CommissionStatusBadge status={commission.status} />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedCommission(commission)}
-                      disabled={isUpdating}
-                    >
-                      <Pencil className="h-4 w-4 mr-1" />
-                      {t('updateStatus')}
-                    </Button>
-                    
-                    <CreateInvoiceFromCommissionButton
-                      commissionId={commission.id}
-                      policyId={commission.policy_id}
-                      disabled={commission.status === 'calculating' || isUpdating}
-                    />
-                  </div>
-                </TableCell>
+    <Card>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("policyNumber")}</TableHead>
+                <TableHead>{t("baseAmount")}</TableHead>
+                <TableHead>{t("rate")}</TableHead>
+                <TableHead>{t("calculatedAmount")}</TableHead>
+                <TableHead>{t("status")}</TableHead>
+                <TableHead>{t("createdDate")}</TableHead>
+                <TableHead>{t("paymentDate")}</TableHead>
+                <TableHead className="text-right">{t("actions")}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {commissions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center h-24">
+                    <div className="flex flex-col items-center justify-center text-muted-foreground">
+                      <Info className="h-10 w-10 mb-2" />
+                      <p>{t("noCommissionsFound")}</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                commissions.map((commission) => (
+                  <TableRow
+                    key={commission.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => onCommissionClick(commission)}
+                  >
+                    <TableCell className="font-medium">{commission.policy_number}</TableCell>
+                    <TableCell>{formatCurrency(commission.base_amount)}</TableCell>
+                    <TableCell>{commission.rate}%</TableCell>
+                    <TableCell>{formatCurrency(commission.calculated_amount)}</TableCell>
+                    <TableCell>{getStatusBadge(commission.status)}</TableCell>
+                    <TableCell>{formatDate(commission.created_at)}</TableCell>
+                    <TableCell>{commission.payment_date ? formatDate(commission.payment_date) : '-'}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm">
+                        {t("view")}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-      {pagination && (
-        <div className="mt-4">
-          <PaginationController 
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            totalItems={pagination.totalItems}
-            itemsPerPage={pagination.itemsPerPage}
-            onPageChange={pagination.onPageChange}
-            onPageSizeChange={pagination.onPageSizeChange}
+        <div className="p-4 border-t">
+          <PaginationController
+            currentPage={currentPage}
+            totalPages={totalPages} 
+            itemsPerPage={itemsPerPage}
+            totalItems={totalItems}
+            itemsCount={commissions.length}
+            onPageChange={onPageChange}
+            onPageSizeChange={onPageSizeChange}
           />
         </div>
-      )}
-
-      {selectedCommission && (
-        <UpdateCommissionStatusDialog
-          open={!!selectedCommission}
-          onOpenChange={(open) => !open && setSelectedCommission(null)}
-          commission={selectedCommission}
-          onUpdate={updateCommissionStatus}
-          isUpdating={isUpdating}
-        />
-      )}
-    </>
+      </CardContent>
+    </Card>
   );
 };
 

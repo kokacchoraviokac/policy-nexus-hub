@@ -81,7 +81,10 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
             </TabsContent>
 
             <TabsContent value="documents">
-              <DocumentsTab process={updatedProcess} />
+              <DocumentsTab 
+                salesProcess={updatedProcess}
+                salesStage={updatedProcess.stage} 
+              />
             </TabsContent>
           </Tabs>
           
