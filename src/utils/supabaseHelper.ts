@@ -1,12 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentTableName } from "@/types/documents";
-import { fromTable } from "./supabaseTypeAssertions";
+import { RelationName } from "@/types/common";
 
-type DatabaseTableName = string;
+type DatabaseTableName = RelationName;
 
 export const safeQueryFrom = (table: DatabaseTableName) => {
   try {
-    return fromTable(table);
+    return supabase.from(table);
   } catch (error) {
     console.error(`Error accessing table ${table}:`, error);
     throw new Error(`Failed to access table ${table}`);
@@ -14,7 +14,7 @@ export const safeQueryFrom = (table: DatabaseTableName) => {
 };
 
 export const fetchRecordById = async <T>(
-  tableName: string,
+  tableName: DatabaseTableName,
   id: string,
   columns = "*"
 ): Promise<T | null> => {
@@ -39,7 +39,7 @@ export const fetchRecordById = async <T>(
 };
 
 export const insertRecord = async <T>(
-  tableName: string,
+  tableName: DatabaseTableName,
   record: Record<string, any>
 ): Promise<T> => {
   try {
@@ -60,7 +60,7 @@ export const insertRecord = async <T>(
 };
 
 export const updateRecord = async <T>(
-  tableName: string,
+  tableName: DatabaseTableName,
   id: string,
   updates: Record<string, any>
 ): Promise<T> => {

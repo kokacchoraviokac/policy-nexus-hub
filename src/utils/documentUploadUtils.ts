@@ -1,11 +1,7 @@
 
-import { EntityType } from '@/types/common';
-import { DocumentTableName } from '@/types/documents';
+import { DocumentTableName, EntityType } from "@/types/documents";
 
-/**
- * Gets the document table name for a given entity type
- */
-export function getDocumentTableName(entityType: EntityType): DocumentTableName {
+export const getDocumentTableName = (entityType: EntityType): DocumentTableName => {
   switch (entityType) {
     case EntityType.POLICY:
       return 'policy_documents';
@@ -25,52 +21,37 @@ export function getDocumentTableName(entityType: EntityType): DocumentTableName 
     case EntityType.ADDENDUM:
       return 'addendum_documents';
     default:
-      throw new Error(`No document table mapping for entity type: ${entityType}`);
+      throw new Error(`Unsupported entity type: ${entityType}`);
   }
-}
+};
 
-/**
- * Gets the entity ID column name for a given entity type
- */
-export function getEntityIdColumn(entityType: EntityType): string {
-  switch (entityType) {
-    case EntityType.POLICY:
-      return 'policy_id';
-    case EntityType.CLAIM:
-      return 'claim_id';
-    case EntityType.SALES_PROCESS:
-    case EntityType.SALE:
-      return 'sales_process_id';
-    case EntityType.CLIENT:
-      return 'client_id';
-    case EntityType.INSURER:
-      return 'insurer_id';
-    case EntityType.AGENT:
-      return 'agent_id';
-    case EntityType.INVOICE:
-      return 'invoice_id';
-    case EntityType.ADDENDUM:
-      return 'addendum_id';
+export const getEntityTypeFromTableName = (tableName: DocumentTableName): EntityType => {
+  switch (tableName) {
+    case 'policy_documents':
+      return EntityType.POLICY;
+    case 'claim_documents':
+      return EntityType.CLAIM;
+    case 'sales_documents':
+      return EntityType.SALES_PROCESS;
+    case 'client_documents':
+      return EntityType.CLIENT;
+    case 'insurer_documents':
+      return EntityType.INSURER;
+    case 'agent_documents':
+      return EntityType.AGENT;
+    case 'invoice_documents':
+      return EntityType.INVOICE;
+    case 'addendum_documents':
+      return EntityType.ADDENDUM;
     default:
-      throw new Error(`No entity ID column mapping for entity type: ${entityType}`);
+      throw new Error(`Unsupported table name: ${tableName}`);
   }
-}
+};
 
-/**
- * Helper to safely convert a string to a DocumentTableName
- */
-export function asTableName(name: string): DocumentTableName {
-  if (
-    name === 'policy_documents' ||
-    name === 'claim_documents' ||
-    name === 'sales_documents' ||
-    name === 'client_documents' ||
-    name === 'insurer_documents' ||
-    name === 'agent_documents' ||
-    name === 'invoice_documents' ||
-    name === 'addendum_documents'
-  ) {
-    return name as DocumentTableName;
-  }
-  throw new Error(`Invalid document table name: ${name}`);
-}
+export const generateUniqueFileName = (originalName: string): string => {
+  const timestamp = new Date().getTime();
+  const randomString = Math.random().toString(36).substring(2, 10);
+  const fileExtension = originalName.split('.').pop() || '';
+  
+  return `${timestamp}-${randomString}.${fileExtension}`;
+};

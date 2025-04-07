@@ -10,6 +10,7 @@ import {
   SortingState,
   ColumnDef,
   ColumnFiltersState,
+  CellContext
 } from "@tanstack/react-table";
 import {
   Table,
@@ -22,6 +23,8 @@ import {
 import Pagination from "@/components/ui/pagination";
 import TableSkeletonLoader from "@/components/common/TableSkeletonLoader";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+export type Column<TData> = ColumnDef<TData, unknown>;
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];

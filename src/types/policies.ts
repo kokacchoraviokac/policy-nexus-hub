@@ -1,12 +1,7 @@
 
-export enum WorkflowStatus {
-  DRAFT = "draft",
-  PENDING_REVIEW = "pending_review",
-  IN_REVIEW = "in_review",
-  APPROVED = "approved",
-  REJECTED = "rejected",
-  FINALIZED = "finalized"
-}
+import { WorkflowStatus } from "./common";
+
+export { WorkflowStatus };
 
 export type PolicyWorkflowStatus = WorkflowStatus;
 
@@ -14,6 +9,7 @@ export interface InvalidPolicy {
   row?: number;
   fields: Record<string, string[]>;
   data?: any;
+  errors?: string[];
 }
 
 export interface ValidationErrors {
@@ -47,6 +43,63 @@ export interface Policy {
   status: string;
   workflow_status: string;
   notes?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+  client_name?: string; // Adding this since it's used in several components
+}
+
+export interface PolicyAddendum {
+  id: string;
+  policy_id: string;
+  addendum_number: string;
+  effective_date: string;
+  description: string;
+  premium_adjustment?: number;
+  lien_status?: boolean;
+  status: string;
+  workflow_status: string;
+  created_by?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PolicyFilterParams {
+  status?: string;
+  expiry_from?: string;
+  expiry_to?: string;
+  client_id?: string;
+  insurer_id?: string;
+  workflow_status?: string;
+  search?: string;
+  start_date_from?: string;
+  start_date_to?: string;
+  premium_min?: number;
+  premium_max?: number;
+  assigned_to?: string;
+  page?: number;
+  limit?: number;
+}
+
+export enum PolicyStatus {
+  ACTIVE = "active",
+  EXPIRED = "expired",
+  PENDING = "pending",
+  CANCELLED = "cancelled"
+}
+
+export interface UnlinkedPaymentType {
+  id: string;
+  amount: number;
+  payment_date: string;
+  payer_name?: string;
+  reference?: string;
+  status: string;
+  currency: string;
+  linked_policy_id?: string;
+  linked_by?: string;
+  linked_at?: string;
   company_id: string;
   created_at: string;
   updated_at: string;

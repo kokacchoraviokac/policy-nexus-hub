@@ -8,16 +8,14 @@ import { DocumentTableName } from "@/types/documents";
  * This ensures we get proper typing in the response
  */
 export const fromDocumentTable = (tableName: DocumentTableName) => {
-  // Since we can't directly type-check at runtime, we need to trust the type system
-  // And use a more flexible approach with the Supabase client
-  return supabase.from(tableName as string);
+  // Convert DocumentTableName to a string for the query
+  return supabase.from(tableName);
 };
 
 /**
  * A type-safe wrapper for general table access
  */
 export const fromTable = (tableName: RelationName) => {
-  // Again, we trust TypeScript to validate the table name
-  // and let any runtime errors be caught by the Supabase client
-  return supabase.from(tableName as string);
+  // Convert RelationName to a string for the query
+  return supabase.from(tableName);
 };

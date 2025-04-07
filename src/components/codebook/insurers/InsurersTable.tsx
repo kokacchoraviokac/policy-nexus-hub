@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Column } from "@/components/ui/data-table";
+import { ColumnDef } from "@tanstack/react-table";
 
 // Export the table columns function for reuse across the app
-export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id: string) => void): Column<Insurer>[] => {
+export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id: string) => void): ColumnDef<Insurer, unknown>[] => {
   const { t } = useLanguage();
   
   return [
@@ -19,44 +19,44 @@ export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id:
     {
       accessorKey: "contact_person",
       header: t("contactPerson"),
-      cell: (row: Insurer) => row.contact_person || "-",
+      cell: ({ row }) => row.original.contact_person || "-",
     },
     {
       accessorKey: "email",
       header: t("email"),
-      cell: (row: Insurer) => row.email || "-",
+      cell: ({ row }) => row.original.email || "-",
     },
     {
       accessorKey: "phone", 
       header: t("phone"),
-      cell: (row: Insurer) => row.phone || "-",
+      cell: ({ row }) => row.original.phone || "-",
     },
     {
       accessorKey: "country",
       header: t("country"),
-      cell: (row: Insurer) => row.country || "-",
+      cell: ({ row }) => row.original.country || "-",
     },
     {
       accessorKey: "is_active",
       header: t("status"),
-      cell: (row: Insurer) => (
-        <Badge variant={row.is_active ? "default" : "secondary"}>
-          {row.is_active ? t("active") : t("inactive")}
+      cell: ({ row }) => (
+        <Badge variant={row.original.is_active ? "default" : "secondary"}>
+          {row.original.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
     },
     ...(onEdit || onDelete ? [
       {
-        accessorKey: "id",
+        id: "actions",
         header: t("actions"),
-        cell: (row: Insurer) => (
+        cell: ({ row }) => (
           <div className="flex gap-2 justify-end">
             {onEdit && (
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="h-8 w-8 p-0"
-                onClick={() => onEdit(row.id)}
+                onClick={() => onEdit(row.original.id)}
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -66,7 +66,7 @@ export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id:
                 variant="outline"
                 size="sm"
                 className="h-8 w-8 p-0 text-destructive"
-                onClick={() => onDelete(row.id)}
+                onClick={() => onDelete(row.original.id)}
               >
                 <Trash className="h-4 w-4" />
               </Button>
@@ -74,7 +74,7 @@ export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id:
           </div>
         ),
       }
-    ] : [])
+    ] as ColumnDef<Insurer, unknown>[] : []),
   ];
 };
 

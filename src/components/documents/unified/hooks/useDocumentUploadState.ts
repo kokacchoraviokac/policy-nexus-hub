@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { DocumentCategory } from "@/types/common";
-import { Document, EntityType } from "@/types/documents";
+import { DocumentCategory, EntityType } from "@/types/documents";
+import { Document } from "@/types/documents";
 import { useUploadDocument } from "@/hooks/useUploadDocument";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -54,7 +54,7 @@ export const useDocumentUploadState = ({
         file,
         documentName,
         documentType,
-        category: documentCategory,
+        category: documentCategory as DocumentCategory,
         entityId,
         entityType,
         originalDocumentId: selectedDocument?.id,

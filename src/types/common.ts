@@ -19,7 +19,8 @@ export enum DocumentCategory {
   NOTIFICATION = "notification",
   LIEN = "lien",
   OTHER = "other",
-  PROPOSAL = "proposal"
+  PROPOSAL = "proposal",
+  QUOTE = "quote"
 }
 
 export enum ApprovalStatus {
@@ -47,6 +48,22 @@ export interface ServiceResponse<T = any> {
   data?: T;
   error?: Error;
   message?: string;
+}
+
+export enum CommissionStatus {
+  CALCULATING = "calculating",
+  DUE = "due",
+  PARTIALLY_PAID = "partially_paid",
+  PAID = "paid",
+  INVOICED = "invoiced",
+  PENDING = "pending"
+}
+
+export enum WorkflowStatus {
+  DRAFT = "draft",
+  IN_REVIEW = "in_review",
+  READY = "ready",
+  COMPLETE = "complete"
 }
 
 export type RelationName = 
