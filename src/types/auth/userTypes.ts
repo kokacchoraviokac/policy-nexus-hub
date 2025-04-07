@@ -1,23 +1,28 @@
 
-import { Session } from "@supabase/supabase-js";
-
 export enum UserRole {
-  SUPER_ADMIN = "superAdmin",
+  SUPER_ADMIN = "super_admin",
   ADMIN = "admin",
   EMPLOYEE = "employee",
+  USER = "user",
   AGENT = "agent",
   CLIENT = "client"
 }
 
 export interface User {
   id: string;
-  name?: string;
   email: string;
-  role: UserRole;
-  companyId?: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
   company_id?: string;
-  avatar?: string;
-  user_metadata?: Record<string, any>;
+  companyId?: string;
+  role?: UserRole;
+  avatar_url?: string;
+  phone?: string;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  privileges?: string[];
 }
 
 export interface CustomPrivilege {
@@ -28,44 +33,4 @@ export interface CustomPrivilege {
   expires_at?: string;
   granted_by: string;
   context?: string;
-}
-
-export interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  userProfile: User | null;
-  role: UserRole | null;
-  companyId: string | null;
-  isInitialized: boolean;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
-  signOut: () => Promise<void>;
-  login: (email: string, password: string) => Promise<{ error?: any }>;
-  logout: () => Promise<void>;
-  updateUser: (profile: Partial<User>) => Promise<void>;
-  updateUserProfile: (profile: Partial<User>) => Promise<void>;
-  hasPrivilege: (privilege: string) => boolean;
-  hasPrivilegeWithContext: (privilege: string, context?: any) => boolean;
-  hasRole: (role: UserRole | UserRole[]) => boolean;
-  initiatePasswordReset: (email: string) => Promise<boolean>;
-  updatePassword: (newPassword: string) => Promise<boolean>;
-  refreshSession: () => Promise<void>;
-  customPrivileges: CustomPrivilege[];
-}
-
-export interface ResourceContext {
-  [key: string]: any;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface SignUpCredentials extends LoginCredentials {
-  name?: string;
-  companyId?: string;
-  role?: UserRole;
 }

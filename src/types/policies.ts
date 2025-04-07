@@ -1,3 +1,4 @@
+
 // Enum for policy status
 export enum PolicyStatus {
   ACTIVE = "active",
@@ -115,4 +116,20 @@ export interface PolicyAddendum {
   updated_at: string;
   created_by?: string;
   company_id: string;
+}
+
+export interface UnlinkedPaymentType {
+  id: string;
+  amount: number;
+  payment_date: string;
+  status: string;
+  reference?: string;
+  payer_name?: string;
+  linked_policy_id?: string;
+  linked_at?: string;
+  linked_by?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+  currency: string;
 }

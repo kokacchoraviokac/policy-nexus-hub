@@ -1,12 +1,5 @@
 
-export enum UserRole {
-  SUPER_ADMIN = "super_admin",
-  ADMIN = "admin",
-  EMPLOYEE = "employee",
-  USER = "user",
-  AGENT = "agent",
-  CLIENT = "client"
-}
+export { UserRole } from './userTypes';
 
 export interface User {
   id: string;

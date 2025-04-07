@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -54,44 +53,35 @@ const Pagination: React.FC<PaginationProps> = ({
     const maxPagesToShow = 5;
     
     if (totalPages <= maxPagesToShow) {
-      // Show all pages if we have less than maxPagesToShow
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
     } else {
-      // Always show first page
       pageNumbers.push(1);
       
-      // Calculate start and end of the middle section
       let startPage = Math.max(2, currentPage - 1);
       let endPage = Math.min(totalPages - 1, currentPage + 1);
       
-      // Adjust if we're near the beginning
       if (currentPage <= 3) {
         endPage = 4;
       }
       
-      // Adjust if we're near the end
       if (currentPage >= totalPages - 2) {
         startPage = totalPages - 3;
       }
       
-      // Add ellipsis if needed before middle section
       if (startPage > 2) {
         pageNumbers.push("ellipsis-start");
       }
       
-      // Add middle section
       for (let i = startPage; i <= endPage; i++) {
         pageNumbers.push(i);
       }
       
-      // Add ellipsis if needed after middle section
       if (endPage < totalPages - 1) {
         pageNumbers.push("ellipsis-end");
       }
       
-      // Always show last page
       pageNumbers.push(totalPages);
     }
     
@@ -212,6 +202,7 @@ const Pagination: React.FC<PaginationProps> = ({
 };
 
 export default Pagination;
+export { Pagination };
 
 // For backward compatibility with modular pagination components
 export const PaginationContent = ({ children }: { children: React.ReactNode }) => <div className="flex items-center space-x-1">{children}</div>;
