@@ -11,6 +11,30 @@ export enum ProposalStatus {
   EXPIRED = "expired"
 }
 
+export enum SalesProcessStage {
+  QUOTE = "quote",
+  AUTHORIZATION = "authorization",
+  PROPOSAL = "proposal",
+  SIGNED = "signed",
+  CONCLUDED = "concluded"
+}
+
+export interface SalesProcess {
+  id: string;
+  sales_number?: string;
+  client_id?: string;
+  client_name?: string;
+  assigned_to?: string;
+  current_step: SalesProcessStage | string;
+  status: string;
+  estimated_value?: number;
+  expected_close_date?: string;
+  created_at: string;
+  updated_at: string;
+  company_id: string;
+  lead_id?: string;
+}
+
 export interface Proposal {
   id: string;
   title: string;
@@ -35,6 +59,9 @@ export interface Proposal {
   accepted_at?: string;
   rejected_at?: string;
   is_latest?: boolean;
+  coverage_details?: string;
+  document_ids?: string[];
+  expiry_date?: string;
 }
 
 export interface CreateProposalRequest {
@@ -49,4 +76,22 @@ export interface CreateProposalRequest {
   premium?: number;
   notes?: string;
   expires_at?: string;
+  coverage_details?: string;
+}
+
+export interface ProposalStats {
+  total: number;
+  draft: number;
+  pending: number;
+  sent: number;
+  viewed: number;
+  accepted: number;
+  rejected: number;
+  expired: number;
+}
+
+export interface UseProposalsDataProps {
+  salesProcessId?: string;
+  filter?: string;
+  initialLimit?: number;
 }

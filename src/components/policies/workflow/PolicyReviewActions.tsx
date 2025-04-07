@@ -8,6 +8,7 @@ import { Loader2, Check, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy } from "@/types/policies";
+import { EntityType } from "@/types/common";
 import { useActivityLogger } from "@/utils/activityLogger";
 
 interface PolicyReviewActionsProps {
@@ -37,7 +38,7 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
 
       // Log the activity
       logActivity({
-        entity_type: "policy",
+        entity_type: EntityType.POLICY,
         entity_id: policy.id,
         action: "update",
         details: {
@@ -83,7 +84,7 @@ const PolicyReviewActions: React.FC<PolicyReviewActionsProps> = ({
 
       // Log the activity
       logActivity({
-        entity_type: "policy",
+        entity_type: EntityType.POLICY,
         entity_id: policy.id,
         action: "update",
         details: {

@@ -1,9 +1,10 @@
 
-import { EntityType, DocumentCategory } from "@/types/common";
+import { EntityType, DocumentCategory, ApprovalStatus } from "./common";
 
 // Document Types
+export { EntityType, DocumentCategory, ApprovalStatus };
 
-// Define DocumentApprovalStatus as an enum
+// Document Approval Status
 export enum DocumentApprovalStatus {
   PENDING = 'pending',
   APPROVED = 'approved',

@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { DocumentCategory, EntityType } from '@/types/common';
+import { EntityType, DocumentCategory } from '@/types/common';
 import { 
   Document,
   DocumentSearchParams,
   UseDocumentSearchProps,
-  UseDocumentSearchReturn
+  UseDocumentSearchReturn,
+  DocumentApprovalStatus
 } from '@/types/documents';
 import { getDocumentTableName } from '@/utils/documentUploadUtils';
 

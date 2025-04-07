@@ -5,10 +5,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Document, EntityType } from "@/types/documents";
+import { EntityType } from "@/types/common";
 import { useDocuments } from "@/hooks/useDocuments";
-import DocumentList from "@/components/shared/DocumentList";
-import DocumentUploadDialog from "@/components/policies/detail/DocumentUploadDialog";
+import DocumentList from "@/components/documents/unified/DocumentList";
+import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
 import { useActivityLogger } from "@/utils/activityLogger";
 
 interface PolicyDocumentsTabProps {
@@ -36,7 +36,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
     refetch,
     deleteDocument,
     isDeletingDocument,
-  } = useDocuments("policy", policyId);
+  } = useDocuments(EntityType.POLICY, policyId);
   
   useEffect(() => {
     setIsComplete(initialIsComplete);
@@ -69,11 +69,12 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
         </div>
         
         <DocumentList
+          entityType={EntityType.POLICY}
+          entityId={policyId}
           documents={documents}
           isLoading={isLoading}
           isError={isError}
           error={error}
-          refetch={refetch}
           onDelete={deleteDocument}
           isDeleting={isDeletingDocument}
         />
@@ -96,12 +97,12 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
       
       <DocumentUploadDialog
         open={showUploadDialog}
-        onClose={() => setShowUploadDialog(false)}
+        onOpenChange={setShowUploadDialog}
+        entityType={EntityType.POLICY}
         entityId={policyId}
-        entityType="policy"
-        onSuccess={() => {
+        onUploadComplete={() => {
           // Invalidate the documents query to refresh the list
-          queryClient.invalidateQueries({ queryKey: ["documents", "policy", policyId] });
+          queryClient.invalidateQueries({ queryKey: ["documents", EntityType.POLICY, policyId] });
         }}
       />
     </Card>

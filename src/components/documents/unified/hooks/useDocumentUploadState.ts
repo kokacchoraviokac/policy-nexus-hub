@@ -1,99 +1,82 @@
 
 import { useState } from "react";
-import { DocumentCategory, EntityType } from "@/types/documents";
 import { useToast } from "@/hooks/use-toast";
+import { DocumentCategory, EntityType } from "@/types/common";
+import { Document } from "@/types/documents";
+import { useUploadDocument } from "@/hooks/useUploadDocument";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { uploadDocument } from "@/utils/documents";
 
 interface UseDocumentUploadStateProps {
   entityType: EntityType;
   entityId: string;
-  onSuccess?: () => void;
-  originalDocumentId?: string | null;
-  currentVersion?: number;
   defaultCategory?: DocumentCategory;
-  selectedDocument?: any;
+  selectedDocument?: Document;
+  onSuccess?: () => void;
 }
 
-export const useDocumentUploadState = (props: UseDocumentUploadStateProps) => {
-  const { entityType, entityId, onSuccess, originalDocumentId, currentVersion, defaultCategory } = props;
-  const { toast } = useToast();
+export const useDocumentUploadState = ({
+  entityType,
+  entityId,
+  defaultCategory,
+  selectedDocument,
+  onSuccess
+}: UseDocumentUploadStateProps) => {
   const { t } = useLanguage();
-  
-  const [documentName, setDocumentName] = useState("");
-  const [documentType, setDocumentType] = useState("");
-  const [documentCategory, setDocumentCategory] = useState(defaultCategory || "");
+  const { toast } = useToast();
+  const [documentName, setDocumentName] = useState(selectedDocument?.document_name || "");
+  const [documentType, setDocumentType] = useState(selectedDocument?.document_type || "");
+  const [documentCategory, setDocumentCategory] = useState<DocumentCategory | string>(
+    selectedDocument?.category || defaultCategory || ""
+  );
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [salesStage, setSalesStage] = useState<string | undefined>(undefined);
+  
+  const { uploadDocument, isUploading } = useUploadDocument();
   
   const handleFileChange = (newFile: File | null) => {
     setFile(newFile);
-    
-    // Auto-fill name if not already set
-    if (newFile && !documentName) {
-      setDocumentName(newFile.name.split('.')[0]);
-    }
   };
   
   const isValid = !!file && !!documentName && !!documentType;
   
-  const handleSubmit = async (additionalData?: Record<string, any>) => {
-    if (!isValid) {
+  const handleSubmit = async () => {
+    if (!file || !documentName || !documentType) {
       toast({
-        title: t("missingRequiredFields"),
+        title: t("validationError"),
         description: t("pleaseCompleteAllRequiredFields"),
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
     
-    if (!file) return;
-    
-    setUploading(true);
-    
     try {
-      const result = await uploadDocument({
+      await uploadDocument({
         file,
         documentName,
         documentType,
-        category: documentCategory || "other",
+        category: documentCategory,
         entityId,
         entityType,
-        originalDocumentId,
-        currentVersion,
-        ...additionalData
+        originalDocumentId: selectedDocument?.id,
+        currentVersion: selectedDocument?.version,
+        salesStage
       });
-      
-      if (!result.success) {
-        const errorMessage = typeof result.error === 'string' 
-          ? result.error 
-          : t("documentUploadFailed");
-          
-        throw new Error(errorMessage);
-      }
       
       toast({
         title: t("documentUploaded"),
-        description: t("documentUploadedSuccessfully"),
+        description: t("documentUploadedSuccessfully")
       });
-      
-      // Clear form
-      setDocumentName("");
-      setDocumentType("");
-      setDocumentCategory("");
-      setFile(null);
       
       if (onSuccess) {
         onSuccess();
       }
     } catch (error: any) {
+      console.error("Error uploading document:", error);
       toast({
-        title: t("documentUploadFailed"),
-        description: error.message || t("errorOccurredWhileUploading"),
-        variant: "destructive",
+        title: t("uploadError"),
+        description: error.message || t("errorUploadingDocument"),
+        variant: "destructive"
       });
-    } finally {
-      setUploading(false);
     }
   };
   
@@ -105,12 +88,11 @@ export const useDocumentUploadState = (props: UseDocumentUploadStateProps) => {
     documentCategory,
     setDocumentCategory,
     file,
-    setFile,
     handleFileChange,
-    uploading,
+    uploading: isUploading,
     isValid,
-    handleSubmit
+    handleSubmit,
+    salesStage,
+    setSalesStage
   };
 };
-
-export default useDocumentUploadState;

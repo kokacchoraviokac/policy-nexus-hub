@@ -1,60 +1,61 @@
 
-export enum RelationName {
-  POLICIES = "policies",
-  CLIENTS = "clients", 
-  CLAIMS = "claims",
-  POLICY_DOCUMENTS = "policy_documents",
-  CLAIM_DOCUMENTS = "claim_documents",
-  SALES_DOCUMENTS = "sales_documents",
-  CLIENT_DOCUMENTS = "client_documents",
-  AGENT_DOCUMENTS = "agent_documents",
-  INSURER_DOCUMENTS = "insurer_documents",
-  ADDENDUM_DOCUMENTS = "addendum_documents",
-  INVOICE_DOCUMENTS = "invoice_documents"
-}
+// Common Types used across the application
 
 export enum EntityType {
-  POLICY = 'policy',
-  CLAIM = 'claim',
-  SALES_PROCESS = 'sales_process',
-  CLIENT = 'client',
-  AGENT = 'agent',
-  INSURER = 'insurer',
-  ADDENDUM = 'addendum',
-  INVOICE = 'invoice',
-  SALE = 'sale'
+  POLICY = "policy",
+  CLAIM = "claim",
+  SALES_PROCESS = "sales_process",
+  CLIENT = "client",
+  INSURER = "insurer",
+  AGENT = "agent",
+  ADDENDUM = "addendum",
+  INVOICE = "invoice",
+  SALE = "sale" // Alias for sales_process
 }
 
 export enum DocumentCategory {
-  POLICY = 'policy',
-  CLAIM = 'claim',
-  INVOICE = 'invoice',
-  CONTRACT = 'contract',
-  LIEN = 'lien',
-  PROPOSAL = 'proposal',
-  QUOTE = 'quote',
-  NOTIFICATION = 'notification',
-  OTHER = 'other',
-  MISCELLANEOUS = 'miscellaneous'
+  POLICY = "policy",
+  CLAIM = "claim",
+  SALES = "sales",
+  FINANCIAL = "financial",
+  LEGAL = "legal",
+  CONTRACT = "contract",
+  INVOICE = "invoice",
+  MISCELLANEOUS = "miscellaneous",
+  OTHER = "other"
 }
 
-export enum WorkflowStatus {
-  DRAFT = 'draft',
-  PENDING = 'pending',
-  IN_REVIEW = 'in_review',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  COMPLETED = 'completed',
-  ON_HOLD = 'on_hold',
-  CANCELLED = 'cancelled',
-  READY = 'ready',
-  REVIEW = 'review',
-  COMPLETE = 'complete'
+export enum ApprovalStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  NEEDS_REVIEW = "needs_review"
 }
 
-export interface ServiceResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
+export type RelationName =
+  | "policy_documents"
+  | "claim_documents"
+  | "sales_documents"
+  | "client_documents"
+  | "insurer_documents"
+  | "agent_documents"
+  | "invoice_documents"
+  | "addendum_documents"
+  | "activity_logs"
+  | "agent_payouts"
+  | "agents"
+  | "companies"
+  | "bank_statements"
+  | "bank_transactions"
+  | "invoices"
+  | "policies"
+  | "policy_addendums"
+  | "policy_types"
+  | "profiles"
+  | "report_schedules"
+  | "sales_assignments"
+  | "sales_processes"
+  | "saved_filters"
+  | "saved_reports"
+  | "unlinked_payments"
+  | "user_custom_privileges";
