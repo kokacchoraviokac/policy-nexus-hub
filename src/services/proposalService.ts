@@ -1,103 +1,152 @@
 
 import { Proposal, ProposalStatus } from "@/types/sales";
-import { generateRandomId } from "@/utils/helpers";
-import mockProposals from "@/data/mockProposals";
+import { supabase } from "@/integrations/supabase/client";
 
-// Since we're using mock data, we'll just manipulate the copied array
-const proposals = [...mockProposals];
+interface ProposalFilterParams {
+  status?: ProposalStatus | 'all';
+  salesProcessId?: string;
+  clientId?: string;
+}
 
-// Get all proposals or filter by sales process ID
-export const getProposals = async (
-  salesProcessId?: string,
-  status?: ProposalStatus
-): Promise<Proposal[]> => {
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-  
-  let result = [...proposals];
-  
-  if (salesProcessId) {
-    result = result.filter(p => p.sales_process_id === salesProcessId);
+export const getProposals = async (params?: ProposalFilterParams) => {
+  try {
+    let query = supabase
+      .from('proposals')
+      .select('*');
+    
+    // Apply filters
+    if (params) {
+      if (params.status && params.status !== 'all') {
+        query = query.eq('status', params.status);
+      }
+      
+      if (params.salesProcessId) {
+        query = query.eq('sales_process_id', params.salesProcessId);
+      }
+      
+      if (params.clientId) {
+        query = query.eq('client_id', params.clientId);
+      }
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching proposals:', error);
+    return { data: [], error };
   }
-  
-  if (status && status !== 'all') {
-    result = result.filter(p => p.status === status);
+};
+
+export const getProposalById = async (proposalId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('proposals')
+      .select('*')
+      .eq('id', proposalId)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error fetching proposal:', error);
+    return { data: null, error };
   }
-  
-  return result;
 };
 
-// Get a single proposal by ID
-export const getProposalById = async (proposalId: string): Promise<Proposal | null> => {
-  await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API call
-  return proposals.find(p => p.id === proposalId) || null;
-};
-
-// Create a new proposal
-export const createProposal = async (proposal: Omit<Proposal, 'id' | 'created_at'>): Promise<Proposal> => {
-  await new Promise(resolve => setTimeout(resolve, 700)); // Simulate API call
-  
-  const newProposal: Proposal = {
-    ...proposal,
-    id: generateRandomId(),
-    created_at: new Date().toISOString(),
-  };
-  
-  proposals.push(newProposal);
-  return newProposal;
-};
-
-// Update an existing proposal
-export const updateProposal = async (proposalId: string, updates: Partial<Proposal>): Promise<Proposal> => {
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-  
-  const index = proposals.findIndex(p => p.id === proposalId);
-  if (index === -1) throw new Error("Proposal not found");
-  
-  proposals[index] = { ...proposals[index], ...updates };
-  return proposals[index];
-};
-
-// Delete a proposal
-export const deleteProposal = async (proposalId: string): Promise<boolean> => {
-  await new Promise(resolve => setTimeout(resolve, 400)); // Simulate API call
-  
-  const index = proposals.findIndex(p => p.id === proposalId);
-  if (index === -1) return false;
-  
-  proposals.splice(index, 1);
-  return true;
-};
-
-// Update proposal status
-export const updateProposalStatus = async (
-  proposalId: string, 
-  newStatus: ProposalStatus
-): Promise<Proposal> => {
-  await new Promise(resolve => setTimeout(resolve, 300)); // Simulate API call
-  
-  const index = proposals.findIndex(p => p.id === proposalId);
-  if (index === -1) throw new Error("Proposal not found");
-  
-  const now = new Date().toISOString();
-  
-  const updates: Partial<Proposal> = { status: newStatus };
-  
-  // Add appropriate timestamp based on status
-  switch (newStatus) {
-    case 'sent':
-      updates.sent_at = now;
-      break;
-    case 'viewed':
-      updates.viewed_at = now;
-      break;
-    case 'accepted':
-      updates.accepted_at = now;
-      break;
-    case 'rejected':
-      updates.rejected_at = now;
-      break;
+export const createProposal = async (proposal: Partial<Proposal>) => {
+  try {
+    const { data, error } = await supabase
+      .from('proposals')
+      .insert(proposal)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error creating proposal:', error);
+    return { data: null, error };
   }
-  
-  proposals[index] = { ...proposals[index], ...updates };
-  return proposals[index];
+};
+
+export const updateProposal = async (proposalId: string, updates: Partial<Proposal>) => {
+  try {
+    const { data, error } = await supabase
+      .from('proposals')
+      .update(updates)
+      .eq('id', proposalId)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error updating proposal:', error);
+    return { data: null, error };
+  }
+};
+
+export const updateProposalStatus = async (proposalId: string, status: ProposalStatus) => {
+  try {
+    const updates: Partial<Proposal> = { status };
+    
+    // Add timestamps based on status
+    if (status === ProposalStatus.SENT) {
+      updates.sent_at = new Date().toISOString();
+    } else if (status === ProposalStatus.VIEWED) {
+      updates.viewed_at = new Date().toISOString();
+    } else if (status === ProposalStatus.ACCEPTED) {
+      updates.accepted_at = new Date().toISOString();
+    } else if (status === ProposalStatus.REJECTED) {
+      updates.rejected_at = new Date().toISOString();
+    }
+    
+    const { data, error } = await supabase
+      .from('proposals')
+      .update(updates)
+      .eq('id', proposalId)
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { data, error: null };
+  } catch (error) {
+    console.error('Error updating proposal status:', error);
+    return { data: null, error };
+  }
+};
+
+export const deleteProposal = async (proposalId: string) => {
+  try {
+    const { error } = await supabase
+      .from('proposals')
+      .delete()
+      .eq('id', proposalId);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Error deleting proposal:', error);
+    return { success: false, error };
+  }
 };

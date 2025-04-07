@@ -1,32 +1,44 @@
 
-import { Proposal } from "@/types/reports";
-import { ProposalStats, ProposalStatus } from "@/types/sales";
+import { Proposal, ProposalStatus } from "@/types/sales";
+
+// Define ProposalStats interface
+export interface ProposalStats {
+  total: number;
+  draft: number;
+  pending: number;
+  accepted: number;
+  rejected: number;
+  expired: number;
+  sent: number;
+  viewed: number;
+  approved: number;
+}
 
 /**
- * Calculate statistics for a list of proposals
+ * Calculate proposal statistics from an array of proposals
+ * @param proposals - Array of proposals to analyze
+ * @returns Object with count by status
  */
-export const calculateProposalStats = (proposals: Proposal[]): ProposalStats => {
-  // Initialize stats
+export function calculateProposalStats(proposals: Proposal[]): ProposalStats {
   const stats: ProposalStats = {
     total: proposals.length,
     draft: 0,
-    sent: 0,
+    pending: 0,
     accepted: 0,
     rejected: 0,
     expired: 0,
-    pending: 0,
+    sent: 0,
     viewed: 0,
     approved: 0
   };
 
-  // Count proposals by status
   proposals.forEach(proposal => {
     switch (proposal.status) {
       case ProposalStatus.DRAFT:
         stats.draft++;
         break;
-      case ProposalStatus.SENT:
-        stats.sent++;
+      case ProposalStatus.PENDING:
+        stats.pending++;
         break;
       case ProposalStatus.ACCEPTED:
         stats.accepted++;
@@ -37,53 +49,48 @@ export const calculateProposalStats = (proposals: Proposal[]): ProposalStats => 
       case ProposalStatus.EXPIRED:
         stats.expired++;
         break;
+      case ProposalStatus.SENT:
+        stats.sent++;
+        break;
       case ProposalStatus.VIEWED:
         stats.viewed++;
         break;
       case ProposalStatus.APPROVED:
         stats.approved++;
         break;
-      case ProposalStatus.PENDING:
-        stats.pending++;
-        break;
       default:
-        // Ignore unknown statuses
+        // Handle other statuses if needed
         break;
     }
   });
 
   return stats;
-};
+}
 
 /**
- * Get badge variant for a proposal status
+ * Get a variant color for a proposal status badge
+ * @param status - The proposal status
+ * @returns A string representing the badge variant
  */
-export const getProposalStatusBadgeVariant = (status: ProposalStatus): string => {
+export function getProposalStatusVariant(status: ProposalStatus): string {
   switch (status) {
     case ProposalStatus.DRAFT:
+      return "outline";
+    case ProposalStatus.PENDING:
       return "secondary";
-    case ProposalStatus.SENT:
-      return "info";
-    case ProposalStatus.VIEWED:
-      return "info";
     case ProposalStatus.ACCEPTED:
       return "success";
     case ProposalStatus.REJECTED:
       return "destructive";
+    case ProposalStatus.EXPIRED:
+      return "warning";
+    case ProposalStatus.SENT:
+      return "info";
+    case ProposalStatus.VIEWED:
+      return "info";
     case ProposalStatus.APPROVED:
       return "success";
-    case ProposalStatus.PENDING:
-      return "warning";
-    case ProposalStatus.EXPIRED:
-      return "default";
     default:
       return "default";
   }
-};
-
-/**
- * Determine if a proposal status allows editing
- */
-export const canEditProposal = (status: ProposalStatus): boolean => {
-  return status === ProposalStatus.DRAFT;
-};
+}

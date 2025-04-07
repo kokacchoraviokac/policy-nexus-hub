@@ -1,4 +1,6 @@
 
+// Update the FinancialTransaction interface to include currency
+
 import { ProposalStatus } from "./sales";
 
 export interface FinancialReportFilters {
@@ -43,12 +45,34 @@ export interface UseFinancialReportReturn {
   defaultFilters: FinancialReportFilters;
   isLoading: boolean;
   isError: boolean;
-  // Add missing property for compatibility with existing code
-  reports?: any[];
+  reports?: any[]; // Add missing property for compatibility
+  applyFilters?: () => void; // Add missing properties for compatibility
+  resetFilters?: () => void;
 }
 
 export interface FinancialReportData {
   transactions: FinancialTransaction[];
+  summary: FinancialReportSummary;
+}
+
+export interface FinancialReportFiltersProps {
+  filters: FinancialReportFilters;
+  setFilters: (filters: FinancialReportFilters) => void;
+}
+
+export interface FinancialReportTableProps {
+  data: FinancialTransaction[];
+  isLoading: boolean;
+}
+
+export interface FinancialTransactionsProps {
+  data: FinancialTransaction[];
+  isLoading: boolean;
+  onExport: () => void;
+  isExporting: boolean;
+}
+
+export interface FinancialReportSummaryProps {
   summary: FinancialReportSummary;
 }
 

@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/auth/userTypes";
-import { CustomPrivilege } from "@/types/auth/userTypes";
+import { User, UserRole, CustomPrivilege } from "@/types/auth/userTypes";
 
 export async function fetchUserCustomPrivileges(userId: string): Promise<CustomPrivilege[]> {
   if (!userId) return [];
@@ -21,6 +20,55 @@ export async function fetchUserCustomPrivileges(userId: string): Promise<CustomP
   } catch (error) {
     console.error("Error in fetchUserCustomPrivileges:", error);
     return [];
+  }
+}
+
+export async function grantCustomPrivilege(
+  userId: string,
+  privilege: string,
+  grantedBy: string,
+  expiresAt?: string
+): Promise<CustomPrivilege | null> {
+  try {
+    const { data, error } = await supabase
+      .from('user_custom_privileges')
+      .insert({
+        user_id: userId,
+        privilege,
+        granted_by: grantedBy,
+        expires_at: expiresAt
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error granting custom privilege:", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in grantCustomPrivilege:", error);
+    return null;
+  }
+}
+
+export async function revokeCustomPrivilege(privilegeId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('user_custom_privileges')
+      .delete()
+      .eq('id', privilegeId);
+
+    if (error) {
+      console.error("Error revoking custom privilege:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error in revokeCustomPrivilege:", error);
+    return false;
   }
 }
 

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import DocumentPreview from "./DocumentPreview";
-import DocumentApprovalDialog from "./DocumentApprovalDialog";
+import { DocumentApprovalDialog } from "./DocumentApprovalDialog";
 import { useDocumentDownload } from "@/hooks/useDocumentDownload";
 
 interface DocumentListItemProps {
@@ -48,12 +48,12 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
   
   const getApprovalStatusIcon = (status?: DocumentApprovalStatus) => {
     switch (status) {
-      case "approved":
+      case DocumentApprovalStatus.APPROVED:
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "rejected":
+      case DocumentApprovalStatus.REJECTED:
         return <XCircle className="h-4 w-4 text-destructive" />;
-      case "needs_review":
-      case "pending":
+      case DocumentApprovalStatus.NEEDS_REVIEW:
+      case DocumentApprovalStatus.PENDING:
       default:
         return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }

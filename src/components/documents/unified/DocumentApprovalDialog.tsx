@@ -1,4 +1,4 @@
-// Update imports and the useState call to use PENDING enum value
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,37 +17,47 @@ import { DocumentApprovalStatus } from "@/types/documents";
 
 interface DocumentApprovalDialogProps {
   document: any;
-  isOpen: boolean;
-  onClose: () => void;
-  onApprove: (status: DocumentApprovalStatus, notes: string) => void;
-  onReject: (status: DocumentApprovalStatus, notes: string) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onApprove?: (status: DocumentApprovalStatus, notes: string) => void;
+  onReject?: (status: DocumentApprovalStatus, notes: string) => void;
 }
 
-export function DocumentApprovalDialog({ document, isOpen, onClose, onApprove, onReject }) {
+export function DocumentApprovalDialog({ 
+  document, 
+  open, 
+  onOpenChange, 
+  onApprove, 
+  onReject 
+}: DocumentApprovalDialogProps) {
   const { toast } = useToast();
   const [status, setStatus] = useState<DocumentApprovalStatus>(DocumentApprovalStatus.PENDING);
   const [notes, setNotes] = useState("");
 
   const handleApprove = () => {
-    onApprove(status, notes);
+    if (onApprove) {
+      onApprove(status, notes);
+    }
     toast({
       title: "Document Approved",
       description: "The document has been approved.",
     });
-    onClose();
+    onOpenChange(false);
   };
 
   const handleReject = () => {
-    onReject(status, notes);
+    if (onReject) {
+      onReject(status, notes);
+    }
     toast({
       title: "Document Rejected",
       description: "The document has been rejected.",
     });
-    onClose();
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Review Document</DialogTitle>
@@ -93,7 +103,7 @@ export function DocumentApprovalDialog({ document, isOpen, onClose, onApprove, o
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button type="submit" onClick={handleApprove}>

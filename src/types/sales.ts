@@ -1,4 +1,6 @@
 
+// Update the sales types with additional needed fields
+
 export enum ProposalStatus {
   DRAFT = 'draft',
   PENDING = 'pending',
@@ -8,7 +10,10 @@ export enum ProposalStatus {
   CANCELLED = 'cancelled',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  UNDER_REVIEW = 'under_review'
+  UNDER_REVIEW = 'under_review',
+  SENT = 'sent',
+  VIEWED = 'viewed',
+  APPROVED = 'approved'
 }
 
 export enum SaleStage {
@@ -40,6 +45,17 @@ export interface Proposal {
   expiry_date?: string;
   created_by: string;
   company_id: string;
+  // Additional fields needed by ProposalViewDialog
+  client_name?: string;
+  insurer_name?: string;
+  coverage_details?: string;
+  premium?: string | number;
+  notes?: string;
+  document_ids?: string[];
+  sent_at?: string;
+  viewed_at?: string;
+  expires_at?: string;
+  currency?: string;
 }
 
 export interface SalesProcess {
@@ -55,4 +71,35 @@ export interface SalesProcess {
   estimated_value?: number;
   company_id: string;
   company?: string; // Additional field for company name
+  client_name?: string;
+}
+
+export interface ProposalStats {
+  total: number;
+  draft: number;
+  sent: number;
+  accepted: number;
+  rejected: number;
+  expired: number;
+  pending: number;
+  viewed: number;
+  approved: number;
+}
+
+export interface UseProposalsDataProps {
+  salesProcessId?: string;
+  searchQuery?: string;
+  statusFilter?: string;
+}
+
+export interface ProposalsListProps {
+  proposals: Proposal[];
+  onStatusChange?: (proposalId: string, newStatus: ProposalStatus) => Promise<boolean>;
+}
+
+export interface UpdateProposalStatusDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdateStatus: (status: ProposalStatus) => Promise<void>;
+  currentStatus: ProposalStatus;
 }

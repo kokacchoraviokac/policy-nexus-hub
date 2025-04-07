@@ -1,4 +1,5 @@
 
+// Add the missing shadcn utility
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 

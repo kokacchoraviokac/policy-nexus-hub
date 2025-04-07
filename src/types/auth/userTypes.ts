@@ -1,4 +1,6 @@
 
+// Update the UserTypes to include CustomPrivilege
+
 export enum UserRole {
   ADMIN = 'admin',
   EMPLOYEE = 'employee',
@@ -28,7 +30,6 @@ export interface UserProfile {
   updated_at: string;
 }
 
-// Adding missing CustomPrivilege interface
 export interface CustomPrivilege {
   id: string;
   user_id: string;
