@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { DocumentAnalysisPanelProps } from "@/types/documents";
+import { DocumentCategory } from "@/types/common";
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   file,
@@ -30,7 +31,7 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
         setAnalyzing(false);
         onAnalysisComplete();
         // Simulate a detected category
-        onCategoryDetected('policy');
+        onCategoryDetected(DocumentCategory.POLICY);
       }
     };
     

@@ -25,7 +25,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
     error,
     refreshDocuments,
     deleteDocument,
-    isDeletingDocument,
+    isDeleting,
   } = useDocumentManager({ 
     entityType: EntityType.POLICY,
     entityId: policyId
@@ -39,12 +39,6 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
   const handleUploadVersion = (document: any) => {
     setSelectedDocument(document);
     setUploadDialogOpen(true);
-  };
-
-  // Adapter function to make deleteDocument compatible with DocumentList
-  const handleDeleteDocument = (document: any) => {
-    const documentId = typeof document === 'string' ? document : document.id;
-    deleteDocument(documentId);
   };
 
   return (
@@ -67,8 +61,8 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
           isLoading={isLoading}
           isError={isError}
           error={error as Error}
-          onDelete={handleDeleteDocument}
-          isDeleting={isDeletingDocument}
+          onDelete={deleteDocument}
+          isDeleting={isDeleting}
           showUploadButton={false}
           onUploadVersion={handleUploadVersion}
           entityType={EntityType.POLICY}

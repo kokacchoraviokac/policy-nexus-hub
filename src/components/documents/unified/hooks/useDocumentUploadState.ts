@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface UseDocumentUploadStateProps {
   entityType: EntityType;
   entityId: string;
-  defaultCategory?: DocumentCategory;
+  defaultCategory?: DocumentCategory | string;
   selectedDocument?: Document;
   onSuccess?: () => void;
 }

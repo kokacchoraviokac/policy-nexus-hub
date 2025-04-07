@@ -51,7 +51,7 @@ const InsurerFormDialog: React.FC<InsurerFormDialogProps> = ({
         </DialogHeader>
 
         <InsurerForm
-          insurer={insurer}
+          initialData={insurer}
           onSubmit={handleSubmit}
           isLoading={isLoading}
           isEditMode={isEditMode}

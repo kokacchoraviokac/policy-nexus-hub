@@ -10,182 +10,103 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, RotateCcw } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { cn } from "@/lib/utils";
-import { PaginationController } from "./pagination-controller";
+import { Loader2, Search, AlertCircle } from "lucide-react";
+import { PaginationController } from "@/components/ui/pagination";
 
 export interface Column<T> {
+  accessorKey: string;
   header: string;
-  accessorKey: keyof T | string;
   cell?: (row: T) => React.ReactNode;
   className?: string;
 }
 
 export interface DataTableProps<T> {
-  data: T[];
   columns: Column<T>[];
-  keyField: keyof T;
+  data: T[];
   isLoading?: boolean;
-  error?: Error | null;
-  onRefresh?: () => void;
-  searchPlaceholder?: string;
-  onSearch?: (query: string) => void;
-  emptyMessage?: string;
-  className?: string;
-  actions?: React.ReactNode;
+  emptyState?: {
+    title: string;
+    description: string;
+    action?: React.ReactNode;
+  };
+  keyField: string;
   pagination?: {
     currentPage: number;
     totalPages: number;
     itemsPerPage: number;
-    totalItems: number;
+    itemsCount: number;
     onPageChange: (page: number) => void;
     onPageSizeChange?: (size: number) => void;
     pageSizeOptions?: number[];
   };
-  emptyState?: {
-    title: string;
-    description: string;
-    action: React.ReactNode;
-  };
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  onSearch?: (term: string) => void;
+  searchTerm?: string;
 }
 
-export function DataTable<T>({
-  data,
+function DataTable<T>({
   columns,
-  keyField,
+  data,
   isLoading = false,
-  error = null,
-  onRefresh,
+  emptyState,
+  keyField,
+  pagination,
+  searchable = false,
   searchPlaceholder,
   onSearch,
-  emptyMessage,
-  className,
-  actions,
-  pagination,
-  emptyState
+  searchTerm: externalSearchTerm,
 }: DataTableProps<T>) {
   const { t } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [internalSearchTerm, setInternalSearchTerm] = useState<string>("");
   
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSearch) {
-      onSearch(searchQuery);
+  // Determine if we're using controlled or uncontrolled search
+  const isControlledSearch = externalSearchTerm !== undefined && onSearch;
+  const searchTerm = isControlledSearch ? externalSearchTerm : internalSearchTerm;
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    if (isControlledSearch && onSearch) {
+      onSearch(value);
+    } else {
+      setInternalSearchTerm(value);
     }
   };
   
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className={cn("space-y-4", className)}>
-        <div className="flex justify-between items-center">
-          <div className="w-1/3">
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <Skeleton className="h-10 w-24" />
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column, index) => (
-                <TableHead key={index} className={column.className}>
-                  <Skeleton className="h-4 w-20" />
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array(5).fill(0).map((_, idx) => (
-              <TableRow key={idx}>
-                {columns.map((column, colIdx) => (
-                  <TableCell key={`${idx}-${colIdx}`} className={column.className}>
-                    <Skeleton className="h-4 w-full" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    );
-  }
+  // Simple internal filtering for uncontrolled mode
+  const filteredData = !isControlledSearch && searchTerm
+    ? data.filter((item: any) => 
+        Object.values(item).some(
+          (val) => 
+            val && 
+            typeof val === "string" && 
+            val.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      )
+    : data;
   
-  // Error state
-  if (error) {
-    return (
-      <div className="rounded-md bg-destructive/10 p-6 text-center">
-        <h4 className="font-medium text-destructive mb-2">{t("errorOccurred")}</h4>
-        <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-        {onRefresh && (
-          <Button onClick={onRefresh} variant="outline" size="sm">
-            <RotateCcw className="mr-2 h-4 w-4" />
-            {t("tryAgain")}
-          </Button>
-        )}
-      </div>
-    );
-  }
+  // Use filteredData for uncontrolled search, or data for controlled search
+  const displayData = isControlledSearch ? data : filteredData;
   
-  // Empty state
-  if (data.length === 0) {
-    return (
-      <div className={cn("space-y-4", className)}>
-        {(onSearch || actions) && (
-          <div className="flex justify-between items-center mb-4">
-            {onSearch && (
-              <form onSubmit={handleSearch} className="flex items-center">
-                <Input
-                  placeholder={searchPlaceholder || t("search")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="max-w-sm"
-                />
-                <Button type="submit" variant="ghost" size="sm" className="ml-2">
-                  <Search className="h-4 w-4" />
-                </Button>
-              </form>
-            )}
-            {actions}
-          </div>
-        )}
-        <div className="rounded-md bg-muted/50 p-8 text-center">
-          {emptyState ? (
-            <>
-              <h3 className="font-medium text-lg mb-2">{emptyState.title}</h3>
-              <p className="text-muted-foreground mb-4">{emptyState.description}</p>
-              {emptyState.action}
-            </>
-          ) : (
-            <p className="text-muted-foreground">
-              {emptyMessage || t("noDataAvailable")}
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
+  // Determine if we should show empty state
+  const showEmptyState = !isLoading && displayData.length === 0;
   
-  // Render table with data
+  // Access key function to get the unique key from each row
+  const getRowKey = (row: any) => row[keyField] || JSON.stringify(row);
+  
   return (
-    <div className={cn("space-y-4", className)}>
-      {(onSearch || actions) && (
-        <div className="flex justify-between items-center mb-4">
-          {onSearch && (
-            <form onSubmit={handleSearch} className="flex items-center">
-              <Input
-                placeholder={searchPlaceholder || t("search")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-sm"
-              />
-              <Button type="submit" variant="ghost" size="sm" className="ml-2">
-                <Search className="h-4 w-4" />
-              </Button>
-            </form>
-          )}
-          {actions}
+    <div className="space-y-4">
+      {searchable && (
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={searchPlaceholder || t("search")}
+            className="pl-8"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
         </div>
       )}
       
@@ -193,39 +114,72 @@ export function DataTable<T>({
         <Table>
           <TableHeader>
             <TableRow>
-              {columns.map((column, index) => (
-                <TableHead key={index} className={column.className}>
+              {columns.map((column) => (
+                <TableHead key={column.accessorKey} className={column.className}>
                   {column.header}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((item) => (
-              <TableRow key={String(item[keyField])}>
-                {columns.map((column, index) => (
-                  <TableCell key={`${String(item[keyField])}-${index}`} className={column.className}>
-                    {column.cell ? column.cell(item) : String(item[column.accessorKey as keyof T] || '')}
-                  </TableCell>
-                ))}
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <div className="flex justify-center items-center h-full">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                </TableCell>
               </TableRow>
-            ))}
+            ) : showEmptyState ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <div className="flex flex-col items-center justify-center">
+                    <AlertCircle className="h-10 w-10 text-muted-foreground mb-2" />
+                    <h3 className="text-lg font-medium">
+                      {emptyState?.title || t("noData")}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {emptyState?.description || t("noDataDescription")}
+                    </p>
+                    {emptyState?.action && (
+                      <div className="mt-4">{emptyState.action}</div>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              displayData.map((row: any) => (
+                <TableRow key={getRowKey(row)}>
+                  {columns.map((column) => (
+                    <TableCell key={`${getRowKey(row)}-${column.accessorKey}`}>
+                      {column.cell
+                        ? column.cell(row)
+                        : row[column.accessorKey] || "-"}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
-
-      {pagination && (
-        <div className="mt-4">
-          <PaginationController
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            onPageChange={pagination.onPageChange}
-            itemsPerPage={pagination.itemsPerPage}
-            itemsCount={pagination.totalItems}
-            onPageSizeChange={pagination.onPageSizeChange}
-            pageSizeOptions={pagination.pageSizeOptions}
-          />
-        </div>
+      
+      {pagination && displayData.length > 0 && (
+        <PaginationController
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={pagination.onPageChange}
+          itemsPerPage={pagination.itemsPerPage}
+          itemsCount={pagination.itemsCount}
+          onPageSizeChange={pagination.onPageSizeChange}
+          pageSizeOptions={pagination.pageSizeOptions}
+        />
       )}
     </div>
   );

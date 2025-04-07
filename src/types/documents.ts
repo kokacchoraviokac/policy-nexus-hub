@@ -1,10 +1,6 @@
 
-import { DocumentComment, EntityType, DocumentCategory, ApprovalStatus } from './common';
+import { EntityType, DocumentCategory, ApprovalStatus, DocumentComment } from "@/types/common";
 
-// Export these types directly from their original source
-export { EntityType, DocumentCategory, ApprovalStatus };
-
-// Document approval status
 export enum DocumentApprovalStatus {
   PENDING = "pending",
   APPROVED = "approved",
@@ -12,7 +8,6 @@ export enum DocumentApprovalStatus {
   NEEDS_REVIEW = "needs_review"
 }
 
-// Document base interface
 export interface Document {
   id: string;
   document_name: string;
@@ -21,43 +16,63 @@ export interface Document {
   entity_type: string;
   entity_id: string;
   uploaded_by: string;
+  uploaded_by_name?: string;
+  category?: string;
+  company_id: string;
   created_at: string;
   updated_at: string;
-  company_id: string;
   mime_type?: string;
-  category?: DocumentCategory;
-  is_latest_version?: boolean;
   version?: number;
+  is_latest_version?: boolean;
   original_document_id?: string;
   description?: string;
+  status?: ApprovalStatus;
   approval_status?: DocumentApprovalStatus;
-  status?: string;
-  comments?: DocumentComment[];
-  uploaded_by_name?: string;
-  approval_notes?: string;
-  approved_by?: string;
-  approved_at?: string;
-  // Fields needed for document operations
+  comments?: (DocumentComment | string)[];
   policy_id?: string;
   claim_id?: string;
   sales_process_id?: string;
-  invoice_id?: string;
-  addendum_id?: string;
   client_id?: string;
   insurer_id?: string;
   agent_id?: string;
+  invoice_id?: string;
+  addendum_id?: string;
 }
 
-// Type alias for backward compatibility
-export type DocumentCategoryString = DocumentCategory;
-
-// Type for Policy Document
 export interface PolicyDocument extends Document {
   policy_id: string;
 }
 
-// Document table names
-export type DocumentTableName = 
+export interface ClaimDocument extends Document {
+  claim_id: string;
+}
+
+export interface SalesDocument extends Document {
+  sales_process_id: string;
+  step?: string;
+}
+
+export interface ClientDocument extends Document {
+  client_id: string;
+}
+
+export interface InsurerDocument extends Document {
+  insurer_id: string;
+}
+
+export interface AgentDocument extends Document {
+  agent_id: string;
+}
+
+export interface InvoiceDocument extends Document {
+  invoice_id: string;
+}
+
+export interface AddendumDocument extends Document {
+  addendum_id: string;
+}
+
+export type DocumentTableName =
   | "policy_documents"
   | "claim_documents"
   | "sales_documents"
@@ -67,104 +82,28 @@ export type DocumentTableName =
   | "invoice_documents"
   | "addendum_documents";
 
-// Document search parameters
-export interface DocumentSearchParams {
-  entityType?: EntityType;
-  entityId?: string;
-  category?: DocumentCategory;
-  startDate?: string;
-  endDate?: string;
-  status?: DocumentApprovalStatus;
-  searchTerm?: string;
+export interface DocumentAnalysisPanelProps {
+  file: File;
+  onAnalysisComplete: () => void;
+  onCategoryDetected: (category: DocumentCategory | string) => void;
 }
 
-// Props for document search hook
-export interface UseDocumentSearchProps {
-  defaultParams?: DocumentSearchParams;
-  entityType?: EntityType;
-  entityId?: string;
-  category?: DocumentCategory;
-  defaultPageSize?: number;
-  defaultSortBy?: string;
-  defaultSortOrder?: 'asc' | 'desc';
-  initialSearchTerm?: string;
-  approvalStatus?: DocumentApprovalStatus;
-  initialSearchParams?: DocumentSearchParams;
-  autoFetch?: boolean;
-}
-
-// Return type for document search hook
-export interface UseDocumentSearchReturn {
-  documents: Document[];
-  isLoading: boolean;
-  error: Error | null;
-  searchParams: DocumentSearchParams;
-  setSearchParams: (params: DocumentSearchParams) => void;
-  refresh: () => void;
-  searchTerm?: string;
-  setSearchTerm?: (term: string) => void;
-  selectedCategory?: DocumentCategory;
-  setSelectedCategory?: (category: DocumentCategory) => void;
-  searchDocuments?: () => void;
-  currentPage?: number;
-  totalPages?: number;
-  itemsCount?: number;
-  itemsPerPage?: number;
-  handlePageChange?: (page: number) => void;
-  isError?: boolean;
-  totalCount?: number;
-}
-
-// Document upload options
 export interface DocumentUploadOptions {
   file: File;
   documentName: string;
   documentType: string;
-  category?: DocumentCategory;
+  category?: DocumentCategory | string;
   entityId: string;
-  entityType: EntityType | string;
+  entityType: EntityType;
   originalDocumentId?: string;
   currentVersion?: number;
   salesStage?: string;
   description?: string;
 }
 
-// Document approval info
-export interface ApprovalInfo {
-  status: ApprovalStatus;
-  approvedBy?: string;
-  approvedAt?: string;
-  notes?: string;
-  documentId?: string;
-}
-
-// Document upload dialog props
-export interface DocumentUploadDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+export interface UpdateApprovalParams {
+  documentId: string;
   entityType: EntityType;
-  entityId: string;
-  selectedDocument?: Document;
-  onUploadComplete?: () => void;
-  embedMode?: boolean;
-  onFileSelected?: (file: File | null) => void;
-  defaultCategory?: DocumentCategory;
-  salesStage?: string;
-}
-
-// Document analysis panel props
-export interface DocumentAnalysisPanelProps {
-  file: File;
-  onAnalysisComplete: () => void;
-  onCategoryDetected: (category: DocumentCategory) => void;
-}
-
-// Comment type for documents
-export interface Comment {
-  id?: string;
-  document_id: string;
-  user_id: string;
-  author: string;
-  text: string;
-  created_at?: string;
+  status: DocumentApprovalStatus;
+  notes?: string;
 }
