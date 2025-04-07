@@ -1,19 +1,7 @@
 
-// Document Types
+import { EntityType, DocumentCategory } from "@/types/common";
 
-// Define DocumentCategory as an enum for runtime availability
-export enum DocumentCategory {
-  POLICY = 'policy',
-  CLAIM = 'claim',
-  INVOICE = 'invoice',
-  CONTRACT = 'contract',
-  LIEN = 'lien',
-  PROPOSAL = 'proposal',
-  QUOTE = 'quote',
-  NOTIFICATION = 'notification',
-  OTHER = 'other',
-  MISCELLANEOUS = 'miscellaneous'
-}
+// Document Types
 
 // Define DocumentApprovalStatus as an enum
 export enum DocumentApprovalStatus {
@@ -46,6 +34,7 @@ export interface Document {
   approved_at?: string;
   approval_notes?: string;
   comments?: string[];
+  description?: string;
 }
 
 // Define PolicyDocument extending the base Document
@@ -78,6 +67,19 @@ export interface DocumentUploadResponse {
   success: boolean;
   documentId?: string;
   error?: string;
+}
+
+// Document upload options
+export interface DocumentUploadOptions {
+  file: File;
+  documentName: string;
+  documentType: string;
+  category: DocumentCategory | string;
+  entityId: string;
+  entityType: EntityType;
+  originalDocumentId?: string;
+  currentVersion?: number;
+  [key: string]: any;
 }
 
 // Document search parameters
@@ -139,6 +141,9 @@ export interface UseDocumentSearchReturn {
 // Props for document analysis panel
 export interface DocumentAnalysisPanelProps {
   document: Document;
+  file?: File;
+  onAnalysisComplete?: () => void;
+  onCategoryDetected?: (category: DocumentCategory) => void;
   onClose?: () => void;
   showClose?: boolean;
 }
@@ -151,4 +156,18 @@ export interface ApprovalInfo {
   approved_by?: string;
   approved_at?: string;
   action_type?: string;
+}
+
+// Props for DocumentUploadDialog
+export interface DocumentUploadDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entityType: EntityType;
+  entityId: string;
+  selectedDocument?: Document;
+  onUploadComplete?: () => void;
+  embedMode?: boolean;
+  onFileSelected?: (file: File | null) => void;
+  defaultCategory?: DocumentCategory;
+  salesStage?: string;
 }

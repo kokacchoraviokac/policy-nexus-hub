@@ -1,12 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { RelationName } from "@/types/common";
+import { DocumentTableName } from "@/types/documents";
 
 /**
  * A type-safe wrapper for accessing document tables
  * This ensures we get proper typing in the response
  */
-export const fromDocumentTable = (tableName: RelationName) => {
+export const fromDocumentTable = (tableName: DocumentTableName) => {
   return supabase.from(tableName);
 };
 

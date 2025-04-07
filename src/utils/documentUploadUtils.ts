@@ -1,21 +1,14 @@
 
+import { supabase } from "@/integrations/supabase/client";
+import { DocumentTableName, DocumentUploadOptions } from "@/types/documents";
 import { EntityType } from "@/types/common";
-import { DocumentCategory } from "@/types/documents";
-
-export type DocumentTableName = 
-  | 'policy_documents'
-  | 'claim_documents'
-  | 'sales_documents'
-  | 'client_documents'
-  | 'insurer_documents'
-  | 'agent_documents'
-  | 'invoice_documents'
-  | 'addendum_documents';
 
 /**
- * Get the document table name based on the entity type
+ * Get the document table name based on entity type
+ * @param entityType The type of entity
+ * @returns The document table name
  */
-export const getDocumentTableName = (entityType: string): DocumentTableName => {
+export const getDocumentTableName = (entityType: EntityType): DocumentTableName => {
   switch (entityType) {
     case EntityType.POLICY:
       return 'policy_documents';
@@ -35,14 +28,17 @@ export const getDocumentTableName = (entityType: string): DocumentTableName => {
     case EntityType.INVOICE:
       return 'invoice_documents';
     default:
-      return 'policy_documents'; // Default to policy documents
+      console.warn(`No document table found for entity type: ${entityType}. Defaulting to policy_documents.`);
+      return 'policy_documents';
   }
 };
 
 /**
- * Get the entity ID field name based on the entity type
+ * Get the entity ID column name based on entity type
+ * @param entityType The type of entity
+ * @returns The entity ID column name
  */
-export const getEntityIdFieldName = (entityType: string): string => {
+export const getEntityIdColumn = (entityType: EntityType): string => {
   switch (entityType) {
     case EntityType.POLICY:
       return 'policy_id';
@@ -62,33 +58,90 @@ export const getEntityIdFieldName = (entityType: string): string => {
     case EntityType.INVOICE:
       return 'invoice_id';
     default:
-      return 'entity_id';
+      console.warn(`No entity ID column found for entity type: ${entityType}. Defaulting to policy_id.`);
+      return 'policy_id';
   }
 };
 
 /**
- * Get the allowed document types for a given entity type
+ * Convert a DocumentTableName to a Supabase table name for type safety
  */
-export const getDocumentTypesForEntity = (entityType: string): string[] => {
-  switch (entityType) {
-    case EntityType.POLICY:
-      return ['policy', 'certificate', 'terms', 'invoice', 'other'];
-    case EntityType.CLAIM:
-      return ['claim_form', 'damage_report', 'evidence', 'medical_report', 'other'];
-    case EntityType.SALES_PROCESS:
-    case EntityType.SALE:
-      return ['quote', 'proposal', 'authorization', 'requirements', 'other'];
-    case EntityType.CLIENT:
-      return ['identification', 'financial', 'company', 'authorization', 'other'];
-    case EntityType.INSURER:
-      return ['agreement', 'commission', 'contacts', 'products', 'other'];
-    case EntityType.AGENT:
-      return ['contract', 'license', 'commission', 'training', 'other'];
-    case EntityType.ADDENDUM:
-      return ['addendum', 'amendment', 'supplement', 'other'];
-    case EntityType.INVOICE:
-      return ['invoice', 'receipt', 'payment', 'other'];
-    default:
-      return ['other'];
+export const asTableName = (tableName: DocumentTableName): string => {
+  return tableName;
+};
+
+/**
+ * Upload a document to storage and create a record in the database
+ */
+export const uploadDocument = async (options: DocumentUploadOptions): Promise<{ success: boolean; documentId?: string; error?: string }> => {
+  const { file, documentName, documentType, category, entityId, entityType } = options;
+
+  try {
+    // Generate a unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `${entityType}/${entityId}/${fileName}`;
+
+    // Upload file to storage
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    // Get the document table name based on entity type
+    const tableName = getDocumentTableName(entityType);
+
+    // Create the document record
+    const documentData: any = {
+      document_name: documentName,
+      document_type: documentType,
+      file_path: filePath,
+      entity_id: entityId,
+      entity_type: entityType,
+      uploaded_by: options.uploadedBy || null,
+      company_id: options.companyId || null,
+      category,
+    };
+
+    // Add entity-specific ID field
+    const entityIdColumn = getEntityIdColumn(entityType);
+    documentData[entityIdColumn] = entityId;
+
+    // Add version info if this is an update
+    if (options.originalDocumentId) {
+      documentData.original_document_id = options.originalDocumentId;
+      documentData.version = (options.currentVersion || 0) + 1;
+      documentData.is_latest_version = true;
+    }
+
+    // Insert document record
+    const { data: docData, error: docError } = await supabase
+      .from(tableName)
+      .insert(documentData)
+      .select()
+      .single();
+
+    if (docError) {
+      throw docError;
+    }
+
+    // If this is a new version, update the previous version
+    if (options.originalDocumentId) {
+      await supabase
+        .from(tableName)
+        .update({ is_latest_version: false })
+        .eq('id', options.originalDocumentId);
+    }
+
+    return { success: true, documentId: docData.id };
+  } catch (error: any) {
+    console.error('Error uploading document:', error);
+    return { success: false, error: error.message || 'Failed to upload document' };
   }
 };

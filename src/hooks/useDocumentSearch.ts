@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { 
-  PolicyDocument, 
+  Document, 
   DocumentCategory, 
   DocumentApprovalStatus,
   DocumentSearchParams,
@@ -23,7 +23,7 @@ export const useDocumentSearch = ({
   initialSearchParams,
   autoFetch = true
 }: UseDocumentSearchProps = {}): UseDocumentSearchReturn => {
-  const [documents, setDocuments] = useState<PolicyDocument[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(defaultPageSize);
@@ -32,7 +32,7 @@ export const useDocumentSearch = ({
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [sortBy, setSortBy] = useState(defaultSortBy);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(defaultSortOrder);
-  const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | undefined>(category);
+  const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | string | undefined>(category);
   const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<DocumentApprovalStatus | undefined>(approvalStatus);
   const [isError, setIsError] = useState(false);
   
@@ -54,11 +54,8 @@ export const useDocumentSearch = ({
         approvalStatus: params?.approvalStatus || selectedApprovalStatus
       };
       
-      // For now, we'll mock the document data since there might be issues with the database schema
-      // In a real implementation, replace this with proper Supabase queries
-      
-      // Mock document data
-      const mockDocuments: PolicyDocument[] = [
+      // Mock document data for development
+      const mockDocuments = [
         {
           id: '1',
           document_name: 'Policy Document',
@@ -66,14 +63,16 @@ export const useDocumentSearch = ({
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           uploaded_by: 'user123',
+          uploaded_by_name: 'John Doe',
           file_path: '/documents/policy1.pdf',
-          category: 'policy',
+          category: DocumentCategory.POLICY,
           entity_id: entityId || 'mock-entity-id',
           entity_type: entityType || EntityType.POLICY,
           version: 1,
           is_latest_version: true,
           approval_status: DocumentApprovalStatus.APPROVED,
-          company_id: 'mock-company-id'
+          company_id: 'mock-company-id',
+          description: 'A sample policy document'
         },
         {
           id: '2',
@@ -82,14 +81,16 @@ export const useDocumentSearch = ({
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           uploaded_by: 'user123',
+          uploaded_by_name: 'John Doe',
           file_path: '/documents/claim1.pdf',
-          category: 'claim',
+          category: DocumentCategory.CLAIM,
           entity_id: entityId || 'mock-entity-id',
           entity_type: entityType || EntityType.CLAIM,
           version: 1,
           is_latest_version: true,
           approval_status: DocumentApprovalStatus.PENDING,
-          company_id: 'mock-company-id'
+          company_id: 'mock-company-id',
+          description: 'A sample claim document'
         }
       ];
       
@@ -187,7 +188,7 @@ export const useDocumentSearch = ({
     sortOrder,
     setSortOrder,
     selectedCategory,
-    setSelectedCategory,
+    setSelectedCategory: setSelectedCategory as (category: DocumentCategory | string | undefined) => void,
     selectedApprovalStatus,
     setSelectedApprovalStatus,
     searchDocuments,
@@ -200,3 +201,5 @@ export const useDocumentSearch = ({
     itemsPerPage: pageSize
   };
 };
+
+export default useDocumentSearch;

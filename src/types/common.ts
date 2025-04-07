@@ -8,7 +8,9 @@ export enum RelationName {
   SALES_DOCUMENTS = "sales_documents",
   CLIENT_DOCUMENTS = "client_documents",
   AGENT_DOCUMENTS = "agent_documents",
-  INSURER_DOCUMENTS = "insurer_documents"
+  INSURER_DOCUMENTS = "insurer_documents",
+  ADDENDUM_DOCUMENTS = "addendum_documents",
+  INVOICE_DOCUMENTS = "invoice_documents"
 }
 
 export enum EntityType {
@@ -18,9 +20,9 @@ export enum EntityType {
   CLIENT = 'client',
   AGENT = 'agent',
   INSURER = 'insurer',
-  SALE = 'sale',
   ADDENDUM = 'addendum',
-  INVOICE = 'invoice'
+  INVOICE = 'invoice',
+  SALE = 'sale'
 }
 
 export enum DocumentCategory {
