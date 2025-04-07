@@ -1,7 +1,32 @@
 
-import { DocumentCategory, EntityType, ApprovalStatus } from "./common";
+export enum EntityType {
+  POLICY = "policy",
+  CLAIM = "claim",
+  SALES_PROCESS = "sales_process",
+  CLIENT = "client",
+  INSURER = "insurer",
+  AGENT = "agent",
+  INVOICE = "invoice",
+  ADDENDUM = "addendum"
+}
 
-export { DocumentCategory, EntityType, ApprovalStatus };
+export enum DocumentCategory {
+  POLICY = "policy",
+  CLAIM = "claim",
+  INVOICE = "invoice",
+  CONTRACT = "contract",
+  NOTIFICATION = "notification",
+  LIEN = "lien",
+  OTHER = "other",
+  PROPOSAL = "proposal",
+  QUOTE = "quote",
+  SALES = "sales",
+  FINANCIAL = "financial",
+  LEGAL = "legal",
+  MEDICAL = "medical",
+  CORRESPONDENCE = "correspondence",
+  MISCELLANEOUS = "miscellaneous"
+}
 
 export enum DocumentApprovalStatus {
   PENDING = "pending",
@@ -10,66 +35,36 @@ export enum DocumentApprovalStatus {
   NEEDS_REVIEW = "needs_review"
 }
 
+export type DocumentTableName = 
+  | "policy_documents"
+  | "claim_documents" 
+  | "sales_documents"
+  | "client_documents"
+  | "insurer_documents"
+  | "agent_documents"
+  | "invoice_documents"
+  | "addendum_documents";
+
 export interface Document {
   id: string;
   document_name: string;
   document_type: string;
-  created_at: string;
+  description?: string;
   file_path: string;
   entity_type: EntityType;
   entity_id: string;
   uploaded_by: string;
-  uploaded_by_id?: string;
   uploaded_by_name?: string;
-  description?: string;
+  category?: DocumentCategory;
+  status?: DocumentApprovalStatus;
   version?: number;
-  status?: string;
-  tags?: string[];
-  category: DocumentCategory;
-  company_id: string;
-  
-  mime_type?: string;
+  original_document_id?: string;
   is_latest_version?: boolean;
-  original_document_id?: string | null;
-  approval_status?: DocumentApprovalStatus;
-  approved_by?: string;
-  approved_at?: string;
-  approval_notes?: string;
-  comments?: string[];
-}
-
-export interface DocumentUploadRequest {
-  document_name: string;
-  document_type: string;
-  entity_type: string;
-  entity_id: string;
-  description?: string;
-  tags?: string[];
-  category: DocumentCategory;
-  file: File;
-}
-
-export type DocumentTableName = 
-  | 'policy_documents'
-  | 'claim_documents'
-  | 'sales_documents'
-  | 'client_documents'
-  | 'insurer_documents'
-  | 'agent_documents'
-  | 'invoice_documents'
-  | 'addendum_documents';
-
-export interface DocumentUploadDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  entityType: EntityType;
-  entityId: string;
-  onUploadComplete?: () => void;
-  defaultCategory?: string;
-  salesStage?: string;
-  selectedDocument?: Document;
-  embedMode?: boolean;
-  onFileSelected?: (file: File | null) => void;
+  created_at: string;
+  updated_at: string;
+  mime_type?: string;
+  file_size?: number;
+  comments?: DocumentComment[] | string[];
 }
 
 export interface PolicyDocument extends Document {
@@ -77,97 +72,53 @@ export interface PolicyDocument extends Document {
   addendum_id?: string;
 }
 
-export interface Comment {
-  id?: string;
+export interface ClaimDocument extends Document {
+  claim_id: string;
+}
+
+export interface SalesDocument extends Document {
+  sales_process_id: string;
+  step?: string;
+}
+
+export interface ClientDocument extends Document {
+  client_id: string;
+}
+
+export interface InsurerDocument extends Document {
+  insurer_id: string;
+}
+
+export interface AgentDocument extends Document {
+  agent_id: string;
+}
+
+export interface InvoiceDocument extends Document {
+  invoice_id: string;
+}
+
+export interface AddendumDocument extends Document {
+  addendum_id: string;
+}
+
+export interface DocumentComment {
+  id: string;
+  document_id: string;
   author: string;
   text: string;
-  document_id?: string;
-  user_id?: string;
-  created_at?: string;
-}
-
-export interface DocumentUploadOptions {
-  tableName?: DocumentTableName;
-  onSuccess?: (document: Document) => void;
-  onError?: (error: Error) => void;
-  file?: File;
-  documentName?: string;
-  documentType?: string;
-  category?: DocumentCategory;
-  entityId?: string;
-  entityType?: EntityType;
-  originalDocumentId?: string;
-  currentVersion?: number;
-  salesStage?: string;
-  description?: string;
-}
-
-export interface DocumentSearchParams {
-  entity_type?: EntityType;
-  entity_id?: string;
-  category?: DocumentCategory;
-  search_term?: string;
-  date_from?: string;
-  date_to?: string;
-  uploaded_by?: string;
-  page?: number;
-  limit?: number;
-}
-
-export interface UseDocumentSearchProps {
-  defaultParams?: Partial<DocumentSearchParams>;
-  entityType?: string;
-  entityId?: string;
-  category?: string;
-  defaultPageSize?: number;
-  defaultSortBy?: string;
-  defaultSortOrder?: 'asc' | 'desc';
-  initialSearchTerm?: string;
-  approvalStatus?: string;
-  initialSearchParams?: Partial<DocumentSearchParams>;
-  autoFetch?: boolean;
-}
-
-export interface UseDocumentSearchReturn {
-  documents: Document[];
-  isLoading: boolean;
-  error: Error | null;
-  setSearchParams: (params: Partial<DocumentSearchParams>) => void;
-  searchParams: DocumentSearchParams;
-  totalCount: number;
-  pagination: {
-    currentPage: number;
-    pageSize: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-  };
-  searchTerm?: string;
-  setSearchTerm?: (term: string) => void;
-  selectedCategory?: string;
-  setSelectedCategory?: (category: string) => void;
-  searchDocuments?: () => void;
-  currentPage?: number;
-  totalPages?: number;
-  itemsCount?: number;
-  itemsPerPage?: number;
-  handlePageChange?: (page: number) => void;
-  isError?: boolean;
-  page?: number;
-}
-
-export interface ApprovalInfo {
-  status: DocumentApprovalStatus;
-  document_id?: string;
-  approvedBy?: {
-    id: string;
-    name: string;
-  };
-  approvedAt?: string;
-  notes?: string;
-  canApprove: boolean;
+  user_id: string;
+  created_at: string;
 }
 
 export interface DocumentAnalysisPanelProps {
-  document?: Document;
-  onAnalysisComplete?: (results: any) => void;
+  file: File;
+  onCategoryDetected: (category: DocumentCategory) => void;
+  onAnalysisComplete: () => void;
+}
+
+export interface ApprovalInfo {
+  document_id: string;
+  status: DocumentApprovalStatus;
+  notes: string;
+  canApprove: boolean;
 }

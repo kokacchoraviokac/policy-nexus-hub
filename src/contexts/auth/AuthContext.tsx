@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext } from 'react';
 import { AuthContextType } from './types';
+import { UserRole } from '@/types/auth/userTypes';
 
 // Create the auth context with default values
 export const AuthContext = createContext<AuthContextType>({

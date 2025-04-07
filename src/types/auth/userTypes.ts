@@ -1,37 +1,23 @@
 
-import { UserRole } from "../common";
+import { Session } from "@supabase/supabase-js";
 
-export { UserRole };
+export enum UserRole {
+  SUPER_ADMIN = "superAdmin",
+  ADMIN = "admin",
+  EMPLOYEE = "employee",
+  AGENT = "agent",
+  CLIENT = "client"
+}
 
 export interface User {
   id: string;
+  name?: string;
   email: string;
-  name: string;
-  avatar_url?: string;
-  avatar?: string;
   role: UserRole;
-  company_id?: string;
   companyId?: string;
-}
-
-export interface Invitation {
-  id: string;
-  email: string;
-  role: UserRole;
-  token: string;
-  expires_at: string;
-  status: "pending" | "accepted" | "expired";
-  company_id: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateInvitationRequest {
-  email: string;
-  role: UserRole;
   company_id?: string;
-  expiry_days?: number;
+  avatar?: string;
+  user_metadata?: Record<string, any>;
 }
 
 export interface CustomPrivilege {
@@ -39,7 +25,47 @@ export interface CustomPrivilege {
   user_id: string;
   privilege: string;
   granted_at: string;
+  expires_at?: string;
   granted_by: string;
-  expires_at?: string | null;
   context?: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  userProfile: User | null;
+  role: UserRole | null;
+  companyId: string | null;
+  isInitialized: boolean;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
+  signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error?: any }>;
+  logout: () => Promise<void>;
+  updateUser: (profile: Partial<User>) => Promise<void>;
+  updateUserProfile: (profile: Partial<User>) => Promise<void>;
+  hasPrivilege: (privilege: string) => boolean;
+  hasPrivilegeWithContext: (privilege: string, context?: any) => boolean;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  initiatePasswordReset: (email: string) => Promise<boolean>;
+  updatePassword: (newPassword: string) => Promise<boolean>;
+  refreshSession: () => Promise<void>;
+  customPrivileges: CustomPrivilege[];
+}
+
+export interface ResourceContext {
+  [key: string]: any;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface SignUpCredentials extends LoginCredentials {
+  name?: string;
+  companyId?: string;
+  role?: UserRole;
 }

@@ -9,6 +9,8 @@ export interface FinancialTransaction {
   entity_id?: string;
   entity_type?: string;
   currency?: string;
+  status?: string;
+  reference?: string;
 }
 
 export interface FinancialReportSummary {

@@ -17,6 +17,8 @@ const Pagination: React.FC<PaginationProps> = ({
   itemsCount,
   itemsPerPage,
   className,
+  pageSizeOptions,
+  onPageSizeChange,
 }) => {
   const { t } = useLanguage();
 
@@ -81,130 +83,91 @@ const Pagination: React.FC<PaginationProps> = ({
           })}
         </div>
       )}
-
-      <div className="flex items-center space-x-2 ml-auto">
+      
+      <div className="flex items-center space-x-2">
+        {/* First page button */}
         <Button
           variant="outline"
           size="icon"
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
-          aria-label={t("firstPage")}
+          className="h-8 w-8"
         >
           <ChevronsLeft className="h-4 w-4" />
         </Button>
+        
+        {/* Previous page button */}
         <Button
           variant="outline"
           size="icon"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          aria-label={t("previousPage")}
+          className="h-8 w-8"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
         
-        {getPageNumbers().map((page, idx) => (
-          typeof page === 'number' ? (
-            <Button
-              key={page}
-              variant={currentPage === page ? "default" : "outline"}
-              size="icon"
-              onClick={() => onPageChange(page)}
-              aria-label={t("pageNumber", { page })}
-              aria-current={currentPage === page ? "page" : undefined}
-            >
-              {page}
-            </Button>
-          ) : (
-            <span key={page} className="px-2 text-muted-foreground">...</span>
-          )
-        ))}
+        {/* Page numbers */}
+        <div className="flex items-center space-x-1">
+          {getPageNumbers().map((page, index) => (
+            page === "ellipsis-start" || page === "ellipsis-end" ? (
+              <div key={`ellipsis-${index}`} className="px-2">...</div>
+            ) : (
+              <Button
+                key={`page-${page}`}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                className="h-8 w-8"
+                onClick={() => typeof page === 'number' && onPageChange(page)}
+              >
+                {page}
+              </Button>
+            )
+          ))}
+        </div>
         
+        {/* Next page button */}
         <Button
           variant="outline"
           size="icon"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          aria-label={t("nextPage")}
+          className="h-8 w-8"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
+        
+        {/* Last page button */}
         <Button
           variant="outline"
           size="icon"
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
-          aria-label={t("lastPage")}
+          className="h-8 w-8"
         >
           <ChevronsRight className="h-4 w-4" />
         </Button>
       </div>
+      
+      {/* Page size selector */}
+      {pageSizeOptions && onPageSizeChange && (
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-muted-foreground">{t("itemsPerPage")}</span>
+          <select
+            className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+            value={itemsPerPage}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          >
+            {pageSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Pagination;
-
-// Also export sub-components for use when needed
-export const PaginationContent = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-center space-x-2">{children}</div>
-);
-
-export const PaginationItem = ({ children }: { children: React.ReactNode }) => (
-  <div>{children}</div>
-);
-
-export const PaginationLink = ({ 
-  page, 
-  isActive, 
-  onClick 
-}: { 
-  page: number | string,
-  isActive?: boolean,
-  onClick: () => void 
-}) => (
-  <Button
-    variant={isActive ? "default" : "outline"}
-    size="icon"
-    onClick={onClick}
-  >
-    {page}
-  </Button>
-);
-
-export const PaginationEllipsis = () => (
-  <span className="px-2 text-muted-foreground">...</span>
-);
-
-export const PaginationNext = ({ 
-  onClick,
-  disabled
-}: { 
-  onClick: () => void,
-  disabled?: boolean
-}) => (
-  <Button
-    variant="outline"
-    size="icon"
-    onClick={onClick}
-    disabled={disabled}
-  >
-    <ChevronRight className="h-4 w-4" />
-  </Button>
-);
-
-export const PaginationPrevious = ({ 
-  onClick,
-  disabled
-}: { 
-  onClick: () => void,
-  disabled?: boolean
-}) => (
-  <Button
-    variant="outline"
-    size="icon"
-    onClick={onClick}
-    disabled={disabled}
-  >
-    <ChevronLeft className="h-4 w-4" />
-  </Button>
-);

@@ -8,15 +8,12 @@ import { DocumentTableName } from "@/types/documents";
  * This ensures we get proper typing in the response
  */
 export const fromDocumentTable = (tableName: DocumentTableName) => {
-  // We're using an explicit any here to overcome TypeScript's limitation
-  // with string literal types that should be compatible but TypeScript sees as different
-  return supabase.from(tableName as any);
+  return supabase.from(tableName);
 };
 
 /**
  * A type-safe wrapper for general table access
  */
 export const fromTable = (tableName: RelationName) => {
-  // Using any to avoid TypeScript's limitation with string literal union types
-  return supabase.from(tableName as any);
+  return supabase.from(tableName);
 };
