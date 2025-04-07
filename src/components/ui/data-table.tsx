@@ -40,6 +40,7 @@ interface DataTableProps<TData, TValue> {
   emptyState?: {
     title: string;
     description: string;
+    action?: React.ReactNode;
   };
   onRowClick?: (row: TData) => void;
   sortable?: boolean;
@@ -96,6 +97,9 @@ export function DataTable<TData, TValue>({
         <p className="text-sm text-muted-foreground mt-1">
           {emptyState.description}
         </p>
+        {emptyState.action && (
+          <div className="mt-4">{emptyState.action}</div>
+        )}
       </div>
     );
   }
