@@ -69,14 +69,14 @@ export interface PaginationQuery {
   pageSize?: number;
 }
 
-export interface CommissionStatus {
-  PENDING: "pending";
-  INVOICED: "invoiced";
-  PAID: "paid";
-  PARTIALLY_PAID: "partially_paid";
+export enum CommissionStatus {
+  PENDING = "pending",
+  INVOICED = "invoiced",
+  PAID = "paid",
+  PARTIALLY_PAID = "partially_paid"
 }
 
-export enum DocumentComment {
+export interface DocumentComment {
   id: string;
   document_id: string;
   text: string;

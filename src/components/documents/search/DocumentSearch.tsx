@@ -22,7 +22,8 @@ import {
 } from '@/components/ui/table';
 import { formatDateToLocal } from '@/utils/dateUtils';
 import { useDocumentSearch } from '@/hooks/useDocumentSearch';
-import { PolicyDocument, DocumentCategory } from '@/types/documents';
+import { PolicyDocument } from '@/types/documents';
+import { DocumentCategory } from '@/types/common';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Pagination } from '@/components/ui/pagination';
 import DocumentViewDialog from '../DocumentViewDialog';

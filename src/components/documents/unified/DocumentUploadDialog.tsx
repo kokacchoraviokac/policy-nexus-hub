@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -56,14 +55,12 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     }
   });
 
-  // Notify parent component when file changes
   useEffect(() => {
     if (onFileSelected) {
       onFileSelected(file);
     }
   }, [file, onFileSelected]);
 
-  // In embed mode, don't render the Dialog wrapper
   if (embedMode) {
     return (
       <div className="space-y-4">

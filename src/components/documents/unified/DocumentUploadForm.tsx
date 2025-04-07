@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { documentCategories, supportedDocumentTypes } from "@/utils/documentUtils";
-import { DocumentCategory } from "@/types/documents";
+import { DocumentCategory } from "@/types/common";
 import FileUploadField from "../FileUploadField";
 
 interface DocumentUploadFormProps {

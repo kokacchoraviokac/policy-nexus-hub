@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { EntityType } from "@/types/documents";
+import { DocumentCategory } from "@/types/common";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload } from "lucide-react";
 import { useDocumentUpload } from "@/hooks/useDocumentUpload";
