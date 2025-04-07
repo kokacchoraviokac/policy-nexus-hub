@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { DocumentTableName } from "@/types/documents";
 import { RelationName } from "@/types/common";
@@ -6,7 +7,8 @@ type DatabaseTableName = RelationName;
 
 export const safeQueryFrom = (table: DatabaseTableName) => {
   try {
-    return supabase.from(table);
+    // Using any to overcome TypeScript's limitations with string literals
+    return supabase.from(table as any);
   } catch (error) {
     console.error(`Error accessing table ${table}:`, error);
     throw new Error(`Failed to access table ${table}`);
@@ -44,7 +46,7 @@ export const insertRecord = async <T>(
 ): Promise<T> => {
   try {
     const { data, error } = await safeQueryFrom(tableName)
-      .insert(record)
+      .insert(record as any)
       .select()
       .single();
 
@@ -66,7 +68,7 @@ export const updateRecord = async <T>(
 ): Promise<T> => {
   try {
     const { data, error } = await safeQueryFrom(tableName)
-      .update(updates)
+      .update(updates as any)
       .eq("id", id)
       .select()
       .single();

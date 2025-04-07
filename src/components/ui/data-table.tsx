@@ -21,8 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Pagination from "@/components/ui/pagination";
-import TableSkeletonLoader from "@/components/common/TableSkeletonLoader";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type Column<TData> = ColumnDef<TData, unknown>;
 
@@ -90,7 +90,38 @@ export function DataTable<TData, TValue>({
 
   // Handle empty or loading state
   if (isLoading) {
-    return <TableSkeletonLoader columns={columns.length} />;
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {Array(columns.length)
+                .fill(0)
+                .map((_, i) => (
+                  <TableHead key={`header-${i}`}>
+                    <Skeleton className="h-4 w-24" />
+                  </TableHead>
+                ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array(5)
+              .fill(0)
+              .map((_, rowIndex) => (
+                <TableRow key={`row-${rowIndex}`}>
+                  {Array(columns.length)
+                    .fill(0)
+                    .map((_, colIndex) => (
+                      <TableCell key={`cell-${rowIndex}-${colIndex}`}>
+                        <Skeleton className="h-4 w-full" />
+                      </TableCell>
+                    ))}
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
   }
 
   if (!isLoading && data.length === 0 && emptyState) {

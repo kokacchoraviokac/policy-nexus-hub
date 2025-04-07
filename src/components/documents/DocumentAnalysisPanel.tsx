@@ -5,13 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { DocumentAnalysisPanelProps } from "@/types/documents";
-import { DocumentCategory } from "@/types/common";
+import { DocumentAnalysisPanelProps, DocumentCategory } from "@/types/documents";
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
-  file,
-  onAnalysisComplete,
-  onCategoryDetected
+  document,
+  onAnalysisComplete
 }) => {
   const { t } = useLanguage();
   const [progress, setProgress] = useState(0);
@@ -29,9 +27,15 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
       if (currentProgress >= 100) {
         clearInterval(timer);
         setAnalyzing(false);
-        onAnalysisComplete();
-        // Simulate a detected category
-        onCategoryDetected(DocumentCategory.POLICY);
+        if (onAnalysisComplete) {
+          onAnalysisComplete({
+            categories: [DocumentCategory.POLICY, DocumentCategory.INVOICE],
+            extractedData: {
+              title: document?.document_name || "Unknown document",
+              date: new Date().toISOString()
+            }
+          });
+        }
       }
     };
     
@@ -40,7 +44,19 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
     return () => {
       clearInterval(timer);
     };
-  }, [onAnalysisComplete, onCategoryDetected]);
+  }, [document, onAnalysisComplete]);
+  
+  if (!document) {
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6">
+          <div className="text-center text-muted-foreground">
+            {t("noDocumentSelected")}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className="w-full">
@@ -52,9 +68,9 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
           
           <div className="flex-1 space-y-4">
             <div>
-              <h3 className="font-medium">{file.name}</h3>
+              <h3 className="font-medium">{document.document_name}</h3>
               <p className="text-sm text-muted-foreground">
-                {(file.size / 1024 / 1024).toFixed(2)} MB · {file.type || "Unknown type"}
+                {document.mime_type ? document.mime_type : "Unknown type"}
               </p>
             </div>
             

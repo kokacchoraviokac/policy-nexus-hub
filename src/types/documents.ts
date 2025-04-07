@@ -90,6 +90,16 @@ export interface DocumentUploadOptions {
   tableName?: DocumentTableName;
   onSuccess?: (document: Document) => void;
   onError?: (error: Error) => void;
+  file?: File;
+  documentName?: string;
+  documentType?: string;
+  category?: DocumentCategory;
+  entityId?: string;
+  entityType?: EntityType;
+  originalDocumentId?: string;
+  currentVersion?: number;
+  salesStage?: string;
+  description?: string;
 }
 
 export interface DocumentSearchParams {
@@ -106,6 +116,16 @@ export interface DocumentSearchParams {
 
 export interface UseDocumentSearchProps {
   defaultParams?: Partial<DocumentSearchParams>;
+  entityType?: string;
+  entityId?: string;
+  category?: string;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: string;
+  initialSearchParams?: Partial<DocumentSearchParams>;
+  autoFetch?: boolean;
 }
 
 export interface UseDocumentSearchReturn {
@@ -121,10 +141,23 @@ export interface UseDocumentSearchReturn {
     totalPages: number;
     onPageChange: (page: number) => void;
   };
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void;
+  selectedCategory?: string;
+  setSelectedCategory?: (category: string) => void;
+  searchDocuments?: () => void;
+  currentPage?: number;
+  totalPages?: number;
+  itemsCount?: number;
+  itemsPerPage?: number;
+  handlePageChange?: (page: number) => void;
+  isError?: boolean;
+  page?: number;
 }
 
 export interface ApprovalInfo {
   status: DocumentApprovalStatus;
+  document_id?: string;
   approvedBy?: {
     id: string;
     name: string;
@@ -135,6 +168,6 @@ export interface ApprovalInfo {
 }
 
 export interface DocumentAnalysisPanelProps {
-  document: Document;
+  document?: Document;
   onAnalysisComplete?: (results: any) => void;
 }

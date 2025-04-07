@@ -44,7 +44,7 @@ export interface DocumentComment {
 }
 
 export enum UserRole {
-  SUPER_ADMIN = "super_admin",
+  SUPER_ADMIN = "superAdmin",
   ADMIN = "admin",
   EMPLOYEE = "employee",
   AGENT = "agent",
