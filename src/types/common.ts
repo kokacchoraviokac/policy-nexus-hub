@@ -3,120 +3,84 @@ export enum EntityType {
   POLICY = "policy",
   CLAIM = "claim",
   SALES_PROCESS = "sales_process",
-  SALE = "sale",
+  INVOICE = "invoice",
   CLIENT = "client",
   INSURER = "insurer",
   AGENT = "agent",
-  INVOICE = "invoice",
-  ADDENDUM = "addendum"
-}
-
-export enum DocumentCategory {
-  POLICY = "policy",
-  CLAIM = "claim",
-  INVOICE = "invoice",
-  CONTRACT = "contract",
-  NOTIFICATION = "notification",
-  LIEN = "lien",
-  OTHER = "other",
-  PROPOSAL = "proposal",
-  QUOTE = "quote",
-  SALES = "sales",
-  FINANCIAL = "financial",
-  LEGAL = "legal",
-  MEDICAL = "medical",
-  CORRESPONDENCE = "correspondence",
-  MISCELLANEOUS = "miscellaneous"
+  SALE = "sale",
+  REPORT = "report"
 }
 
 export enum ApprovalStatus {
-  PENDING = "pending",
   APPROVED = "approved",
   REJECTED = "rejected",
+  PENDING = "pending",
   NEEDS_REVIEW = "needs_review"
 }
 
-export interface DocumentComment {
-  id?: string;
-  author: string;
-  text: string;
-  created_at: string;
-}
+export type DocumentCategory = 
+  | "policy_document"
+  | "claim_document"
+  | "invoice"
+  | "client_document"
+  | "insurer_document"
+  | "contract"
+  | "authorization"
+  | "sales_document"
+  | "quote"
+  | "proposal"
+  | "general";
 
-export enum UserRole {
-  SUPER_ADMIN = "superAdmin",
-  ADMIN = "admin",
-  EMPLOYEE = "employee",
-  AGENT = "agent",
-  CLIENT = "client"
-}
-
-export interface ServiceResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: Error;
-  message?: string;
-}
-
-export enum CommissionStatus {
-  CALCULATING = "calculating",
-  DUE = "due",
-  PARTIALLY_PAID = "partially_paid",
-  PAID = "paid",
-  INVOICED = "invoiced",
-  PENDING = "pending"
-}
-
-export enum WorkflowStatus {
-  DRAFT = "draft",
-  IN_REVIEW = "in_review",
-  READY = "ready",
-  COMPLETE = "complete",
-  REVIEW = "review",
-  REJECTED = "rejected"
-}
-
-export type RelationName = 
+export type RelationName =
+  | "policies"
+  | "claims"
+  | "invoices"
+  | "clients"
+  | "insurers"
   | "policy_documents"
-  | "claim_documents" 
-  | "sales_documents"
+  | "claim_documents"
+  | "invoice_documents"
   | "client_documents"
   | "insurer_documents"
-  | "agent_documents"
-  | "invoice_documents"
-  | "addendum_documents"
-  | "activity_logs"
-  | "agent_payouts"
+  | "sales_documents"
+  | "policy_addendums"
   | "agents"
+  | "users"
+  | "user_custom_privileges"
+  | "sales_processes"
+  | "invitations"
+  | "activity_logs"
+  | "commissions"
   | "bank_statements"
   | "bank_transactions"
-  | "claim_documents"
-  | "claims"
-  | "client_commissions"
-  | "clients"
-  | "commissions"
-  | "companies"
-  | "company_email_settings"
-  | "company_settings"
-  | "fixed_commissions"
-  | "instructions"
-  | "insurance_products"
-  | "insurers"
-  | "invitations"
-  | "invoice_items"
-  | "invoices"
   | "leads"
-  | "manual_commissions"
-  | "payout_items"
-  | "policies"
-  | "policy_addendums"
-  | "policy_types"
-  | "profiles"
-  | "report_schedules"
-  | "sales_assignments"
-  | "sales_processes"
-  | "saved_filters"
-  | "saved_reports"
-  | "unlinked_payments"
-  | "user_custom_privileges"
-  | "document_comments";
+  | "profiles";
+
+export interface PaginatedResult<T> {
+  data: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface PaginationQuery {
+  page?: number;
+  pageSize?: number;
+}
+
+export interface CommissionStatus {
+  PENDING: "pending";
+  INVOICED: "invoiced";
+  PAID: "paid";
+  PARTIALLY_PAID: "partially_paid";
+}
+
+export enum DocumentComment {
+  id: string;
+  document_id: string;
+  text: string;
+  author: string;
+  created_at: string;
+  user_id: string;
+}

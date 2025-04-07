@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { RelationName } from "@/types/common";
 import { DocumentTableName } from "@/types/documents";
-import { PostgrestQueryBuilder } from "@supabase/supabase-js";
 
 /**
  * A type-safe wrapper for accessing document tables
