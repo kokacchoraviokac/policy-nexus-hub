@@ -1,4 +1,3 @@
-
 // Enum for policy status
 export enum PolicyStatus {
   ACTIVE = "active",
@@ -41,7 +40,7 @@ export interface Policy {
   commission_type?: string;
   commission_percentage?: number;
   commission_amount?: number;
-  status: PolicyStatus;
+  status: string | PolicyStatus;
   workflow_status: string;
   notes?: string;
   created_at: string;
@@ -56,6 +55,7 @@ export interface Policy {
   insured_name?: string;
   product_code?: string;
   policy_type_id?: string;
+  client_name?: string;
 }
 
 export interface PolicyFilterParams {

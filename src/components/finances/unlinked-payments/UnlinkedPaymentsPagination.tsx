@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import {
   ChevronsLeft, 
   ChevronsRight
 } from 'lucide-react';
-import { Pagination } from '@/components/ui/pagination';
+import Pagination from '@/components/ui/pagination';
 
 interface UnlinkedPaymentsPaginationProps {
   currentPage: number;

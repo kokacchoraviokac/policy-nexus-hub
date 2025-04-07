@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCompanies } from '@/hooks/useCompanies';
@@ -13,8 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { createInviteFormSchema } from './invitations/CreateInvitationForm';
 import CreateInvitationForm from './invitations/CreateInvitationForm';
 import { useAuth } from '@/contexts/auth/AuthContext';
-import { Pagination } from '@/components/ui/pagination';
-import { UserRole } from '@/types/common';
+import Pagination from '@/components/ui/pagination';
+import { UserRole } from '@/types/auth';
 
 const InvitationManagement: React.FC = () => {
   const { t } = useLanguage();

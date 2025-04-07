@@ -25,7 +25,7 @@ import { useDocumentSearch } from '@/hooks/useDocumentSearch';
 import { PolicyDocument } from '@/types/documents';
 import { DocumentCategory } from '@/types/common';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pagination } from '@/components/ui/pagination';
+import Pagination from '@/components/ui/pagination';
 import DocumentViewDialog from '../DocumentViewDialog';
 
 const DocumentSearch: React.FC = () => {

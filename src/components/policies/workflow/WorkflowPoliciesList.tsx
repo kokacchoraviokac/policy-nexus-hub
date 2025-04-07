@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy, WorkflowStatus } from "@/types/policies";
@@ -22,7 +21,6 @@ import {
 import { 
   Edit,
   Loader2,
-  Search,
   AlertTriangle,
   Filter,
   ChevronRight,
@@ -35,7 +33,7 @@ import {
   MoreHorizontal
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Pagination } from "@/components/ui/pagination";
+import Pagination from "@/components/ui/pagination";
 import { mapPolicyStatusToBadgeVariant } from "@/utils/policies/policyMappers";
 import { 
   DropdownMenu,
@@ -78,7 +76,6 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>(policies);
   
-  // Status options
   const statusOptions = [
     { id: "all", label: t("allStatuses"), value: "all" },
     { id: "draft", label: t("draft"), value: WorkflowStatus.DRAFT },
@@ -89,7 +86,6 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
     { id: "rejected", label: t("rejected"), value: WorkflowStatus.REJECTED },
   ];
   
-  // Filter policies based on search query
   React.useEffect(() => {
     if (!searchQuery) {
       setFilteredPolicies(policies);
@@ -114,7 +110,6 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search logic is applied in useEffect
   };
   
   const renderWorkflowStatusBadge = (status?: string) => {

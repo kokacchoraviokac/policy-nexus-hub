@@ -1,22 +1,27 @@
 
 import React from "react";
-import Pagination from "@/components/ui/pagination";
+import { PaginationControllerProps } from "@/types/pagination";
+import Pagination from "./pagination";
 
-// This is a wrapper component that maintains backward compatibility
-// with the previous implementation while using the new Pagination component
-export interface PaginationControllerProps {
-  totalPages: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-  itemsCount?: number;
-  itemsPerPage?: number;
-  onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: number[];
-}
-
-export function PaginationController(props: PaginationControllerProps) {
-  // Simply pass all props to the Pagination component
-  return <Pagination {...props} />;
-}
-
-export default PaginationController;
+export const PaginationController: React.FC<PaginationControllerProps> = ({
+  currentPage,
+  totalPages,
+  totalItems,
+  itemsCount,
+  itemsPerPage,
+  onPageChange,
+  onPageSizeChange,
+  pageSizeOptions
+}) => {
+  return (
+    <Pagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      itemsCount={totalItems || itemsCount}
+      itemsPerPage={itemsPerPage}
+      onPageChange={onPageChange}
+      onPageSizeChange={onPageSizeChange}
+      pageSizeOptions={pageSizeOptions}
+    />
+  );
+};

@@ -8,7 +8,8 @@ export enum EntityType {
   INSURER = "insurer",
   AGENT = "agent",
   SALE = "sale",
-  REPORT = "report"
+  REPORT = "report",
+  ADDENDUM = "addendum"
 }
 
 export enum ApprovalStatus {
@@ -54,7 +55,9 @@ export type RelationName =
   | "bank_statements"
   | "bank_transactions"
   | "leads"
-  | "profiles";
+  | "profiles"
+  | "unlinked_payments"
+  | "document_comments";
 
 export interface PaginatedResult<T> {
   data: T[];

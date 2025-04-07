@@ -107,6 +107,16 @@ export interface DocumentSearchParams {
 export interface UseDocumentSearchProps {
   initialParams?: Partial<DocumentSearchParams>;
   autoSearch?: boolean;
+  entityType?: string;
+  entityId?: string;
+  category?: string;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: string;
+  initialSearchParams?: Partial<DocumentSearchParams>;
+  autoFetch?: boolean;
 }
 
 export interface UseDocumentSearchReturn {
@@ -123,6 +133,17 @@ export interface UseDocumentSearchReturn {
     totalItems: number;
     onPageChange: (page: number) => void;
   };
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void; 
+  selectedCategory?: string;
+  setSelectedCategory?: (category: DocumentCategory | undefined) => void;
+  searchDocuments?: () => void;
+  currentPage?: number;
+  totalPages?: number;
+  itemsCount?: number;
+  itemsPerPage?: number;
+  handlePageChange?: (page: number) => void;
+  totalCount?: number;
 }
 
 export interface ApprovalInfo {
@@ -130,4 +151,13 @@ export interface ApprovalInfo {
   status: DocumentApprovalStatus;
   notes: string;
   canApprove: boolean;
+}
+
+export interface Comment {
+  id: string;
+  text: string;
+  author: string;
+  created_at: string;
+  document_id: string;
+  user_id: string;
 }

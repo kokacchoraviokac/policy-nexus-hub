@@ -22,11 +22,9 @@ const PolicyImportPage: React.FC = () => {
     validationErrors,
     handleFileSelect,
     handleFileDrop,
-    savePolicies,
-    clearImportData,
-    isImporting,
-    isValidating,
-    importSuccess,
+    submitPolicies,
+    isProcessing,
+    isSubmitting,
     invalidPolicies
   } = usePolicyImport();
   
@@ -45,14 +43,14 @@ const PolicyImportPage: React.FC = () => {
   };
   
   const handleSavePolicies = async () => {
-    const success = await savePolicies!();
+    const success = await submitPolicies();
     if (success) {
       setTab('complete');
     }
   };
   
   const startNewImport = () => {
-    clearImportData!();
+    // Reset the import state
     setTab('upload');
   };
   
@@ -80,7 +78,7 @@ const PolicyImportPage: React.FC = () => {
           </TabsTrigger>
           <TabsTrigger 
             value="complete" 
-            disabled={!importSuccess}
+            disabled={!isSubmitting && importedPolicies.length === 0}
           >
             {t('complete')}
           </TabsTrigger>
@@ -126,10 +124,8 @@ const PolicyImportPage: React.FC = () => {
           <PolicyImportReview 
             policies={importedPolicies}
             invalidPolicies={invalidPolicies || []}
-            onSubmit={handleSavePolicies}
-            isSubmitting={isImporting}
-            // Pass validation errors if needed
-            validationErrors={validationErrors}
+            onBack={() => setTab('upload')}
+            onImport={handleSavePolicies}
           />
         </TabsContent>
         
