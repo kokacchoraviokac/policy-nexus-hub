@@ -1,12 +1,19 @@
 
 import { UserRole } from "@/types/auth/userTypes";
 
+export enum InvitationStatus {
+  PENDING = "pending",
+  ACCEPTED = "accepted",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled"
+}
+
 export interface Invitation {
   id: string;
   email: string;
   role: UserRole;
   token: string;
-  status: "pending" | "accepted" | "expired";
+  status: InvitationStatus;
   expires_at: string;
   created_at: string;
   updated_at: string;
@@ -18,7 +25,7 @@ export interface CreateInvitationRequest {
   email: string;
   role: UserRole;
   expires_at?: string;
-  expiry_days?: number;
+  company_id?: string;
 }
 
 export interface InvitationEmailRequest {

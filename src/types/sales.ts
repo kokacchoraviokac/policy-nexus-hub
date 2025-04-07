@@ -50,7 +50,7 @@ export interface Proposal {
   client_name?: string;
   insurer_name?: string;
   coverage_details?: string;
-  premium?: string | number;
+  premium?: number | string;
   notes?: string;
   document_ids?: string[];
   sent_at?: string;
@@ -58,6 +58,7 @@ export interface Proposal {
   expires_at?: string;
   currency?: string;
   version?: number;
+  is_latest?: boolean;
   accepted_at?: string;
   rejected_at?: string;
 }
@@ -69,11 +70,11 @@ export interface SalesProcess {
   stage: SaleStage;
   created_at: string;
   updated_at: string;
+  company_id: string;
   assigned_to?: string;
   client_id?: string;
   expected_close_date?: string;
   estimated_value?: number;
-  company_id: string;
   company?: string; // Additional field for company name
   client_name?: string;
 }
@@ -104,6 +105,6 @@ export interface ProposalsListProps {
 export interface UpdateProposalStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdateStatus: (status: ProposalStatus) => Promise<void>;
+  onUpdate: (status: ProposalStatus) => Promise<void>;
   currentStatus: ProposalStatus;
 }

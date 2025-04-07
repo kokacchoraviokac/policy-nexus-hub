@@ -1,106 +1,85 @@
+import { supabase } from "@/integrations/supabase/client";
+import { DocumentTableName } from "@/types/documents";
+import { fromTable } from "./supabaseTypeAssertions";
 
-import { supabase } from '@/integrations/supabase/client';
-import { DatabaseTableName, RelationName } from '@/types/supabase';
+type DatabaseTableName = string;
 
-/**
- * Type-safe function to get a Supabase query builder for any table
- */
-export const fromTable = (tableName: DatabaseTableName) => {
-  return supabase.from(tableName);
+export const safeQueryFrom = (table: DatabaseTableName) => {
+  try {
+    return fromTable(table);
+  } catch (error) {
+    console.error(`Error accessing table ${table}:`, error);
+    throw new Error(`Failed to access table ${table}`);
+  }
 };
 
-/**
- * Type-safe alias for backward compatibility
- */
-export const fromAnyTable = fromTable;
-
-/**
- * Helper to make dynamic table queries safer
- */
-export async function safeQuery<T = any>(
-  tableName: DatabaseTableName,
-  queryFn: (queryBuilder: ReturnType<typeof fromTable>) => Promise<{ data: any; error: any }>
-): Promise<T[]> {
+export const fetchRecordById = async <T>(
+  tableName: string,
+  id: string,
+  columns = "*"
+): Promise<T | null> => {
   try {
-    const queryBuilder = fromTable(tableName);
-    const { data, error } = await queryFn(queryBuilder);
-    
+    const { data, error } = await safeQueryFrom(tableName)
+      .select(columns)
+      .eq("id", id)
+      .single();
+
     if (error) {
-      console.error(`Error querying ${tableName}:`, error);
+      if (error.code === "PGRST116") {
+        return null; // Record not found
+      }
       throw error;
     }
-    
-    return data as T[];
+
+    return data as T;
   } catch (error) {
-    console.error(`Error in safeQuery for ${tableName}:`, error);
+    console.error(`Error fetching ${tableName} record:`, error);
     throw error;
   }
-}
+};
 
-/**
- * Helper to safely execute a dynamic table query
- */
-export async function executeQuery<T = any>(
-  tableName: DatabaseTableName,
-  queryFn: (queryBuilder: ReturnType<typeof fromTable>) => Promise<{ data: any; error: any }>
-): Promise<{ data: T | null; error: any }> {
+export const insertRecord = async <T>(
+  tableName: string,
+  record: Record<string, any>
+): Promise<T> => {
   try {
-    const queryBuilder = fromTable(tableName);
-    const result = await queryFn(queryBuilder);
-    return result as { data: T | null; error: any };
+    const { data, error } = await safeQueryFrom(tableName)
+      .insert(record)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data as T;
   } catch (error) {
-    console.error(`Error executing query on ${tableName}:`, error);
-    return { data: null, error: error };
+    console.error(`Error inserting into ${tableName}:`, error);
+    throw error;
   }
-}
+};
 
-/**
- * Check if a table name is valid
- */
-export function isValidTableName(tableName: string): tableName is DatabaseTableName {
-  const validTableNames: DatabaseTableName[] = [
-    'policy_documents',
-    'claim_documents',
-    'sales_documents',
-    'client_documents',
-    'insurer_documents',
-    'agent_documents',
-    'addendum_documents',
-    'invoice_documents',
-    'activity_logs',
-    'agent_payouts',
-    'agents',
-    'bank_statements',
-    'bank_transactions',
-    'claims',
-    'client_commissions',
-    'clients',
-    'commissions',
-    'companies',
-    'company_email_settings',
-    'company_settings',
-    'fixed_commissions',
-    'instructions',
-    'insurance_products',
-    'insurers',
-    'invitations',
-    'invoice_items',
-    'invoices',
-    'leads',
-    'manual_commissions',
-    'payout_items',
-    'policies',
-    'policy_addendums',
-    'policy_types',
-    'profiles',
-    'report_schedules',
-    'sales_assignments',
-    'sales_processes',
-    'saved_filters',
-    'saved_reports',
-    'unlinked_payments',
-    'user_custom_privileges'
-  ];
+export const updateRecord = async <T>(
+  tableName: string,
+  id: string,
+  updates: Record<string, any>
+): Promise<T> => {
+  try {
+    const { data, error } = await safeQueryFrom(tableName)
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single();
 
-  return validTableNames.includes(tableName as DatabaseTableName);
-}
+    if (error) {
+      throw error;
+    }
+
+    return data as T;
+  } catch (error) {
+    console.error(`Error updating ${tableName} record:`, error);
+    throw error;
+  }
+};
+
+// Other utility functions can be added as needed

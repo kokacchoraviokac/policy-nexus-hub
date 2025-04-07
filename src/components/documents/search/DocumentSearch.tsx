@@ -35,18 +35,18 @@ const DocumentSearch: React.FC = () => {
   const {
     documents,
     isLoading,
-    isError,
+    error,
     searchTerm,
     setSearchTerm,
     selectedCategory,
     setSelectedCategory,
     searchDocuments,
     currentPage,
-    totalCount,
     totalPages,
-    handlePageChange,
     itemsCount,
-    itemsPerPage
+    itemsPerPage,
+    handlePageChange,
+    isError
   } = useDocumentSearch({
     defaultPageSize: 10
   });

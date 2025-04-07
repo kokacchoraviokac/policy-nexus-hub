@@ -1,18 +1,7 @@
 
-// Extend the types for document-related operations
+// Document Types
 
-export enum EntityType {
-  POLICY = 'policy',
-  CLAIM = 'claim',
-  SALES_PROCESS = 'sales_process',
-  CLIENT = 'client',
-  AGENT = 'agent',
-  INSURER = 'insurer',
-  SALE = 'sale',
-  ADDENDUM = 'addendum',
-  INVOICE = 'invoice'
-}
-
+// Define DocumentCategory as an enum for runtime availability
 export enum DocumentCategory {
   POLICY = 'policy',
   CLAIM = 'claim',
@@ -26,77 +15,54 @@ export enum DocumentCategory {
   MISCELLANEOUS = 'miscellaneous'
 }
 
+// Define DocumentApprovalStatus as an enum
 export enum DocumentApprovalStatus {
+  PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  NEEDS_REVIEW = 'needs_review',
-  PENDING = 'pending'
+  NEEDS_REVIEW = 'needs_review'
 }
 
+// Document base interface
 export interface Document {
   id: string;
   document_name: string;
   document_type: string;
   file_path: string;
-  entity_type: EntityType;
   entity_id: string;
+  entity_type: EntityType;
   uploaded_by: string;
   uploaded_by_name?: string;
+  company_id: string;
   created_at: string;
   updated_at: string;
+  category?: DocumentCategory | string;
   version?: number;
   is_latest_version?: boolean;
-  original_document_id?: string | null;
+  original_document_id?: string;
   mime_type?: string;
-  category?: DocumentCategory;
-  company_id: string;
   approval_status?: DocumentApprovalStatus;
-  approved_at?: string;
   approved_by?: string;
-  description?: string;
+  approved_at?: string;
   approval_notes?: string;
-  comments?: { author: string; text: string; date: string }[];
+  comments?: string[];
 }
 
-export type PolicyDocument = Document;
-
-export interface DocumentUploadParams {
-  file: File;
-  documentName: string;
-  documentType: string;
-  category: DocumentCategory;
-  entityId: string;
-  entityType: EntityType;
-  originalDocumentId?: string;
-  currentVersion?: number;
+// Define PolicyDocument extending the base Document
+export interface PolicyDocument extends Document {
+  policy_id?: string;
 }
 
-export interface DocumentUploadResponse {
-  success: boolean;
-  document?: Document;
-  error?: string;
-}
+// Document types for different entities
+export type ClaimDocument = Document & { claim_id: string };
+export type SalesDocument = Document & { sales_process_id: string; step?: string };
+export type ClientDocument = Document & { client_id: string };
+export type InsurerDocument = Document & { insurer_id: string };
+export type AgentDocument = Document & { agent_id: string };
+export type InvoiceDocument = Document & { invoice_id: string };
+export type AddendumDocument = Document & { addendum_id: string };
 
-export interface DocumentUploadDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  entityType: EntityType;
-  entityId: string;
-  onUploadComplete?: () => void;
-  defaultCategory?: DocumentCategory;
-  salesStage?: string;
-  selectedDocument?: Document;
-  embedMode?: boolean;
-  onFileSelected?: (file: File | null) => void;
-}
-
-export interface DocumentAnalysisPanelProps {
-  document?: Document;
-  file?: File;
-  onAnalysisComplete?: () => void;
-  onCategoryDetected?: (category: DocumentCategory) => void;
-}
-
+// Table names for document types
 export type DocumentTableName = 
   | 'policy_documents'
   | 'claim_documents'
@@ -107,42 +73,82 @@ export type DocumentTableName =
   | 'invoice_documents'
   | 'addendum_documents';
 
-export interface DocumentUploadOptions {
-  entityType: EntityType;
-  entityId: string;
-  onSuccess?: () => void;
-  originalDocumentId?: string | null;
-  currentVersion?: number;
+// Document upload response
+export interface DocumentUploadResponse {
+  success: boolean;
+  documentId?: string;
+  error?: string;
 }
 
+// Document search parameters
 export interface DocumentSearchParams {
   searchTerm?: string;
-  category?: DocumentCategory;
-  dateFrom?: string;
-  dateTo?: string;
+  category?: DocumentCategory | string;
   entityType?: EntityType;
-  uploadedBy?: string;
-}
-
-export interface UseDocumentSearchProps {
-  initialParams?: DocumentSearchParams;
   entityId?: string;
-  entityType?: EntityType;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+  approvalStatus?: DocumentApprovalStatus;
 }
 
+// Props for document search hook
+export interface UseDocumentSearchProps {
+  entityType?: EntityType;
+  entityId?: string;
+  category?: DocumentCategory | string;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  initialSearchParams?: Partial<DocumentSearchParams>;
+  autoFetch?: boolean;
+}
+
+// Return type for document search hook
 export interface UseDocumentSearchReturn {
-  documents: Document[];
+  documents: PolicyDocument[];
+  totalCount: number;
+  page: number;
+  setPage: (page: number) => void;
+  pageSize: number;
   isLoading: boolean;
   error: Error | null;
-  searchParams: DocumentSearchParams;
-  setSearchParams: (params: DocumentSearchParams) => void;
-  searchResults: Document[];
-  totalResults: number;
-  performSearch: () => void;
+  isError: boolean;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  sortBy: string;
+  setSortBy: (sortBy: string) => void;
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (order: 'asc' | 'desc') => void;
+  selectedCategory: DocumentCategory | string | undefined;
+  setSelectedCategory: (category: DocumentCategory | string | undefined) => void;
+  selectedApprovalStatus: DocumentApprovalStatus | undefined;
+  setSelectedApprovalStatus: (status: DocumentApprovalStatus | undefined) => void;
+  searchDocuments: (params?: Partial<DocumentSearchParams>) => Promise<void>;
+  refresh: () => void;
+  currentPage: number;
+  totalPages: number;
+  handlePageChange: (page: number) => void;
+  itemsCount: number;
+  itemsPerPage: number;
 }
 
+// Props for document analysis panel
+export interface DocumentAnalysisPanelProps {
+  document: Document;
+  onClose?: () => void;
+  showClose?: boolean;
+}
+
+// Document approval info
 export interface ApprovalInfo {
   document_id: string;
   status: DocumentApprovalStatus;
   notes?: string;
+  approved_by?: string;
+  approved_at?: string;
+  action_type?: string;
 }

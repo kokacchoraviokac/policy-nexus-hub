@@ -35,7 +35,7 @@ export const fetchProposals = async (
       throw new Error(error.message);
     }
 
-    return data as Proposal[];
+    return data as unknown as Proposal[]; 
   } catch (error) {
     console.error('Error in fetchProposals:', error);
     throw error;
@@ -60,7 +60,7 @@ export const createProposal = async (proposal: Partial<Proposal>): Promise<Propo
       throw new Error(error.message);
     }
 
-    return data as Proposal;
+    return data as unknown as Proposal;
   } catch (error) {
     console.error('Error in createProposal:', error);
     throw error;
@@ -102,7 +102,7 @@ export const updateProposalStatus = async (
       throw new Error(error.message);
     }
 
-    return data as Proposal;
+    return data as unknown as Proposal;
   } catch (error) {
     console.error('Error in updateProposalStatus:', error);
     throw error;
@@ -126,7 +126,7 @@ export const getProposalById = async (proposalId: string): Promise<Proposal | nu
       throw new Error(error.message);
     }
 
-    return data as Proposal;
+    return data as unknown as Proposal;
   } catch (error) {
     console.error('Error in getProposalById:', error);
     throw error;
@@ -135,7 +135,7 @@ export const getProposalById = async (proposalId: string): Promise<Proposal | nu
 
 // Hook for using proposals with React Query and toast notifications
 export const useProposalService = () => {
-  const toast = useToast();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const updateStatus = async (proposalId: string, status: ProposalStatus): Promise<boolean> => {
@@ -143,12 +143,16 @@ export const useProposalService = () => {
       await updateProposalStatus(proposalId, status);
       
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries(['proposals']);
+      queryClient.invalidateQueries({ queryKey: ['proposals'] });
       
       return true;
     } catch (error) {
       console.error('Error updating proposal status:', error);
-      toast.error(`Failed to update proposal status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast({
+        title: "Failed to update proposal status",
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: "destructive"
+      });
       return false;
     }
   };

@@ -21,9 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Proposal } from "@/types/sales";
+import { Proposal, ProposalStatus } from "@/types/sales";
 import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
-import { EntityType } from "@/types/documents";
+import { DocumentCategory, EntityType } from "@/types/common";
 
 interface CreateProposalDialogProps {
   open: boolean;
@@ -65,12 +65,16 @@ const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
         client_name: clientName,
         sales_process_id: salesProcessId,
         created_at: new Date().toISOString(),
-        status: "draft",
+        status: ProposalStatus.DRAFT,
         insurer_name: insurerName,
         coverage_details: coverageDetails,
-        premium,
+        premium: premium ? parseFloat(premium) : 0,
         notes,
-        document_ids: []
+        document_ids: [],
+        created_by: "", // Add a default value
+        updated_at: new Date().toISOString(),
+        amount: 0, // Add a default value
+        company_id: "" // Add a default value
       };
       
       setSaving(false);
@@ -185,10 +189,9 @@ const CreateProposalDialog: React.FC<CreateProposalDialogProps> = ({
       <DocumentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
-        entityType={"sales_process" as EntityType}
+        entityType={EntityType.SALES_PROCESS}
         entityId={salesProcessId}
-        defaultCategory="proposal"
-        salesStage="proposal"
+        defaultCategory={DocumentCategory.PROPOSAL}
       />
     </>
   );

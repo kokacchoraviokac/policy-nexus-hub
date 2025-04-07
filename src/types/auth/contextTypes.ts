@@ -2,7 +2,10 @@
 import { CustomPrivilege } from "./userTypes";
 
 export interface ResourceContext {
-  [key: string]: string | number | boolean;
+  [key: string]: string | number | boolean | undefined;
+  resourceId?: string;
+  resourceType?: string;
+  actionType?: string;
 }
 
 // Context for privilege checking

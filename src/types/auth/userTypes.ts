@@ -41,4 +41,4 @@ export interface CustomPrivilege {
 }
 
 // Export the UserRole for use in other modules
-export { UserRole as default };
+export default UserRole;

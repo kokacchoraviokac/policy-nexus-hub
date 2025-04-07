@@ -45,9 +45,9 @@ export interface UseFinancialReportReturn {
   defaultFilters: FinancialReportFilters;
   isLoading: boolean;
   isError: boolean;
-  reports?: { 
-    data: FinancialTransaction[]; 
-    summary: FinancialReportSummary; 
+  reports?: {
+    data: FinancialTransaction[];
+    summary: FinancialReportSummary;
   };
   applyFilters?: () => void;
   resetFilters?: () => void;

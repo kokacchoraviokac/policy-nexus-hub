@@ -7,6 +7,7 @@ import { FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import DocumentUploadDialog from "@/components/documents/DocumentUploadDialog";
+import { EntityType } from "@/types/common";
 
 interface PolicyDocumentsCardProps {
   policyId: string;
@@ -75,7 +76,7 @@ const PolicyDocumentsCard: React.FC<PolicyDocumentsCardProps> = ({
         <DocumentUploadDialog
           open={showUploadDialog}
           onOpenChange={setShowUploadDialog}
-          entityType="policy"
+          entityType={EntityType.POLICY}
           entityId={policyId}
         />
       )}

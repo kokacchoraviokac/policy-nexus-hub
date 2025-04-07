@@ -9,6 +9,8 @@ export interface PaginationControllerProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   className?: string;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 /**
@@ -22,6 +24,8 @@ const PaginationController: React.FC<PaginationControllerProps> = ({
   currentPage,
   onPageChange,
   className,
+  pageSizeOptions,
+  onPageSizeChange,
 }) => {
   // Calculate total pages
   const totalPages = Math.max(1, Math.ceil(itemsCount / itemsPerPage));

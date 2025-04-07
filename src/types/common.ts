@@ -42,7 +42,12 @@ export enum WorkflowStatus {
   IN_REVIEW = 'in_review',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  COMPLETED = 'completed'
+  COMPLETED = 'completed',
+  ON_HOLD = 'on_hold',
+  CANCELLED = 'cancelled',
+  READY = 'ready',
+  REVIEW = 'review',
+  COMPLETE = 'complete'
 }
 
 export interface ServiceResponse<T = any> {

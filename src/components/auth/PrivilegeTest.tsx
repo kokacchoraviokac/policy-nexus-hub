@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { ResourceContext } from "@/types/auth/contextTypes";
 import {
   Select,
   SelectContent,
@@ -15,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface ContextData {
+interface ContextData extends ResourceContext {
   ownerId?: string;
   companyId?: string;
   resourceType?: string;
