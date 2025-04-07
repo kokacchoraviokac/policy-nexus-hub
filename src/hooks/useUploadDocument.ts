@@ -21,8 +21,9 @@ export const useUploadDocument = () => {
       entityId, 
       entityType,
       originalDocumentId,
-      currentVersion, 
-      salesStage 
+      currentVersion,
+      salesStage,
+      description
     } = options;
     
     setIsUploading(true);
@@ -63,6 +64,7 @@ export const useUploadDocument = () => {
         category: category,
         company_id: 'current-company-id', // This should be replaced with actual company ID
         mime_type: file.type,
+        description: description
       };
       
       // Add version information if this is a new version of an existing document
@@ -72,8 +74,8 @@ export const useUploadDocument = () => {
         documentRecord.version = currentVersion + 1;
         
         // Set previous version as not latest
-        const docTable = fromDocumentTable(tableName);
-        await docTable
+        await supabase
+          .from(tableName)
           .update({ is_latest_version: false })
           .eq('id', originalDocumentId);
       }
@@ -84,8 +86,8 @@ export const useUploadDocument = () => {
       }
       
       // Insert document record
-      const docTable = fromDocumentTable(tableName);
-      const { data: insertedData, error: documentError } = await docTable
+      const { data: insertedData, error: documentError } = await supabase
+        .from(tableName)
         .insert(documentRecord)
         .select()
         .single();

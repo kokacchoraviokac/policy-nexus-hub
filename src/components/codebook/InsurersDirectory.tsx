@@ -134,6 +134,7 @@ const InsurersDirectory: React.FC = () => {
       <DataTable
         data={insurers}
         columns={getInsurerColumns((id) => handleViewDetails(id))}
+        keyField="id"
         isLoading={isLoading}
         emptyState={{
           title: t("noInsurersFound"),

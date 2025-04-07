@@ -12,47 +12,49 @@ export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id:
   
   return [
     {
+      key: "name",
       header: t("name"),
-      accessorKey: "name" as keyof Insurer,
-      sortable: true
+      accessorKey: "name",
     },
     {
+      key: "contact_person",
       header: t("contactPerson"),
-      accessorKey: "contact_person" as keyof Insurer,
+      accessorKey: "contact_person",
       cell: (row: Insurer) => row.contact_person || "-",
-      sortable: true
     },
     {
+      key: "email",
       header: t("email"),
-      accessorKey: "email" as keyof Insurer,
+      accessorKey: "email",
       cell: (row: Insurer) => row.email || "-",
-      sortable: true
     },
     {
+      key: "phone",
       header: t("phone"),
-      accessorKey: "phone" as keyof Insurer,
+      accessorKey: "phone",
       cell: (row: Insurer) => row.phone || "-",
     },
     {
+      key: "country",
       header: t("country"),
-      accessorKey: "country" as keyof Insurer,
+      accessorKey: "country",
       cell: (row: Insurer) => row.country || "-",
-      sortable: true
     },
     {
+      key: "status",
       header: t("status"),
-      accessorKey: "is_active" as keyof Insurer,
+      accessorKey: "is_active",
       cell: (row: Insurer) => (
         <Badge variant={row.is_active ? "default" : "secondary"}>
           {row.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
-      sortable: true
     },
     ...(onEdit || onDelete ? [
       {
+        key: "actions",
         header: t("actions"),
-        accessorKey: "id" as keyof Insurer,
+        accessorKey: "id",
         cell: (row: Insurer) => (
           <div className="flex gap-2 justify-end">
             {onEdit && (

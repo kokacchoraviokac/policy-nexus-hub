@@ -8,6 +8,12 @@ export enum CommissionStatus {
   INVOICED = "invoiced"
 }
 
+// Commission type enum
+export enum CommissionType {
+  AUTOMATIC = "automatic",
+  MANUAL = "manual"
+}
+
 // Base Commission interface
 export interface Commission {
   id: string;
@@ -48,6 +54,17 @@ export interface Invoice {
   company_id: string;
   created_at: string;
   updated_at: string;
+  invoice_type?: string;
+  invoice_category?: string;
+  calculation_reference?: string;
+}
+
+export type InvoiceType = Invoice;
+
+// Invoice with items
+export interface InvoiceWithItems extends Invoice {
+  items: InvoiceItem[];
+  entity?: any; // The related entity (policy, client, etc.)
 }
 
 // Invoice item
@@ -60,6 +77,22 @@ export interface InvoiceItem {
   amount: number;
   created_at: string;
   updated_at: string;
+  policy?: any; // Optional reference to policy details
+}
+
+// Invoice template settings
+export interface InvoiceTemplateSettings {
+  id?: string;
+  name: string;
+  company_id: string;
+  is_default: boolean;
+  header_content?: string;
+  footer_content?: string;
+  company_logo_position?: string;
+  theme_color?: string;
+  font_family?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Financial transaction
@@ -73,6 +106,7 @@ export interface FinancialTransaction {
   reference?: string;
   entity_id?: string;
   entity_type?: string;
+  currency?: string;
 }
 
 // Transaction type enum
@@ -110,6 +144,7 @@ export interface BankStatement {
   status: string;
   file_path?: string;
   processed_by?: string;
+  processed_at?: string;
   company_id: string;
   created_at: string;
   updated_at: string;
@@ -131,3 +166,5 @@ export interface UnlinkedPayment {
   created_at: string;
   updated_at: string;
 }
+
+export type UnlinkedPaymentType = UnlinkedPayment;

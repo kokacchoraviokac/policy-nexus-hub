@@ -20,6 +20,8 @@ export interface Column<T> {
   header: string;
   render?: (item: T) => React.ReactNode;
   className?: string;
+  accessorKey?: string;
+  cell?: (row: T) => React.ReactNode;
 }
 
 export interface DataTableProps<T> {
@@ -34,6 +36,15 @@ export interface DataTableProps<T> {
   emptyMessage?: string;
   className?: string;
   actions?: React.ReactNode;
+  pagination?: {
+    currentPage: number;
+    itemsPerPage: number;
+    totalItems: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange?: (pageSize: number) => void;
+    pageSizeOptions?: number[];
+  };
 }
 
 export function DataTable<T>({
@@ -47,7 +58,8 @@ export function DataTable<T>({
   onSearch,
   emptyMessage,
   className,
-  actions
+  actions,
+  pagination
 }: DataTableProps<T>) {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,7 +192,10 @@ export function DataTable<T>({
               <TableRow key={String(item[keyField])}>
                 {columns.map((column) => (
                   <TableCell key={`${String(item[keyField])}-${column.key}`} className={column.className}>
-                    {column.render ? column.render(item) : String(item[column.key as keyof T] || '')}
+                    {column.render ? column.render(item) : 
+                     column.cell ? column.cell(item) : 
+                     column.accessorKey ? String(item[column.accessorKey as keyof T] || '') : 
+                     String(item[column.key as keyof T] || '')}
                   </TableCell>
                 ))}
               </TableRow>

@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import { useActivityLogger, fetchActivityLogs } from "@/utils/activityLogger";
+import { EntityType } from "@/types/common";
 
 export interface ActivityItem {
   id: string;
@@ -41,7 +42,7 @@ export function useInsurerDetail() {
       // Log view activity
       if (data) {
         logActivity({
-          entity_type: "insurer",
+          entity_type: EntityType.INSURER,
           entity_id: data.id,
           action: "view"
         });
@@ -57,7 +58,7 @@ export function useInsurerDetail() {
     queryFn: async () => {
       if (!insurerId) return [];
       
-      const logs = await fetchActivityLogs("insurer", insurerId);
+      const logs = await fetchActivityLogs(EntityType.INSURER, insurerId);
       
       // Transform data to include stringified details for the UI
       return logs.map(log => ({
@@ -83,7 +84,7 @@ export function useInsurerDetail() {
       
       // Log delete activity
       await logActivity({
-        entity_type: "insurer",
+        entity_type: EntityType.INSURER,
         entity_id: insurer.id,
         action: "delete",
         details: { name: insurer.name }
@@ -118,7 +119,7 @@ export function useInsurerDetail() {
       
       // Log export activity using 'update' action since 'export' is not in the allowed types
       logActivity({
-        entity_type: "insurer",
+        entity_type: EntityType.INSURER,
         entity_id: insurer.id,
         action: "update", // Using update instead of export to match allowed types
         details: { action_type: "export", format: "CSV" }
