@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Proposal, ProposalStatus } from "@/types/sales";
+import { ServiceResponse } from "@/types/common";
 
 /**
  * Fetch all proposals with optional filtering
@@ -12,7 +13,11 @@ export const fetchProposals = async (
   searchQuery?: string
 ): Promise<Proposal[]> => {
   try {
-    // Start building query
+    // For now, return mock data
+    // In a real implementation, this would query the Supabase database
+    
+    // Start building query - commented out until proposals table is created
+    /*
     let query = supabase
       .from('proposals')
       .select('*');
@@ -41,12 +46,13 @@ export const fetchProposals = async (
       console.error('Error fetching proposals:', error);
       throw error;
     }
+    */
     
-    // Return the data as Proposal[]
-    return data as Proposal[];
+    // Return empty array for now
+    return [];
   } catch (error) {
     console.error('Error in fetchProposals:', error);
-    // Return mock data for now
+    // Return empty array
     return [];
   }
 };
@@ -64,19 +70,26 @@ export const createProposal = async (proposal: Partial<Proposal>): Promise<Propo
       updated_at: now
     };
     
-    // Insert into database
-    const { data, error } = await supabase
-      .from('proposals')
-      .insert(newProposal)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error creating proposal:', error);
-      throw error;
-    }
-    
-    return data as Proposal;
+    // Use mock data for now
+    // Return a mock proposal with the data that was passed in
+    return {
+      id: Math.random().toString(36).substring(2, 15),
+      title: proposal.title || 'Untitled Proposal',
+      description: proposal.description || '',
+      client_name: 'Client Name',
+      client_id: proposal.client_id || '',
+      insurer_name: 'Insurer Name',
+      insurer_id: proposal.insurer_id || '',
+      sales_process_id: proposal.sales_process_id || '',
+      amount: proposal.amount || 0,
+      currency: proposal.currency || 'EUR',
+      created_at: now,
+      updated_at: now,
+      status: proposal.status || ProposalStatus.DRAFT,
+      created_by: proposal.created_by || '',
+      company_id: proposal.company_id || '',
+      is_latest: true
+    };
   } catch (error) {
     console.error('Error in createProposal:', error);
     throw error;
@@ -88,6 +101,7 @@ export const createProposal = async (proposal: Partial<Proposal>): Promise<Propo
  */
 export const getProposalById = async (proposalId: string): Promise<Proposal | null> => {
   try {
+    /*
     const { data, error } = await supabase
       .from('proposals')
       .select('*')
@@ -103,6 +117,10 @@ export const getProposalById = async (proposalId: string): Promise<Proposal | nu
     }
     
     return data as Proposal;
+    */
+    
+    // For now, return null to indicate proposal not found
+    return null;
   } catch (error) {
     console.error('Error in getProposalById:', error);
     throw error;
@@ -130,6 +148,7 @@ export const updateProposalStatus = async (
       updateData.rejected_at = new Date().toISOString();
     }
     
+    /*
     // Update the proposal
     const { data, error } = await supabase
       .from('proposals')
@@ -144,6 +163,27 @@ export const updateProposalStatus = async (
     }
     
     return data as Proposal;
+    */
+    
+    // Return mock data for now
+    return {
+      id: proposalId,
+      title: 'Mock Proposal',
+      client_name: 'Mock Client',
+      client_id: 'client-id',
+      insurer_name: 'Mock Insurer',
+      insurer_id: 'insurer-id',
+      sales_process_id: 'sales-id',
+      description: 'Mock description',
+      amount: 1000,
+      currency: 'EUR',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      status: status,
+      created_by: 'user-id',
+      company_id: 'company-id',
+      is_latest: true
+    };
   } catch (error) {
     console.error('Error in updateProposalStatus:', error);
     throw error;

@@ -8,7 +8,9 @@ import { DocumentTableName } from "@/types/documents";
  * This ensures we get proper typing in the response
  */
 export const fromDocumentTable = (tableName: DocumentTableName) => {
-  return supabase.from(tableName);
+  // Convert DocumentTableName to RelationName
+  const relationName = tableName as unknown as RelationName;
+  return supabase.from(relationName);
 };
 
 /**

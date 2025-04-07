@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Tag, AlertCircle, FileText } from "lucide-react";
 import { DocumentAnalysisPanelProps, DocumentCategory } from "@/types/documents";
+import { DocumentCategory as DocCategory } from "@/types/common";
 
 const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
   document,
@@ -31,11 +32,11 @@ const DocumentAnalysisPanel: React.FC<DocumentAnalysisPanelProps> = ({
         let detectedCategories: string[] = [];
         
         if (file.type.includes('pdf')) {
-          detectedCategories = ['policy', 'invoice'];
+          detectedCategories = [DocCategory.POLICY, DocCategory.INVOICE];
         } else if (file.type.includes('image')) {
-          detectedCategories = ['identification', 'other'];
+          detectedCategories = ['identification', DocCategory.OTHER];
         } else if (file.type.includes('word')) {
-          detectedCategories = ['contract', 'amendment'];
+          detectedCategories = [DocCategory.CONTRACT, 'amendment'];
         }
         
         setCategories(detectedCategories);

@@ -1,15 +1,14 @@
 
-import { useState, useCallback } from "react";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { DocumentCategory, EntityType } from '@/types/common';
 import { 
-  Document, 
-  DocumentCategory, 
-  DocumentApprovalStatus,
+  Document,
   DocumentSearchParams,
   UseDocumentSearchProps,
-  UseDocumentSearchReturn 
-} from "@/types/documents";
-import { EntityType } from "@/types/common";
-import { fromTable } from "@/utils/supabaseTypeAssertions";
+  UseDocumentSearchReturn
+} from '@/types/documents';
+import { getDocumentTableName } from '@/utils/documentUploadUtils';
 
 export const useDocumentSearch = ({
   entityType,
@@ -26,161 +25,102 @@ export const useDocumentSearch = ({
   const [documents, setDocuments] = useState<any[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(defaultPageSize);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [sortBy, setSortBy] = useState(defaultSortBy);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(defaultSortOrder);
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | string | undefined>(category);
-  const [selectedApprovalStatus, setSelectedApprovalStatus] = useState<DocumentApprovalStatus | undefined>(approvalStatus);
+  const [selectedApprovalStatus, setSelectedApprovalStatus] = useState(approvalStatus);
   const [isError, setIsError] = useState(false);
-  
-  const searchDocuments = useCallback(async (params?: Partial<DocumentSearchParams>) => {
-    setIsLoading(true);
-    setError(null);
-    setIsError(false);
-    
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const currentPage = page;
+  const itemsCount = totalCount;
+  const itemsPerPage = pageSize;
+
+  /**
+   * Fetch documents based on search parameters
+   */
+  const searchDocuments = async (params?: Partial<DocumentSearchParams>) => {
     try {
-      const searchParams: DocumentSearchParams = {
-        searchTerm: params?.searchTerm !== undefined ? params.searchTerm : searchTerm,
-        category: params?.category || selectedCategory,
-        page: params?.page || page,
-        limit: params?.limit || pageSize,
-        entityType: params?.entityType || entityType,
-        entityId: params?.entityId || entityId,
-        sortBy: params?.sortBy || sortBy,
-        sortOrder: params?.sortOrder || sortOrder,
-        approvalStatus: params?.approvalStatus || selectedApprovalStatus
+      setIsLoading(true);
+      setError(null);
+      setIsError(false);
+
+      const currentParams = {
+        page: page,
+        limit: pageSize,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
+        searchTerm: searchTerm,
+        category: selectedCategory,
+        entityType: entityType,
+        entityId: entityId,
+        approvalStatus: selectedApprovalStatus,
+        ...(initialSearchParams || {}),
+        ...(params || {})
       };
-      
-      // Mock document data for development
-      const mockDocuments = [
-        {
-          id: '1',
-          document_name: 'Policy Document',
-          document_type: 'policy',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          uploaded_by: 'user123',
-          uploaded_by_name: 'John Doe',
-          file_path: '/documents/policy1.pdf',
-          category: DocumentCategory.POLICY,
-          entity_id: entityId || 'mock-entity-id',
-          entity_type: entityType || EntityType.POLICY,
-          version: 1,
-          is_latest_version: true,
-          approval_status: DocumentApprovalStatus.APPROVED,
-          company_id: 'mock-company-id',
-          description: 'A sample policy document'
-        },
-        {
-          id: '2',
-          document_name: 'Claim Form',
-          document_type: 'claim',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          uploaded_by: 'user123',
-          uploaded_by_name: 'John Doe',
-          file_path: '/documents/claim1.pdf',
-          category: DocumentCategory.CLAIM,
-          entity_id: entityId || 'mock-entity-id',
-          entity_type: entityType || EntityType.CLAIM,
-          version: 1,
-          is_latest_version: true,
-          approval_status: DocumentApprovalStatus.PENDING,
-          company_id: 'mock-company-id',
-          description: 'A sample claim document'
-        }
-      ];
-      
-      // Apply filters to mock data
-      let filteredDocuments = [...mockDocuments];
-      
-      if (searchParams.entityId) {
-        filteredDocuments = filteredDocuments.filter(doc => doc.entity_id === searchParams.entityId);
-      }
-      
-      if (searchParams.entityType) {
-        filteredDocuments = filteredDocuments.filter(doc => doc.entity_type === searchParams.entityType);
-      }
-      
-      if (searchParams.category) {
-        filteredDocuments = filteredDocuments.filter(doc => doc.category === searchParams.category);
-      }
-      
-      if (searchParams.approvalStatus) {
-        filteredDocuments = filteredDocuments.filter(doc => doc.approval_status === searchParams.approvalStatus);
-      }
-      
-      if (searchParams.searchTerm) {
-        const term = searchParams.searchTerm.toLowerCase();
-        filteredDocuments = filteredDocuments.filter(doc => 
-          doc.document_name.toLowerCase().includes(term)
-        );
-      }
-      
-      // Sort the documents
-      filteredDocuments.sort((a, b) => {
-        const aValue = (a as any)[searchParams.sortBy || 'created_at'];
-        const bValue = (b as any)[searchParams.sortBy || 'created_at'];
-        
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          return searchParams.sortOrder === 'asc' 
-            ? aValue.localeCompare(bValue) 
-            : bValue.localeCompare(aValue);
-        }
-        
-        return 0;
-      });
-      
-      // Apply pagination
-      const start = ((searchParams.page || 1) - 1) * (searchParams.limit || 10);
-      const end = start + (searchParams.limit || 10);
-      const paginatedDocuments = filteredDocuments.slice(start, end);
-      
-      setTotalCount(filteredDocuments.length);
-      setDocuments(paginatedDocuments);
-      
-    } catch (error) {
-      console.error('Error in fetchDocuments:', error);
-      setError(error instanceof Error ? error : new Error('Unknown error occurred'));
+
+      // This is where we would make a real API call to fetch documents
+      // For now, let's just simulate a successful response with empty data
+      setTimeout(() => {
+        setDocuments([]);
+        setTotalCount(0);
+        setIsLoading(false);
+      }, 500);
+    } catch (err: any) {
+      console.error('Error searching documents:', err);
+      setError(err);
       setIsError(true);
-    } finally {
       setIsLoading(false);
     }
+  };
+
+  // Initial fetch when component mounts
+  useEffect(() => {
+    if (autoFetch) {
+      searchDocuments();
+    }
   }, [
-    entityType,
-    entityId,
     page,
     pageSize,
     sortBy,
     sortOrder,
+    entityType,
+    entityId,
     selectedCategory,
     selectedApprovalStatus,
-    searchTerm
+    // We don't include searchTerm here to avoid triggering search on every keystroke
   ]);
-  
-  const refresh = useCallback(() => {
-    searchDocuments();
-  }, [searchDocuments]);
-  
-  // Handle page changes
+
+  // Reset page to 1 when search term changes
+  useEffect(() => {
+    if (page !== 1) {
+      setPage(1);
+    } else if (autoFetch) {
+      searchDocuments();
+    }
+  }, [searchTerm]);
+
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-    searchDocuments({ page: newPage });
   };
-  
-  // Compute total pages
-  const totalPages = Math.ceil(totalCount / pageSize);
-  
+
+  const refresh = () => {
+    searchDocuments();
+  };
+
   return {
     documents,
     totalCount,
+    page,
     setPage,
     pageSize,
     isLoading,
     error,
+    isError,
     searchTerm,
     setSearchTerm,
     sortBy,
@@ -188,18 +128,15 @@ export const useDocumentSearch = ({
     sortOrder,
     setSortOrder,
     selectedCategory,
-    setSelectedCategory: setSelectedCategory as (category: DocumentCategory | string | undefined) => void,
+    setSelectedCategory,
     selectedApprovalStatus,
     setSelectedApprovalStatus,
     searchDocuments,
     refresh,
-    isError,
-    currentPage: page,
+    currentPage,
     totalPages,
     handlePageChange,
-    itemsCount: totalCount,
-    itemsPerPage: pageSize
+    itemsCount,
+    itemsPerPage
   };
 };
-
-export default useDocumentSearch;

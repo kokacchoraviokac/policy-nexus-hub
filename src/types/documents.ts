@@ -33,7 +33,12 @@ export interface Document {
   approved_by?: string;
   approved_at?: string;
   approval_notes?: string;
-  comments?: string[];
+  comments?: {
+    id: string;
+    text: string;
+    author: string;
+    created_at: string;
+  }[];
   description?: string;
 }
 
@@ -140,7 +145,7 @@ export interface UseDocumentSearchReturn {
 
 // Props for document analysis panel
 export interface DocumentAnalysisPanelProps {
-  document: Document;
+  document?: Document;
   file?: File;
   onAnalysisComplete?: () => void;
   onCategoryDetected?: (category: DocumentCategory) => void;
