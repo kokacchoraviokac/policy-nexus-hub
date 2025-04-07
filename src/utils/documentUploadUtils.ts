@@ -55,3 +55,27 @@ export const generateUniqueFileName = (originalName: string): string => {
   
   return `${timestamp}-${randomString}.${fileExtension}`;
 };
+
+export const getEntityIdColumn = (entityType: EntityType): string => {
+  switch (entityType) {
+    case EntityType.POLICY:
+      return 'policy_id';
+    case EntityType.CLAIM:
+      return 'claim_id';
+    case EntityType.SALES_PROCESS:
+    case EntityType.SALE:
+      return 'sales_process_id';
+    case EntityType.CLIENT:
+      return 'client_id';
+    case EntityType.INSURER:
+      return 'insurer_id';
+    case EntityType.AGENT:
+      return 'agent_id';
+    case EntityType.INVOICE:
+      return 'invoice_id';
+    case EntityType.ADDENDUM:
+      return 'addendum_id';
+    default:
+      return 'entity_id';
+  }
+};

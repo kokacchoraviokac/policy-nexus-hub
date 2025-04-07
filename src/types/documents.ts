@@ -1,9 +1,14 @@
 
 import { DocumentCategory, EntityType, ApprovalStatus } from "./common";
 
-export type { DocumentCategory, EntityType, ApprovalStatus };
+export { DocumentCategory, EntityType, ApprovalStatus };
 
-export type DocumentApprovalStatus = ApprovalStatus;
+export enum DocumentApprovalStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  NEEDS_REVIEW = "needs_review"
+}
 
 export interface Document {
   id: string;
@@ -79,4 +84,57 @@ export interface Comment {
   document_id?: string;
   user_id?: string;
   created_at?: string;
+}
+
+export interface DocumentUploadOptions {
+  tableName?: DocumentTableName;
+  onSuccess?: (document: Document) => void;
+  onError?: (error: Error) => void;
+}
+
+export interface DocumentSearchParams {
+  entity_type?: EntityType;
+  entity_id?: string;
+  category?: DocumentCategory;
+  search_term?: string;
+  date_from?: string;
+  date_to?: string;
+  uploaded_by?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface UseDocumentSearchProps {
+  defaultParams?: Partial<DocumentSearchParams>;
+}
+
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  isLoading: boolean;
+  error: Error | null;
+  setSearchParams: (params: Partial<DocumentSearchParams>) => void;
+  searchParams: DocumentSearchParams;
+  totalCount: number;
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+  };
+}
+
+export interface ApprovalInfo {
+  status: DocumentApprovalStatus;
+  approvedBy?: {
+    id: string;
+    name: string;
+  };
+  approvedAt?: string;
+  notes?: string;
+  canApprove: boolean;
+}
+
+export interface DocumentAnalysisPanelProps {
+  document: Document;
+  onAnalysisComplete?: (results: any) => void;
 }

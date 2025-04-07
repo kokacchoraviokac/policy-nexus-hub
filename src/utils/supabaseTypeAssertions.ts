@@ -8,14 +8,14 @@ import { DocumentTableName } from "@/types/documents";
  * This ensures we get proper typing in the response
  */
 export const fromDocumentTable = (tableName: DocumentTableName) => {
-  // Convert DocumentTableName to a string for the query
-  return supabase.from(tableName);
+  // Use type assertion to ensure TypeScript treats this as a valid table name
+  return supabase.from(tableName as RelationName);
 };
 
 /**
  * A type-safe wrapper for general table access
  */
 export const fromTable = (tableName: RelationName) => {
-  // Convert RelationName to a string for the query
+  // Use RelationName which includes all valid table names
   return supabase.from(tableName);
 };

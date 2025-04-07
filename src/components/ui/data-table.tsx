@@ -31,8 +31,8 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   isLoading?: boolean;
   pagination?: {
-    pageSize?: number;
     pageIndex?: number;
+    pageSize?: number;
     onPageChange?: (page: number) => void;
     onPageSizeChange?: (pageSize: number) => void;
     pageSizeOptions?: number[];

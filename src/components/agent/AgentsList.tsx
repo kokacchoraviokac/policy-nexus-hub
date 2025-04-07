@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DataTable from "@/components/ui/data-table";
@@ -119,10 +118,10 @@ const AgentsList = () => {
           keyField="id"
           isLoading={isLoading}
           pagination={{
-            currentPage: pagination.pageIndex,
+            pageIndex: pagination.pageIndex,
+            pageSize: pagination.pageSize,
             totalPages: Math.ceil(totalCount / pagination.pageSize),
-            itemsPerPage: pagination.pageSize,
-            totalItems: totalCount,
+            totalCount: totalCount,
             onPageChange: (page) => pagination.onPageChange(page),
             onPageSizeChange: (size) => pagination.onPageSizeChange(size)
           }}

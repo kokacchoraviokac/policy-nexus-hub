@@ -20,7 +20,13 @@ export enum DocumentCategory {
   LIEN = "lien",
   OTHER = "other",
   PROPOSAL = "proposal",
-  QUOTE = "quote"
+  QUOTE = "quote",
+  SALES = "sales",
+  FINANCIAL = "financial",
+  LEGAL = "legal",
+  MEDICAL = "medical",
+  CORRESPONDENCE = "correspondence",
+  MISCELLANEOUS = "miscellaneous"
 }
 
 export enum ApprovalStatus {
@@ -40,7 +46,9 @@ export interface DocumentComment {
 export enum UserRole {
   SUPER_ADMIN = "super_admin",
   ADMIN = "admin",
-  EMPLOYEE = "employee"
+  EMPLOYEE = "employee",
+  AGENT = "agent",
+  CLIENT = "client"
 }
 
 export interface ServiceResponse<T = any> {
@@ -63,7 +71,9 @@ export enum WorkflowStatus {
   DRAFT = "draft",
   IN_REVIEW = "in_review",
   READY = "ready",
-  COMPLETE = "complete"
+  COMPLETE = "complete",
+  REVIEW = "review",
+  REJECTED = "rejected"
 }
 
 export type RelationName = 
