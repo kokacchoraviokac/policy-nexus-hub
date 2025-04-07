@@ -19,3 +19,14 @@ export interface PaginationOptions {
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: number[];
 }
+
+export interface PaginationControllerProps {
+  currentPage: number;
+  totalPages: number;
+  itemsPerPage?: number;
+  totalItems?: number;
+  itemsCount?: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
+}

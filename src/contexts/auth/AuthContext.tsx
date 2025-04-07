@@ -2,6 +2,7 @@
 import React, { createContext, useContext } from 'react';
 import { AuthContextType } from './types';
 import { UserRole } from '@/types/auth/userTypes';
+import { ResourceContext } from '@/types/auth/contextTypes';
 
 // Create the auth context with default values
 export const AuthContext = createContext<AuthContextType>({
@@ -21,8 +22,8 @@ export const AuthContext = createContext<AuthContextType>({
   updateUser: async () => {},
   updateUserProfile: async () => {},
   hasPrivilege: () => false,
-  hasPrivilegeWithContext: () => false,
-  hasRole: () => false,
+  hasPrivilegeWithContext: (privilege: string, context?: ResourceContext) => false,
+  hasRole: (role: UserRole | UserRole[]) => false,
   initiatePasswordReset: async () => false,
   updatePassword: async () => false,
   refreshSession: async () => {},

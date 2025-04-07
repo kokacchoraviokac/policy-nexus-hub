@@ -1,5 +1,5 @@
 
-import { Policy, PolicyAddendum, WorkflowStatus } from "@/types/policies";
+import { Policy, PolicyAddendum, PolicyWorkflowStatus } from "@/types/policies";
 
 export interface WorkflowPolicy extends Policy {
   workflow_status: string;
@@ -11,7 +11,7 @@ export interface WorkflowPolicy extends Policy {
 export function mapPoliciesToWorkflowPolicies(policies: Policy[]): WorkflowPolicy[] {
   return policies.map(policy => ({
     ...policy,
-    workflow_status: policy.workflow_status || WorkflowStatus.DRAFT,
+    workflow_status: policy.workflow_status || PolicyWorkflowStatus.DRAFT,
   }));
 }
 
@@ -23,12 +23,16 @@ export const policiesToWorkflowPolicies = mapPoliciesToWorkflowPolicies;
  */
 export function mapPolicyStatusToText(status: string): string {
   const statusMap: Record<string, string> = {
-    [WorkflowStatus.DRAFT]: 'Draft',
-    [WorkflowStatus.IN_REVIEW]: 'In Review',
-    [WorkflowStatus.READY]: 'Ready',
-    [WorkflowStatus.COMPLETE]: 'Complete',
-    [WorkflowStatus.REVIEW]: 'Review',
-    [WorkflowStatus.REJECTED]: 'Rejected',
+    [PolicyWorkflowStatus.DRAFT]: 'Draft',
+    [PolicyWorkflowStatus.IN_REVIEW]: 'In Review',
+    [PolicyWorkflowStatus.READY]: 'Ready',
+    [PolicyWorkflowStatus.COMPLETE]: 'Complete',
+    [PolicyWorkflowStatus.REVIEW]: 'Review',
+    [PolicyWorkflowStatus.REJECTED]: 'Rejected',
+    [PolicyWorkflowStatus.PENDING]: 'Pending',
+    [PolicyWorkflowStatus.PROCESSING]: 'Processing',
+    [PolicyWorkflowStatus.FINALIZED]: 'Finalized',
+    [PolicyWorkflowStatus.NEEDS_REVIEW]: 'Needs Review',
     'active': 'Active',
     'pending': 'Pending',
     'expired': 'Expired',
@@ -43,12 +47,16 @@ export function mapPolicyStatusToText(status: string): string {
  */
 export function mapPolicyStatusToBadgeVariant(status: string): string {
   const variantMap: Record<string, string> = {
-    [WorkflowStatus.DRAFT]: 'secondary',
-    [WorkflowStatus.IN_REVIEW]: 'warning',
-    [WorkflowStatus.READY]: 'info',
-    [WorkflowStatus.COMPLETE]: 'success',
-    [WorkflowStatus.REVIEW]: 'warning',
-    [WorkflowStatus.REJECTED]: 'destructive',
+    [PolicyWorkflowStatus.DRAFT]: 'secondary',
+    [PolicyWorkflowStatus.IN_REVIEW]: 'warning',
+    [PolicyWorkflowStatus.READY]: 'info',
+    [PolicyWorkflowStatus.COMPLETE]: 'success',
+    [PolicyWorkflowStatus.REVIEW]: 'warning',
+    [PolicyWorkflowStatus.REJECTED]: 'destructive',
+    [PolicyWorkflowStatus.PENDING]: 'warning',
+    [PolicyWorkflowStatus.PROCESSING]: 'info',
+    [PolicyWorkflowStatus.FINALIZED]: 'success',
+    [PolicyWorkflowStatus.NEEDS_REVIEW]: 'destructive',
     'active': 'success',
     'pending': 'warning',
     'expired': 'destructive',

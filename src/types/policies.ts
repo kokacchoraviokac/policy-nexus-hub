@@ -4,7 +4,19 @@ export enum PolicyWorkflowStatus {
   IN_REVIEW = "in_review",
   READY = "ready",
   COMPLETE = "complete",
-  REJECTED = "rejected"
+  REJECTED = "rejected",
+  REVIEW = "review",
+  PENDING = "pending",
+  PROCESSING = "processing",
+  FINALIZED = "finalized",
+  NEEDS_REVIEW = "needs_review"
+}
+
+export enum PolicyStatus {
+  ACTIVE = "active",
+  PENDING = "pending",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled"
 }
 
 export interface Policy {
@@ -37,6 +49,7 @@ export interface Policy {
   created_at: string;
   updated_at: string;
   company_id: string;
+  client_name?: string; // Adding this field for compatibility
 }
 
 export interface PolicyAddendum {
@@ -59,11 +72,13 @@ export interface InvalidPolicy {
   row: number;
   data: Partial<Policy>;
   errors: string[];
-  fields: Record<string, string>;
+  fields?: Record<string, string>;
 }
 
 export interface ValidationErrors {
-  [key: string]: string;
+  global?: string[];
+  byRow?: Record<number, string[]>;
+  policies?: InvalidPolicy[];
 }
 
 export interface PolicyFilterParams {
@@ -84,4 +99,20 @@ export interface PolicyFilterParams {
   start_date_to?: string;
   expiry_from?: string;
   expiry_to?: string;
+}
+
+export interface UnlinkedPaymentType {
+  id: string;
+  amount: number;
+  currency: string;
+  payment_date: string;
+  reference: string;
+  status: string;
+  payer_name: string;
+  linked_policy_id?: string;
+  linked_at?: string;
+  linked_by?: string;
+  created_at: string;
+  updated_at: string;
+  company_id: string;
 }
