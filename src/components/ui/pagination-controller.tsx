@@ -1,17 +1,9 @@
 
-import React from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Pagination } from '@/components/ui/pagination';
-import { useLanguage } from '@/contexts/LanguageContext';
+import React from "react";
+import { cn } from "@/utils/shadcn";
+import { Pagination } from "./pagination";
 
-// Define PaginationProps interface here to ensure it matches what Pagination component expects
-export interface PaginationProps {
+export interface PaginationControllerProps {
   itemsCount: number;
   itemsPerPage: number;
   currentPage: number;
@@ -19,67 +11,43 @@ export interface PaginationProps {
   className?: string;
 }
 
-interface PaginationControllerProps {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  itemsPerPage: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
-  pageSizeOptions?: number[];
-  className?: string;
-}
-
+/**
+ * A controller component that handles pagination logic and renders a Pagination component
+ * with the correct props. This abstraction is useful for components that need pagination
+ * but don't want to deal with calculating total pages.
+ */
 const PaginationController: React.FC<PaginationControllerProps> = ({
-  currentPage,
-  totalPages,
-  totalItems,
+  itemsCount,
   itemsPerPage,
+  currentPage,
   onPageChange,
-  onPageSizeChange,
-  pageSizeOptions = [10, 25, 50, 100],
   className,
 }) => {
-  const { t } = useLanguage();
+  // Calculate total pages
+  const totalPages = Math.max(1, Math.ceil(itemsCount / itemsPerPage));
+
+  // If there's only 1 page, don't show pagination
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  // Make sure current page is within bounds
+  const boundedCurrentPage = Math.max(1, Math.min(currentPage, totalPages));
   
-  // Adapt our props to match the PaginationProps interface
-  const paginationProps: PaginationProps = {
-    itemsCount: totalItems,
-    itemsPerPage: itemsPerPage,
-    currentPage: currentPage,
-    onPageChange: onPageChange,
-    className
-  };
-  
+  // If current page is out of bounds, auto-correct by changing page
+  if (boundedCurrentPage !== currentPage) {
+    onPageChange(boundedCurrentPage);
+  }
+
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-2">
-      <div className="text-sm text-muted-foreground">
-        {t('showing')} {totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}-
-        {Math.min(currentPage * itemsPerPage, totalItems)} {t('of')} {totalItems} {t('items')}
-      </div>
-      
-      <div className="flex items-center space-x-6">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-muted-foreground">{t('rowsPerPage')}</span>
-          <Select
-            value={itemsPerPage.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
-          >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pageSizeOptions.map((option) => (
-                <SelectItem key={option} value={option.toString()}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <Pagination {...paginationProps} />
-      </div>
+    <div className={cn("flex items-center justify-center pt-4", className)}>
+      <Pagination
+        totalPages={totalPages}
+        currentPage={boundedCurrentPage}
+        onPageChange={onPageChange}
+        itemsCount={itemsCount}
+        itemsPerPage={itemsPerPage}
+      />
     </div>
   );
 };

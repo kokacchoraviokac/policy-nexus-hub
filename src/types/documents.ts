@@ -7,7 +7,10 @@ export enum EntityType {
   SALES_PROCESS = 'sales_process',
   CLIENT = 'client',
   AGENT = 'agent',
-  INSURER = 'insurer'
+  INSURER = 'insurer',
+  SALE = 'sale',
+  ADDENDUM = 'addendum',
+  INVOICE = 'invoice'
 }
 
 export enum DocumentCategory {
@@ -19,7 +22,8 @@ export enum DocumentCategory {
   PROPOSAL = 'proposal',
   QUOTE = 'quote',
   NOTIFICATION = 'notification',
-  OTHER = 'other'
+  OTHER = 'other',
+  MISCELLANEOUS = 'miscellaneous'
 }
 
 export enum DocumentApprovalStatus {
@@ -37,6 +41,7 @@ export interface Document {
   entity_type: EntityType;
   entity_id: string;
   uploaded_by: string;
+  uploaded_by_name?: string;
   created_at: string;
   updated_at: string;
   version?: number;
@@ -46,7 +51,11 @@ export interface Document {
   category?: DocumentCategory;
   company_id: string;
   approval_status?: DocumentApprovalStatus;
+  approved_at?: string;
+  approved_by?: string;
   description?: string;
+  approval_notes?: string;
+  comments?: { author: string; text: string; date: string }[];
 }
 
 export type PolicyDocument = Document;
@@ -79,4 +88,61 @@ export interface DocumentUploadDialogProps {
   selectedDocument?: Document;
   embedMode?: boolean;
   onFileSelected?: (file: File | null) => void;
+}
+
+export interface DocumentAnalysisPanelProps {
+  document?: Document;
+  file?: File;
+  onAnalysisComplete?: () => void;
+  onCategoryDetected?: (category: DocumentCategory) => void;
+}
+
+export type DocumentTableName = 
+  | 'policy_documents'
+  | 'claim_documents'
+  | 'sales_documents'
+  | 'client_documents'
+  | 'insurer_documents'
+  | 'agent_documents'
+  | 'invoice_documents'
+  | 'addendum_documents';
+
+export interface DocumentUploadOptions {
+  entityType: EntityType;
+  entityId: string;
+  onSuccess?: () => void;
+  originalDocumentId?: string | null;
+  currentVersion?: number;
+}
+
+export interface DocumentSearchParams {
+  searchTerm?: string;
+  category?: DocumentCategory;
+  dateFrom?: string;
+  dateTo?: string;
+  entityType?: EntityType;
+  uploadedBy?: string;
+}
+
+export interface UseDocumentSearchProps {
+  initialParams?: DocumentSearchParams;
+  entityId?: string;
+  entityType?: EntityType;
+}
+
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  isLoading: boolean;
+  error: Error | null;
+  searchParams: DocumentSearchParams;
+  setSearchParams: (params: DocumentSearchParams) => void;
+  searchResults: Document[];
+  totalResults: number;
+  performSearch: () => void;
+}
+
+export interface ApprovalInfo {
+  document_id: string;
+  status: DocumentApprovalStatus;
+  notes?: string;
 }

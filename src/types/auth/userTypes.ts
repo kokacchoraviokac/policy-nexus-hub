@@ -15,8 +15,8 @@ export interface User {
   name: string;
   role: UserRole;
   company_id: string;
-  avatar?: string;
   companyId?: string; // Alias for company_id to maintain compatibility
+  avatar?: string;
 }
 
 export interface UserProfile {

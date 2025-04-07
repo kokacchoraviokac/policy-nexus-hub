@@ -17,7 +17,10 @@ export enum EntityType {
   SALES_PROCESS = 'sales_process',
   CLIENT = 'client',
   AGENT = 'agent',
-  INSURER = 'insurer'
+  INSURER = 'insurer',
+  SALE = 'sale',
+  ADDENDUM = 'addendum',
+  INVOICE = 'invoice'
 }
 
 export enum DocumentCategory {
@@ -29,5 +32,22 @@ export enum DocumentCategory {
   PROPOSAL = 'proposal',
   QUOTE = 'quote',
   NOTIFICATION = 'notification',
-  OTHER = 'other'
+  OTHER = 'other',
+  MISCELLANEOUS = 'miscellaneous'
+}
+
+export enum WorkflowStatus {
+  DRAFT = 'draft',
+  PENDING = 'pending',
+  IN_REVIEW = 'in_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  COMPLETED = 'completed'
+}
+
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }

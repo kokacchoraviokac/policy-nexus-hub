@@ -45,8 +45,11 @@ export interface UseFinancialReportReturn {
   defaultFilters: FinancialReportFilters;
   isLoading: boolean;
   isError: boolean;
-  reports?: any[]; // Add missing property for compatibility
-  applyFilters?: () => void; // Add missing properties for compatibility
+  reports?: { 
+    data: FinancialTransaction[]; 
+    summary: FinancialReportSummary; 
+  };
+  applyFilters?: () => void;
   resetFilters?: () => void;
 }
 

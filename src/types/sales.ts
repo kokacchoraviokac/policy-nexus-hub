@@ -13,7 +13,8 @@ export enum ProposalStatus {
   UNDER_REVIEW = 'under_review',
   SENT = 'sent',
   VIEWED = 'viewed',
-  APPROVED = 'approved'
+  APPROVED = 'approved',
+  INFO = 'info'
 }
 
 export enum SaleStage {
@@ -56,6 +57,9 @@ export interface Proposal {
   viewed_at?: string;
   expires_at?: string;
   currency?: string;
+  version?: number;
+  accepted_at?: string;
+  rejected_at?: string;
 }
 
 export interface SalesProcess {

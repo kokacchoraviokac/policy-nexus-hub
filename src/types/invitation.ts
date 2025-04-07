@@ -1,41 +1,29 @@
 
-import { UserRole } from "./auth/userTypes";
-
-export enum InvitationStatus {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-  EXPIRED = 'expired',
-  CANCELLED = 'cancelled'
-}
+import { UserRole } from "@/types/auth/userTypes";
 
 export interface Invitation {
   id: string;
   email: string;
   role: UserRole;
   token: string;
-  status: InvitationStatus;
+  status: "pending" | "accepted" | "expired";
   expires_at: string;
   created_at: string;
+  updated_at: string;
   created_by: string | null;
   company_id: string | null;
-  updated_at: string;
-}
-
-export interface InvitationCreateParams {
-  email: string;
-  role: UserRole;
-  expires_in_days?: number;
-}
-
-export interface AcceptInvitationParams {
-  token: string;
-  name: string;
-  password: string;
 }
 
 export interface CreateInvitationRequest {
   email: string;
   role: UserRole;
-  company_id?: string;
-  expires_in_days?: number; // Add missing property
+  expires_at?: string;
+  expiry_days?: number;
+}
+
+export interface InvitationEmailRequest {
+  to: string;
+  invitationToken: string;
+  role: string;
+  expiresAt: string;
 }

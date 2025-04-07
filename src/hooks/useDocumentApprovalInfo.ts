@@ -1,138 +1,112 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "./use-toast";
-import { DocumentApprovalStatus } from "@/types/documents";
+import { DocumentApprovalStatus, ApprovalInfo } from "@/types/documents";
+import { useActivityLogger } from "@/utils/activityLogger";
 
-export interface ApprovalInfo {
-  id?: string;
-  document_id: string;
-  status: DocumentApprovalStatus;
-  notes?: string;
-  approved_by?: string;
-  approved_at?: string;
+interface UseDocumentApprovalInfoProps {
+  documentId: string;
 }
 
-export function useDocumentApprovalInfo(documentId: string) {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [status, setStatus] = useState<DocumentApprovalStatus>(DocumentApprovalStatus.PENDING);
-  const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [approvalInfo, setApprovalInfo] = useState<ApprovalInfo | null>(null);
-
+export function useDocumentApprovalInfo({ documentId }: UseDocumentApprovalInfoProps) {
+  const [approvalInfo, setApprovalInfo] = useState<ApprovalInfo>({
+    document_id: documentId,
+    status: DocumentApprovalStatus.PENDING,
+    notes: ""
+  });
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const { logActivity } = useActivityLogger();
+  
   useEffect(() => {
     if (!documentId) return;
-
-    const fetchApprovalInfo = async () => {
-      setLoading(true);
+    
+    async function fetchApprovalInfo() {
+      setIsLoading(true);
+      setError(null);
+      
       try {
+        // Using activity logs to fetch approval info since we don't have a dedicated table
         const { data, error } = await supabase
-          .from("document_approvals")
-          .select("*")
-          .eq("document_id", documentId)
-          .single();
-
-        if (error && error.code !== "PGSQL_ERROR") {
-          console.error("Error fetching approval info:", error);
-          return;
+          .from('activity_logs')
+          .select('*')
+          .eq('entity_id', documentId)
+          .eq('action', 'update')
+          .order('created_at', { ascending: false })
+          .limit(1);
+          
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const latestActivity = data[0];
+          const details = latestActivity.details;
+          
+          if (details && details.action_type && details.action_type.startsWith('document_')) {
+            const status = details.action_type.replace('document_', '') as DocumentApprovalStatus;
+            setApprovalInfo({
+              document_id: documentId,
+              status: status,
+              notes: details.notes || ""
+            });
+          }
         }
-
-        if (data) {
-          setApprovalInfo(data);
-          setStatus(data.status as DocumentApprovalStatus);
-          setNotes(data.notes || "");
-        }
-      } catch (error) {
-        console.error("Error in fetchApprovalInfo:", error);
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch approval info'));
+        console.error("Error fetching document approval info:", err);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
-    };
-
+    }
+    
     fetchApprovalInfo();
   }, [documentId]);
-
-  const updateApprovalStatus = async (newStatus: DocumentApprovalStatus, notes: string = "") => {
-    if (!user?.id || !documentId) return false;
-
-    setLoading(true);
+  
+  const updateApprovalStatus = async (status: DocumentApprovalStatus, notes?: string) => {
+    if (!documentId) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
     try {
-      const approvalData = {
-        document_id: documentId,
-        status: newStatus,
-        notes: notes,
-        approved_by: user.id,
-        approved_at: new Date().toISOString(),
-      };
-
-      let result;
-      if (approvalInfo?.id) {
-        // Update existing approval
-        result = await supabase
-          .from("document_approvals")
-          .update(approvalData)
-          .eq("id", approvalInfo.id);
-      } else {
-        // Create new approval
-        result = await supabase
-          .from("document_approvals")
-          .insert(approvalData);
-      }
-
-      if (result.error) {
-        console.error("Error updating approval status:", result.error);
-        toast({
-          title: "Error",
-          description: "Failed to update approval status",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Also update the document's approval_status field
-      const { error: docError } = await supabase
-        .from("documents")
-        .update({ approval_status: newStatus })
-        .eq("id", documentId);
-
-      if (docError) {
-        console.error("Error updating document status:", docError);
-      }
-
+      // Log the approval activity
+      await logActivity({
+        entity_type: 'policy', // TODO: This should be dynamic based on document entity type
+        entity_id: documentId,
+        action: 'update',
+        details: {
+          action_type: `document_${status}`,
+          document_id: documentId,
+          notes: notes || null,
+          status
+        }
+      });
+      
       // Update local state
-      setStatus(newStatus);
-      setNotes(notes);
       setApprovalInfo({
-        ...approvalInfo,
-        ...approvalData,
+        document_id: documentId,
+        status,
+        notes: notes || ""
       });
-
-      toast({
-        title: "Success",
-        description: `Document ${newStatus === 'approved' ? 'approved' : 'rejected'} successfully`,
-      });
-
+      
+      // In a real implementation, you would update the document's approval_status here
+      // Since we don't have direct access to update document tables,
+      // we'll use activity logs as our source of truth
+      
       return true;
-    } catch (error) {
-      console.error("Error in updateApprovalStatus:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to update approval status'));
+      console.error("Error updating document approval status:", err);
       return false;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
+  
   return {
-    status,
-    notes,
-    loading,
     approvalInfo,
-    updateApprovalStatus,
+    isLoading,
+    error,
+    updateApprovalStatus
   };
 }

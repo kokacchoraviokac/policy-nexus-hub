@@ -1,311 +1,211 @@
-
+// Update ProposalsList to use the correct prop types
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Proposal, ProposalStatus } from "@/types/reports";
-import {
-  Card,
-  CardContent,
+import { 
+  Card, 
+  CardContent, 
   CardHeader,
   CardTitle,
+  CardDescription,
+  CardFooter
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Proposal, ProposalStatus } from "@/types/sales";
+import UpdateProposalStatusDialog from "./UpdateProposalStatusDialog";
+import { formatCurrency, formatDate } from "@/utils/formatters";
 import {
-  Edit,
-  Eye,
-  Loader2,
-  Search,
-  AlertTriangle,
-  Send,
-  Clock,
   CheckCircle,
   XCircle,
+  Clock,
+  Send,
+  Eye,
   FileText,
+  MoreVertical
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import ViewProposalDialog from "./ViewProposalDialog";
-import UpdateProposalStatusDialog from "./UpdateProposalStatusDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { getProposalStatusVariant } from "@/utils/proposalUtils";
 
-interface ProposalsListProps {
+export interface ProposalsListProps {
   proposals: Proposal[];
-  isLoading: boolean;
-  error?: Error | null;
-  onUpdateStatus: (proposalId: string, newStatus: ProposalStatus) => Promise<void>;
-  onEdit?: (proposalId: string) => void;
+  onStatusChange?: (proposalId: string, newStatus: ProposalStatus) => Promise<boolean>;
 }
 
-const ProposalsList: React.FC<ProposalsListProps> = ({
-  proposals,
-  isLoading,
-  error,
-  onUpdateStatus,
-  onEdit,
+const ProposalsList: React.FC<ProposalsListProps> = ({ 
+  proposals, 
+  onStatusChange 
 }) => {
-  const { t, formatDate, formatCurrency } = useLanguage();
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [viewProposal, setViewProposal] = useState<Proposal | null>(null);
-  const [updateStatusProposal, setUpdateStatusProposal] = useState<Proposal | null>(null);
+  const { t, formatDate: formatLocalDate } = useLanguage();
+  const { toast } = useToast();
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   
-  // Filter proposals based on search term
-  const filteredProposals = proposals.filter((proposal) =>
-    proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (proposal.client_name && proposal.client_name.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Filtering is handled above
-  };
-  
-  const handleStatusUpdate = async (status: ProposalStatus) => {
-    if (updateStatusProposal) {
-      await onUpdateStatus(updateStatusProposal.id, status);
-      setUpdateStatusProposal(null);
-    }
-  };
-  
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusIcon = (status: ProposalStatus) => {
     switch (status) {
-      case "draft":
-        return "secondary";
-      case "sent":
-        return "warning";
-      case "viewed":
-        return "info";
-      case "accepted":
-        return "success";
-      case "rejected":
-        return "destructive";
-      case "approved":
-        return "success";
-      case "pending":
-        return "warning";
+      case ProposalStatus.ACCEPTED:
+        return <CheckCircle className="h-4 w-4 text-emerald-500" />;
+      case ProposalStatus.REJECTED:
+        return <XCircle className="h-4 w-4 text-rose-500" />;
+      case ProposalStatus.EXPIRED:
+        return <Clock className="h-4 w-4 text-amber-500" />;
+      case ProposalStatus.SENT:
+        return <Send className="h-4 w-4 text-blue-500" />;
+      case ProposalStatus.VIEWED:
+        return <Eye className="h-4 w-4 text-indigo-500" />;
+      case ProposalStatus.DRAFT:
+        return <FileText className="h-4 w-4 text-slate-500" />;
       default:
-        return "default";
+        return <FileText className="h-4 w-4 text-slate-500" />;
     }
   };
-  
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "draft":
-        return <FileText className="h-3.5 w-3.5" />;
-      case "sent":
-        return <Send className="h-3.5 w-3.5" />;
-      case "viewed":
-        return <Eye className="h-3.5 w-3.5" />;
-      case "accepted":
-        return <CheckCircle className="h-3.5 w-3.5" />;
-      case "rejected":
-        return <XCircle className="h-3.5 w-3.5" />;
-      case "approved":
-        return <CheckCircle className="h-3.5 w-3.5" />;
-      case "pending":
-        return <Clock className="h-3.5 w-3.5" />;
-      default:
-        return <FileText className="h-3.5 w-3.5" />;
+
+  const handleStatusChange = async (status: ProposalStatus) => {
+    if (!selectedProposal || !onStatusChange) return;
+    
+    try {
+      const success = await onStatusChange(selectedProposal.id, status);
+      
+      if (success) {
+        toast({
+          title: t("proposalStatusUpdated"),
+          description: t("proposalStatusUpdateSuccess"),
+        });
+      } else {
+        toast({
+          title: t("proposalStatusUpdateFailed"),
+          description: t("proposalStatusUpdateError"),
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: t("proposalStatusUpdateFailed"),
+        description: t("proposalStatusUpdateError"),
+        variant: "destructive",
+      });
+    } finally {
+      setStatusDialogOpen(false);
     }
   };
-  
-  if (isLoading) {
+
+  if (proposals.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("proposals")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="flex items-center justify-between p-4 border rounded-md">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-[200px]" />
-                  <Skeleton className="h-3 w-[150px]" />
-                </div>
-                <div className="flex space-x-2">
-                  <Skeleton className="h-9 w-20 rounded-md" />
-                  <Skeleton className="h-9 w-9 rounded-md" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="py-10 text-center">
+        <FileText className="mx-auto h-10 w-10 text-muted-foreground" />
+        <h3 className="mt-2 text-lg font-medium">{t("noProposals")}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t("noProposalsDescription")}
+        </p>
+      </div>
     );
   }
-  
-  if (error) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("proposals")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8">
-            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-            <h3 className="text-lg font-medium">{t("failedToLoadProposals")}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {error.message}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
+
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{t("proposals")}</CardTitle>
-            <Button
-              onClick={() => navigate("/sales/proposals/new")}
-              size="sm"
-            >
-              {t("newProposal")}
+    <div className="space-y-4">
+      {proposals.map((proposal) => (
+        <Card key={proposal.id} className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-lg">{proposal.title}</CardTitle>
+                <CardDescription className="mt-1">
+                  {t("forClient")}: {proposal.client_name || t("unknownClient")}
+                </CardDescription>
+              </div>
+              <Badge variant={getProposalStatusVariant(proposal.status) as "default" | "destructive" | "outline" | "secondary" | "success" | "warning"}>
+                {getStatusIcon(proposal.status)}
+                <span className="ml-1">{t(proposal.status)}</span>
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="pb-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("insurer")}
+                </p>
+                <p className="text-sm">
+                  {proposal.insurer_name || t("notSpecified")}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("amount")}
+                </p>
+                <p className="text-sm font-semibold">
+                  {proposal.amount
+                    ? formatCurrency(proposal.amount, proposal.currency || "EUR")
+                    : t("notSpecified")}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("created")}
+                </p>
+                <p className="text-sm">
+                  {formatLocalDate(proposal.created_at)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {t("expires")}
+                </p>
+                <p className="text-sm">
+                  {proposal.expiry_date
+                    ? formatLocalDate(proposal.expiry_date)
+                    : t("notSpecified")}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="pt-2 flex justify-between">
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4 mr-2" />
+              {t("view")}
             </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSearch} className="flex space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder={t("searchProposals")}
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button type="submit">{t("search")}</Button>
-          </form>
-          
-          {filteredProposals.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">{t("noProposalsFound")}</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {t("createYourFirstProposal")}
-              </p>
-              <Button
-                onClick={() => navigate("/sales/proposals/new")}
-                className="mt-4"
-              >
-                {t("newProposal")}
-              </Button>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("title")}</TableHead>
-                    <TableHead>{t("client")}</TableHead>
-                    <TableHead>{t("amount")}</TableHead>
-                    <TableHead>{t("createdDate")}</TableHead>
-                    <TableHead>{t("status")}</TableHead>
-                    <TableHead>{t("actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProposals.map((proposal) => (
-                    <TableRow key={proposal.id}>
-                      <TableCell className="font-medium">
-                        {proposal.title}
-                      </TableCell>
-                      <TableCell>{proposal.client_name || "-"}</TableCell>
-                      <TableCell>
-                        {proposal.amount
-                          ? formatCurrency(
-                              proposal.amount,
-                              proposal.currency || "EUR"
-                            )
-                          : "-"}
-                      </TableCell>
-                      <TableCell>{formatDate(proposal.created_at)}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={getStatusBadgeVariant(proposal.status as string)}
-                          className="flex w-fit items-center gap-1"
-                        >
-                          {getStatusIcon(proposal.status as string)}
-                          {t(proposal.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setViewProposal(proposal)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {onEdit && proposal.status === "draft" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onEdit(proposal.id)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {proposal.status === "draft" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setUpdateStatusProposal(proposal);
-                              }}
-                            >
-                              <Send className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            
+            {onStatusChange && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{t("changeStatus")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setSelectedProposal(proposal);
+                      setStatusDialogOpen(true);
+                    }}
+                  >
+                    {t("updateStatus")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </CardFooter>
+        </Card>
+      ))}
       
-      {/* View Proposal Dialog */}
-      {viewProposal && (
-        <ViewProposalDialog
-          proposal={viewProposal}
-          open={!!viewProposal}
-          onOpenChange={(open) => {
-            if (!open) setViewProposal(null);
-          }}
+      {selectedProposal && (
+        <UpdateProposalStatusDialog 
+          open={statusDialogOpen}
+          onOpenChange={setStatusDialogOpen}
+          currentStatus={selectedProposal.status}
+          onUpdateStatus={handleStatusChange}
         />
       )}
-      
-      {/* Update Status Dialog */}
-      {updateStatusProposal && (
-        <UpdateProposalStatusDialog
-          open={!!updateStatusProposal}
-          onOpenChange={(open) => {
-            if (!open) setUpdateStatusProposal(null);
-          }}
-          onUpdate={(status: ProposalStatus) => handleStatusUpdate(status as ProposalStatus)}
-          currentStatus={updateStatusProposal.status as ProposalStatus}
-        />
-      )}
-    </>
+    </div>
   );
 };
 
