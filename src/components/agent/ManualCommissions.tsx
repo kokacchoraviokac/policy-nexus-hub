@@ -85,6 +85,7 @@ const ManualCommissions = () => {
         <DataTable
           data={manualCommissions}
           columns={columns}
+          keyField="id"
           isLoading={isLoading}
           pagination={{
             currentPage: pagination.pageIndex,

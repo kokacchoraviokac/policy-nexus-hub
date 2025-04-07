@@ -42,8 +42,8 @@ const PayoutReports = () => {
       accessorKey: "status",
       cell: (row: any) => (
         <span className={`px-2 py-1 rounded text-xs font-medium ${
-          row.status === 'paid' ? 'bg-green-100 text-green-800' : 
-          row.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+          row.status === 'paid' ? 'bg-green-100 text-green-700' : 
+          row.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 
           'bg-gray-100 text-gray-800'
         }`}>
           {t(row.status)}
@@ -89,6 +89,7 @@ const PayoutReports = () => {
         <DataTable
           data={payouts}
           columns={columns}
+          keyField="id"
           isLoading={isLoading}
           pagination={{
             currentPage: pagination.pageIndex,
@@ -100,7 +101,8 @@ const PayoutReports = () => {
           }}
           emptyState={{
             title: t("noPayoutsFound"),
-            description: t("noPayoutsDescription")
+            description: t("noPayoutsDescription"),
+            action: null
           }}
         />
       </Card>

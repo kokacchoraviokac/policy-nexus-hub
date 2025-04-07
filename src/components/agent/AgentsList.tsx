@@ -66,7 +66,6 @@ const AgentsList = () => {
     },
     {
       header: t("actions"),
-      id: "actions",
       accessorKey: "id",
       cell: (row: any) => (
         <div className="flex space-x-2">
@@ -117,6 +116,7 @@ const AgentsList = () => {
         <DataTable
           data={agents}
           columns={columns}
+          keyField="id"
           isLoading={isLoading}
           pagination={{
             currentPage: pagination.pageIndex,

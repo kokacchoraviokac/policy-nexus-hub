@@ -1,188 +1,168 @@
 
 import React from "react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  className?: string;
-  itemsPerPage?: number;
   itemsCount?: number;
-  showPageNumbers?: boolean;
-  showEllipsis?: boolean;
-  siblingCount?: number;
+  itemsPerPage?: number;
+  pageSizeOptions?: number[];
+  onPageSizeChange?: (pageSize: number) => void;
+  className?: string;
 }
 
-export function Pagination({
+export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,
   onPageChange,
-  className,
-  showPageNumbers = true,
-  showEllipsis = true,
-  siblingCount = 1,
-  itemsPerPage,
   itemsCount,
-}: PaginationProps) {
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      onPageChange(currentPage - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (currentPage < totalPages) {
-      onPageChange(currentPage + 1);
-    }
-  };
+  itemsPerPage,
+  pageSizeOptions = [10, 25, 50, 100],
+  onPageSizeChange,
+  className,
+}) => {
+  const isFirstPage = currentPage === 1;
+  const isLastPage = currentPage === totalPages;
 
   // Generate page numbers to display
-  const generatePageNumbers = () => {
-    const pageNumbers = [];
-
-    // Always include first page
-    pageNumbers.push(1);
-
-    const leftSibling = Math.max(2, currentPage - siblingCount);
-    const rightSibling = Math.min(totalPages - 1, currentPage + siblingCount);
-
-    // Add ellipsis if needed
-    if (leftSibling > 2 && showEllipsis) {
-      pageNumbers.push("ellipsis-left");
-    } else if (leftSibling === 2) {
-      pageNumbers.push(2);
-    }
-
-    // Add pages between left and right siblings
-    for (let i = leftSibling; i <= rightSibling; i++) {
-      if (i !== 1 && i !== totalPages) {
-        pageNumbers.push(i);
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if there are few
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      // Calculate middle range
+      let startPage = Math.max(2, currentPage - 1);
+      let endPage = Math.min(totalPages - 1, currentPage + 1);
+      
+      // Adjust if we're near the start
+      if (currentPage <= 3) {
+        endPage = 4;
+      }
+      
+      // Adjust if we're near the end
+      if (currentPage >= totalPages - 2) {
+        startPage = totalPages - 3;
+      }
+      
+      // Add ellipsis if needed at start
+      if (startPage > 2) {
+        pages.push(-1); // -1 represents ellipsis
+      }
+      
+      // Add middle pages
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis if needed at end
+      if (endPage < totalPages - 1) {
+        pages.push(-2); // -2 represents ellipsis
+      }
+      
+      // Always show last page
+      if (totalPages > 1) {
+        pages.push(totalPages);
       }
     }
-
-    // Add ellipsis if needed
-    if (rightSibling < totalPages - 1 && showEllipsis) {
-      pageNumbers.push("ellipsis-right");
-    } else if (rightSibling === totalPages - 1) {
-      pageNumbers.push(totalPages - 1);
-    }
-
-    // Always include last page if there's more than one page
-    if (totalPages > 1) {
-      pageNumbers.push(totalPages);
-    }
-
-    return pageNumbers;
+    
+    return pages;
   };
 
-  if (totalPages <= 1) {
-    return null;
-  }
+  if (totalPages <= 1) return null;
 
   return (
-    <nav
-      className={cn(
-        "flex items-center justify-between px-2 sm:px-0",
-        className
-      )}
-      aria-label="Pagination"
-    >
-      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        {itemsCount && itemsPerPage && (
-          <div className="text-sm text-muted-foreground">
-            Showing <span className="font-medium">{Math.min((currentPage - 1) * (itemsPerPage || 10) + 1, itemsCount)}</span> to{" "}
-            <span className="font-medium">{Math.min(currentPage * (itemsPerPage || 10), itemsCount)}</span> of{" "}
+    <div className={cn("flex items-center justify-between", className)}>
+      <div className="flex-1 text-sm text-muted-foreground">
+        {itemsCount !== undefined && itemsPerPage !== undefined && (
+          <div>
+            Showing <span className="font-medium">{Math.min((currentPage - 1) * itemsPerPage + 1, itemsCount)}</span>
+            {" "} to {" "}
+            <span className="font-medium">{Math.min(currentPage * itemsPerPage, itemsCount)}</span>
+            {" "} of {" "}
             <span className="font-medium">{itemsCount}</span> results
           </div>
         )}
-        <div>
-          <ul className="inline-flex -space-x-px">
-            <li>
-              <Button
-                onClick={handlePrevious}
-                disabled={currentPage === 1}
-                variant="outline"
-                size="icon"
-                className="rounded-r-none"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-            </li>
-            {showPageNumbers &&
-              generatePageNumbers().map((pageNumber, index) => {
-                if (pageNumber === "ellipsis-left" || pageNumber === "ellipsis-right") {
-                  return (
-                    <li key={`ellipsis-${index}`}>
-                      <span className="flex items-center justify-center px-3 h-9 text-sm border border-input bg-background text-muted-foreground">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </span>
-                    </li>
-                  );
-                }
-                
-                const isCurrentPage = pageNumber === currentPage;
-                
+      </div>
+      
+      <div className="flex items-center space-x-6 lg:space-x-8">
+        {onPageSizeChange && (
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium">Rows per page</p>
+            <select
+              className="h-8 w-[70px] rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+              value={itemsPerPage}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            >
+              {pageSizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 p-0"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={isFirstPage}
+          >
+            <span className="sr-only">Go to previous page</span>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          
+          <div className="flex items-center">
+            {getPageNumbers().map((page, i) => {
+              if (page < 0) {
                 return (
-                  <li key={`page-${pageNumber}`}>
-                    <Button
-                      onClick={() => onPageChange(pageNumber as number)}
-                      variant={isCurrentPage ? "default" : "outline"}
-                      size="icon"
-                      className={cn(
-                        "rounded-none px-3 w-9",
-                        isCurrentPage ? "z-10" : ""
-                      )}
-                      aria-current={isCurrentPage ? "page" : undefined}
-                    >
-                      {pageNumber}
-                    </Button>
-                  </li>
+                  <div key={`ellipsis-${i}`} className="px-2">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </div>
                 );
-              })}
-            <li>
-              <Button
-                onClick={handleNext}
-                disabled={currentPage === totalPages}
-                variant="outline"
-                size="icon"
-                className="rounded-l-none"
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </li>
-          </ul>
+              }
+              
+              return (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="icon"
+                  className="h-8 w-8 p-0"
+                  onClick={() => onPageChange(page)}
+                >
+                  <span className="sr-only">Go to page {page}</span>
+                  {page}
+                </Button>
+              );
+            })}
+          </div>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 p-0"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={isLastPage}
+          >
+            <span className="sr-only">Go to next page</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-      <div className="flex sm:hidden w-full justify-between">
-        <Button
-          onClick={handlePrevious}
-          disabled={currentPage === 1}
-          variant="outline"
-          size="sm"
-          className="px-2"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Previous
-        </Button>
-        <span className="flex items-center text-sm text-muted-foreground">
-          Page {currentPage} of {totalPages}
-        </span>
-        <Button
-          onClick={handleNext}
-          disabled={currentPage === totalPages}
-          variant="outline"
-          size="sm"
-          className="px-2"
-        >
-          Next
-          <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </div>
-    </nav>
+    </div>
   );
-}
+};

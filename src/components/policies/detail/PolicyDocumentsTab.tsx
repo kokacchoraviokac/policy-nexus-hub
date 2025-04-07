@@ -7,7 +7,7 @@ import { Upload } from "lucide-react";
 import { useDocumentManager } from "@/hooks/useDocumentManager";
 import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
 import DocumentList from "@/components/documents/unified/DocumentList";
-import { EntityType } from "@/types/documents";
+import { EntityType } from "@/types/common";
 
 interface PolicyDocumentsTabProps {
   policyId: string;
@@ -25,8 +25,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
     error,
     refreshDocuments,
     deleteDocument,
-    isDeleting,
-    updateDocumentApproval
+    isDeletingDocument,
   } = useDocumentManager({ 
     entityType: EntityType.POLICY,
     entityId: policyId
@@ -64,12 +63,12 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
       </CardHeader>
       <CardContent>
         <DocumentList 
-          documents={documents}
+          documents={documents || []}
           isLoading={isLoading}
           isError={isError}
           error={error as Error}
           onDelete={handleDeleteDocument}
-          isDeleting={isDeleting}
+          isDeleting={isDeletingDocument}
           showUploadButton={false}
           onUploadVersion={handleUploadVersion}
           entityType={EntityType.POLICY}

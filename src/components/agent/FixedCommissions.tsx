@@ -82,6 +82,7 @@ const FixedCommissions = () => {
         <DataTable
           data={fixedCommissions}
           columns={columns}
+          keyField="id"
           isLoading={isLoading}
           pagination={{
             currentPage: pagination.pageIndex,

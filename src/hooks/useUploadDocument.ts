@@ -72,7 +72,8 @@ export const useUploadDocument = () => {
         documentRecord.version = currentVersion + 1;
         
         // Set previous version as not latest
-        await fromDocumentTable(tableName)
+        const docTable = fromDocumentTable(tableName);
+        await docTable
           .update({ is_latest_version: false })
           .eq('id', originalDocumentId);
       }
@@ -83,7 +84,8 @@ export const useUploadDocument = () => {
       }
       
       // Insert document record
-      const { data: insertedData, error: documentError } = await fromDocumentTable(tableName)
+      const docTable = fromDocumentTable(tableName);
+      const { data: insertedData, error: documentError } = await docTable
         .insert(documentRecord)
         .select()
         .single();

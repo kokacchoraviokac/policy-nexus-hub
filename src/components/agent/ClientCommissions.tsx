@@ -86,6 +86,7 @@ const ClientCommissions = () => {
         <DataTable
           data={clientCommissions}
           columns={columns}
+          keyField="id"
           isLoading={isLoading}
           pagination={{
             currentPage: pagination.pageIndex,

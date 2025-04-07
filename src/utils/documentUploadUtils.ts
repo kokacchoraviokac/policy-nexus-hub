@@ -18,7 +18,13 @@ export function getDocumentTableName(entityType: EntityType | string): DocumentT
     [EntityType.ADDENDUM]: "addendum_documents",
   };
 
-  return mapping[entityType] || "policy_documents";
+  const tableName = mapping[entityType];
+  if (!tableName) {
+    console.warn(`Unknown entity type: ${entityType}, defaulting to policy_documents`);
+    return "policy_documents";
+  }
+
+  return tableName;
 }
 
 /**
@@ -37,5 +43,11 @@ export function getEntityIdColumn(entityType: EntityType | string): string {
     [EntityType.ADDENDUM]: "addendum_id",
   };
 
-  return mapping[entityType] || "entity_id";
+  const columnName = mapping[entityType];
+  if (!columnName) {
+    console.warn(`Unknown entity type: ${entityType}, defaulting to entity_id`);
+    return "entity_id";
+  }
+
+  return columnName;
 }

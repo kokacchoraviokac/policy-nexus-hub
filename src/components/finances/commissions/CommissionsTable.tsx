@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { PaginationController } from "@/components/ui/pagination-controller";
@@ -101,7 +102,7 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onCommissionClick(commission)}
                   >
-                    <TableCell className="font-medium">{commission.policy_number}</TableCell>
+                    <TableCell className="font-medium">{commission.policy_id}</TableCell>
                     <TableCell>{formatCurrency(commission.base_amount)}</TableCell>
                     <TableCell>{commission.rate}%</TableCell>
                     <TableCell>{formatCurrency(commission.calculated_amount)}</TableCell>
@@ -125,10 +126,8 @@ const CommissionsTable: React.FC<CommissionsTableProps> = ({
             currentPage={currentPage}
             totalPages={totalPages} 
             itemsPerPage={itemsPerPage}
-            totalItems={totalItems}
             itemsCount={commissions.length}
             onPageChange={onPageChange}
-            onPageSizeChange={onPageSizeChange}
           />
         </div>
       </CardContent>
