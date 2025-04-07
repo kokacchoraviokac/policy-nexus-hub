@@ -22,7 +22,7 @@ export enum DocumentCategory {
   CONTRACT = "contract",
   INVOICE = "invoice",
   MISCELLANEOUS = "miscellaneous",
-  PROPOSAL = "proposal", // Adding missing PROPOSAL type
+  PROPOSAL = "proposal",
   OTHER = "other"
 }
 

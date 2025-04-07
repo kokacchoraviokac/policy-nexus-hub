@@ -1,8 +1,8 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { DocumentCategory, EntityType } from "@/types/common";
-import { Document } from "@/types/documents";
+import { DocumentCategory } from "@/types/common";
+import { Document, EntityType } from "@/types/documents";
 import { useUploadDocument } from "@/hooks/useUploadDocument";
 import { useLanguage } from "@/contexts/LanguageContext";
 

@@ -9,7 +9,7 @@ import { DocumentTableName } from "@/types/documents";
  */
 export const fromDocumentTable = (tableName: DocumentTableName) => {
   // Map the document table name to the correctly typed RelationName
-  const relationName = tableName as RelationName;
+  const relationName = tableName as unknown as RelationName;
   return supabase.from(relationName);
 };
 
@@ -17,5 +17,5 @@ export const fromDocumentTable = (tableName: DocumentTableName) => {
  * A type-safe wrapper for general table access
  */
 export const fromTable = (tableName: string) => {
-  return supabase.from(tableName as RelationName);
+  return supabase.from(tableName as unknown as RelationName);
 };

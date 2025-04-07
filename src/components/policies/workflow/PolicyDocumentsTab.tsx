@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EntityType } from "@/types/common";
+import { EntityType } from "@/types/documents";
 import { useDocuments } from "@/hooks/useDocuments";
 import DocumentList from "@/components/documents/unified/DocumentList";
 import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";

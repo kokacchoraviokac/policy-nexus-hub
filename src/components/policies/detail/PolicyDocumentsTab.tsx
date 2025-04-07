@@ -7,7 +7,7 @@ import { Upload } from "lucide-react";
 import { useDocumentManager } from "@/hooks/useDocumentManager";
 import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
 import DocumentList from "@/components/documents/unified/DocumentList";
-import { EntityType } from "@/types/common";
+import { EntityType } from "@/types/documents";
 
 interface PolicyDocumentsTabProps {
   policyId: string;

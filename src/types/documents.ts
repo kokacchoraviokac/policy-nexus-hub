@@ -1,16 +1,19 @@
 
-import { EntityType, DocumentCategory as CommonDocumentCategory } from "./common";
+import { EntityType, DocumentCategory as CommonDocumentCategory, ApprovalStatus } from "./common";
 
 // Re-export DocumentCategory for backward compatibility 
 export { CommonDocumentCategory as DocumentCategory };
 
-// Add DocumentApprovalStatus enum that was missing
+// Export DocumentApprovalStatus with the same values as ApprovalStatus
 export enum DocumentApprovalStatus {
   PENDING = "pending",
   APPROVED = "approved",
   REJECTED = "rejected",
   NEEDS_REVIEW = "needs_review"
 }
+
+// Re-export EntityType
+export { EntityType };
 
 export type DocumentTableName = 
   | "policy_documents"
@@ -73,7 +76,7 @@ export interface DocumentUploadDialogProps {
   entityType: EntityType;
   entityId: string;
   onUploadComplete?: () => void;
-  defaultCategory?: CommonDocumentCategory;
+  defaultCategory?: CommonDocumentCategory | string;
   salesStage?: string;
   selectedDocument?: Document;
   embedMode?: boolean;
@@ -116,6 +119,14 @@ export interface DocumentSearchParams {
 export interface UseDocumentSearchProps {
   initialParams?: DocumentSearchParams;
   autoFetch?: boolean;
+  entityType?: EntityType;
+  entityId?: string;
+  category?: string;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
 }
 
 export interface UseDocumentSearchReturn {
@@ -130,4 +141,14 @@ export interface UseDocumentSearchReturn {
   searchParams: DocumentSearchParams;
   setSearchParams: (params: Partial<DocumentSearchParams>) => void;
   refresh: () => void;
+  isError: boolean;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  selectedCategory?: string;
+  setSelectedCategory: (category?: string) => void;
+  searchDocuments: (params?: Partial<DocumentSearchParams>) => Promise<void>;
+  totalPages: number;
+  itemsCount: number;
+  itemsPerPage: number;
+  handlePageChange: (page: number) => void;
 }
