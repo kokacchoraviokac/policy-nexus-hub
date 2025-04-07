@@ -4,6 +4,14 @@ import { EntityType, DocumentCategory as CommonDocumentCategory } from "./common
 // Re-export DocumentCategory for backward compatibility 
 export { CommonDocumentCategory as DocumentCategory };
 
+// Add DocumentApprovalStatus enum that was missing
+export enum DocumentApprovalStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  NEEDS_REVIEW = "needs_review"
+}
+
 export type DocumentTableName = 
   | "policy_documents"
   | "claim_documents"
@@ -30,12 +38,21 @@ export interface Document {
   mime_type?: string;
   created_at: string;
   updated_at?: string;
-  approval_status?: string;
+  approval_status?: DocumentApprovalStatus;
   approved_by?: string;
   approved_at?: string;
   tags?: string[];
   company_id?: string;
   metadata?: Record<string, any>;
+  description?: string;
+  comments?: string[];
+  approval_notes?: string;
+}
+
+export interface ApprovalInfo {
+  document_id: string;
+  status: DocumentApprovalStatus;
+  notes: string;
 }
 
 export interface DocumentUploadOptions {
@@ -81,4 +98,36 @@ export interface ClaimDocument extends Document {
 export interface SalesDocument extends Document {
   sales_process_id: string;
   step?: string;
+}
+
+// Add DocumentSearchParams interface
+export interface DocumentSearchParams {
+  entityType?: EntityType;
+  entityId?: string;
+  category?: string;
+  searchTerm?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  page?: number;
+  limit?: number;
+}
+
+export interface UseDocumentSearchProps {
+  initialParams?: DocumentSearchParams;
+  autoFetch?: boolean;
+}
+
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  isLoading: boolean;
+  error: Error | null;
+  totalCount: number;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  pageSize: number;
+  setPageSize: (size: number) => void;
+  searchParams: DocumentSearchParams;
+  setSearchParams: (params: Partial<DocumentSearchParams>) => void;
+  refresh: () => void;
 }

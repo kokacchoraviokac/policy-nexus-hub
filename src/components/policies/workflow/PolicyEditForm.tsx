@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy } from "@/types/policies";
 import { useActivityLogger } from "@/utils/activityLogger";
+import { EntityType } from "@/types/common";
 
 interface PolicyEditFormProps {
   policy: Policy;

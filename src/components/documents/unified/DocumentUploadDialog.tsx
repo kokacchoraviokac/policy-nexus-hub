@@ -9,7 +9,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { EntityType, DocumentCategory, Document, DocumentUploadDialogProps } from "@/types/documents";
+import { Document, DocumentUploadDialogProps } from "@/types/documents";
+import { DocumentCategory, EntityType } from "@/types/common";
 import { useDocumentUploadState } from "./hooks/useDocumentUploadState";
 import DocumentUploadForm from "./DocumentUploadForm";
 import { Button } from "@/components/ui/button";

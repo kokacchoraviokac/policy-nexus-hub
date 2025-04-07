@@ -63,6 +63,8 @@ export interface Proposal {
   is_latest?: boolean;
   coverage_details?: string;
   document_ids?: string[];
+  // Make version optional as it's used in some places but not in the interface
+  version?: number;
 }
 
 export interface CreateProposalRequest {
@@ -100,8 +102,9 @@ export interface UseProposalsDataProps {
   statusFilter?: string; // Added statusFilter
 }
 
-// Added DocumentsTabProps interface
+// Updated DocumentsTabProps interface to match how it's used
 export interface DocumentsTabProps {
-  salesProcess: SalesProcess;
+  salesProcess?: SalesProcess;
+  process?: SalesProcess;
   salesStage?: string;
 }

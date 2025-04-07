@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DocumentListItem from "./DocumentListItem";
 import DocumentUploadDialog from "./DocumentUploadDialog";
-import { PolicyDocument, DocumentCategory } from "@/types/documents";
+import { Document, PolicyDocument } from "@/types/documents";
 import { EntityType } from "@/types/common";
 
 interface DocumentListProps {
@@ -17,13 +17,13 @@ interface DocumentListProps {
   showUploadButton?: boolean;
   showApproval?: boolean;
   filterCategory?: string;
-  documents?: PolicyDocument[];
+  documents?: Document[];
   isLoading?: boolean;
   isError?: boolean;
   error?: Error;
-  onDelete?: (documentId: string | PolicyDocument) => void;
+  onDelete?: (documentId: string | Document) => void;
   isDeleting?: boolean;
-  onUploadVersion?: (document: PolicyDocument) => void;
+  onUploadVersion?: (document: Document) => void;
 }
 
 const DocumentList: React.FC<DocumentListProps> = ({ 
@@ -43,7 +43,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
 }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<PolicyDocument | undefined>(undefined);
+  const [selectedDocument, setSelectedDocument] = useState<Document | undefined>(undefined);
   
   // Use provided props if available, otherwise fetch documents using the hook
   const { 
@@ -62,7 +62,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   const isDeleting = providedIsDeleting !== undefined ? providedIsDeleting : isDeletingFetched;
 
   // Custom delete document handler that manages both string IDs and Document objects
-  const handleDeleteDocument = (documentIdOrObject: string | PolicyDocument) => {
+  const handleDeleteDocument = (documentIdOrObject: string | Document) => {
     if (providedOnDelete) {
       providedOnDelete(documentIdOrObject);
     } else if (deleteDocumentFetched) {
@@ -78,7 +78,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   // Filter documents by category if filterCategory is provided
   const filteredDocuments = useMemo(() => {
     if (!filterCategory) return documents;
-    return documents.filter(doc => doc.category === filterCategory);
+    return documents?.filter(doc => doc.category === filterCategory) || [];
   }, [documents, filterCategory]);
 
   const handleUploadClick = () => {
@@ -90,7 +90,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
     }
   };
   
-  const handleUploadVersion = (document: PolicyDocument) => {
+  const handleUploadVersion = (document: Document) => {
     if (onUploadVersion) {
       onUploadVersion(document);
     } else {
