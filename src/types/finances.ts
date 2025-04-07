@@ -30,12 +30,16 @@ export interface Invoice {
   company_id: string;
   created_at: string;
   updated_at: string;
+  invoice_type?: string;
+  invoice_category?: string;
+  calculation_reference?: string;
 }
 
 // Invoice with items
 export interface InvoiceWithItems extends Invoice {
   items: InvoiceItem[];
   template_settings?: InvoiceTemplateSettings;
+  entity?: any;
 }
 
 // Invoice Item
@@ -45,10 +49,14 @@ export interface InvoiceItem {
   description: string;
   amount: number;
   policy_id?: string;
+  policy?: any;
   commission_id?: string;
   created_at: string;
   updated_at: string;
 }
+
+// Invoice Type alias for backwards compatibility
+export type InvoiceType = Invoice;
 
 // Invoice Template
 export interface InvoiceTemplate {
@@ -63,6 +71,8 @@ export interface InvoiceTemplate {
 
 // Invoice Template Settings
 export interface InvoiceTemplateSettings {
+  id?: string;
+  name?: string;
   font_family: string;
   font_size: string;
   primary_color: string;
@@ -75,8 +85,9 @@ export interface InvoiceTemplateSettings {
   payment_instructions?: string;
   show_payment_instructions?: boolean;
   logo_position?: "left" | "center" | "right";
-  font_weight?: "normal" | "bold";
+  font_weight?: "normal" | "bold" | "light";
   font_style?: "normal" | "italic";
+  is_default?: boolean;
 }
 
 // Commission with Policy Details
@@ -117,3 +128,63 @@ export interface FinancialTransaction {
   company_id: string;
   created_at: string;
 }
+
+// Bank Statement
+export interface BankStatement {
+  id: string;
+  statement_date: string;
+  bank_name: string;
+  account_number: string;
+  starting_balance: number;
+  ending_balance: number;
+  file_path?: string;
+  status: string;
+  processed_by?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Bank Transaction
+export interface BankTransaction {
+  id: string;
+  statement_id: string;
+  transaction_date: string;
+  description: string;
+  amount: number;
+  reference?: string;
+  status: string;
+  matched_invoice_id?: string;
+  matched_policy_id?: string;
+  matched_at?: string;
+  matched_by?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Unlinked Payment Type
+export interface UnlinkedPaymentType {
+  id: string;
+  amount: number;
+  payment_date: string;
+  payer_name?: string;
+  reference?: string;
+  status: string;
+  linked_policy_id?: string;
+  linked_at?: string;
+  linked_by?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+  currency: string;
+}
+
+export enum CommissionStatus {
+  CALCULATING = "calculating",
+  DUE = "due",
+  PARTIALLY_PAID = "partially_paid",
+  PAID = "paid"
+}
+
+export interface Commission extends CommissionType {}

@@ -1,47 +1,69 @@
 
-import React, { ReactNode } from "react";
-import { cn } from "@/lib/utils";
-import FilterPopover from "./FilterPopover";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetHeader, 
+  SheetTitle,
+  SheetTrigger 
+} from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Filter } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-export interface FilterBarProps {
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  searchPlaceholder?: string;
-  filterGroups?: FilterGroup[];
-  className?: string;
-}
-
-export interface FilterGroup {
-  title: string;
-  filters: Filter[];
-  selectedValues?: string[];
-  onFilterChange?: (values: string[]) => void;
-}
-
-export interface Filter {
-  value: string;
-  label: string;
-  count?: number;
+interface FilterBarProps {
+  searchValue: string;
+  onSearchChange: React.Dispatch<React.SetStateAction<string>>;
+  searchPlaceholder: string;
+  resetFilters?: () => void;
+  children?: React.ReactNode;
 }
 
 const FilterBar: React.FC<FilterBarProps> = ({
   searchValue,
   onSearchChange,
   searchPlaceholder,
-  filterGroups,
-  className,
+  resetFilters,
+  children
 }) => {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  
   return (
-    <div className={cn("flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-2 sm:space-y-0", className)}>
-      {filterGroups?.map((group, index) => (
-        <FilterPopover
-          key={`${group.title}-${index}`}
-          title={group.title}
-          filters={group.filters}
-          selectedValues={group.selectedValues}
-          onFilterChange={group.onFilterChange}
+    <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+      <div className="relative flex-1">
+        <Input
+          className="w-full"
+          placeholder={searchPlaceholder}
+          value={searchValue}
+          onChange={(e) => onSearchChange(e.target.value)}
         />
-      ))}
+      </div>
+      
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button variant="outline" size="sm" className="whitespace-nowrap">
+            <Filter className="h-4 w-4 mr-2" />
+            {t("filters")}
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-auto">
+          <SheetHeader>
+            <SheetTitle>{t("advancedFilters")}</SheetTitle>
+          </SheetHeader>
+          <div className="py-4">
+            {children}
+          </div>
+          {resetFilters && (
+            <div className="pt-4 border-t flex justify-end">
+              <Button variant="outline" size="sm" onClick={resetFilters}>
+                {t("resetFilters")}
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };

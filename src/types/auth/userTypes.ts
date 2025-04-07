@@ -1,44 +1,32 @@
 
-// Update the UserTypes to include CustomPrivilege
-
-export enum UserRole {
-  ADMIN = 'admin',
-  EMPLOYEE = 'employee',
-  SUPER_ADMIN = 'superAdmin',  // Keep this as 'superAdmin' to match existing code
-  AGENT = 'agent',
-  CLIENT = 'client'
-}
+import { UserRole } from "../common";
 
 export interface User {
   id: string;
   email: string;
   name: string;
+  avatar_url?: string;
   role: UserRole;
-  company_id: string;
-  companyId?: string; // Alias for company_id to maintain compatibility
-  avatar?: string;
+  company_id?: string;
+  companyId?: string;
 }
 
-export interface UserProfile {
+export interface Invitation {
   id: string;
   email: string;
-  name: string;
   role: UserRole;
-  company_id: string;
-  avatar_url?: string;
+  token: string;
+  expires_at: string;
+  status: "pending" | "accepted" | "expired";
+  company_id: string | null;
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface CustomPrivilege {
-  id: string;
-  user_id: string;
-  privilege: string;
-  granted_at: string;
-  granted_by: string;
-  expires_at?: string | null;
-  context?: string;
+export interface CreateInvitationRequest {
+  email: string;
+  role: UserRole;
+  company_id?: string;
+  expiry_days?: number;
 }
-
-// Export the UserRole for use in other modules
-export default UserRole;

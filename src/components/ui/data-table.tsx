@@ -1,5 +1,16 @@
 
-import React, { useState } from "react";
+import React from "react";
+import {
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+  getSortedRowModel,
+  getFilteredRowModel,
+  SortingState,
+  ColumnDef,
+  ColumnFiltersState,
+} from "@tanstack/react-table";
 import {
   Table,
   TableBody,
@@ -8,181 +19,151 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import Pagination from "@/components/ui/pagination";
+import TableSkeletonLoader from "@/components/common/TableSkeletonLoader";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Loader2, Search, AlertCircle } from "lucide-react";
-import { PaginationController } from "@/components/ui/pagination";
 
-export interface Column<T> {
-  accessorKey: string;
-  header: string;
-  cell?: (row: T) => React.ReactNode;
-  className?: string;
-}
-
-export interface DataTableProps<T> {
-  columns: Column<T>[];
-  data: T[];
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
   isLoading?: boolean;
+  pagination?: {
+    pageSize?: number;
+    pageIndex?: number;
+    onPageChange?: (page: number) => void;
+    onPageSizeChange?: (pageSize: number) => void;
+    pageSizeOptions?: number[];
+    totalCount?: number;
+    totalPages?: number;
+  };
+  keyField: string; // Required field for key identification
   emptyState?: {
     title: string;
     description: string;
-    action?: React.ReactNode;
   };
-  keyField: string;
-  pagination?: {
-    currentPage: number;
-    totalPages: number;
-    itemsPerPage: number;
-    itemsCount: number;
-    onPageChange: (page: number) => void;
-    onPageSizeChange?: (size: number) => void;
-    pageSizeOptions?: number[];
-  };
-  searchable?: boolean;
-  searchPlaceholder?: string;
-  onSearch?: (term: string) => void;
-  searchTerm?: string;
+  onRowClick?: (row: TData) => void;
+  sortable?: boolean;
+  rowClassName?: (row: TData) => string;
 }
 
-function DataTable<T>({
+export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading = false,
-  emptyState,
-  keyField,
   pagination,
-  searchable = false,
-  searchPlaceholder,
-  onSearch,
-  searchTerm: externalSearchTerm,
-}: DataTableProps<T>) {
+  keyField,
+  emptyState,
+  onRowClick,
+  sortable = false,
+  rowClassName,
+}: DataTableProps<TData, TValue>) {
   const { t } = useLanguage();
-  const [internalSearchTerm, setInternalSearchTerm] = useState<string>("");
-  
-  // Determine if we're using controlled or uncontrolled search
-  const isControlledSearch = externalSearchTerm !== undefined && onSearch;
-  const searchTerm = isControlledSearch ? externalSearchTerm : internalSearchTerm;
-  
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    
-    if (isControlledSearch && onSearch) {
-      onSearch(value);
-    } else {
-      setInternalSearchTerm(value);
-    }
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setColumnFilters,
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+      pagination: pagination
+        ? {
+            pageIndex: pagination.pageIndex || 0,
+            pageSize: pagination.pageSize || 10,
+          }
+        : undefined,
+    },
+    enableSorting: sortable,
+    manualPagination: !!pagination,
+  });
+
+  // Handle empty or loading state
+  if (isLoading) {
+    return <TableSkeletonLoader columns={columns.length} />;
+  }
+
+  if (!isLoading && data.length === 0 && emptyState) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <h3 className="text-lg font-medium">{emptyState.title}</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          {emptyState.description}
+        </p>
+      </div>
+    );
+  }
+
+  const getRowKey = (row: TData) => {
+    // @ts-ignore - We know the keyField exists on TData
+    return row[keyField] || `row-${Math.random()}`;
   };
-  
-  // Simple internal filtering for uncontrolled mode
-  const filteredData = !isControlledSearch && searchTerm
-    ? data.filter((item: any) => 
-        Object.values(item).some(
-          (val) => 
-            val && 
-            typeof val === "string" && 
-            val.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      )
-    : data;
-  
-  // Use filteredData for uncontrolled search, or data for controlled search
-  const displayData = isControlledSearch ? data : filteredData;
-  
-  // Determine if we should show empty state
-  const showEmptyState = !isLoading && displayData.length === 0;
-  
-  // Access key function to get the unique key from each row
-  const getRowKey = (row: any) => row[keyField] || JSON.stringify(row);
-  
+
   return (
     <div className="space-y-4">
-      {searchable && (
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={searchPlaceholder || t("search")}
-            className="pl-8"
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-        </div>
-      )}
-      
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead key={column.accessorKey} className={column.className}>
-                  {column.header}
-                </TableHead>
-              ))}
-            </TableRow>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  <div className="flex justify-center items-center h-full">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                </TableCell>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={getRowKey(row.original)}
+                onClick={() => onRowClick && onRowClick(row.original)}
+                className={cn(
+                  onRowClick && "cursor-pointer hover:bg-muted",
+                  rowClassName && rowClassName(row.original)
+                )}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
-            ) : showEmptyState ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  <div className="flex flex-col items-center justify-center">
-                    <AlertCircle className="h-10 w-10 text-muted-foreground mb-2" />
-                    <h3 className="text-lg font-medium">
-                      {emptyState?.title || t("noData")}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {emptyState?.description || t("noDataDescription")}
-                    </p>
-                    {emptyState?.action && (
-                      <div className="mt-4">{emptyState.action}</div>
-                    )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              displayData.map((row: any) => (
-                <TableRow key={getRowKey(row)}>
-                  {columns.map((column) => (
-                    <TableCell key={`${getRowKey(row)}-${column.accessorKey}`}>
-                      {column.cell
-                        ? column.cell(row)
-                        : row[column.accessorKey] || "-"}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>
-      
-      {pagination && displayData.length > 0 && (
-        <PaginationController
-          currentPage={pagination.currentPage}
+
+      {pagination && pagination.totalPages && pagination.totalPages > 1 && (
+        <Pagination
           totalPages={pagination.totalPages}
-          onPageChange={pagination.onPageChange}
-          itemsPerPage={pagination.itemsPerPage}
-          itemsCount={pagination.itemsCount}
-          onPageSizeChange={pagination.onPageSizeChange}
-          pageSizeOptions={pagination.pageSizeOptions}
+          currentPage={(pagination.pageIndex || 0) + 1}
+          onPageChange={(page) =>
+            pagination.onPageChange && pagination.onPageChange(page - 1)
+          }
+          itemsCount={pagination.totalCount}
+          itemsPerPage={pagination.pageSize || 10}
         />
       )}
     </div>
   );
+}
+
+// Helper function for conditional class names
+function cn(...classes: (string | boolean | undefined)[]) {
+  return classes.filter(Boolean).join(" ");
 }
 
 export default DataTable;

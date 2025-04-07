@@ -6,8 +6,8 @@ import { InvoiceTemplateCard } from "./InvoiceTemplateCard";
 import { EmptyTemplatesList } from "./EmptyTemplatesList";
 
 interface TemplateListProps {
-  templates: InvoiceTemplateSettings[];
-  onEdit: (template: InvoiceTemplateSettings) => void;
+  templates: (InvoiceTemplateSettings & { id: string; is_default: boolean })[];
+  onEdit: (template: InvoiceTemplateSettings & { id: string; is_default: boolean }) => void;
   onDelete: (templateId: string) => void;
   onSetDefault: (templateId: string) => void;
   onAddTemplate: () => void;

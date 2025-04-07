@@ -1,114 +1,53 @@
 
-import { WorkflowStatus } from "./workflow";
-
-export enum PolicyStatus {
-  ACTIVE = 'active',
-  EXPIRED = 'expired',
-  PENDING = 'pending',
-  CANCELLED = 'cancelled',
-  RENEWED = 'renewed'
+export enum WorkflowStatus {
+  DRAFT = "draft",
+  PENDING_REVIEW = "pending_review",
+  IN_REVIEW = "in_review",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  FINALIZED = "finalized"
 }
 
-// Re-export WorkflowStatus from workflow.ts
-export { WorkflowStatus } from "./workflow";
-
-export interface Policy {
-  id: string;
-  policy_number: string;
-  policy_type: string;
-  start_date: string;
-  expiry_date: string;
-  policyholder_name: string;
-  insurer_name: string;
-  insurer_id?: string;
-  client_id?: string;
-  client_name?: string;
-  premium: number;
-  currency: string;
-  payment_frequency?: string;
-  commission_type?: string;
-  commission_percentage?: number;
-  commission_amount?: number;
-  product_id?: string;
-  product_name?: string;
-  product_code?: string;
-  insured_id?: string;
-  insured_name?: string;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  assigned_to?: string;
-  company_id: string;
-  status: PolicyStatus | string;
-  workflow_status: WorkflowStatus | string;
-  notes?: string;
-}
-
-export interface PolicyAddendum {
-  id: string;
-  addendum_number: string;
-  effective_date: string;
-  description: string;
-  premium_adjustment?: number;
-  lien_status: boolean; // Make this required to match expectations
-  status: string;
-  workflow_status: string;
-  policy_id: string;
-  created_by?: string;
-  company_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UnlinkedPayment {
-  id: string;
-  amount: number;
-  payment_date: string;
-  reference?: string;
-  status: string;
-  payer_name?: string;
-  currency: string;
-  company_id: string;
-  linked_at?: string;
-  linked_by?: string;
-  linked_policy_id?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type UnlinkedPaymentType = UnlinkedPayment;
+export type PolicyWorkflowStatus = WorkflowStatus;
 
 export interface InvalidPolicy {
-  policy: Partial<Policy>; // Changed to required property
-  errors: string[];
+  row?: number;
+  fields: Record<string, string[]>;
+  data?: any;
 }
 
 export interface ValidationErrors {
   [key: string]: string[];
 }
 
-export interface PolicyFilterParams {
-  searchTerm?: string;
-  status?: string;
-  type?: string;
-  dateRange?: {
-    from?: Date;
-    to?: Date;
-  };
-  page: number;
-  pageSize: number;
-  // Add the properties used in usePoliciesWorkflow.ts
-  workflowStatus?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  clientId?: string;
-  insurerId?: string;
-  productId?: string;
-  assignedTo?: string;
-  startDateFrom?: string;
-  startDateTo?: string;
-  expiryDateFrom?: string;
-  expiryDateTo?: string;
+export interface Policy {
+  id: string;
+  policy_number: string;
+  policy_type: string;
+  policy_type_id?: string;
+  start_date: string;
+  expiry_date: string;
+  policyholder_name: string;
+  insured_name?: string;
+  client_id?: string;
+  insured_id?: string;
+  insurer_id?: string;
+  insurer_name: string;
+  product_id?: string;
+  product_name?: string;
+  product_code?: string;
+  premium: number;
+  currency: string;
+  payment_frequency?: string;
+  commission_type?: string;
+  commission_percentage?: number;
+  commission_amount?: number;
+  assigned_to?: string;
+  created_by?: string;
+  status: string;
+  workflow_status: string;
+  notes?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
 }

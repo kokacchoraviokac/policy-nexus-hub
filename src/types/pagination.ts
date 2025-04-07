@@ -33,4 +33,15 @@ export interface FilterBarProps {
   onSearchChange: React.Dispatch<React.SetStateAction<string>>;
   searchPlaceholder: string;
   resetFilters?: () => void;
+  children?: React.ReactNode;
+}
+
+export interface PaginationControllerProps {
+  currentPage: number;
+  totalPages: number;
+  itemsPerPage: number;
+  itemsCount: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (size: number) => void;
+  pageSizeOptions?: number[];
 }

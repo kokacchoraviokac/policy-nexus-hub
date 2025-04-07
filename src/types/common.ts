@@ -18,7 +18,8 @@ export enum DocumentCategory {
   CONTRACT = "contract",
   NOTIFICATION = "notification",
   LIEN = "lien",
-  OTHER = "other"
+  OTHER = "other",
+  PROPOSAL = "proposal"
 }
 
 export enum ApprovalStatus {

@@ -37,6 +37,9 @@ export interface Document {
   agent_id?: string;
   invoice_id?: string;
   addendum_id?: string;
+  approval_notes?: string;
+  approved_at?: string;
+  approved_by?: string;
 }
 
 export interface PolicyDocument extends Document {
@@ -106,4 +109,66 @@ export interface UpdateApprovalParams {
   entityType: EntityType;
   status: DocumentApprovalStatus;
   notes?: string;
+}
+
+export interface DocumentSearchParams {
+  entityType?: string;
+  entityId?: string;
+  category?: string;
+  searchTerm?: string;
+  status?: string;
+  uploadedBy?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface UseDocumentSearchProps {
+  defaultParams?: DocumentSearchParams;
+  autoSearch?: boolean;
+}
+
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  isLoading: boolean;
+  error: Error | null;
+  searchParams: DocumentSearchParams;
+  setSearchParams: (params: DocumentSearchParams) => void;
+  search: () => Promise<void>;
+  resetSearch: () => void;
+}
+
+export interface ApprovalInfo {
+  status: DocumentApprovalStatus;
+  approvedBy?: string;
+  approvedAt?: string;
+  notes?: string;
+}
+
+export interface DocumentUploadDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  entityType: EntityType;
+  entityId: string;
+  onUploadComplete?: () => void;
+  defaultCategory?: string;
+  salesStage?: string;
+  selectedDocument?: Document;
+  embedMode?: boolean;
+  onFileSelected?: (file: File | null) => void;
+}
+
+export interface DocumentListProps {
+  entityType: EntityType;
+  entityId: string;
+  onUploadClick?: () => void;
+  showUploadButton?: boolean;
+  showApproval?: boolean;
+  filterCategory?: string;
+  documents?: Document[];
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: Error;
+  onDelete?: (documentId: string | Document) => void;
+  isDeleting?: boolean;
+  onUploadVersion?: (document: Document) => void;
 }
