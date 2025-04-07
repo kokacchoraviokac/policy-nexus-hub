@@ -33,6 +33,8 @@ export enum ApprovalStatus {
   NEEDS_REVIEW = "needs_review"
 }
 
+// Rather than using string literals in a union type, we define all valid table names
+// This makes it easier to add new tables and ensures consistency
 export type RelationName =
   | "policy_documents"
   | "claim_documents"
@@ -69,7 +71,7 @@ export interface ServiceResponse<T = any> {
   message?: string;
 }
 
-// Add UserRole enum for consistency
+// Extend UserRole enum for consistency
 export enum UserRole {
   SUPER_ADMIN = "super_admin",
   ADMIN = "admin",
@@ -107,3 +109,9 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+// Type for roles in string format - useful when dealing with API responses
+export type UserRoleString = 'super_admin' | 'admin' | 'employee' | 'agent' | 'client';
+
+// Type for entity types in string format - useful when dealing with API responses
+export type EntityTypeString = 'policy' | 'claim' | 'sales_process' | 'sale' | 'client' | 'insurer' | 'agent' | 'addendum' | 'invoice';

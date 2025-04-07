@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +47,7 @@ const PolicyEditForm: React.FC<PolicyEditFormProps> = ({
       
       // Log the activity
       logActivity({
-        entity_type: "policy",
+        entity_type: EntityType.POLICY,
         entity_id: policy.id,
         action: "update",
         details: {

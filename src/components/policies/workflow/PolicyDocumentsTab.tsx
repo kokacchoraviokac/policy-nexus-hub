@@ -48,11 +48,11 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
     
     // Log the activity
     logActivity({
-      entity_type: "policy",
+      entity_type: EntityType.POLICY,
       entity_id: policyId,
       action: "update",
       details: {
-        status: isComplete ? "complete" : "incomplete",
+        status: checked ? "complete" : "incomplete",
         timestamp: new Date().toISOString()
       }
     });

@@ -1,3 +1,4 @@
+
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, isValid, parseISO } from "date-fns";
@@ -38,4 +39,31 @@ export function formatCurrency(amount: number, currency: string = "EUR"): string
     style: "currency",
     currency: currency,
   }).format(amount);
+}
+
+/**
+ * Type guard to check if a value can be used as an EntityType
+ */
+export function isValidEntityType(value: string): boolean {
+  return [
+    "policy",
+    "claim",
+    "sales_process",
+    "sale",
+    "client",
+    "insurer",
+    "agent",
+    "addendum",
+    "invoice"
+  ].includes(value);
+}
+
+/**
+ * Helper function to safely convert a string to EntityType
+ */
+export function toEntityType(value: string): EntityType {
+  if (isValidEntityType(value)) {
+    return value as EntityType;
+  }
+  throw new Error(`Invalid entity type: ${value}`);
 }

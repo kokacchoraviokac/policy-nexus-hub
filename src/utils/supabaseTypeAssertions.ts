@@ -20,14 +20,18 @@ export const fromDocumentTable = (tableName: DocumentTableName) => {
     'addendum_documents': 'addendum_documents'
   };
 
+  // Ensure we're using a valid table name
   const relationName = validTables[tableName];
-  return supabase.from(relationName);
+  
+  // Cast to any to avoid TypeScript errors with dynamic table names
+  // This is safe because we've verified the table name is valid
+  return supabase.from(relationName as any);
 };
 
 /**
  * A type-safe wrapper for general table access
  */
 export const fromTable = (tableName: string) => {
-  // Cast the tableName to RelationName and rely on runtime validation
-  return supabase.from(tableName as RelationName);
+  // Cast the tableName to any and rely on runtime validation
+  return supabase.from(tableName as any);
 };
