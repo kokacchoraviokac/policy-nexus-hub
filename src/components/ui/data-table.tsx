@@ -1,11 +1,13 @@
 
-import React, { useState } from "react";
+"use client";
+
+import React from "react";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  useReactTable,
   getPaginationRowModel,
+  useReactTable,
   SortingState,
   getSortedRowModel,
   ColumnFiltersState,
@@ -20,54 +22,45 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationController } from "./pagination-controller";
-import { Input } from "./input";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FilterX } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  searchKey?: string;
-  searchPlaceholder?: string;
+  isLoading?: boolean;
+  searchable?: boolean;
+  searchColumn?: string;
   pagination?: boolean;
   pageSize?: number;
-  pageSizeOptions?: number[];
-  showPageSizeOptions?: boolean;
-  totalCount?: number;
-  serverPagination?: boolean;
-  currentPage?: number;
-  totalPages?: number;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
+  emptyState?: {
+    title: string;
+    description: string;
+    action: React.ReactNode | null;
+  };
 }
+
+export type Column<TData, TValue = unknown> = ColumnDef<TData, TValue>;
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  searchKey,
-  searchPlaceholder,
+  isLoading = false,
+  searchable = false,
+  searchColumn,
   pagination = true,
   pageSize = 10,
-  pageSizeOptions = [10, 25, 50, 100],
-  showPageSizeOptions = true,
-  totalCount,
-  serverPagination = false,
-  currentPage = 1,
-  totalPages = 1,
-  onPageChange,
-  onPageSizeChange,
+  emptyState,
 }: DataTableProps<TData, TValue>) {
-  const { t } = useLanguage();
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [localPageSize, setLocalPageSize] = useState(pageSize);
-  
-  // Create the table instance
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: serverPagination ? undefined : getPaginationRowModel(),
+    getPaginationRowModel: pagination ? getPaginationRowModel() : undefined,
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
@@ -75,53 +68,52 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
-      // Only set pagination for client-side pagination
-      ...(serverPagination ? {} : { pagination: { pageIndex: currentPage - 1, pageSize: localPageSize } }),
     },
-    // Set manual pagination if server pagination is enabled
-    manualPagination: serverPagination,
-    // Provide the pageCount for server pagination
-    pageCount: serverPagination ? totalPages : undefined,
+    initialState: {
+      pagination: {
+        pageSize: pageSize,
+      },
+    },
   });
-  
-  // Handle local page size change
-  const handleLocalPageSizeChange = (size: number) => {
-    setLocalPageSize(size);
-    table.setPageSize(size);
-    if (onPageSizeChange) {
-      onPageSizeChange(size);
-    }
-  };
-  
-  // Handle page change
-  const handlePageChange = (page: number) => {
-    if (serverPagination && onPageChange) {
-      onPageChange(page);
-    } else {
-      table.setPageIndex(page - 1);
-    }
-  };
-  
-  const getItemsCount = () => {
-    if (serverPagination) {
-      return data.length;
-    } else {
-      return table.getRowModel().rows.length;
-    }
-  };
-  
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-64 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (data.length === 0 && emptyState) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <h3 className="text-lg font-medium">{emptyState.title}</h3>
+        <p className="text-muted-foreground mt-1">{emptyState.description}</p>
+        {emptyState.action && <div className="mt-4">{emptyState.action}</div>}
+      </div>
+    );
+  }
+
   return (
     <div>
-      {searchKey && (
+      {searchable && searchColumn && (
         <div className="flex items-center py-4">
           <Input
-            placeholder={searchPlaceholder || t("search")}
-            value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(searchKey)?.setFilterValue(event.target.value)
-            }
+            placeholder="Search..."
+            value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
+            onChange={(event) => table.getColumn(searchColumn)?.setFilterValue(event.target.value)}
             className="max-w-sm"
           />
+          {table.getColumn(searchColumn)?.getFilterValue() && (
+            <Button
+              variant="ghost"
+              onClick={() => table.getColumn(searchColumn)?.setFilterValue("")}
+              className="ml-2"
+            >
+              <FilterX className="h-4 w-4 mr-2" />
+              Clear
+            </Button>
+          )}
         </div>
       )}
       <div className="rounded-md border">
@@ -153,41 +145,44 @@ export function DataTable<TData, TValue>({
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  {t("noResults")}
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  No results.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      {pagination && (
-        <div className="py-4">
-          <PaginationController
-            currentPage={serverPagination ? currentPage : table.getState().pagination.pageIndex + 1}
-            totalPages={serverPagination ? totalPages : table.getPageCount()}
-            itemsPerPage={serverPagination ? localPageSize : table.getState().pagination.pageSize}
-            onPageChange={handlePageChange}
-            onPageSizeChange={showPageSizeOptions ? handleLocalPageSizeChange : undefined}
-            pageSizeOptions={pageSizeOptions}
-            totalItems={totalCount || table.getFilteredRowModel().rows.length}
-            itemsCount={getItemsCount()}
-          />
+      {pagination && data.length > 0 && (
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>
   );
 }
+
+// Default export for backward compatibility 
+export default DataTable;

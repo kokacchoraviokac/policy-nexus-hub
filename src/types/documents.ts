@@ -23,14 +23,14 @@ export interface Document {
   document_name: string;
   document_type: string;
   file_path: string;
-  entity_type?: string;
+  entity_type?: EntityType | string;
   entity_id: string;
   uploaded_by: string;
   uploaded_by_name?: string;
   company_id: string;
   created_at: string;
   updated_at?: string;
-  category?: string;
+  category?: DocumentCategory | string;
   mime_type?: string;
   description?: string;
   tags?: string[];
@@ -40,6 +40,9 @@ export interface Document {
   approval_status?: DocumentApprovalStatus;
   approval_history?: DocumentApprovalHistoryItem[];
   comments?: DocumentComment[];
+  approved_by?: string;
+  approved_at?: string;
+  approval_notes?: string;
 }
 
 export interface DocumentComment {
@@ -79,9 +82,9 @@ export interface DocumentUploadOptions {
   file: File;
   documentName: string;
   documentType: string;
-  category?: DocumentCategory;
+  category?: DocumentCategory | string;
   entityId: string;
-  entityType: EntityType;
+  entityType: EntityType | string;
   description?: string;
   tags?: string[];
   originalDocumentId?: string;
@@ -92,10 +95,10 @@ export interface DocumentUploadOptions {
 export interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  entityType: EntityType;
+  entityType: EntityType | string;
   entityId: string;
   onUploadComplete?: () => void;
-  defaultCategory?: DocumentCategory;
+  defaultCategory?: DocumentCategory | string;
   salesStage?: string;
   selectedDocument?: Document;
   embedMode?: boolean;
@@ -103,7 +106,7 @@ export interface DocumentUploadDialogProps {
 }
 
 export interface DocumentListProps {
-  entityType: EntityType;
+  entityType: EntityType | string;
   entityId: string;
   documents?: Document[];
   isLoading?: boolean;
@@ -113,4 +116,54 @@ export interface DocumentListProps {
   isDeleting?: boolean;
   showUploadButton?: boolean;
   onUploadVersion?: (document: Document) => void;
+  showApproval?: boolean;
+  filterCategory?: string;
+}
+
+export interface DocumentAnalysisPanelProps {
+  document: Document;
+  isAnalyzing?: boolean;
+  analysisError?: string | null;
+  onAnalyze?: () => void;
+  analysisResult?: any;
+}
+
+export interface ApprovalInfo {
+  status: DocumentApprovalStatus;
+  approvedBy?: string;
+  approvedByName?: string;
+  approvedAt?: string;
+  notes?: string;
+}
+
+export interface DocumentSearchParams {
+  keyword?: string;
+  entityType?: EntityType | string;
+  documentType?: string;
+  category?: DocumentCategory | string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface UseDocumentSearchProps {
+  initialParams?: DocumentSearchParams;
+}
+
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  isLoading: boolean;
+  error: Error | null;
+  searchParams: DocumentSearchParams;
+  setSearchParams: (params: DocumentSearchParams) => void;
+  search: () => void;
+  reset: () => void;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    itemsPerPage: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+  };
 }

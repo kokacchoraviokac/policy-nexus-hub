@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentUploadOptions, EntityType } from "@/types/documents";
+import { DocumentUploadOptions } from "@/types/documents";
+import { EntityType } from "@/types/common";
 import { getDocumentTableName, getEntityIdColumn } from "@/utils/documentUploadUtils";
 import { fromDocumentTable } from "@/utils/supabaseTypeAssertions";
 
@@ -45,10 +46,10 @@ export const useUploadDocument = () => {
       }
       
       // Get the document table name 
-      const tableName = getDocumentTableName(entityType);
+      const tableName = getDocumentTableName(entityType as EntityType);
       
       // Get the entity ID column name 
-      const entityIdColumn = getEntityIdColumn(entityType);
+      const entityIdColumn = getEntityIdColumn(entityType as EntityType);
       
       // Create document record
       let documentRecord: any = {
@@ -77,7 +78,7 @@ export const useUploadDocument = () => {
       }
       
       // Add sales stage if provided
-      if (salesStage && entityType === EntityType.SALES_PROCESS) {
+      if (salesStage && (entityType === EntityType.SALES_PROCESS || entityType === EntityType.SALE)) {
         documentRecord.step = salesStage;
       }
       

@@ -1,212 +1,188 @@
 
-import React from 'react';
-import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-export interface PaginationProps extends React.HTMLAttributes<HTMLElement> {
+export interface PaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  className?: string;
+  itemsPerPage?: number;
+  itemsCount?: number;
+  showPageNumbers?: boolean;
+  showEllipsis?: boolean;
   siblingCount?: number;
 }
 
-export interface PaginationItemProps extends React.HTMLAttributes<HTMLAnchorElement> {
-  isActive?: boolean;
-  isDisabled?: boolean;
-  className?: string;
-  onClick?: (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => void;
-}
-
-export const PaginationItem: React.FC<PaginationItemProps> = ({
-  className,
-  isActive,
-  isDisabled,
-  children,
-  ...props
-}) => {
-  return (
-    <a
-      className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-md border text-sm transition-colors",
-        isActive
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        isDisabled && "pointer-events-none opacity-50",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </a>
-  );
-};
-
-const Pagination: React.FC<PaginationProps> = ({
+export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
-  siblingCount = 1,
   className,
-  ...props
-}) => {
-  // Generate page numbers to display
-  const getPageNumbers = () => {
-    const totalNumbers = siblingCount * 2 + 3; // siblings + current + first + last
-    const totalButtons = totalNumbers + 2; // +2 for the ellipses
-
-    if (totalPages <= totalButtons) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
+  showPageNumbers = true,
+  showEllipsis = true,
+  siblingCount = 1,
+  itemsPerPage,
+  itemsCount,
+}: PaginationProps) {
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
     }
-
-    const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-    const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-
-    const showLeftDots = leftSiblingIndex > 2;
-    const showRightDots = rightSiblingIndex < totalPages - 1;
-
-    if (!showLeftDots && showRightDots) {
-      const leftItemCount = 3 + 2 * siblingCount;
-      return Array.from({ length: leftItemCount }, (_, i) => i + 1).concat(["ellipsis", totalPages]);
-    }
-
-    if (showLeftDots && !showRightDots) {
-      const rightItemCount = 3 + 2 * siblingCount;
-      return [1, "left-ellipsis"].concat(
-        Array.from(
-          { length: rightItemCount },
-          (_, i) => totalPages - rightItemCount + i + 1
-        )
-      );
-    }
-
-    if (showLeftDots && showRightDots) {
-      return [1, "left-ellipsis"]
-        .concat(
-          Array.from(
-            { length: rightSiblingIndex - leftSiblingIndex + 1 },
-            (_, i) => leftSiblingIndex + i
-          )
-        )
-        .concat(["right-ellipsis", totalPages]);
-    }
-
-    return [];
   };
 
-  const pages = getPageNumbers();
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+    }
+  };
 
-  if (totalPages <= 1) return null;
+  // Generate page numbers to display
+  const generatePageNumbers = () => {
+    const pageNumbers = [];
+
+    // Always include first page
+    pageNumbers.push(1);
+
+    const leftSibling = Math.max(2, currentPage - siblingCount);
+    const rightSibling = Math.min(totalPages - 1, currentPage + siblingCount);
+
+    // Add ellipsis if needed
+    if (leftSibling > 2 && showEllipsis) {
+      pageNumbers.push("ellipsis-left");
+    } else if (leftSibling === 2) {
+      pageNumbers.push(2);
+    }
+
+    // Add pages between left and right siblings
+    for (let i = leftSibling; i <= rightSibling; i++) {
+      if (i !== 1 && i !== totalPages) {
+        pageNumbers.push(i);
+      }
+    }
+
+    // Add ellipsis if needed
+    if (rightSibling < totalPages - 1 && showEllipsis) {
+      pageNumbers.push("ellipsis-right");
+    } else if (rightSibling === totalPages - 1) {
+      pageNumbers.push(totalPages - 1);
+    }
+
+    // Always include last page if there's more than one page
+    if (totalPages > 1) {
+      pageNumbers.push(totalPages);
+    }
+
+    return pageNumbers;
+  };
+
+  if (totalPages <= 1) {
+    return null;
+  }
 
   return (
     <nav
-      className={cn("flex items-center justify-center space-x-2", className)}
-      {...props}
+      className={cn(
+        "flex items-center justify-between px-2 sm:px-0",
+        className
+      )}
+      aria-label="Pagination"
     >
-      <PaginationItem
-        onClick={(e) => {
-          e.preventDefault();
-          if (currentPage > 1) onPageChange(currentPage - 1);
-        }}
-        isDisabled={currentPage === 1}
-        aria-label="Go to previous page"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </PaginationItem>
-
-      {pages.map((page, i) => {
-        if (page === "ellipsis" || page === "left-ellipsis" || page === "right-ellipsis") {
-          return (
-            <PaginationItem
-              key={`ellipsis-${i}`}
-              isDisabled
-              className="h-9 w-9"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </PaginationItem>
-          );
-        }
-
-        return (
-          <PaginationItem
-            key={`page-${page}`}
-            isActive={page === currentPage}
-            onClick={(e) => {
-              e.preventDefault();
-              onPageChange(page as number);
-            }}
-          >
-            {page}
-          </PaginationItem>
-        );
-      })}
-
-      <PaginationItem
-        onClick={(e) => {
-          e.preventDefault();
-          if (currentPage < totalPages) onPageChange(currentPage + 1);
-        }}
-        isDisabled={currentPage === totalPages}
-        aria-label="Go to next page"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </PaginationItem>
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        {itemsCount && itemsPerPage && (
+          <div className="text-sm text-muted-foreground">
+            Showing <span className="font-medium">{Math.min((currentPage - 1) * (itemsPerPage || 10) + 1, itemsCount)}</span> to{" "}
+            <span className="font-medium">{Math.min(currentPage * (itemsPerPage || 10), itemsCount)}</span> of{" "}
+            <span className="font-medium">{itemsCount}</span> results
+          </div>
+        )}
+        <div>
+          <ul className="inline-flex -space-x-px">
+            <li>
+              <Button
+                onClick={handlePrevious}
+                disabled={currentPage === 1}
+                variant="outline"
+                size="icon"
+                className="rounded-r-none"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </li>
+            {showPageNumbers &&
+              generatePageNumbers().map((pageNumber, index) => {
+                if (pageNumber === "ellipsis-left" || pageNumber === "ellipsis-right") {
+                  return (
+                    <li key={`ellipsis-${index}`}>
+                      <span className="flex items-center justify-center px-3 h-9 text-sm border border-input bg-background text-muted-foreground">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </span>
+                    </li>
+                  );
+                }
+                
+                const isCurrentPage = pageNumber === currentPage;
+                
+                return (
+                  <li key={`page-${pageNumber}`}>
+                    <Button
+                      onClick={() => onPageChange(pageNumber as number)}
+                      variant={isCurrentPage ? "default" : "outline"}
+                      size="icon"
+                      className={cn(
+                        "rounded-none px-3 w-9",
+                        isCurrentPage ? "z-10" : ""
+                      )}
+                      aria-current={isCurrentPage ? "page" : undefined}
+                    >
+                      {pageNumber}
+                    </Button>
+                  </li>
+                );
+              })}
+            <li>
+              <Button
+                onClick={handleNext}
+                disabled={currentPage === totalPages}
+                variant="outline"
+                size="icon"
+                className="rounded-l-none"
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div className="flex sm:hidden w-full justify-between">
+        <Button
+          onClick={handlePrevious}
+          disabled={currentPage === 1}
+          variant="outline"
+          size="sm"
+          className="px-2"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Previous
+        </Button>
+        <span className="flex items-center text-sm text-muted-foreground">
+          Page {currentPage} of {totalPages}
+        </span>
+        <Button
+          onClick={handleNext}
+          disabled={currentPage === totalPages}
+          variant="outline"
+          size="sm"
+          className="px-2"
+        >
+          Next
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
     </nav>
   );
-};
-
-export { Pagination };
-
-// Also create a PaginationController component for standardizing pagination
-export interface PaginationControllerProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  itemsPerPage?: number;
-  totalItems?: number;
-  onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: number[];
 }
-
-export const PaginationController: React.FC<PaginationControllerProps> = ({
-  currentPage,
-  totalPages,
-  onPageChange,
-  itemsPerPage,
-  totalItems,
-  onPageSizeChange,
-  pageSizeOptions = [10, 25, 50, 100],
-}) => {
-  return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
-      {totalItems !== undefined && (
-        <div className="text-sm text-muted-foreground">
-          Showing {(currentPage - 1) * (itemsPerPage || 10) + 1} to{" "}
-          {Math.min(currentPage * (itemsPerPage || 10), totalItems)} of {totalItems} results
-        </div>
-      )}
-      
-      <div className="flex items-center gap-2">
-        {onPageSizeChange && itemsPerPage && (
-          <select
-            value={itemsPerPage}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-xs"
-          >
-            {pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        )}
-        
-        <Pagination 
-          currentPage={currentPage} 
-          totalPages={totalPages} 
-          onPageChange={onPageChange} 
-        />
-      </div>
-    </div>
-  );
-};

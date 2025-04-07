@@ -7,10 +7,10 @@ import { fromDocumentTable } from '@/utils/supabaseTypeAssertions';
 import { getDocumentTableName } from '@/utils/documentUploadUtils';
 
 interface UseDocumentsReturn {
-  documents: PolicyDocument[];
+  documents: Document[];
   isLoading: boolean;
   isError: boolean;
-  error: Error;
+  error: Error | null;
   refetch: (options?: any) => Promise<any>;
   documentsCount: number;
   deleteDocument: (documentId: string) => void;
@@ -19,7 +19,7 @@ interface UseDocumentsReturn {
   isRefetching?: boolean;
 }
 
-export function useDocuments(entityType: EntityType, entityId: string): UseDocumentsReturn {
+export function useDocuments(entityType: EntityType | string, entityId: string): UseDocumentsReturn {
   const queryClient = useQueryClient();
   const tableName = getDocumentTableName(entityType);
   
@@ -78,12 +78,12 @@ export function useDocuments(entityType: EntityType, entityId: string): UseDocum
         }
         
         // Transform the data to include full URLs
-        return (data || []).map(doc => ({
+        return (data || []).map((doc: any) => ({
           ...doc,
           file_path: doc.file_path.startsWith('http') 
             ? doc.file_path 
             : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/documents/${doc.file_path}`
-        })) as PolicyDocument[];
+        })) as Document[];
       } catch (error) {
         console.error('Error fetching documents:', error);
         throw error;
@@ -115,7 +115,7 @@ export function useDocuments(entityType: EntityType, entityId: string): UseDocum
   };
 
   return {
-    documents: documents as PolicyDocument[],
+    documents: documents as Document[],
     isLoading,
     isError,
     error: error as Error,

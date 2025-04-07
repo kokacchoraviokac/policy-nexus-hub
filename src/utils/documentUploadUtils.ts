@@ -1,109 +1,41 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { DocumentTableName, DocumentUploadOptions } from "@/types/documents";
-import { EntityType, DocumentCategory, RelationName } from "@/types/common";
+import { EntityType } from "@/types/common";
+import { DocumentTableName } from "@/types/documents";
 
 /**
- * Get the document table name based on entity type
- * @param entityType The type of entity
- * @returns The document table name
+ * Maps entity types to their corresponding document table names
  */
-export const getDocumentTableName = (entityType: EntityType): DocumentTableName => {
-  switch (entityType) {
-    case EntityType.POLICY:
-      return 'policy_documents';
-    case EntityType.CLAIM:
-      return 'claim_documents';
-    case EntityType.SALES_PROCESS:
-    case EntityType.SALE:
-      return 'sales_documents';
-    case EntityType.CLIENT:
-      return 'client_documents';
-    case EntityType.INSURER:
-      return 'insurer_documents';
-    case EntityType.AGENT:
-      return 'agent_documents';
-    case EntityType.ADDENDUM:
-      return 'addendum_documents';
-    case EntityType.INVOICE:
-      return 'invoice_documents';
-    default:
-      console.warn(`No document table found for entity type: ${entityType}. Defaulting to policy_documents.`);
-      return 'policy_documents';
-  }
-};
+export function getDocumentTableName(entityType: EntityType | string): DocumentTableName {
+  const mapping: Record<string, DocumentTableName> = {
+    [EntityType.POLICY]: "policy_documents",
+    [EntityType.CLAIM]: "claim_documents",
+    [EntityType.SALES_PROCESS]: "sales_documents",
+    [EntityType.SALE]: "sales_documents", // Alias for sales_process
+    [EntityType.CLIENT]: "client_documents",
+    [EntityType.INSURER]: "insurer_documents",
+    [EntityType.AGENT]: "agent_documents",
+    [EntityType.INVOICE]: "invoice_documents",
+    [EntityType.ADDENDUM]: "addendum_documents",
+  };
+
+  return mapping[entityType] || "policy_documents";
+}
 
 /**
- * Get the entity ID column name based on entity type
- * @param entityType The type of entity
- * @returns The entity ID column name
+ * Maps entity types to their corresponding ID column names in document tables
  */
-export const getEntityIdColumn = (entityType: EntityType): string => {
-  switch (entityType) {
-    case EntityType.POLICY:
-      return 'policy_id';
-    case EntityType.CLAIM:
-      return 'claim_id';
-    case EntityType.SALES_PROCESS:
-    case EntityType.SALE:
-      return 'sales_process_id';
-    case EntityType.CLIENT:
-      return 'client_id';
-    case EntityType.INSURER:
-      return 'insurer_id';
-    case EntityType.AGENT:
-      return 'agent_id';
-    case EntityType.ADDENDUM:
-      return 'addendum_id';
-    case EntityType.INVOICE:
-      return 'invoice_id';
-    default:
-      console.warn(`No entity ID column found for entity type: ${entityType}. Defaulting to policy_id.`);
-      return 'policy_id';
-  }
-};
+export function getEntityIdColumn(entityType: EntityType | string): string {
+  const mapping: Record<string, string> = {
+    [EntityType.POLICY]: "policy_id",
+    [EntityType.CLAIM]: "claim_id",
+    [EntityType.SALES_PROCESS]: "sales_process_id",
+    [EntityType.SALE]: "sales_process_id", // Alias for sales_process
+    [EntityType.CLIENT]: "client_id",
+    [EntityType.INSURER]: "insurer_id",
+    [EntityType.AGENT]: "agent_id",
+    [EntityType.INVOICE]: "invoice_id",
+    [EntityType.ADDENDUM]: "addendum_id",
+  };
 
-/**
- * Convert a DocumentTableName to a Supabase table name for type safety
- */
-export const asTableName = (tableName: DocumentTableName): RelationName => {
-  return tableName as RelationName;
-};
-
-/**
- * Upload a document to storage and create a record in the database
- */
-export const uploadDocument = async (options: DocumentUploadOptions): Promise<{ success: boolean; documentId?: string; error?: string }> => {
-  const { file, documentName, documentType, category, entityId, entityType } = options;
-
-  try {
-    // Generate a unique filename
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `${entityType}/${entityId}/${fileName}`;
-
-    // Upload file to storage
-    const { data, error } = await supabase.storage
-      .from('documents')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (error) {
-      throw error;
-    }
-
-    // Get the document table name based on entity type
-    const tableName = getDocumentTableName(entityType);
-    
-    // For the sake of simplicity and to avoid deeper issues, create a mock document ID
-    // This is a temporary solution until we properly set up the database tables and RLS policies
-    const documentId = Math.random().toString(36).substring(2, 15);
-
-    return { success: true, documentId };
-  } catch (error: any) {
-    console.error('Error uploading document:', error);
-    return { success: false, error: error.message || 'Failed to upload document' };
-  }
-};
+  return mapping[entityType] || "entity_id";
+}

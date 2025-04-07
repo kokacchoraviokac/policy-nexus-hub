@@ -1,6 +1,6 @@
 
 import React from "react";
-import DataTable from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";

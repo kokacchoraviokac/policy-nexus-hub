@@ -23,15 +23,13 @@ export const fromDocumentTable = (tableName: DocumentTableName) => {
   // Ensure we're using a valid table name
   const relationName = validTables[tableName];
   
-  // Cast to any to avoid TypeScript errors with dynamic table names
-  // This is safe because we've verified the table name is valid
-  return supabase.from(relationName as any);
+  // This is now type safe since we've mapped to a valid relation name
+  return supabase.from(relationName);
 };
 
 /**
  * A type-safe wrapper for general table access
  */
-export const fromTable = (tableName: string) => {
-  // Cast the tableName to any and rely on runtime validation
-  return supabase.from(tableName as any);
+export const fromTable = (tableName: RelationName) => {
+  return supabase.from(tableName);
 };

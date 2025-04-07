@@ -2,6 +2,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, isValid, parseISO } from "date-fns";
+import { EntityType } from "@/types/common";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

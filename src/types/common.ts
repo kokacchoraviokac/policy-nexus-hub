@@ -23,7 +23,15 @@ export enum DocumentCategory {
   INVOICE = "invoice",
   MISCELLANEOUS = "miscellaneous",
   PROPOSAL = "proposal",
-  OTHER = "other"
+  OTHER = "other",
+  LIEN = "lien",
+  NOTIFICATION = "notification",
+  CORRESPONDENCE = "correspondence",
+  DISCOVERY = "discovery",
+  QUOTE = "quote",
+  CLOSEOUT = "closeout",
+  MEDICAL = "medical",
+  CLAIM_EVIDENCE = "claim_evidence"
 }
 
 export enum ApprovalStatus {
@@ -82,10 +90,12 @@ export enum UserRole {
 
 // DocumentComment interface for structured comments
 export interface DocumentComment {
+  id?: string;
+  document_id?: string;
   author: string;
+  user_id?: string;
   text: string;
   created_at: string;
-  user_id?: string;
 }
 
 // Financial transaction types
@@ -115,3 +125,24 @@ export type UserRoleString = 'super_admin' | 'admin' | 'employee' | 'agent' | 'c
 
 // Type for entity types in string format - useful when dealing with API responses
 export type EntityTypeString = 'policy' | 'claim' | 'sales_process' | 'sale' | 'client' | 'insurer' | 'agent' | 'addendum' | 'invoice';
+
+// Export string type equivalents of enum values for better interoperability
+export type DocumentCategoryString = 
+  | 'policy' 
+  | 'claim' 
+  | 'sales' 
+  | 'financial' 
+  | 'legal' 
+  | 'contract' 
+  | 'invoice' 
+  | 'miscellaneous' 
+  | 'proposal' 
+  | 'other'
+  | 'lien'
+  | 'notification'
+  | 'correspondence'
+  | 'discovery'
+  | 'quote'
+  | 'closeout'
+  | 'medical'
+  | 'claim_evidence';
