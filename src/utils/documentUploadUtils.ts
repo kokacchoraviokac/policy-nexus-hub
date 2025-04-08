@@ -3,7 +3,7 @@ import { EntityType } from "@/types/common";
 import { DocumentTableName } from "@/types/documents";
 
 /**
- * Get the appropriate document table name based on entity type
+ * Get the table name for documents based on entity type
  */
 export function getDocumentTableName(entityType: EntityType): DocumentTableName {
   switch (entityType) {
@@ -25,34 +25,69 @@ export function getDocumentTableName(entityType: EntityType): DocumentTableName 
     case EntityType.ADDENDUM:
       return "addendum_documents";
     default:
-      // Default to policy_documents as a fallback
-      console.warn(`No document table mapping for entity type: ${entityType}, using policy_documents as fallback`);
-      return "policy_documents";
+      throw new Error(`Unsupported entity type: ${entityType}`);
   }
 }
 
 /**
- * Get the appropriate entity ID field name based on the document table name
+ * Get the entity-specific ID column name
  */
-export function getEntityIdField(tableName: DocumentTableName): string {
-  switch (tableName) {
-    case "policy_documents":
+export function getEntityIdColumn(entityType: EntityType): string {
+  switch (entityType) {
+    case EntityType.POLICY:
       return "policy_id";
-    case "claim_documents":
+    case EntityType.CLAIM:
       return "claim_id";
-    case "sales_documents":
+    case EntityType.SALES_PROCESS:
       return "sales_process_id";
-    case "client_documents":
+    case EntityType.CLIENT:
       return "client_id";
-    case "insurer_documents":
+    case EntityType.INSURER:
       return "insurer_id";
-    case "agent_documents":
+    case EntityType.AGENT:
       return "agent_id";
-    case "invoice_documents":
+    case EntityType.INVOICE:
       return "invoice_id";
-    case "addendum_documents":
+    case EntityType.POLICY_ADDENDUM:
+    case EntityType.ADDENDUM:
       return "addendum_id";
     default:
       return "entity_id";
   }
+}
+
+/**
+ * Validate if the document file type is allowed
+ */
+export function isAllowedFileType(file: File): boolean {
+  const allowedTypes = [
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/jpg',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+    'application/msword', // doc
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'application/vnd.ms-excel', // xls
+    'text/csv'
+  ];
+  
+  return allowedTypes.includes(file.type);
+}
+
+/**
+ * Get the mime type of a file
+ */
+export function getMimeType(file: File): string {
+  return file.type || 'application/octet-stream';
+}
+
+/**
+ * Create a storage path for a document
+ */
+export function createStoragePath(entityType: EntityType, entityId: string, fileName: string): string {
+  const normalizedEntityType = entityType.toLowerCase().replace(/_/g, '-');
+  const timestamp = Date.now();
+  const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+  return `${normalizedEntityType}/${entityId}/${timestamp}_${sanitizedFileName}`;
 }

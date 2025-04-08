@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { DocumentApprovalStatus, EntityType, DocumentTableName } from '@/types/documents';
+import { DocumentApprovalStatus, EntityType } from '@/types/common';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDocumentTableName } from '@/utils/documentUploadUtils';
@@ -41,16 +41,22 @@ export const useDocumentApproval = () => {
       // Get the appropriate table name based on entity type
       const tableName = getDocumentTableName(entityType);
       
-      // Update the document with the new approval status
-      const { error: updateError } = await supabase
-        .from(tableName)
+      // For safety, handle it with runtime type checking
+      if (typeof tableName !== 'string') {
+        throw new Error('Invalid table name');
+      }
+      
+      // Update the document with the new approval status using a valid table name
+      // Cast to 'any' to bypass the TypeScript error about dynamic table names
+      const { error: updateError } = await (supabase
+        .from(tableName as any)
         .update({
           approval_status: status,
           approval_notes: notes,
           approved_at: status === DocumentApprovalStatus.APPROVED ? new Date().toISOString() : null,
           approved_by: status === DocumentApprovalStatus.APPROVED ? user.id : null
         })
-        .eq('id', documentId);
+        .eq('id', documentId));
       
       if (updateError) throw updateError;
       

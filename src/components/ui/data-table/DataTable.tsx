@@ -14,6 +14,7 @@ import { Search, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { PaginationController } from "@/components/ui/pagination-controller";
 
 export interface Column<T> {
   key: string;
@@ -22,9 +23,10 @@ export interface Column<T> {
   className?: string;
   accessorKey?: string;
   cell?: (row: T) => React.ReactNode;
+  sortable?: boolean;
 }
 
-export interface DataTableProps<T> {
+export interface DataTableProps<T, K = unknown> {
   data: T[];
   columns: Column<T>[];
   keyField: keyof T;
@@ -37,17 +39,19 @@ export interface DataTableProps<T> {
   className?: string;
   actions?: React.ReactNode;
   pagination?: {
-    currentPage: number;
-    itemsPerPage: number;
-    totalItems: number;
-    totalPages: number;
+    pageIndex?: number;
+    pageSize?: number;
+    totalItems?: number;
+    totalPages?: number;
+    currentPage?: number;
+    itemsPerPage?: number;
     onPageChange: (page: number) => void;
     onPageSizeChange?: (pageSize: number) => void;
     pageSizeOptions?: number[];
   };
 }
 
-export function DataTable<T>({
+export function DataTable<T, K = unknown>({
   data,
   columns,
   keyField,
@@ -60,7 +64,7 @@ export function DataTable<T>({
   className,
   actions,
   pagination
-}: DataTableProps<T>) {
+}: DataTableProps<T, K>) {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -203,6 +207,21 @@ export function DataTable<T>({
           </TableBody>
         </Table>
       </div>
+
+      {pagination && (
+        <div className="p-4 border-t">
+          <PaginationController
+            currentPage={pagination.currentPage || pagination.pageIndex || 1}
+            totalPages={pagination.totalPages || 1}
+            itemsPerPage={pagination.itemsPerPage || pagination.pageSize || 10}
+            itemsCount={data.length}
+            totalItems={pagination.totalItems}
+            onPageChange={pagination.onPageChange}
+            onPageSizeChange={pagination.onPageSizeChange}
+            pageSizeOptions={pagination.pageSizeOptions}
+          />
+        </div>
+      )}
     </div>
   );
 }

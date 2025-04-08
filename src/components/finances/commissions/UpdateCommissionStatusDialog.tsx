@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CommissionType } from "@/types/finances";
+import { Commission, CommissionStatus } from "@/types/finances";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,17 +32,14 @@ import CommissionStatusBadge from "./CommissionStatusBadge";
 interface UpdateCommissionStatusDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  commission: CommissionType;
-  onUpdate: (data: { commissionId: string; status: CommissionType["status"]; paymentDate?: string; paidAmount?: number }) => void;
+  commission: Commission;
+  onUpdate: (data: { commissionId: string; status: CommissionStatus; paymentDate?: string; paidAmount?: number }) => void;
   isUpdating: boolean;
 }
 
-// Type to use for form validation - only allow these status values
-type AllowedStatus = "due" | "partially_paid" | "paid";
-
 // This schema is for the form's values
 const formSchema = z.object({
-  status: z.enum(["due", "partially_paid", "paid"] as const),
+  status: z.enum(["due", "partially_paid", "paid", "pending", "invoiced"] as const),
   paymentDate: z.date().optional(),
   paidAmount: z.number().optional(),
 }).superRefine((data, ctx) => {
@@ -85,7 +82,7 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
   const { t, formatCurrency } = useLanguage();
   
   // Default to "due" if current status is "calculating"
-  const defaultStatus: AllowedStatus = commission.status === "calculating" ? "due" : commission.status as AllowedStatus;
+  const defaultStatus = commission.status === "calculating" ? "due" as CommissionStatus : commission.status;
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -101,7 +98,7 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
   const handleSubmit = (values: FormValues) => {
     onUpdate({
       commissionId: commission.id,
-      status: values.status,
+      status: values.status as CommissionStatus,
       paymentDate: values.paymentDate ? values.paymentDate.toISOString() : undefined,
       paidAmount: values.paidAmount,
     });
@@ -149,6 +146,8 @@ const UpdateCommissionStatusDialog: React.FC<UpdateCommissionStatusDialogProps> 
                         <SelectItem value="due">{t("due")}</SelectItem>
                         <SelectItem value="partially_paid">{t("partially_paid")}</SelectItem>
                         <SelectItem value="paid">{t("paid")}</SelectItem>
+                        <SelectItem value="pending">{t("pending")}</SelectItem>
+                        <SelectItem value="invoiced">{t("invoiced")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

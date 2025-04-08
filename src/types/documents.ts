@@ -1,5 +1,5 @@
 
-import { EntityType, DocumentCategory, DocumentApprovalStatus, ApprovalStatus } from './common';
+import { EntityType, DocumentCategory, DocumentApprovalStatus, ApprovalStatus, Comment } from './common';
 
 export interface Document {
   id: string;
@@ -22,12 +22,10 @@ export interface Document {
   is_latest_version?: boolean;
   original_document_id?: string;
   mime_type?: string;
-  
-  // Add missing properties to fix errors
   description?: string;
-  status?: string; // Document status
+  status?: string;
   approval_notes?: string;
-  comments?: Comment[] | string[]; // Add comments property
+  comments?: Comment[];
 }
 
 export interface PolicyDocument extends Document {
@@ -58,15 +56,6 @@ export interface DocumentUploadDialogProps {
   filterCategory?: string;
 }
 
-export interface Comment {
-  id: string;
-  document_id: string;
-  author: string;
-  text: string;
-  created_at: string;
-  user_id: string;
-}
-
 export interface DocumentUploadOptions {
   file: File;
   documentName: string;
@@ -89,7 +78,6 @@ export interface ApprovalInfo {
 
 export type DocumentTableName = "policy_documents" | "claim_documents" | "sales_documents" | "client_documents" | "insurer_documents" | "agent_documents" | "invoice_documents" | "addendum_documents";
 
-// Add missing interfaces for document search
 export interface DocumentSearchParams {
   entityType?: EntityType;
   entityId?: string;

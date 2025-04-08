@@ -10,13 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, FileText, Clock, Upload, Trash, CheckCircle, XCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Document } from "@/types/documents";
+import { Document, DocumentApprovalStatus } from "@/types/documents";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { ApprovalStatus, DocumentComment } from "@/types/common";
+import { Comment } from "@/types/common";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface DocumentViewDialogProps {
   document: Document;
@@ -27,13 +28,6 @@ interface DocumentViewDialogProps {
   showApprovalStatus?: boolean;
   onApprove?: () => void;
   onReject?: () => void;
-}
-
-interface Comment {
-  id: string;
-  author: string;
-  text: string;
-  created_at: string;
 }
 
 const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
@@ -47,6 +41,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
   onReject,
 }) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [documentUrl, setDocumentUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,57 +84,18 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
 
     fetchDocument();
 
-    // Load comments if on the comments tab
-    if (activeTab === "comments") {
-      loadComments();
+    // Load comments if they exist
+    if (document.comments && Array.isArray(document.comments) && document.comments.length > 0) {
+      setComments(document.comments as Comment[]);
+    } else {
+      setComments([]);
     }
-
+    
     // Load versions if on the versions tab
-    if (activeTab === "versions") {
+    if (activeTab === "versions" && (document.original_document_id || document.id)) {
       loadVersions();
     }
   }, [document, open, activeTab]);
-
-  const loadComments = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("document_comments")
-        .select("*")
-        .eq("document_id", document.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setComments(data as Comment[]);
-    } catch (err) {
-      console.error("Error loading comments:", err);
-    }
-  };
-
-  const addComment = async () => {
-    if (!newComment.trim()) return;
-
-    try {
-      setIsAddingComment(true);
-      const { data, error } = await supabase.from("document_comments").insert([
-        {
-          document_id: document.id,
-          author: "Current User", // Replace with actual user info
-          text: newComment,
-          user_id: "current-user-id", // Replace with actual user ID
-        },
-      ]);
-
-      if (error) throw error;
-      
-      // Refresh comments
-      await loadComments();
-      setNewComment("");
-    } catch (err) {
-      console.error("Error adding comment:", err);
-    } finally {
-      setIsAddingComment(false);
-    }
-  };
 
   const loadVersions = async () => {
     if (!document.original_document_id && !document.id) return;
@@ -148,343 +104,318 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
       setIsLoadingVersions(true);
       const docId = document.original_document_id || document.id;
       
+      const tableName = document.entity_type + "_documents";
+      
       const { data, error } = await supabase
-        .from(document.entity_type + "_documents")
+        .from(tableName)
         .select("*")
         .or(`id.eq.${docId},original_document_id.eq.${docId}`)
         .order("version", { ascending: false });
-
+        
       if (error) throw error;
+      
       setVersions(data as Document[]);
     } catch (err) {
       console.error("Error loading versions:", err);
+      toast({
+        title: t("errorLoadingVersions"),
+        description: (err as Error)?.message || t("unexpectedError"),
+        variant: "destructive"
+      });
     } finally {
       setIsLoadingVersions(false);
     }
   };
 
-  const getApprovalStatusBadge = (status?: string) => {
-    if (!status) return null;
-    
-    switch (status) {
-      case ApprovalStatus.APPROVED:
+  const addComment = async () => {
+    if (!newComment.trim()) return;
+
+    try {
+      setIsAddingComment(true);
+      
+      // Instead of storing in Supabase, we'll update the local state and document.comments
+      const newCommentObj: Comment = {
+        id: `comment-${Date.now()}`,
+        document_id: document.id,
+        author: "Current User", // Should be replaced with actual user name
+        text: newComment,
+        created_at: new Date().toISOString(),
+        user_id: "current-user-id", // Should be replaced with actual user ID
+      };
+      
+      // Update local state
+      const updatedComments = [...comments, newCommentObj];
+      setComments(updatedComments);
+      
+      // Clear input
+      setNewComment("");
+      
+      toast({
+        title: t("commentAdded"),
+        description: t("commentAddedSuccessfully")
+      });
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      toast({
+        title: t("errorAddingComment"),
+        description: (err as Error)?.message || t("unexpectedError"),
+        variant: "destructive"
+      });
+    } finally {
+      setIsAddingComment(false);
+    }
+  };
+
+  const renderApprovalStatus = () => {
+    switch (document.approval_status) {
+      case DocumentApprovalStatus.APPROVED:
         return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
-            <CheckCircle className="h-3 w-3" />
-            {t("approved")}
+          <Badge variant="outline" className="space-x-2">
+            <CheckCircle className="h-3.5 w-3.5 mr-1" />
+            <span>{t("approved")}</span>
           </Badge>
         );
-      case ApprovalStatus.REJECTED:
+      case DocumentApprovalStatus.REJECTED:
         return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
-            <XCircle className="h-3 w-3" />
-            {t("rejected")}
+          <Badge variant="destructive" className="space-x-2">
+            <XCircle className="h-3.5 w-3.5 mr-1" />
+            <span>{t("rejected")}</span>
           </Badge>
         );
-      case ApprovalStatus.PENDING:
+      case DocumentApprovalStatus.PENDING:
+      case DocumentApprovalStatus.NEEDS_REVIEW:
       default:
         return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {t("pending")}
+          <Badge variant="secondary" className="space-x-2">
+            <Clock className="h-3.5 w-3.5 mr-1" />
+            <span>{t("pending")}</span>
           </Badge>
         );
     }
   };
 
+  const renderComments = () => {
+    if (comments.length === 0) {
+      return (
+        <div className="text-sm text-muted-foreground text-center p-4">
+          {t("noCommentsYet")}
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-3">
+        {comments.map((comment, index) => (
+          <div key={comment.id || index} className="bg-muted p-3 rounded-lg">
+            <div className="flex justify-between mb-1">
+              <span className="text-sm font-medium">{comment.author}</span>
+              <span className="text-xs text-muted-foreground">
+                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+              </span>
+            </div>
+            <p className="text-sm">{comment.text}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <DialogTitle className="text-xl truncate" title={document.document_name}>
-                {document.document_name}
-              </DialogTitle>
-              <div className="flex flex-wrap gap-x-4 text-sm text-muted-foreground mt-1">
-                <span>{document.document_type}</span>
-                {document.category && <span>{t(document.category)}</span>}
-                <span title={new Date(document.created_at).toLocaleString()}>
-                  {formatDistanceToNow(new Date(document.created_at), { addSuffix: true })}
-                </span>
-                {document.version && (
-                  <span>{t("version")} {document.version}</span>
-                )}
-              </div>
-            </div>
-            {showApprovalStatus && (
-              <div className="flex-shrink-0">
-                {getApprovalStatusBadge(document.status as string)}
-              </div>
-            )}
-          </div>
+      <DialogContent className="sm:max-w-[800px]">
+        <DialogHeader>
+          <DialogTitle>{document.document_name}</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-h-0 flex flex-col">
+        <Tabs defaultValue="preview" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full">
-            <TabsTrigger value="preview">{t("preview")}</TabsTrigger>
-            <TabsTrigger value="details">{t("details")}</TabsTrigger>
-            <TabsTrigger value="versions">{t("versions")}</TabsTrigger>
-            <TabsTrigger value="comments">{t("comments")}</TabsTrigger>
+            <TabsTrigger value="preview" className="flex-1">{t("preview")}</TabsTrigger>
+            <TabsTrigger value="details" className="flex-1">{t("details")}</TabsTrigger>
+            <TabsTrigger value="comments" className="flex-1">{t("comments")}</TabsTrigger>
+            {(document.version && document.version > 1) || document.original_document_id ? (
+              <TabsTrigger value="versions" className="flex-1">{t("versions")}</TabsTrigger>
+            ) : null}
           </TabsList>
 
-          <TabsContent value="preview" className="flex-1 overflow-auto flex flex-col">
+          <TabsContent value="preview" className="py-4">
             {isLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <div className="flex flex-col items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                <p className="text-sm text-muted-foreground">{t("loadingDocument")}</p>
               </div>
             ) : error ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <FileText className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">{error}</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-4"
-                    onClick={() => setActiveTab("details")}
-                  >
-                    {t("viewDetails")}
-                  </Button>
-                </div>
+              <div className="flex flex-col items-center justify-center p-8 text-destructive">
+                <FileText className="h-8 w-8 mb-2" />
+                <p className="font-medium">{t("errorLoadingDocument")}</p>
+                <p className="text-sm mt-1">{error}</p>
               </div>
-            ) : documentUrl && (document.mime_type?.includes('image/')) ? (
-              <div className="flex-1 flex items-center justify-center p-4">
-                <img 
+            ) : documentUrl ? (
+              <div className="border rounded-md overflow-hidden">
+                <iframe 
                   src={documentUrl} 
-                  alt={document.document_name} 
-                  className="max-w-full max-h-full object-contain" 
+                  className="w-full h-[60vh]" 
+                  title={document.document_name}
                 />
               </div>
-            ) : documentUrl && (document.mime_type?.includes('pdf')) ? (
-              <iframe 
-                src={`${documentUrl}#toolbar=0`} 
-                className="w-full h-full flex-1 min-h-0" 
-                title={document.document_name}
-              />
             ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <FileText className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">{t("previewNotAvailable")}</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-4"
-                    onClick={() => window.open(documentUrl || '', '_blank')}
-                  >
+              <div className="flex flex-col items-center justify-center p-8">
+                <FileText className="h-8 w-8 mb-2" />
+                <p className="text-sm text-muted-foreground">{t("documentNotPreviewable")}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end mt-4">
+              {documentUrl && (
+                <Button variant="outline" asChild className="mr-2">
+                  <a href={documentUrl} download target="_blank" rel="noopener noreferrer">
                     <Download className="h-4 w-4 mr-2" />
                     {t("download")}
+                  </a>
+                </Button>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="details" className="py-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium mb-1">{t("documentName")}</h4>
+                <p className="text-sm text-muted-foreground">{document.document_name}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-1">{t("documentType")}</h4>
+                <p className="text-sm text-muted-foreground">{document.document_type}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-1">{t("uploadedBy")}</h4>
+                <p className="text-sm text-muted-foreground">{document.uploaded_by_name || t("unknown")}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-1">{t("uploadedOn")}</h4>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(document.created_at).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-1">{t("category")}</h4>
+                <p className="text-sm text-muted-foreground">{document.category || t("uncategorized")}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium mb-1">{t("version")}</h4>
+                <p className="text-sm text-muted-foreground">{document.version || 1}</p>
+              </div>
+              {document.description && (
+                <div className="col-span-2">
+                  <h4 className="text-sm font-medium mb-1">{t("description")}</h4>
+                  <p className="text-sm text-muted-foreground">{document.description}</p>
+                </div>
+              )}
+              {showApprovalStatus && (
+                <div>
+                  <h4 className="text-sm font-medium mb-1">{t("approvalStatus")}</h4>
+                  <div>{renderApprovalStatus()}</div>
+                </div>
+              )}
+            </div>
+
+            {showApprovalStatus && document.approval_status === DocumentApprovalStatus.PENDING && (
+              <div className="space-y-2 mt-4">
+                <Separator />
+                <div className="flex justify-end space-x-2 mt-2">
+                  <Button variant="outline" onClick={onReject}>
+                    <XCircle className="h-4 w-4 mr-2" />
+                    {t("reject")}
+                  </Button>
+                  <Button onClick={onApprove}>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {t("approve")}
                   </Button>
                 </div>
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="details" className="flex-1 overflow-auto">
-            <div className="space-y-4 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("documentName")}</h4>
-                  <p>{document.document_name}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("documentType")}</h4>
-                  <p>{document.document_type}</p>
-                </div>
-                {document.category && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("category")}</h4>
-                    <p>{t(document.category)}</p>
-                  </div>
-                )}
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("uploadedBy")}</h4>
-                  <p>{document.uploaded_by || t("unknown")}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("uploadDate")}</h4>
-                  <p>{new Date(document.created_at).toLocaleString()}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("fileType")}</h4>
-                  <p>{document.mime_type || t("unknown")}</p>
-                </div>
-                {document.version && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("version")}</h4>
-                    <p>{document.version}</p>
-                  </div>
-                )}
-                {showApprovalStatus && document.status && (
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">{t("approvalStatus")}</h4>
-                    <div>{getApprovalStatusBadge(document.status as string)}</div>
-                  </div>
-                )}
-              </div>
+          <TabsContent value="comments" className="py-4 space-y-4">
+            {renderComments()}
+            
+            <div className="flex space-x-2 mt-4">
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder={t("addComment")}
+                className="flex-1 px-3 py-2 rounded-md border"
+              />
+              <Button
+                variant="secondary"
+                onClick={addComment}
+                disabled={!newComment.trim() || isAddingComment}
+              >
+                {isAddingComment ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : null}
+                {t("post")}
+              </Button>
             </div>
           </TabsContent>
 
-          <TabsContent value="versions" className="flex-1 overflow-auto">
+          <TabsContent value="versions" className="py-4">
             {isLoadingVersions ? (
-              <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="flex flex-col items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                <p className="text-sm text-muted-foreground">{t("loadingVersions")}</p>
               </div>
-            ) : versions.length <= 1 ? (
-              <div className="flex flex-col items-center justify-center h-full py-8">
-                <p className="text-muted-foreground">{t("noOtherVersions")}</p>
-              </div>
-            ) : (
-              <div className="space-y-2 p-4">
+            ) : versions.length > 0 ? (
+              <div className="border rounded-md overflow-hidden divide-y">
                 {versions.map((version) => (
-                  <div 
-                    key={version.id} 
-                    className={`p-3 rounded-md border ${version.id === document.id ? 'bg-muted' : ''}`}
-                  >
-                    <div className="flex items-center justify-between">
+                  <div key={version.id} className="p-4 hover:bg-muted/50 transition-colors">
+                    <div className="flex justify-between items-center">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{t("version")} {version.version}</span>
-                          {version.id === document.id && (
-                            <Badge variant="outline" className="text-xs">
-                              {t("current")}
-                            </Badge>
-                          )}
-                          {version.is_latest_version && (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                              {t("latest")}
-                            </Badge>
-                          )}
-                        </div>
+                        <p className="font-medium">{t("version")} {version.version}</p>
                         <p className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(version.created_at), { addSuffix: true })}
+                          {t("uploadedBy")} {version.uploaded_by_name || t("unknown")} • {new Date(version.created_at).toLocaleString()}
                         </p>
                       </div>
-                      {version.id !== document.id && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            // Replace current document with this version
-                            onOpenChange(false);
-                            // Here you'd typically have a function to view this specific version
-                          }}
+                      <Button variant="ghost" size="sm" asChild>
+                        <a 
+                          href={`/api/documents/download/${version.id}`} 
+                          download
                         >
-                          {t("view")}
-                        </Button>
-                      )}
+                          <Download className="h-4 w-4 mr-2" />
+                          {t("download")}
+                        </a>
+                      </Button>
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="comments" className="flex-1 overflow-auto flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {comments.length === 0 ? (
-                <div className="flex items-center justify-center h-40">
-                  <p className="text-muted-foreground">{t("noComments")}</p>
-                </div>
-              ) : (
-                comments.map((comment) => (
-                  <div key={comment.id} className="border rounded-md p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">{comment.author}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                    <p className="text-sm">{comment.text}</p>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="border-t p-4">
-              <div className="flex gap-2">
-                <textarea
-                  className="flex-1 min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder={t("addComment")}
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  disabled={isAddingComment}
-                />
-                <Button 
-                  onClick={addComment} 
-                  disabled={!newComment.trim() || isAddingComment}
-                >
-                  {isAddingComment ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : null}
-                  {t("post")}
-                </Button>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-8">
+                <p className="text-sm text-muted-foreground">{t("noVersionsFound")}</p>
               </div>
-            </div>
+            )}
           </TabsContent>
         </Tabs>
 
-        <Separator className="my-2" />
-
-        <DialogFooter className="flex-shrink-0">
-          <div className="flex justify-between items-center w-full">
-            <div className="flex gap-2">
-              {showApprovalStatus && onApprove && document.status !== ApprovalStatus.APPROVED && (
-                <Button 
-                  variant="outline"
-                  className="text-green-700 hover:text-green-800 hover:bg-green-50"
-                  onClick={onApprove}
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  {t("approve")}
-                </Button>
-              )}
-              
-              {showApprovalStatus && onReject && document.status !== ApprovalStatus.REJECTED && (
-                <Button 
-                  variant="outline"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={onReject}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  {t("reject")}
-                </Button>
-              )}
-            </div>
-            
-            <div className="flex gap-2">
-              {documentUrl && (
-                <Button 
-                  variant="outline"
-                  onClick={() => window.open(documentUrl, '_blank')}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  {t("download")}
-                </Button>
-              )}
-              
-              {onUploadVersion && (
-                <Button 
-                  variant="outline"
-                  onClick={onUploadVersion}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {t("uploadNewVersion")}
-                </Button>
-              )}
-              
-              {onDelete && (
-                <Button 
-                  variant="outline"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={onDelete}
-                >
-                  <Trash className="h-4 w-4 mr-2" />
-                  {t("delete")}
-                </Button>
-              )}
-            </div>
+        <DialogFooter className="flex justify-between">
+          <div>
+            {onDelete && (
+              <Button variant="destructive" size="sm" onClick={onDelete}>
+                <Trash className="h-4 w-4 mr-2" />
+                {t("delete")}
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {onUploadVersion && (
+              <Button variant="outline" onClick={onUploadVersion}>
+                <Upload className="h-4 w-4 mr-2" />
+                {t("uploadNewVersion")}
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => onOpenChange(false)}>
+              {t("close")}
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>

@@ -12,7 +12,7 @@ export enum EntityType {
   DOCUMENT = "document",
   POLICY_ADDENDUM = "policy_addendum",
   INVOICE = "invoice",
-  ADDENDUM = "addendum" // Add missing ADDENDUM type
+  ADDENDUM = "addendum"
 }
 
 export enum DocumentCategory {
@@ -27,8 +27,8 @@ export enum DocumentCategory {
   OTHER = "other",
   GENERAL = "general",
   AUTHORIZATION = "authorization",
-  MISCELLANEOUS = "miscellaneous", // Add missing MISCELLANEOUS category
-  PROPOSAL = "proposal" // Add missing PROPOSAL category
+  MISCELLANEOUS = "miscellaneous",
+  PROPOSAL = "proposal"
 }
 
 export enum DocumentApprovalStatus {
@@ -38,7 +38,6 @@ export enum DocumentApprovalStatus {
   NEEDS_REVIEW = "needs_review"
 }
 
-// Add missing ApprovalStatus enum
 export enum ApprovalStatus {
   PENDING = "pending",
   APPROVED = "approved",
@@ -49,7 +48,10 @@ export enum ApprovalStatus {
 export enum CommissionStatus {
   DUE = "due",
   PAID = "paid",
-  PARTIALLY_PAID = "partially_paid"
+  PARTIALLY_PAID = "partially_paid",
+  PENDING = "pending",
+  INVOICED = "invoiced",
+  CALCULATING = "calculating"
 }
 
 export enum PolicyStatus {
@@ -93,9 +95,13 @@ export interface PaginationProps {
   itemsCount?: number;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: number[];
+  
+  // Add mapping for tanstack/react-table props
+  pageIndex?: number;
+  pageSize?: number;
+  totalCount?: number;
 }
 
-// Add Document Comments interface
 export interface DocumentComment {
   id: string;
   document_id: string;
@@ -105,10 +111,60 @@ export interface DocumentComment {
   user_id: string;
 }
 
-// Add ResourceContext interface to fix auth-related issues
 export interface ResourceContext {
   resource: string;
   action: string;
   condition?: string;
+  ownerId?: string;
+  companyId?: string;
+  resourceType?: string;
+  resourceValue?: any;
+  [key: string]: any;
 }
 
+// Interface for table relations
+export type RelationName = 
+  | "policy_documents" 
+  | "claim_documents" 
+  | "sales_documents" 
+  | "activity_logs" 
+  | "agent_payouts" 
+  | "agents" 
+  | "companies" 
+  | "bank_statements" 
+  | "bank_transactions" 
+  | "invoices" 
+  | "invoice_items" 
+  | "leads" 
+  | "sales_processes" 
+  | "policies" 
+  | "policy_addendums" 
+  | "clients" 
+  | "insurers" 
+  | "claims" 
+  | "unlinked_payments" 
+  | "commissions" 
+  | "fixed_commissions" 
+  | "client_commissions" 
+  | "manual_commissions" 
+  | "insurance_products" 
+  | "policy_types" 
+  | "instructions" 
+  | "profiles" 
+  | "company_settings" 
+  | "company_email_settings" 
+  | "report_schedules" 
+  | "saved_reports" 
+  | "saved_filters" 
+  | "sales_assignments" 
+  | "invitations" 
+  | "user_custom_privileges";
+
+export interface Comment {
+  id: string;
+  document_id: string;
+  author: string;
+  text: string;
+  created_at: string;
+  user_id: string;
+}

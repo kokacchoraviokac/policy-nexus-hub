@@ -4,7 +4,7 @@ import { useInsurer } from '@/hooks/useInsurer';
 import { useInsurersCrud } from '@/hooks/insurers/useInsurersCrud';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
-import InsurerForm from '../forms/InsurerForm';
+import InsurerForm, { InsurerFormValues } from '../forms/InsurerForm';
 import { Insurer } from '@/types/codebook';
 
 interface InsurerFormDialogProps {
@@ -25,7 +25,7 @@ const InsurerFormDialog: React.FC<InsurerFormDialogProps> = ({
   const isLoading = isLoadingInsurer || isAdding || isUpdating;
   const isEditMode = !!insurerId;
 
-  const handleSubmit = async (data: Partial<Insurer>) => {
+  const handleSubmit = async (data: InsurerFormValues) => {
     try {
       if (isEditMode && insurerId) {
         await updateInsurer({ 
@@ -59,6 +59,7 @@ const InsurerFormDialog: React.FC<InsurerFormDialogProps> = ({
           onSubmit={handleSubmit}
           isLoading={isLoading}
           isEditMode={isEditMode}
+          onCancel={handleCancel}
         />
       </DialogContent>
     </Dialog>
