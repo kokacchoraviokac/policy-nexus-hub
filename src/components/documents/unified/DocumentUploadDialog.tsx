@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -10,7 +11,7 @@ import {
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Document, DocumentUploadDialogProps, EntityType } from "@/types/documents";
 import { DocumentCategory } from "@/types/common";
-import { useDocumentUploadState } from "./hooks/useDocumentUploadState";
+import { useDocumentUpload } from "@/hooks/useDocumentUpload";
 import DocumentUploadForm from "./DocumentUploadForm";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileUp } from "lucide-react";
@@ -41,25 +42,41 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     setDocumentCategory,
     file,
     handleFileChange,
-    uploading: isSubmitting,
-    isValid,
-    handleSubmit
-  } = useDocumentUploadState({
+    isUploading,
+    handleUpload,
+    setSalesStage
+  } = useDocumentUpload({
     entityId,
     entityType,
-    defaultCategory: defaultCategory as DocumentCategory,
-    selectedDocument,
     onSuccess: () => {
       if (onUploadComplete) onUploadComplete();
       onOpenChange(false);
-    }
+    },
+    originalDocumentId: isNewVersion ? (selectedDocument?.original_document_id || selectedDocument?.id) : undefined,
+    currentVersion: isNewVersion ? (selectedDocument?.version || 1) : undefined,
+    salesStage
   });
+
+  // Set default category if provided
+  useEffect(() => {
+    if (defaultCategory && documentCategory === "") {
+      setDocumentCategory(defaultCategory as DocumentCategory);
+    }
+  }, [defaultCategory, documentCategory, setDocumentCategory]);
 
   useEffect(() => {
     if (onFileSelected) {
       onFileSelected(file);
     }
   }, [file, onFileSelected]);
+
+  const isValid = !!file && !!documentName;
+
+  const handleSubmit = () => {
+    if (isValid) {
+      handleUpload();
+    }
+  };
 
   if (embedMode) {
     return (
@@ -70,7 +87,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           documentType={documentType}
           setDocumentType={setDocumentType}
           documentCategory={documentCategory}
-          setDocumentCategory={setDocumentCategory}
+          setDocumentCategory={setDocumentCategory as any}
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={isNewVersion}
@@ -80,16 +97,16 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
+            disabled={isUploading}
           >
             {t("cancel")}
           </Button>
           
           <Button 
             onClick={handleSubmit}
-            disabled={!isValid || isSubmitting}
+            disabled={!isValid || isUploading}
           >
-            {isSubmitting ? (
+            {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("uploading")}
@@ -128,7 +145,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           documentType={documentType}
           setDocumentType={setDocumentType}
           documentCategory={documentCategory}
-          setDocumentCategory={setDocumentCategory}
+          setDocumentCategory={setDocumentCategory as any}
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={!!selectedDocument}
@@ -138,16 +155,16 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
+            disabled={isUploading}
           >
             {t("cancel")}
           </Button>
           
           <Button 
             onClick={handleSubmit}
-            disabled={!isValid || isSubmitting}
+            disabled={!isValid || isUploading}
           >
-            {isSubmitting ? (
+            {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("uploading")}

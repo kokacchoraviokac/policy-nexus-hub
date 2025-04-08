@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Document, DocumentApprovalStatus, EntityType, Comment } from "@/types/documents";
+import { Document, DocumentApprovalStatus, EntityType } from "@/types/documents";
+import { Comment } from "@/types/common";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle, AlertTriangle, Clock, Loader2 } from "lucide-react";
@@ -61,8 +62,8 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
             <span>{t("rejected")}</span>
           </Badge>
         );
-      case DocumentApprovalStatus.PENDING:
       case DocumentApprovalStatus.NEEDS_REVIEW:
+      case DocumentApprovalStatus.PENDING:
       default:
         return (
           <Badge variant="secondary" className="space-x-2">
@@ -110,7 +111,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
           text: comment,
           created_at: new Date().toISOString(),
           user_id: 'system'
-        };
+        } as Comment;
       }
       return comment as Comment;
     }) : [];

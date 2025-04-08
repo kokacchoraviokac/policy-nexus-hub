@@ -17,8 +17,12 @@ export interface Column<T = any> {
 export interface Pagination {
   pageIndex: number;
   pageSize: number;
-  currentPage?: number; // Added for compatibility
-  itemsPerPage?: number; // Added for compatibility
+  // For compatibility with our custom components
+  currentPage?: number;
+  itemsPerPage?: number;
+  totalCount?: number;
+  totalItems?: number;
+  totalPages?: number;
 }
 
 export interface SortingState {
@@ -31,17 +35,18 @@ export interface TableState {
   sorting: SortingState[];
 }
 
-export interface CellContext<T, V> {
-  row: T;
+export interface CellContext<T = any, V = unknown> {
+  row: { original: T };
   getValue: () => V;
-  [key: string]: any; // Allow accessing row properties directly
+  // Include direct row data access for compatibility with existing code
+  [key: string]: any;
 }
 
-export interface ColumnDef<T, V = unknown> {
+export interface ColumnDef<T = any, V = unknown> {
   id?: string;
   accessorKey?: string;
   header?: string | ReactNode;
-  cell?: (props: { row: T }) => ReactNode;
+  cell?: (props: { row: { original: T } }) => ReactNode;
   enableSorting?: boolean;
   meta?: any;
   sortable?: boolean;

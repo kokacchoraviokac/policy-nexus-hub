@@ -41,7 +41,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
     {
       accessorKey: "category",
       header: t("category"),
-      cell: (row: InsuranceProduct) => row.category || "-",
+      cell: (props: { row: { original: InsuranceProduct } }) => props.row.original.category || "-",
     },
     {
       accessorKey: "insurer_name",
@@ -50,22 +50,22 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
     {
       accessorKey: "is_active",
       header: t("status"),
-      cell: (row: InsuranceProduct) => (
-        <Badge variant={row.is_active ? "default" : "secondary"}>
-          {row.is_active ? t("active") : t("inactive")}
+      cell: (props: { row: { original: InsuranceProduct } }) => (
+        <Badge variant={props.row.original.is_active ? "default" : "secondary"}>
+          {props.row.original.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
     },
     {
       accessorKey: "id",
       header: t("actions"),
-      cell: (row: InsuranceProduct) => (
+      cell: (props: { row: { original: InsuranceProduct } }) => (
         <div className="flex gap-2 justify-end">
           <Button 
             variant="outline" 
             size="sm" 
             className="h-8 w-8 p-0"
-            onClick={() => onEdit(row.id)}
+            onClick={() => onEdit(props.row.original.id)}
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -75,7 +75,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                 variant="outline"
                 size="sm"
                 className="h-8 w-8 p-0 text-destructive"
-                onClick={() => setProductToDelete(row.id)}
+                onClick={() => setProductToDelete(props.row.original.id)}
               >
                 <Trash className="h-4 w-4" />
               </Button>
@@ -84,7 +84,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
               <AlertDialogHeader>
                 <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {t("deleteProductConfirmation").replace("{0}", row.name)}
+                  {t("deleteProductConfirmation").replace("{0}", props.row.original.name)}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

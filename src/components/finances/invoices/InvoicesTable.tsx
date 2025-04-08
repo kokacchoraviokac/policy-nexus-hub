@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import DataTable, { Column } from "@/components/ui/data-table";
+import DataTable from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/utils/format";
@@ -13,9 +13,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { InvoiceType } from "@/types/finances";
 import { Link, useNavigate } from "react-router-dom";
-import { CellContextWithRowAccess } from "@/types/table";
+
+export interface Invoice {
+  id: string;
+  invoice_number: string;
+  entity_name: string;
+  issue_date: string;
+  due_date: string;
+  total_amount: number;
+  currency: string;
+  status: string;
+}
+
+export type InvoiceType = Invoice;
 
 interface InvoicesTableProps {
   invoices: InvoiceType[];
@@ -72,46 +83,39 @@ const InvoicesTable = ({
     navigate(`/finances/invoicing/${id}`);
   };
 
-  const columns: Column<InvoiceType>[] = [
+  const columns = [
     {
-      header: t("invoiceNumber"),
       accessorKey: "invoice_number",
-      key: "invoice_number"
+      header: t("invoiceNumber"),
     },
     {
-      header: t("entityName"),
       accessorKey: "entity_name",
-      key: "entity_name"
+      header: t("entityName"),
     },
     {
-      header: t("issueDate"),
       accessorKey: "issue_date",
-      key: "issue_date",
-      cell: (row: InvoiceType) => formatDate(new Date(row.issue_date))
+      header: t("issueDate"),
+      cell: (props: { row: { original: InvoiceType } }) => formatDate(new Date(props.row.original.issue_date)),
     },
     {
-      header: t("dueDate"),
       accessorKey: "due_date",
-      key: "due_date",
-      cell: (row: InvoiceType) => formatDate(new Date(row.due_date))
+      header: t("dueDate"),
+      cell: (props: { row: { original: InvoiceType } }) => formatDate(new Date(props.row.original.due_date)),
     },
     {
-      header: t("amount"),
       accessorKey: "total_amount",
-      key: "total_amount",
-      cell: (row: InvoiceType) => formatCurrency(row.total_amount, row.currency)
+      header: t("amount"),
+      cell: (props: { row: { original: InvoiceType } }) => formatCurrency(props.row.original.total_amount, props.row.original.currency),
     },
     {
-      header: t("status"),
       accessorKey: "status",
-      key: "status",
-      cell: (row: InvoiceType) => getStatusBadge(row.status)
+      header: t("status"),
+      cell: (props: { row: { original: InvoiceType } }) => getStatusBadge(props.row.original.status),
     },
     {
+      id: "actions",
       header: t("actions"),
-      accessorKey: "id",
-      key: "actions",
-      cell: (row: InvoiceType) => (
+      cell: (props: { row: { original: InvoiceType } }) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -120,11 +124,11 @@ const InvoicesTable = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleViewInvoice(row.id)}>
+            <DropdownMenuItem onClick={() => handleViewInvoice(props.row.original.id)}>
               <Eye className="mr-2 h-4 w-4" />
               {t("view")}
             </DropdownMenuItem>
-            {row.status === 'draft' && (
+            {props.row.original.status === 'draft' && (
               <>
                 <DropdownMenuItem>
                   <Receipt className="mr-2 h-4 w-4" />
@@ -136,7 +140,7 @@ const InvoicesTable = ({
                 </DropdownMenuItem>
               </>
             )}
-            {row.status === 'issued' && (
+            {props.row.original.status === 'issued' && (
               <DropdownMenuItem>
                 <Receipt className="mr-2 h-4 w-4" />
                 {t("markAsPaid")}

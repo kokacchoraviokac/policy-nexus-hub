@@ -1,21 +1,31 @@
+import { ReactNode } from "react";
 
-// Common types used throughout the application
-
-// Entity types for documents and other objects
-export enum EntityType {
+// Document-related types
+export enum DocumentCategory {
   POLICY = "policy",
   CLAIM = "claim",
-  SALES_PROCESS = "sales_process",
   CLIENT = "client",
-  INSURER = "insurer",
-  AGENT = "agent",
   INVOICE = "invoice",
-  POLICY_ADDENDUM = "policy_addendum",
-  ADDENDUM = "addendum", // Alternative name for POLICY_ADDENDUM
-  SALE = "sale" // Alternative name for SALES_PROCESS
+  ADDENDUM = "addendum",
+  OTHER = "other",
+  CLAIM_EVIDENCE = "claim_evidence",
+  MEDICAL = "medical",
+  LEGAL = "legal",
+  FINANCIAL = "financial",
+  LIEN = "lien",
+  NOTIFICATION = "notification",
+  CORRESPONDENCE = "correspondence",
+  DISCOVERY = "discovery",
+  QUOTE = "quote",
+  PROPOSAL = "proposal",
+  CONTRACT = "contract",
+  CLOSEOUT = "closeout",
+  SALES = "sales",
+  AUTHORIZATION = "authorization",
+  GENERAL = "general",
+  MISCELLANEOUS = "miscellaneous"
 }
 
-// Document approval status
 export enum DocumentApprovalStatus {
   PENDING = "pending",
   APPROVED = "approved",
@@ -23,153 +33,103 @@ export enum DocumentApprovalStatus {
   NEEDS_REVIEW = "needs_review"
 }
 
-// Common category enumeration
-export enum DocumentCategory {
+export enum EntityType {
   POLICY = "policy",
-  INVOICE = "invoice",
   CLAIM = "claim",
-  CONTRACT = "contract",
-  LEGAL = "legal",
-  CORRESPONDENCE = "correspondence",
-  MARKETING = "marketing",
-  OTHER = "other",
-  SALES = "sales",
-  MISCELLANEOUS = "miscellaneous",
-  AUTHORIZATION = "authorization",
-  GENERAL = "general",
-  PROPOSAL = "proposal"
+  CLIENT = "client",
+  INVOICE = "invoice",
+  ADDENDUM = "addendum",
+  SALES_PROCESS = "sales_process",
+  SALE = "sale",
+  AGENT = "agent",
+  INSURER = "insurer"
 }
 
-// For use with document approvals
-export interface ApprovalStatus {
-  status: DocumentApprovalStatus;
-  date?: string;
-  user_id?: string;
-  notes?: string;
+export enum ApprovalStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  NEEDS_REVIEW = "needs_review"
 }
 
-// Document comment interface
 export interface Comment {
   id: string;
   document_id: string;
-  user_id: string;
-  author: string;
   text: string;
+  author: string;
+  user_id: string;
   created_at: string;
 }
 
-// Currency type
-export type Currency = "EUR" | "USD" | "RSD" | "GBP" | "CHF" | string;
-
-// Resource context interface for permission checks
 export interface ResourceContext {
-  companyId?: string;
-  userId?: string;
-  resourceId?: string;
-  resourceType?: string;
-  resourceOwnerId?: string;
-  action?: string;
-  meta?: Record<string, any>;
-}
-
-// Base entity interface with common properties
-export interface BaseEntity {
   id: string;
-  created_at: string;
-  updated_at: string;
-  company_id: string;
+  type: string;
+  permissions: string[];
 }
 
-// Generic status enums
-export enum CommonStatus {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  PENDING = "pending",
-  COMPLETED = "completed"
-}
-
-// Standard pagination parameters
+// Pagination-related types
 export interface PaginationParams {
   page: number;
   page_size: number;
 }
 
-// Pagination controller props
-export interface PaginationControllerProps {
+export interface PaginationProps {
   currentPage: number;
   totalPages: number;
-  itemsPerPage: number;
-  itemsCount: number;
+  itemsCount?: number;
+  itemsPerPage?: number;
   totalItems?: number;
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: number[];
 }
 
-// Props for pagination component
-export interface PaginationProps {
+export interface PaginationControllerProps {
   currentPage: number;
   totalPages: number;
+  itemsPerPage?: number;
+  itemsCount?: number;
+  totalItems?: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
 }
 
-// Standard filter interfaces
-export interface DateRangeFilter {
-  from?: string;
-  to?: string;
-}
-
-export interface SortParams {
-  sort_by?: string;
-  sort_direction?: 'asc' | 'desc';
-}
-
-// Service response pattern
-export interface ServiceResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: Error;
+// Service response types
+export interface ServiceResponse<T> {
+  data: T | null;
+  error: Error | null;
+  status: number;
   message?: string;
 }
 
-// Relation names for database tables
-export type RelationName = 
-  | "activity_logs"
-  | "agent_payouts"
-  | "agents"
-  | "companies"
-  | "bank_statements"
-  | "bank_transactions"
-  | "invoices"
-  | "policies"
-  | "claim_documents"
-  | "claims"
-  | "client_commissions"
-  | "clients"
-  | "commissions"
-  | "company_email_settings"
-  | "company_settings"
-  | "fixed_commissions"
-  | "instructions"
-  | "insurance_products"
-  | "insurers"
-  | "invitations"
-  | "invoice_items"
-  | "leads"
-  | "manual_commissions"
-  | "payout_items"
-  | "policy_addendums"
-  | "policy_documents"
-  | "policy_types"
-  | "profiles"
-  | "report_schedules"
-  | "sales_assignments"
-  | "sales_documents"
-  | "sales_processes"
-  | "saved_filters"
-  | "saved_reports"
-  | "unlinked_payments"
-  | "user_custom_privileges"
-  | "client_documents"
-  | "insurer_documents"
-  | "agent_documents";
+// Database relation types
+export type RelationName = string;
+
+// Filtering
+export interface ActiveFilter {
+  id: string;
+  group: string;
+  label: string;
+  value: string;
+}
+
+export interface FilterOption {
+  id: string;
+  label: string;
+  value: string;
+}
+
+export interface FilterGroup {
+  id: string;
+  label: string;
+  options: FilterOption[];
+}
+
+// Other commonly used types
+export interface BaseEntity {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  company_id: string;
+}

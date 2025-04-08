@@ -129,40 +129,33 @@ const PoliciesTable = ({
     {
       header: t("policyNumber"),
       accessorKey: "policy_number",
-      sortable: true,
     },
     {
       header: t("client"),
       accessorKey: "policyholder_name",
-      sortable: true,
     },
     {
       header: t("insurer"),
       accessorKey: "insurer_name",
-      sortable: true,
     },
     {
       header: t("product"),
       accessorKey: "product_name",
-      sortable: true,
     },
     {
       header: t("expiryDate"),
       accessorKey: "expiry_date",
       cell: (row) => row.expiry_date ? formatDate(new Date(row.expiry_date)) : "-",
-      sortable: true,
     },
     {
       header: t("premium"),
       accessorKey: "premium",
       cell: (row) => formatCurrency(row.premium, row.currency),
-      sortable: true,
     },
     {
       header: t("status"),
       accessorKey: "status",
       cell: (row) => getStatusBadge(row.status),
-      sortable: true,
     },
     {
       header: t("actions"),
@@ -208,14 +201,15 @@ const PoliciesTable = ({
         ),
       }}
       pagination={{
-        currentPage: currentPage,
-        itemsPerPage: pageSize,
+        pageIndex: currentPage,
+        pageSize: pageSize,
         totalItems: data?.totalCount || 0,
         totalPages: totalPages,
         onPageChange: handlePageChange,
         onPageSizeChange: handlePageSizeChange,
         pageSizeOptions: [10, 25, 50, 100],
       }}
+      keyField="id"
     />
   );
 };
