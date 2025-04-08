@@ -1,176 +1,206 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/contexts/auth/AuthContext";
+import { Insurer } from "@/types/codebook";
 import { useToast } from "@/hooks/use-toast";
-import { Insurer } from "@/types/documents";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-interface UseInsurersParams {
+interface UseInsurersProps {
   page?: number;
   pageSize?: number;
   search?: string;
-  status?: string;
+  status?: 'active' | 'inactive';
+  shouldFetch?: boolean;
 }
 
-export const useInsurers = ({
+export function useInsurers({
   page = 1,
   pageSize = 10,
-  search = "",
-  status
-}: UseInsurersParams = {}) => {
+  search = '',
+  status,
+  shouldFetch = true
+}: UseInsurersProps = {}) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  // Create a query key that includes all filtering parameters
-  const queryKey = ['insurers', page, pageSize, search, status, user?.company_id];
-  
-  // Use TanStack Query to handle data fetching and caching
-  const { 
-    data, 
-    isLoading, 
-    error,
-    refetch 
-  } = useQuery({
-    queryKey,
-    queryFn: async () => {
-      // Get company_id from user context
-      const companyId = user?.company_id;
-      if (!companyId) throw new Error("Company ID not found");
-      
+  const [insurers, setInsurers] = useState<Insurer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const fetchInsurers = useCallback(async () => {
+    if (!user?.company_id || !shouldFetch) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Create query
       let query = supabase
         .from('insurers')
         .select('*', { count: 'exact' })
-        .eq('company_id', companyId)
-        .order('name', { ascending: true });
+        .eq('company_id', user.company_id);
       
-      // Apply status filter if provided
+      // Apply search filter
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+      
+      // Apply status filter
       if (status) {
         const isActive = status === 'active';
         query = query.eq('is_active', isActive);
       }
       
-      // Apply search filter if provided
-      if (search) {
-        query = query.ilike('name', `%${search}%`);
-      }
-      
-      // Apply pagination
+      // Calculate pagination
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
-      query = query.range(from, to);
       
+      // Apply pagination and order
+      query = query
+        .order('name', { ascending: true })
+        .range(from, to);
+      
+      // Execute query
       const { data, error, count } = await query;
       
-      if (error) {
-        console.error("Error fetching insurers:", error);
-        throw error;
-      }
+      if (error) throw error;
       
-      return {
-        insurers: data as Insurer[],
-        totalItems: count || 0,
-        totalPages: count ? Math.ceil(count / pageSize) : 0
+      setInsurers(data as Insurer[]);
+      
+      if (count !== null) {
+        setTotalItems(count);
+        setTotalPages(Math.ceil(count / pageSize));
+      }
+    } catch (err) {
+      console.error('Error fetching insurers:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch insurers'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.company_id, page, pageSize, search, status, shouldFetch]);
+
+  useEffect(() => {
+    fetchInsurers();
+  }, [fetchInsurers]);
+
+  const refreshInsurers = useCallback(() => {
+    fetchInsurers();
+  }, [fetchInsurers]);
+
+  const createInsurer = useCallback(async (insurerData: Partial<Insurer>) => {
+    if (!user?.company_id) {
+      throw new Error('No company ID available');
+    }
+    
+    setIsCreating(true);
+    
+    try {
+      // Ensure company_id is set
+      const newInsurer = {
+        ...insurerData,
+        company_id: user.company_id,
+        name: insurerData.name || '' // Ensure name is provided
       };
-    },
-    enabled: !!user?.company_id,
-  });
-  
-  // Create mutation for deleting an insurer
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
+      
+      const { data, error } = await supabase
+        .from('insurers')
+        .insert(newInsurer)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Add to state
+      setInsurers(prev => [data as Insurer, ...prev]);
+      
+      // Update total counts
+      setTotalItems(prev => prev + 1);
+      setTotalPages(Math.ceil((totalItems + 1) / pageSize));
+      
+      return data as Insurer;
+    } catch (err) {
+      console.error('Error creating insurer:', err);
+      throw err;
+    } finally {
+      setIsCreating(false);
+    }
+  }, [user?.company_id, totalItems, pageSize]);
+
+  const updateInsurer = useCallback(async (insurerData: Partial<Insurer>) => {
+    if (!insurerData.id) {
+      throw new Error('Insurer ID is required for updates');
+    }
+    
+    setIsUpdating(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('insurers')
+        .update(insurerData)
+        .eq('id', insurerData.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Update in state
+      setInsurers(prev => 
+        prev.map(insurer => 
+          insurer.id === insurerData.id ? (data as Insurer) : insurer
+        )
+      );
+      
+      return data as Insurer;
+    } catch (err) {
+      console.error('Error updating insurer:', err);
+      throw err;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, []);
+
+  const deleteInsurer = useCallback(async (insurerId: string) => {
+    setIsDeleting(true);
+    
+    try {
       const { error } = await supabase
         .from('insurers')
         .delete()
-        .eq('id', id);
+        .eq('id', insurerId);
       
       if (error) throw error;
-      return id;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['insurers'] });
-      toast({
-        title: "Insurer deleted",
-        description: "The insurer has been successfully deleted."
-      });
-    },
-    onError: (error) => {
-      console.error("Error deleting insurer:", error);
-      toast({
-        title: "Delete failed",
-        description: "Failed to delete the insurer.",
-        variant: "destructive"
-      });
-    }
-  });
-  
-  // Create mutation for creating an insurer
-  const createMutation = useMutation({
-    mutationFn: async (newInsurer: Partial<Insurer>) => {
-      // Ensure the company_id is set to the current user's company
-      const insurerWithCompanyId = {
-        ...newInsurer,
-        company_id: user?.company_id
-      };
       
-      const { data, error } = await supabase
-        .from('insurers')
-        .insert(insurerWithCompanyId)
-        .select();
+      // Remove from state
+      setInsurers(prev => prev.filter(insurer => insurer.id !== insurerId));
       
-      if (error) throw error;
-      return data[0] as Insurer;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['insurers'] });
-    },
-    onError: (error) => {
-      console.error("Error creating insurer:", error);
-      throw error;
-    }
-  });
-  
-  // Create mutation for updating an insurer
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, updateData }: { id: string; updateData: Partial<Insurer> }) => {
-      const { data, error } = await supabase
-        .from('insurers')
-        .update(updateData)
-        .eq('id', id)
-        .select();
+      // Update total counts
+      setTotalItems(prev => prev - 1);
+      setTotalPages(Math.ceil((totalItems - 1) / pageSize));
       
-      if (error) throw error;
-      return data[0] as Insurer;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['insurers'] });
-    },
-    onError: (error) => {
-      console.error("Error updating insurer:", error);
-      throw error;
+    } catch (err) {
+      console.error('Error deleting insurer:', err);
+      throw err;
+    } finally {
+      setIsDeleting(false);
     }
-  });
-  
-  // Wrapper functions to simplify API
-  const deleteInsurer = (id: string) => deleteMutation.mutate(id);
-  const createInsurer = async (insurer: Partial<Insurer>) => {
-    return createMutation.mutateAsync(insurer);
-  };
-  const updateInsurer = async (id: string, insurer: Partial<Insurer>) => {
-    return updateMutation.mutateAsync({ id, updateData: insurer });
-  };
-  
+  }, [totalItems, pageSize]);
+
   return {
-    insurers: data?.insurers || [],
-    totalItems: data?.totalItems || 0,
-    totalPages: data?.totalPages || 0,
+    insurers,
     isLoading,
     error,
-    deleteInsurer,
-    refreshInsurers: refetch,
+    totalItems,
+    totalPages,
+    isDeleting,
+    isUpdating,
+    isCreating,
+    refreshInsurers,
     createInsurer,
     updateInsurer,
-    isDeleting: deleteMutation.isPending
+    deleteInsurer
   };
-};
+}

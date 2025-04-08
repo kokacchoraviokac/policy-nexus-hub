@@ -1,141 +1,254 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/auth/AuthContext";
+import { Insurer } from "@/types/codebook";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
-import { Insurer } from "@/types/documents";
 
 interface InsurerFormProps {
-  insurer?: Insurer;
-  onSubmit: (data: Partial<Insurer>) => Promise<void>;
-  isSubmitting: boolean;
+  defaultValues?: Partial<Insurer>;
+  onSubmit: (data: Partial<Insurer>) => void;
+  isSubmitting?: boolean;
 }
 
 const InsurerForm: React.FC<InsurerFormProps> = ({
-  insurer,
+  defaultValues,
   onSubmit,
-  isSubmitting
+  isSubmitting = false,
 }) => {
   const { t } = useLanguage();
-  const { register, handleSubmit, formState: { errors } } = useForm<Partial<Insurer>>({
-    defaultValues: insurer || {
-      name: "",
-      contact_person: "",
-      email: "",
-      phone: "",
-      address: "",
-      city: "",
-      postal_code: "",
-      country: "",
-      registration_number: "",
-      is_active: true
-    }
+  const { user } = useAuth();
+
+  // Create a schema for insurer validation
+  const formSchema = z.object({
+    name: z.string().min(2, t("nameRequired")),
+    contact_person: z.string().optional(),
+    email: z.string().email(t("invalidEmail")).optional().or(z.literal("")),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    postal_code: z.string().optional(),
+    country: z.string().optional(),
+    registration_number: z.string().optional(),
+    is_active: z.boolean().default(true),
+    broker_code: z.string().optional(),
   });
 
+  // Initialize form with default values
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: defaultValues?.name || "",
+      contact_person: defaultValues?.contact_person || "",
+      email: defaultValues?.email || "",
+      phone: defaultValues?.phone || "",
+      address: defaultValues?.address || "",
+      city: defaultValues?.city || "",
+      postal_code: defaultValues?.postal_code || "",
+      country: defaultValues?.country || "",
+      registration_number: defaultValues?.registration_number || "",
+      is_active: defaultValues?.is_active !== undefined ? defaultValues.is_active : true,
+      broker_code: defaultValues?.broker_code || "",
+    },
+  });
+
+  const handleSubmit = (data: z.infer<typeof formSchema>) => {
+    // Add company_id if not provided
+    const insurerData: Partial<Insurer> = {
+      ...data,
+      company_id: user?.company_id,
+    };
+    
+    // If we're updating an existing insurer, include the id
+    if (defaultValues?.id) {
+      insurerData.id = defaultValues.id;
+    }
+
+    onSubmit(insurerData);
+  };
+
   return (
-    <form 
-      id="insurer-form" 
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4"
-    >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">{t("name")} *</Label>
-          <Input
-            id="name"
-            {...register("name", { required: true })}
-            className={errors.name ? "border-red-500" : ""}
-          />
-          {errors.name && (
-            <p className="text-red-500 text-xs">{t("nameRequired")}</p>
+    <Form {...form}>
+      <form id="insurer-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("name")}</FormLabel>
+              <FormControl>
+                <Input placeholder={t("enterName")} {...field} disabled={isSubmitting} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="contact_person">{t("contactPerson")}</Label>
-          <Input
-            id="contact_person"
-            {...register("contact_person")}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="contact_person"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("contactPerson")}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t("enterContactPerson")} {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("email")}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t("enterEmail")} {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="email">{t("email")}</Label>
-          <Input
-            id="email"
-            type="email"
-            {...register("email")}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("phone")}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t("enterPhone")} {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="registration_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("registrationNumber")}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t("enterRegistrationNumber")} {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="phone">{t("phone")}</Label>
-          <Input
-            id="phone"
-            {...register("phone")}
+
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("address")}</FormLabel>
+              <FormControl>
+                <Input placeholder={t("enterAddress")} {...field} disabled={isSubmitting} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("city")}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t("enterCity")} {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="postal_code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("postalCode")}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t("enterPostalCode")} {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("country")}</FormLabel>
+                <FormControl>
+                  <Input placeholder={t("enterCountry")} {...field} disabled={isSubmitting} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="address">{t("address")}</Label>
-          <Textarea
-            id="address"
-            {...register("address")}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="city">{t("city")}</Label>
-          <Input
-            id="city"
-            {...register("city")}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="postal_code">{t("postalCode")}</Label>
-          <Input
-            id="postal_code"
-            {...register("postal_code")}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="country">{t("country")}</Label>
-          <Input
-            id="country"
-            {...register("country")}
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="registration_number">{t("registrationNumber")}</Label>
-          <Input
-            id="registration_number"
-            {...register("registration_number")}
-          />
-        </div>
-        
-        <div className="flex items-center space-x-2 pt-6">
-          <Checkbox
-            id="is_active"
-            {...register("is_active")}
-            defaultChecked={insurer?.is_active ?? true}
-          />
-          <Label htmlFor="is_active">{t("active")}</Label>
-        </div>
-      </div>
-      
-      {isSubmitting && (
-        <div className="flex justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
-      )}
-    </form>
+
+        <FormField
+          control={form.control}
+          name="broker_code"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("brokerCode")}</FormLabel>
+              <FormControl>
+                <Input placeholder={t("enterBrokerCode")} {...field} disabled={isSubmitting} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="is_active"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel>{t("active")}</FormLabel>
+              </div>
+            </FormItem>
+          )}
+        />
+      </form>
+    </Form>
   );
 };
 

@@ -23,64 +23,8 @@ export type DocumentTableName =
   | "invoice_documents"
   | "addendum_documents";
 
-// Client types
-export interface Client extends BaseEntity {
-  name: string;
-  contact_person?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  postal_code?: string;
-  country?: string;
-  is_active: boolean;
-  tax_id?: string;
-  registration_number?: string;
-  notes?: string;
-}
-
-// Insurer types
-export interface Insurer extends BaseEntity {
-  name: string;
-  contact_person?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  postal_code?: string;
-  country?: string;
-  registration_number?: string;
-  is_active: boolean;
-  parent_company_id?: string;
-  broker_code?: string;
-}
-
-// Insurance Product types
-export interface InsuranceProduct extends BaseEntity {
-  code: string;
-  name: string;
-  english_name?: string;
-  description?: string;
-  category: 'life' | 'non-life';
-  is_active: boolean;
-  insurer_id?: string;
-  insurer_name?: string;
-  name_translations?: Record<string, string>;
-  description_translations?: Record<string, string>;
-  category_translations?: Record<string, string>;
-}
-
-// Contact Person types
-export interface ContactPerson extends BaseEntity {
-  name: string;
-  position?: string;
-  email?: string;
-  phone?: string;
-  mobile?: string;
-  is_primary: boolean;
-  entity_id: string;
-  entity_type: 'client' | 'insurer';
-}
+// Re-export necessary types from common
+export { EntityType, DocumentCategory, DocumentApprovalStatus, Comment };
 
 // Base document interface
 export interface Document extends BaseEntity {
@@ -139,6 +83,14 @@ export interface DocumentFilterParams {
   page_size?: number;
   sort_by?: string;
   sort_direction?: 'asc' | 'desc';
+  // Aliases for backward compatibility
+  entityType?: EntityType;
+  entityId?: string;
+  documentType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  searchTerm?: string;
+  pageSize?: number;
 }
 
 // For backward compatibility - aliases to DocumentFilterParams

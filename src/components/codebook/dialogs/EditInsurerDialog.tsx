@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
+import { Insurer } from "@/types/codebook";
 import {
   Dialog,
   DialogContent,
@@ -12,14 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import InsurerForm from "./InsurerForm";
-import { Insurer } from "@/types/documents";
 import { supabase } from "@/integrations/supabase/client";
 
 interface EditInsurerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   insurerId: string;
-  onSubmit: (id: string, insurer: Partial<Insurer>) => Promise<void>;
+  onSubmit: (insurer: Partial<Insurer>) => Promise<void>;
 }
 
 const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
@@ -30,17 +30,17 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
 }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [insurer, setInsurer] = useState<Insurer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open && insurerId) {
-      fetchInsurerDetails();
+      fetchInsurer();
     }
   }, [open, insurerId]);
 
-  const fetchInsurerDetails = async () => {
+  const fetchInsurer = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -52,10 +52,10 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
       if (error) throw error;
       setInsurer(data as Insurer);
     } catch (error) {
-      console.error("Error fetching insurer details:", error);
+      console.error("Error fetching insurer:", error);
       toast({
-        title: t("fetchError"),
-        description: t("errorFetchingInsurerDetails"),
+        title: t("error"),
+        description: t("failedToFetchInsurer"),
         variant: "destructive"
       });
     } finally {
@@ -66,7 +66,7 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
   const handleSubmit = async (data: Partial<Insurer>) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(insurerId, data);
+      await onSubmit(data);
       onOpenChange(false);
       toast({
         title: t("insurerUpdated"),
@@ -84,18 +84,6 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
     }
   };
 
-  if (isLoading) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent>
-          <div className="flex items-center justify-center p-6">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -103,12 +91,20 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
           <DialogTitle>{t("editInsurer")}</DialogTitle>
         </DialogHeader>
         
-        {insurer && (
+        {isLoading ? (
+          <div className="flex justify-center my-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : insurer ? (
           <InsurerForm 
-            insurer={insurer}
+            defaultValues={insurer} 
             onSubmit={handleSubmit} 
             isSubmitting={isSubmitting}
           />
+        ) : (
+          <p className="text-center text-muted-foreground">
+            {t("insurerNotFound")}
+          </p>
         )}
         
         <DialogFooter className="mt-4">
@@ -119,20 +115,22 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
           >
             {t("cancel")}
           </Button>
-          <Button 
-            type="submit"
-            form="insurer-form"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("saving")}
-              </>
-            ) : (
-              t("save")
-            )}
-          </Button>
+          {!isLoading && insurer && (
+            <Button 
+              type="submit"
+              form="insurer-form"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("updating")}
+                </>
+              ) : (
+                t("update")
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

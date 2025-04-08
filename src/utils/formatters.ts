@@ -24,6 +24,16 @@ export function formatDateString(
 }
 
 /**
+ * Format a date string (alias for backward compatibility)
+ */
+export function formatDate(
+  dateString: string | null | undefined,
+  format: string = 'PP'
+): string {
+  return formatDateString(dateString);
+}
+
+/**
  * Format number as currency
  * @param amount The amount to format
  * @param currency The currency code

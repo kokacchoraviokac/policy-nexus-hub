@@ -62,6 +62,31 @@ export function getEntityIdColumn(entityType: EntityType): string {
  * Helper function to safely cast a string as a table name for Supabase operations
  * This helps prevent TypeScript errors when using dynamic table names
  */
-export function asTableName(tableName: string): any {
-  return tableName;
+export function asTableName(tableName: string | DocumentTableName): DocumentTableName {
+  // This is a type assertion function to help TypeScript understand
+  // that the string is a valid table name
+  return tableName as DocumentTableName;
+}
+
+/**
+ * Safely convert any string to a table name
+ */
+export function toTableName(tableName: string): DocumentTableName {
+  const validTableNames: DocumentTableName[] = [
+    "policy_documents",
+    "claim_documents",
+    "sales_documents",
+    "client_documents",
+    "insurer_documents",
+    "agent_documents",
+    "invoice_documents",
+    "addendum_documents"
+  ];
+  
+  if (validTableNames.includes(tableName as DocumentTableName)) {
+    return tableName as DocumentTableName;
+  }
+  
+  // Default fallback
+  return "policy_documents";
 }
