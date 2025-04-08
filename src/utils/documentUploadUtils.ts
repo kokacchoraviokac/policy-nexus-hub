@@ -1,5 +1,4 @@
-
-import { EntityType } from "@/types/common";
+import { EntityType } from "@/types/documents";
 
 export type DocumentTableName = 
   | "policy_documents" 
@@ -8,7 +7,8 @@ export type DocumentTableName =
   | "invoice_documents"
   | "sales_documents"
   | "addendum_documents"
-  | "agent_documents";
+  | "agent_documents"
+  | "insurer_documents";
 
 /**
  * Get the appropriate document table name for a given entity type
@@ -29,9 +29,12 @@ export const getDocumentTableName = (entityType: EntityType | string): DocumentT
     case EntityType.SALE:
       return "sales_documents";
     case EntityType.ADDENDUM:
+    case EntityType.POLICY_ADDENDUM:
       return "addendum_documents";
     case EntityType.AGENT:
       return "agent_documents";
+    case EntityType.INSURER:
+      return "insurer_documents";
     default:
       return "client_documents"; // Default fallback
   }
@@ -58,6 +61,8 @@ export const getEntityIdColumn = (tableName: DocumentTableName): string => {
       return "addendum_id";
     case "agent_documents":
       return "agent_id";
+    case "insurer_documents":
+      return "insurer_id";
     default:
       return "entity_id"; // Fallback
   }
@@ -68,7 +73,14 @@ export const getEntityIdColumn = (tableName: DocumentTableName): string => {
  * @param entityType The entity type
  * @returns The table name
  */
-export const asTableName = (entityType: EntityType | string): string => {
+export const asTableName = (entityType: EntityType | string | DocumentTableName): string => {
+  // If it's already a document table name, get the base table name
+  if (typeof entityType === 'string' && entityType.endsWith('_documents')) {
+    const baseEntityType = entityType.replace('_documents', '');
+    return baseEntityType + 's'; // Simple pluralization
+  }
+  
+  // Otherwise, convert from EntityType to table name
   switch (entityType) {
     case EntityType.POLICY:
       return "policies";
@@ -84,11 +96,16 @@ export const asTableName = (entityType: EntityType | string): string => {
       return "sales";
     case EntityType.ADDENDUM:
       return "policy_addendums";
+    case EntityType.POLICY_ADDENDUM:
+      return "policy_addendums";
     case EntityType.AGENT:
       return "agents";
     case EntityType.INSURER:
       return "insurers";
     default:
-      return entityType.toString().toLowerCase() + "s"; // Simple pluralization as fallback
+      if (typeof entityType === 'string') {
+        return entityType.toLowerCase() + "s"; // Simple pluralization as fallback
+      }
+      return "unknown";
   }
 };

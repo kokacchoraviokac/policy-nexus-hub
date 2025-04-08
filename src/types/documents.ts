@@ -1,5 +1,124 @@
 
-import { BaseEntity, EntityType, DocumentCategory, DocumentApprovalStatus, ApprovalStatus, Comment } from "./common";
+import { BaseEntity } from "./common";
+
+// Filter state for codebook entities
+export interface CodebookFilterState {
+  status: 'all' | 'active' | 'inactive';
+  country?: string;
+  city?: string;
+  createdAfter?: Date;
+  createdBefore?: Date;
+}
+
+// Define document-related enums
+export enum EntityType {
+  POLICY = 'policy',
+  CLAIM = 'claim',
+  CLIENT = 'client',
+  INVOICE = 'invoice',
+  ADDENDUM = 'addendum',
+  POLICY_ADDENDUM = 'policy_addendum',
+  SALES_PROCESS = 'sales_process',
+  SALE = 'sale',
+  AGENT = 'agent',
+  INSURER = 'insurer'
+}
+
+export enum DocumentCategory {
+  POLICY = 'policy',
+  CLAIM = 'claim',
+  CLIENT = 'client',
+  INVOICE = 'invoice',
+  OTHER = 'other',
+  CLAIM_EVIDENCE = 'claim_evidence',
+  MEDICAL = 'medical',
+  LEGAL = 'legal',
+  FINANCIAL = 'financial',
+  LIEN = 'lien', 
+  NOTIFICATION = 'notification',
+  CORRESPONDENCE = 'correspondence',
+  DISCOVERY = 'discovery',
+  QUOTE = 'quote',
+  PROPOSAL = 'proposal',
+  CONTRACT = 'contract',
+  CLOSEOUT = 'closeout',
+  SALES = 'sales',
+  GENERAL = 'general',
+  AUTHORIZATION = 'authorization',
+  MISCELLANEOUS = 'miscellaneous'
+}
+
+export enum DocumentApprovalStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  NEEDS_REVIEW = 'needs_review'
+}
+
+// Filter state for codebook entities
+export interface CodebookFilterState {
+  status: 'all' | 'active' | 'inactive';
+  country?: string;
+  city?: string;
+  createdAfter?: Date;
+  createdBefore?: Date;
+}
+
+// Client types
+export interface Client extends BaseEntity {
+  name: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
+  is_active: boolean;
+  tax_id?: string;
+  registration_number?: string;
+  notes?: string;
+}
+
+// Insurer types
+export interface Insurer extends BaseEntity {
+  name: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
+  registration_number?: string;
+  is_active: boolean;
+  parent_company_id?: string;
+  broker_code?: string;
+}
+
+// Insurance Product types
+export interface InsuranceProduct extends BaseEntity {
+  code: string;
+  name: string;
+  english_name?: string;
+  description?: string;
+  category: 'life' | 'non-life';
+  is_active: boolean;
+  insurer_id?: string;
+  insurer_name?: string;
+}
+
+// Contact Person types
+export interface ContactPerson extends BaseEntity {
+  name: string;
+  position?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  is_primary: boolean;
+  entity_id: string;
+  entity_type: 'client' | 'insurer';
+}
 
 // Document table name based on entity type
 export type DocumentTableName =
@@ -121,12 +240,16 @@ export interface DocumentUploadDialogProps {
 
 // Document upload options
 export interface DocumentUploadOptions {
-  entityType: EntityType;
+  file: File;
+  documentName: string;
+  documentType: string;
+  category: DocumentCategory | string;
   entityId: string;
-  onSuccess?: () => void;
-  originalDocumentId?: string;
+  entityType: EntityType;
+  originalDocumentId?: string | null;
   currentVersion?: number;
   salesStage?: string;
+  description?: string;
 }
 
 // Interface for the useDocumentSearch hook
@@ -134,6 +257,16 @@ export interface UseDocumentSearchProps {
   entityType?: EntityType;
   entityId?: string;
   initialFilters?: Partial<DocumentFilterParams>;
+  defaultParams?: DocumentFilterParams;
+  autoSearch?: boolean;
+  category?: DocumentCategory;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  initialSearchParams?: DocumentFilterParams;
+  autoFetch?: boolean;
 }
 
 // Return type for useDocumentSearch
@@ -153,6 +286,12 @@ export interface UseDocumentSearchReturn {
     onPageSizeChange: (pageSize: number) => void;
   };
   refetch: () => void;
+  searchParams: DocumentFilterParams;
+  setSearchParams: (params: Partial<DocumentFilterParams>) => void;
+  search: () => void;
+  totalCount: number;
+  totalPages: number;
+  resetSearch: () => void;
 }
 
 // Return type for useDocuments hook
@@ -163,4 +302,15 @@ export interface UseDocumentsReturn {
   deleteDocument: (documentId: string) => Promise<void>;
   isDeletingDocument: boolean;
   refetchDocuments: () => Promise<void>;
+  documentsCount: number;
+}
+
+// Comment interface for documents
+export interface Comment {
+  id: string;
+  user_id: string;
+  user_name?: string;
+  content: string;
+  created_at: string;
+  document_id: string;
 }

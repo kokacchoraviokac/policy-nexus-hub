@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { LoaderButton } from '@/components/ui/loader-button';
+import { Loader2 } from 'lucide-react';
 import { Insurer } from '@/types/codebook';
 
 const insurerSchema = z.object({
@@ -262,16 +262,24 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               type="button" 
               variant="outline" 
               onClick={onCancel}
+              disabled={isLoading}
             >
               {t('cancel')}
             </Button>
           )}
-          <LoaderButton
+          <Button
             type="submit"
-            loading={isLoading}
+            disabled={isLoading}
           >
-            {isEditMode ? t('saveChanges') : t('addInsurer')}
-          </LoaderButton>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isEditMode ? t('saving') : t('adding')}
+              </>
+            ) : (
+              isEditMode ? t('saveChanges') : t('addInsurer')
+            )}
+          </Button>
         </div>
       </form>
     </Form>

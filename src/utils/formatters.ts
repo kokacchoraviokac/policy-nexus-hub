@@ -1,99 +1,133 @@
 
-import { format } from "date-fns";
+import { format, parseISO, isValid } from 'date-fns';
 
 /**
- * Format a date string using date-fns
- * @param date Date string or Date object
- * @param formatString Optional format string (default: 'yyyy-MM-dd')
+ * Format a date string to a localized date string
+ * @param dateString ISO date string
+ * @param formatStr Optional format string
  * @returns Formatted date string
  */
-export const formatDateString = (date: string | Date, formatString: string = "yyyy-MM-dd"): string => {
-  if (!date) return "-";
+export const formatDateString = (dateString?: string | null, formatStr: string = 'dd/MM/yyyy'): string => {
+  if (!dateString) return '';
   
   try {
-    const dateObj = typeof date === "string" ? new Date(date) : date;
-    return format(dateObj, formatString);
+    const date = parseISO(dateString);
+    if (!isValid(date)) return '';
+    return format(date, formatStr);
   } catch (error) {
-    console.error("Error formatting date:", error);
-    return String(date);
+    console.error('Error formatting date:', error);
+    return '';
   }
 };
 
 /**
- * Format a date for display
- * @param date Date string or Date object
- * @param formatString Optional format string (default: 'PP')
+ * Format a date to a localized date string
+ * @param date Date object
+ * @param formatStr Optional format string
  * @returns Formatted date string
  */
-export const formatDate = (date: string | Date, formatString: string = "PP"): string => {
-  return formatDateString(date, formatString);
+export const formatDate = (date?: Date | null, formatStr: string = 'dd/MM/yyyy'): string => {
+  if (!date || !isValid(date)) return '';
+  
+  try {
+    return format(date, formatStr);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '';
+  }
 };
 
 /**
- * Format a date string with time using date-fns
- * @param date Date string or Date object
- * @param formatString Optional format string (default: 'yyyy-MM-dd HH:mm')
+ * Format a date string to a localized date and time string
+ * @param dateString ISO date string
+ * @param formatStr Optional format string
  * @returns Formatted date and time string
  */
-export const formatDateTime = (date: string | Date, formatString: string = "yyyy-MM-dd HH:mm"): string => {
-  return formatDateString(date, formatString);
+export const formatDateTime = (dateString?: string | null, formatStr: string = 'dd/MM/yyyy HH:mm'): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = parseISO(dateString);
+    if (!isValid(date)) return '';
+    return format(date, formatStr);
+  } catch (error) {
+    console.error('Error formatting date and time:', error);
+    return '';
+  }
 };
 
 /**
- * Format a currency amount with the currency symbol
- * @param amount The amount to format
- * @param currency The currency code (e.g., USD, EUR)
+ * Format a currency value
+ * @param value Number to format
+ * @param currency Currency code (default: EUR)
+ * @param locale Locale to use for formatting (default: en-US)
  * @returns Formatted currency string
  */
-export const formatCurrency = (amount: number, currency: string = "USD"): string => {
-  if (amount === undefined || amount === null) {
-    return "-";
-  }
+export const formatCurrency = (
+  value?: number | null,
+  currency: string = 'EUR',
+  locale: string = 'en-US'
+): string => {
+  if (value === undefined || value === null) return '';
   
   try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
       currency: currency,
-    }).format(amount);
+    }).format(value);
   } catch (error) {
-    console.error("Error formatting currency:", error);
-    return `${amount} ${currency}`;
+    console.error('Error formatting currency:', error);
+    return value.toString();
   }
 };
 
 /**
- * Format a number with specified options
- * @param value The number to format
- * @param options Intl.NumberFormatOptions
+ * Format a number with thousand separators
+ * @param value Number to format
+ * @param decimalPlaces Number of decimal places
+ * @param locale Locale to use for formatting
  * @returns Formatted number string
  */
-export const formatNumber = (value: number, options: Intl.NumberFormatOptions = {}): string => {
-  if (value === undefined || value === null) {
-    return "-";
-  }
+export const formatNumber = (
+  value?: number | null,
+  decimalPlaces: number = 2,
+  locale: string = 'en-US'
+): string => {
+  if (value === undefined || value === null) return '';
   
   try {
-    return new Intl.NumberFormat("en-US", options).format(value);
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: decimalPlaces,
+      maximumFractionDigits: decimalPlaces,
+    }).format(value);
   } catch (error) {
-    console.error("Error formatting number:", error);
-    return String(value);
+    console.error('Error formatting number:', error);
+    return value.toString();
   }
 };
 
 /**
  * Format a percentage value
- * @param value The percentage value
+ * @param value Number to format as percentage
  * @param decimalPlaces Number of decimal places
+ * @param locale Locale to use for formatting
  * @returns Formatted percentage string
  */
-export const formatPercentage = (value: number, decimalPlaces: number = 2): string => {
-  if (value === undefined || value === null) {
-    return "-";
-  }
+export const formatPercentage = (
+  value?: number | null,
+  decimalPlaces: number = 2,
+  locale: string = 'en-US'
+): string => {
+  if (value === undefined || value === null) return '';
   
-  return formatNumber(value, {
-    style: "percent",
-    minimumFractionDigits: decimalPlaces,
-    maximumFractionDigits: decimalPlaces,
-  });
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'percent',
+      minimumFractionDigits: decimalPlaces,
+      maximumFractionDigits: decimalPlaces,
+    }).format(value / 100);
+  } catch (error) {
+    console.error('Error formatting percentage:', error);
+    return `${value}%`;
+  }
 };

@@ -16,7 +16,16 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, AlertDialogAction } from "@/components/ui/alert-dialog";
+import { 
+  AlertDialog, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogAction 
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 const InsurersDirectory = () => {
@@ -100,6 +109,10 @@ const InsurersDirectory = () => {
   
   const columns = getInsurerColumns(handleEdit, handleDelete);
   
+  const handleRefresh = () => {
+    refreshInsurers();
+  };
+  
   return (
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
@@ -149,7 +162,7 @@ const InsurersDirectory = () => {
           title: t("noInsurersFound"),
           description: t("noInsurersFoundDescription"),
           action: (
-            <Button onClick={refreshInsurers}>
+            <Button onClick={handleRefresh}>
               {t("refresh")}
             </Button>
           )
@@ -157,7 +170,7 @@ const InsurersDirectory = () => {
         pagination={{
           pageIndex: currentPage,
           pageSize: pageSize,
-          totalItems: totalItems,
+          totalCount: totalItems,
           totalPages: totalPages,
           onPageChange: handlePageChange,
           onPageSizeChange: handlePageSizeChange,
