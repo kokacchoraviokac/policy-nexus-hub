@@ -3,7 +3,6 @@ import { UserRole } from "./userTypes";
 
 export * from "./userTypes";
 export type { ResourceContext } from "./contextTypes";
-export * from "./contextTypes";
 
 // User state
 export interface AuthState {
@@ -27,6 +26,10 @@ export interface User {
   updated_at: string;
   avatar_url?: string;
   user_metadata?: Record<string, any>;
+  
+  // Backward compatibility aliases
+  companyId?: string; // Alias for company_id
+  avatar?: string;    // Alias for avatar_url
 }
 
 // Custom privilege for users

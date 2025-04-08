@@ -1,7 +1,7 @@
 
 import { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { User, UserRole, CustomPrivilege } from "@/types/auth/userTypes";
-import { ResourceContext } from "@/types/auth/userTypes";
+import { ResourceContext } from "@/types/auth/contextTypes";
 
 export interface AuthContextType {
   user: User | null;
@@ -10,6 +10,8 @@ export interface AuthContextType {
   isInitialized: boolean;
   isAuthenticated: boolean;
   customPrivileges: CustomPrivilege[];
+  role: UserRole | null;
+  companyId: string | null;
   
   // Auth operations
   signIn: (email: string, password: string) => Promise<void>;
@@ -32,17 +34,13 @@ export interface AuthContextType {
   hasPrivilegeWithContext: (privilege: string, context?: ResourceContext) => boolean;
   hasRole: (role: UserRole | UserRole[]) => boolean;
   checkPrivilege: (privilege: string, resource?: ResourceContext) => boolean;
-  
-  // User profile information
-  role: UserRole | null;
-  companyId: string | null;
 }
 
 // Map Supabase User to our User type
 export const mapSupabaseUserToUser = (supabaseUser: SupabaseUser | null, existingUser?: Partial<User>): User | null => {
   if (!supabaseUser) return null;
   
-  return {
+  const user: User = {
     id: supabaseUser.id,
     name: existingUser?.name || supabaseUser.user_metadata?.name || "User",
     email: supabaseUser.email || "",
@@ -51,6 +49,12 @@ export const mapSupabaseUserToUser = (supabaseUser: SupabaseUser | null, existin
     company_id: existingUser?.company_id || supabaseUser.user_metadata?.company_id,
     user_metadata: supabaseUser.user_metadata || {},
     created_at: supabaseUser.created_at,
-    updated_at: supabaseUser.updated_at || supabaseUser.created_at
+    updated_at: supabaseUser.updated_at || supabaseUser.created_at,
+    
+    // Add backward compatibility aliases
+    companyId: existingUser?.company_id || supabaseUser.user_metadata?.company_id,
+    avatar: existingUser?.avatar_url || supabaseUser.user_metadata?.avatar_url
   };
+  
+  return user;
 };

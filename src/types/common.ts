@@ -1,9 +1,7 @@
 
-/**
- * Common types used across the application
- */
+import { Json } from "@/types/supabase";
 
-// Base entity interface for all entities
+// Base entity interface
 export interface BaseEntity {
   id: string;
   created_at: string;
@@ -11,55 +9,35 @@ export interface BaseEntity {
   company_id?: string;
 }
 
-// Common entity types used throughout the application
+// Entity type enum
 export enum EntityType {
   POLICY = 'policy',
   CLAIM = 'claim',
   CLIENT = 'client',
-  INVOICE = 'invoice',
-  ADDENDUM = 'addendum',
-  POLICY_ADDENDUM = 'policy_addendum',
+  INSURER = 'insurer',
+  AGENT = 'agent',
   SALES_PROCESS = 'sales_process',
   SALE = 'sale',
-  AGENT = 'agent',
-  INSURER = 'insurer',
-  DOCUMENT = 'document'
+  INVOICE = 'invoice',
+  POLICY_ADDENDUM = 'policy_addendum',
+  PRODUCT = 'product',
+  DOCUMENT = 'document',
+  USER = 'user',
 }
 
-// Document approval status
-export enum ApprovalStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  NEEDS_REVIEW = 'needs_review'
-}
-
-// Document categories
+// Document category enum
 export enum DocumentCategory {
   POLICY = 'policy',
   CLAIM = 'claim',
-  CLIENT = 'client',
   INVOICE = 'invoice',
-  OTHER = 'other',
-  CLAIM_EVIDENCE = 'claim_evidence',
-  MEDICAL = 'medical',
-  LEGAL = 'legal',
-  FINANCIAL = 'financial',
-  LIEN = 'lien', 
-  NOTIFICATION = 'notification',
-  CORRESPONDENCE = 'correspondence',
-  DISCOVERY = 'discovery',
-  QUOTE = 'quote',
-  PROPOSAL = 'proposal',
   CONTRACT = 'contract',
-  CLOSEOUT = 'closeout',
-  SALES = 'sales',
-  GENERAL = 'general',
-  AUTHORIZATION = 'authorization',
-  MISCELLANEOUS = 'miscellaneous'
+  AGREEMENT = 'agreement',
+  IDENTIFICATION = 'identification',
+  CORRESPONDENCE = 'correspondence',
+  OTHER = 'other'
 }
 
-// Document approval status - consistent naming with the rest of the app
+// Document approval status enum
 export enum DocumentApprovalStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
@@ -67,83 +45,69 @@ export enum DocumentApprovalStatus {
   NEEDS_REVIEW = 'needs_review'
 }
 
-// Comment interface for documents
-export interface Comment {
-  id: string;
-  user_id: string;
-  user_name?: string;
-  content: string;
-  created_at: string;
-  document_id: string;
+// API response type
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  meta?: Record<string, any>;
 }
 
-// Resource context for authorization checks
-export interface ResourceContext {
-  companyId?: string;
-  organizationId?: string;
-  [key: string]: any;
-}
-
-// Service response wrapper
-export interface ServiceResponse<T> {
+// Service response type
+export interface ServiceResponse<T = any> {
+  success: boolean;
   data: T | null;
   error: Error | null;
-  success: boolean;
-  message?: string;
 }
 
-// Common pagination parameters
+// Date range interface
+export interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
+// Comment interface
+export interface Comment extends BaseEntity {
+  user_id: string;
+  content: string;
+  document_id?: string;
+  entity_id?: string;
+  entity_type?: EntityType;
+}
+
+// Pagination params interface
 export interface PaginationParams {
   page: number;
   page_size: number;
 }
 
-// For use in UI components
-export interface PaginationProps extends PaginationParams {
-  total_pages: number;
-  total_items: number;
-  onPageChange?: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: number[];
-}
-
-export interface PaginationControllerProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-  pageSize?: number;
-  itemsPerPage?: number;
-  itemsCount?: number;
-  totalItems?: number;
-  onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: number[];
-}
-
-// Common pagination response
-export interface PaginatedResponse<T> {
+// Pagination result interface
+export interface PaginationResult<T> {
   data: T[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
+  meta: {
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+  }
 }
 
-// Common filter parameters
-export interface FilterParams extends PaginationParams {
-  search?: string;
-  sort_by?: string;
-  sort_direction?: 'asc' | 'desc';
-  [key: string]: any;
-}
-
-// Common sort options
-export type SortDirection = 'asc' | 'desc';
-
-// Financial transaction types
-export type TransactionType = 'income' | 'expense';
-
-// Database table names for type-safe Supabase operations
+// Tables and views supported by Supabase
 export type RelationName = 
+  | 'clients'
+  | 'insurers'
+  | 'insurance_products'
+  | 'policies'
+  | 'claims'
+  | 'sales_processes'
+  | 'leads'
+  | 'proposals'
+  | 'invoices'
+  | 'commissions'
+  | 'policy_addendums'
+  | 'agents'
+  | 'profiles'
+  | 'saved_filters'
   | 'policy_documents'
   | 'claim_documents'
   | 'sales_documents'
@@ -152,14 +116,26 @@ export type RelationName =
   | 'agent_documents'
   | 'invoice_documents'
   | 'addendum_documents'
-  | 'policies'
-  | 'claims'
-  | 'clients'
-  | 'invoices'
-  | 'sales_processes'
-  | 'policy_addendums'
-  | 'agents'
-  | 'insurers'
   | 'activity_logs'
-  | 'profiles'
+  | 'fixed_commissions'
+  | 'client_commissions'
+  | 'manual_commissions'
+  | 'agent_payouts'
+  | 'bank_statements'
+  | 'bank_transactions'
+  | 'unlinked_payments'
+  | 'company_settings'
+  | 'company_email_settings'
+  | 'companies'
+  | 'instructions'
+  | 'invitations'
+  | 'invoice_items'
+  | 'payout_items'
+  | 'policy_types'
+  | 'report_schedules'
+  | 'saved_reports'
+  | 'sales_assignments'
   | 'user_custom_privileges';
+
+// Commission status type
+export type CommissionStatus = 'pending' | 'due' | 'paid' | 'partially_paid' | 'invoiced';

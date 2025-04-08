@@ -11,6 +11,7 @@ export interface Lead extends BaseEntity {
   status: LeadStatus;
   notes?: string;
   assigned_to?: string;
+  company?: string;  // For backward compatibility
 }
 
 export enum LeadStatus {
@@ -34,6 +35,7 @@ export interface SalesProcess extends BaseEntity {
   assigned_to?: string;
   current_step: string;
   updated_at: string;
+  client_name?: string; // For backward compatibility
 }
 
 export enum SalesProcessStatus {
@@ -46,11 +48,11 @@ export enum SalesProcessStatus {
 export enum ProposalStatus {
   DRAFT = 'draft',
   SENT = 'sent',
+  PENDING = 'pending',
+  VIEWED = 'viewed',
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
   EXPIRED = 'expired',
-  PENDING = 'pending',
-  VIEWED = 'viewed',
   APPROVED = 'approved'
 }
 
@@ -73,6 +75,10 @@ export interface Proposal extends BaseEntity {
   document_ids?: string[];
   amount?: number;
   expiry_date?: string;
+  description?: string; // For backward compatibility
+  created_by?: string;  // For backward compatibility
+  accepted_at?: string; // For backward compatibility
+  rejected_at?: string; // For backward compatibility
 }
 
 // Interface for useProposalsData hook
@@ -95,4 +101,5 @@ export interface ProposalStats {
   rejected: number;
   expired: number;
   draft?: number;
+  sent?: number;
 }

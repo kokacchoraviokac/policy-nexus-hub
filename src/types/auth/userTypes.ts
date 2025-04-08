@@ -1,5 +1,6 @@
 
-import { ResourceContext } from "./contextTypes";
+// Import type so we're not re-exporting it
+import type { ResourceContext } from "./contextTypes";
 
 // User roles
 export enum UserRole {
@@ -96,5 +97,5 @@ export interface CustomPrivilege {
   updated_at: string;
 }
 
-// Prevent circular dependency
-export { ResourceContext }
+// Re-export type to avoid circular dependency
+export type { ResourceContext };
