@@ -20,6 +20,16 @@ export const formatDateString = (date: string | Date, formatString: string = "yy
 };
 
 /**
+ * Format a date for display
+ * @param date Date string or Date object
+ * @param formatString Optional format string (default: 'PP')
+ * @returns Formatted date string
+ */
+export const formatDate = (date: string | Date, formatString: string = "PP"): string => {
+  return formatDateString(date, formatString);
+};
+
+/**
  * Format a date string with time using date-fns
  * @param date Date string or Date object
  * @param formatString Optional format string (default: 'yyyy-MM-dd HH:mm')

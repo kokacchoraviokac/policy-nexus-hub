@@ -4,8 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Insurer } from '@/types/codebook';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth/AuthContext';
 
-export function useInsurersFetch() {
+export function useInsurersFetch(options = {}) {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -19,15 +21,24 @@ export function useInsurersFetch() {
     error,
     refetch
   } = useQuery({
-    queryKey: ['insurers', searchTerm, page, pageSize],
+    queryKey: ['insurers', searchTerm, page, pageSize, options],
     queryFn: async () => {
       // First, get the total count for pagination
       let countQuery = supabase
         .from('insurers')
         .select('*', { count: 'exact', head: true });
       
+      if (user?.company_id) {
+        countQuery = countQuery.eq('company_id', user.company_id);
+      }
+      
       if (searchTerm) {
         countQuery = countQuery.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`);
+      }
+      
+      if (options?.status && options.status !== 'all') {
+        const isActive = options.status === 'active';
+        countQuery = countQuery.eq('is_active', isActive);
       }
       
       const { count, error: countError } = await countQuery;
@@ -44,8 +55,17 @@ export function useInsurersFetch() {
         .from('insurers')
         .select('*');
       
+      if (user?.company_id) {
+        query = query.eq('company_id', user.company_id);
+      }
+      
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`);
+      }
+      
+      if (options?.status && options.status !== 'all') {
+        const isActive = options.status === 'active';
+        query = query.eq('is_active', isActive);
       }
       
       // Add pagination

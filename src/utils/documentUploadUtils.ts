@@ -1,12 +1,21 @@
 
-import { EntityType, DocumentTableName } from "@/types/documents";
+import { EntityType } from "@/types/common";
+
+export type DocumentTableName = 
+  | "policy_documents" 
+  | "claim_documents"
+  | "client_documents"
+  | "invoice_documents"
+  | "sales_documents"
+  | "addendum_documents"
+  | "agent_documents";
 
 /**
- * Converts an EntityType to the corresponding document table name
- * @param entityType The entity type
- * @returns Document table name
+ * Get the appropriate document table name for a given entity type
+ * @param entityType The type of entity to get the table name for
+ * @returns The document table name
  */
-export const asTableName = (entityType: EntityType): DocumentTableName => {
+export const getDocumentTableName = (entityType: EntityType | string): DocumentTableName => {
   switch (entityType) {
     case EntityType.POLICY:
       return "policy_documents";
@@ -14,123 +23,72 @@ export const asTableName = (entityType: EntityType): DocumentTableName => {
       return "claim_documents";
     case EntityType.CLIENT:
       return "client_documents";
+    case EntityType.INVOICE:
+      return "invoice_documents";
     case EntityType.SALES_PROCESS:
     case EntityType.SALE:
       return "sales_documents";
-    case EntityType.AGENT:
-      return "agent_documents";
-    case EntityType.INSURER:
-      return "insurer_documents";
-    case EntityType.INVOICE:
-      return "invoice_documents";
     case EntityType.ADDENDUM:
       return "addendum_documents";
+    case EntityType.AGENT:
+      return "agent_documents";
     default:
-      throw new Error(`Unknown entity type: ${entityType}`);
+      return "client_documents"; // Default fallback
   }
 };
 
 /**
- * Maps document table name to a user-friendly entity label
- * @param tableName Document table name
- * @returns User-friendly entity label
+ * Get the entity ID column name for a given document table
+ * @param tableName The document table name
+ * @returns The entity ID column name
  */
-export const getEntityLabel = (tableName: DocumentTableName): string => {
+export const getEntityIdColumn = (tableName: DocumentTableName): string => {
   switch (tableName) {
     case "policy_documents":
-      return "Policy";
+      return "policy_id";
     case "claim_documents":
-      return "Claim";
+      return "claim_id";
     case "client_documents":
-      return "Client";
-    case "sales_documents":
-      return "Sales";
-    case "agent_documents":
-      return "Agent";
-    case "insurer_documents":
-      return "Insurer";
+      return "client_id";
     case "invoice_documents":
-      return "Invoice";
+      return "invoice_id";
+    case "sales_documents":
+      return "sales_process_id";
     case "addendum_documents":
-      return "Addendum";
+      return "addendum_id";
+    case "agent_documents":
+      return "agent_id";
     default:
-      return "Document";
+      return "entity_id"; // Fallback
   }
 };
 
 /**
- * Gets the entity type from a document table name
- * @param tableName Document table name
- * @returns EntityType
+ * Convert entity type to table name
+ * @param entityType The entity type
+ * @returns The table name
  */
-export const getEntityTypeFromTable = (tableName: DocumentTableName): EntityType => {
-  switch (tableName) {
-    case "policy_documents":
-      return EntityType.POLICY;
-    case "claim_documents":
-      return EntityType.CLAIM;
-    case "client_documents":
-      return EntityType.CLIENT;
-    case "sales_documents":
-      return EntityType.SALES_PROCESS;
-    case "agent_documents":
-      return EntityType.AGENT;
-    case "insurer_documents":
-      return EntityType.INSURER;
-    case "invoice_documents":
-      return EntityType.INVOICE;
-    case "addendum_documents":
-      return EntityType.ADDENDUM;
+export const asTableName = (entityType: EntityType | string): string => {
+  switch (entityType) {
+    case EntityType.POLICY:
+      return "policies";
+    case EntityType.CLAIM:
+      return "claims";
+    case EntityType.CLIENT:
+      return "clients";
+    case EntityType.INVOICE:
+      return "invoices";
+    case EntityType.SALES_PROCESS:
+      return "sales_processes";
+    case EntityType.SALE:
+      return "sales";
+    case EntityType.ADDENDUM:
+      return "policy_addendums";
+    case EntityType.AGENT:
+      return "agents";
+    case EntityType.INSURER:
+      return "insurers";
     default:
-      throw new Error(`Unknown table name: ${tableName}`);
-  }
-};
-
-/**
- * Get file extension from a filename
- * @param filename Filename including extension
- * @returns File extension without the dot (e.g., "pdf")
- */
-export const getFileExtension = (filename: string): string => {
-  const parts = filename.split(".");
-  return parts.length > 1 ? parts.pop()?.toLowerCase() || "" : "";
-};
-
-/**
- * Get an icon based on file extension
- * @param filename Filename or extension
- * @returns Icon name for the file type
- */
-export const getFileIcon = (filename: string): string => {
-  const extension = filename.includes(".") ? getFileExtension(filename) : filename.toLowerCase();
-  
-  switch (extension) {
-    case "pdf":
-      return "file-pdf";
-    case "doc":
-    case "docx":
-      return "file-text";
-    case "xls":
-    case "xlsx":
-    case "csv":
-      return "file-spreadsheet";
-    case "ppt":
-    case "pptx":
-      return "file-presentation";
-    case "jpg":
-    case "jpeg":
-    case "png":
-    case "gif":
-    case "bmp":
-    case "svg":
-      return "image";
-    case "zip":
-    case "rar":
-    case "7z":
-    case "tar":
-    case "gz":
-      return "archive";
-    default:
-      return "file";
+      return entityType.toString().toLowerCase() + "s"; // Simple pluralization as fallback
   }
 };

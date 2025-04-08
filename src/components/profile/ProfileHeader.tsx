@@ -1,5 +1,4 @@
 
-// Just changing the avatarUrl to avatar_url
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@/types/auth/userTypes";

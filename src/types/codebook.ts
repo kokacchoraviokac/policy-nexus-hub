@@ -1,76 +1,67 @@
 
-export interface Client {
-  id: string;
-  name: string;
-  contact_person?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  city?: string | null;
-  postal_code?: string | null;
-  country?: string | null;
-  tax_id?: string | null;
-  registration_number?: string | null;
-  notes?: string | null;
-  is_active: boolean;
-  company_id: string;
-  created_at: string;
-  updated_at: string;
+import { BaseEntity } from "./common";
+
+// Filter state for codebook entities
+export interface CodebookFilterState {
+  status: 'all' | 'active' | 'inactive';
+  country?: string;
+  city?: string;
+  createdAfter?: Date;
+  createdBefore?: Date;
 }
 
-export interface Insurer {
-  id: string;
+// Client types
+export interface Client extends BaseEntity {
   name: string;
-  contact_person?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address?: string | null;
-  city?: string | null;
-  postal_code?: string | null;
-  country?: string | null;
-  registration_number?: string | null;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
   is_active: boolean;
-  company_id: string;
-  created_at: string;
-  updated_at: string;
+  tax_id?: string;
+  registration_number?: string;
+  notes?: string;
 }
 
-export interface InsuranceProduct {
-  id: string;
+// Insurer types
+export interface Insurer extends BaseEntity {
+  name: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
+  registration_number?: string;
+  is_active: boolean;
+  parent_company_id?: string;
+  broker_code?: string;
+}
+
+// Insurance Product types
+export interface InsuranceProduct extends BaseEntity {
   code: string;
   name: string;
-  category?: string | null;
-  description?: string | null;
+  english_name?: string;
+  description?: string;
+  category: 'life' | 'non-life';
   is_active: boolean;
-  insurer_id: string;
-  company_id: string;
-  created_at: string;
-  updated_at: string;
-  insurer_name?: string; // For joining with insurer table
-  // Multilingual fields
-  name_translations?: Record<string, string> | null;
-  description_translations?: Record<string, string> | null;
-  category_translations?: Record<string, string> | null;
+  insurer_id?: string;
+  insurer_name?: string;
 }
 
-export type MultilingualProductField = 'name' | 'description' | 'category';
-
-export interface CodebookFilterState {
-  status?: 'all' | 'active' | 'inactive';
-  city?: string;
-  country?: string;
-  category?: string;
-  insurer?: string;
-  createdAfter?: Date | null;
-  createdBefore?: Date | null;
-}
-
-export interface SavedFilter {
-  id: string;
+// Contact Person types
+export interface ContactPerson extends BaseEntity {
   name: string;
-  entity_type: 'insurers' | 'clients' | 'products';
-  filters: CodebookFilterState;
-  company_id: string;
-  user_id: string;
-  created_at: string;
+  position?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  is_primary: boolean;
+  entity_id: string;
+  entity_type: 'client' | 'insurer';
 }

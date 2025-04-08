@@ -3,7 +3,14 @@ import { useInsurersFetch } from './insurers/useInsurersFetch';
 import { useInsurersFilter } from './insurers/useInsurersFilter';
 import { useInsurersCrud } from './insurers/useInsurersCrud';
 
-export function useInsurers() {
+type UseInsurersOptions = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: string;
+};
+
+export function useInsurers(options: UseInsurersOptions = {}) {
   const { 
     insurers, 
     isLoading, 
@@ -13,7 +20,7 @@ export function useInsurers() {
     setSearchTerm, 
     refetch,
     pagination
-  } = useInsurersFetch();
+  } = useInsurersFetch(options);
 
   const {
     filteredInsurers,
@@ -31,8 +38,8 @@ export function useInsurers() {
   } = useInsurersCrud(refetch);
 
   return {
-    insurers: filteredInsurers,
-    allInsurers: insurers,
+    insurers: filteredInsurers || [],
+    allInsurers: insurers || [],
     isLoading,
     isError,
     error,
@@ -43,10 +50,12 @@ export function useInsurers() {
     handleClearFilter,
     resetFilters,
     getActiveFilterCount,
-    addInsurer,
+    createInsurer: addInsurer,
     updateInsurer,
     deleteInsurer,
-    refetch,
-    pagination
+    refreshInsurers: refetch,
+    pagination,
+    totalItems: pagination.totalCount,
+    totalPages: Math.ceil(pagination.totalCount / pagination.pageSize)
   };
 }

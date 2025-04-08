@@ -5,19 +5,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+import { 
+  Form, 
+  FormControl, 
+  FormDescription, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Insurer } from '@/types/codebook';
 import { LoaderButton } from '@/components/ui/loader-button';
+import { Insurer } from '@/types/codebook';
 
 const insurerSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -29,14 +29,14 @@ const insurerSchema = z.object({
   postal_code: z.string().optional(),
   country: z.string().optional(),
   registration_number: z.string().optional(),
-  is_active: z.boolean().default(true),
+  is_active: z.boolean().default(true)
 });
 
 export type InsurerFormValues = z.infer<typeof insurerSchema>;
 
-export interface InsurerFormProps {
-  initialData?: Partial<Insurer>;
-  onSubmit: (values: InsurerFormValues) => Promise<void>;
+interface InsurerFormProps {
+  initialData?: Insurer;
+  onSubmit: (data: InsurerFormValues) => void;
   isLoading?: boolean;
   isEditMode?: boolean;
   onCancel?: () => void;
@@ -47,10 +47,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
   onSubmit,
   isLoading = false,
   isEditMode = false,
-  onCancel,
+  onCancel
 }) => {
   const { t } = useLanguage();
-
+  
   const form = useForm<InsurerFormValues>({
     resolver: zodResolver(insurerSchema),
     defaultValues: {
@@ -63,8 +63,8 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
       postal_code: initialData?.postal_code || '',
       country: initialData?.country || '',
       registration_number: initialData?.registration_number || '',
-      is_active: initialData?.is_active ?? true,
-    },
+      is_active: initialData?.is_active ?? true
+    }
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
@@ -87,7 +87,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('insurerName')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterInsurerName')} {...field} />
+                  <Input 
+                    placeholder={t('enterInsurerName')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -101,7 +104,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('registrationNumber')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterRegistrationNumber')} {...field} />
+                  <Input 
+                    placeholder={t('enterRegistrationNumber')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -115,7 +121,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('contactPerson')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterContactPerson')} {...field} />
+                  <Input 
+                    placeholder={t('enterContactPerson')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -129,7 +138,11 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('email')}</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder={t('enterEmail')} {...field} />
+                  <Input 
+                    type="email" 
+                    placeholder={t('enterEmail')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -143,7 +156,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('phone')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterPhone')} {...field} />
+                  <Input 
+                    placeholder={t('enterPhone')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -157,7 +173,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('address')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterAddress')} {...field} />
+                  <Input 
+                    placeholder={t('enterAddress')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -171,7 +190,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('city')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterCity')} {...field} />
+                  <Input 
+                    placeholder={t('enterCity')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -185,7 +207,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('postalCode')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterPostalCode')} {...field} />
+                  <Input 
+                    placeholder={t('enterPostalCode')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -199,7 +224,10 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t('country')}</FormLabel>
                 <FormControl>
-                  <Input placeholder={t('enterCountry')} {...field} />
+                  <Input 
+                    placeholder={t('enterCountry')} 
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -230,11 +258,18 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
 
         <div className="flex justify-end space-x-2">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+            >
               {t('cancel')}
             </Button>
           )}
-          <LoaderButton type="submit" loading={isLoading}>
+          <LoaderButton
+            type="submit"
+            loading={isLoading}
+          >
             {isEditMode ? t('saveChanges') : t('addInsurer')}
           </LoaderButton>
         </div>
