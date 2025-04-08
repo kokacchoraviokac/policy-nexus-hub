@@ -1,89 +1,64 @@
 
+// Common enums and types used across the application
+
 export enum EntityType {
   POLICY = "policy",
   CLAIM = "claim",
   SALES_PROCESS = "sales_process",
-  INVOICE = "invoice",
+  SALE = "sale",
   CLIENT = "client",
   INSURER = "insurer",
   AGENT = "agent",
-  SALE = "sale",
-  REPORT = "report",
-  ADDENDUM = "addendum"
+  DOCUMENT = "document",
+  POLICY_ADDENDUM = "policy_addendum",
+  INVOICE = "invoice"
 }
 
-export enum ApprovalStatus {
+export enum DocumentCategory {
+  POLICY = "policy",
+  CLAIM = "claim",
+  INVOICE = "invoice",
+  CONTRACT = "contract",
+  LEGAL = "legal",
+  CORRESPONDENCE = "correspondence",
+  SALES = "sales",
+  CLIENT = "client",
+  OTHER = "other",
+  GENERAL = "general",
+  AUTHORIZATION = "authorization"
+}
+
+export enum DocumentApprovalStatus {
+  PENDING = "pending",
   APPROVED = "approved",
   REJECTED = "rejected",
-  PENDING = "pending",
   NEEDS_REVIEW = "needs_review"
 }
 
-export type DocumentCategory = 
-  | "policy_document"
-  | "claim_document"
-  | "invoice"
-  | "client_document"
-  | "insurer_document"
-  | "contract"
-  | "authorization"
-  | "sales_document"
-  | "quote"
-  | "proposal"
-  | "general";
+export interface ServiceResponse<T> {
+  data?: T;
+  error?: string;
+  status: number;
+  success: boolean;
+}
 
-export type RelationName =
-  | "policies"
-  | "claims"
-  | "invoices"
-  | "clients"
-  | "insurers"
-  | "policy_documents"
-  | "claim_documents"
-  | "invoice_documents"
-  | "client_documents"
-  | "insurer_documents"
-  | "sales_documents"
-  | "policy_addendums"
-  | "agents"
-  | "users"
-  | "user_custom_privileges"
-  | "sales_processes"
-  | "invitations"
-  | "activity_logs"
-  | "commissions"
-  | "bank_statements"
-  | "bank_transactions"
-  | "leads"
-  | "profiles"
-  | "unlinked_payments"
-  | "document_comments";
-
-export interface PaginatedResult<T> {
-  data: T[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
+export interface PaginationControllerProps {
+  currentPage: number;
   totalPages: number;
+  totalItems?: number;
+  itemsCount?: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
 }
 
-export interface PaginationQuery {
-  page?: number;
-  pageSize?: number;
-}
-
-export enum CommissionStatus {
-  PENDING = "pending",
-  INVOICED = "invoiced",
-  PAID = "paid",
-  PARTIALLY_PAID = "partially_paid"
-}
-
-export interface DocumentComment {
-  id: string;
-  document_id: string;
-  text: string;
-  author: string;
-  created_at: string;
-  user_id: string;
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage?: number;
+  itemsCount?: number;
+  onPageSizeChange?: (pageSize: number) => void;
+  pageSizeOptions?: number[];
 }

@@ -21,7 +21,9 @@ export enum CommissionStatus {
   PENDING = "pending",
   INVOICED = "invoiced",
   PAID = "paid",
-  PARTIALLY_PAID = "partially_paid"
+  PARTIALLY_PAID = "partially_paid",
+  DUE = "due",
+  CALCULATING = "calculating"
 }
 
 export interface CommissionType {
@@ -59,6 +61,10 @@ export interface InvoiceItem {
   commission_id?: string;
   created_at: string;
   updated_at: string;
+  policy?: {
+    policy_number: string;
+    id: string;
+  };
 }
 
 export interface Invoice {
@@ -76,6 +82,17 @@ export interface Invoice {
   company_id: string;
   created_at: string;
   updated_at: string;
+  invoice_type?: string;
+  invoice_category?: string;
+  calculation_reference?: string;
+  entity?: {
+    id: string;
+    name: string;
+    address?: string;
+    city?: string;
+    postal_code?: string;
+    tax_id?: string;
+  };
 }
 
 export enum InvoiceStatus {
@@ -153,6 +170,9 @@ export interface InvoiceTemplateSettings {
   address_format: string;
   amount_format: string;
   payment_instructions: string;
+  header_text?: string;
+  footer_text?: string;
+  show_payment_instructions?: boolean;
 }
 
 export interface CreateTemplateData {
@@ -170,4 +190,20 @@ export interface CreateTemplateData {
   address_format: string;
   amount_format: string;
   payment_instructions: string;
+}
+
+export interface UnlinkedPaymentType {
+  id: string;
+  amount: number;
+  payment_date: string;
+  status: string;
+  reference?: string;
+  payer_name?: string;
+  linked_policy_id?: string;
+  linked_at?: string;
+  linked_by?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+  currency: string;
 }

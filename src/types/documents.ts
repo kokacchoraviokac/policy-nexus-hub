@@ -1,36 +1,27 @@
 
-import { EntityType, ApprovalStatus, DocumentCategory } from "@/types/common";
-
-export enum DocumentApprovalStatus {
-  APPROVED = "approved",
-  REJECTED = "rejected",
-  PENDING = "pending",
-  NEEDS_REVIEW = "needs_review"
-}
+import { EntityType, DocumentCategory, DocumentApprovalStatus } from './common';
 
 export interface Document {
   id: string;
   document_name: string;
   document_type: string;
   file_path: string;
-  entity_type: string;
-  entity_id: string;
+  entity_id?: string;
+  entity_type: EntityType;
   uploaded_by: string;
   uploaded_by_name?: string;
+  company_id: string;
   created_at: string;
   updated_at: string;
-  company_id: string;
-  mime_type?: string;
-  description?: string;
   category?: string;
-  version?: number;
-  original_document_id?: string;
-  is_latest_version?: boolean;
-  status?: string;
-  approval_status?: string;
+  approval_status?: DocumentApprovalStatus;
   approved_at?: string;
-  approval_notes?: string;
-  comments?: any[];
+  approved_by?: string;
+  notes?: string;
+  version?: number;
+  is_latest_version?: boolean;
+  original_document_id?: string;
+  mime_type?: string;
 }
 
 export interface PolicyDocument extends Document {
@@ -47,21 +38,6 @@ export interface SalesDocument extends Document {
   step?: string;
 }
 
-export interface ClientDocument extends Document {
-  client_id: string;
-}
-
-export interface InsurerDocument extends Document {
-  insurer_id: string;
-}
-
-export type DocumentTableName =
-  | "policy_documents"
-  | "claim_documents"
-  | "sales_documents"
-  | "client_documents"
-  | "insurer_documents";
-
 export interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -75,75 +51,25 @@ export interface DocumentUploadDialogProps {
   salesStage?: string;
 }
 
+export interface Comment {
+  id: string;
+  document_id: string;
+  author: string;
+  text: string;
+  created_at: string;
+  user_id: string;
+}
+
 export interface DocumentUploadOptions {
   file: File;
   documentName: string;
   documentType: string;
-  category?: string;
+  category: DocumentCategory | string;
   entityId: string;
-  entityType: string;
+  entityType: EntityType;
   originalDocumentId?: string;
   currentVersion?: number;
   salesStage?: string;
-  description?: string;
-}
-
-export interface DocumentSearchParams {
-  entityType?: string;
-  entityId?: string;
-  category?: string;
-  documentType?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  searchTerm?: string;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
-  page?: number;
-  pageSize?: number;
-  userId?: string;
-  approvalStatus?: string;
-}
-
-export interface UseDocumentSearchProps {
-  initialParams?: Partial<DocumentSearchParams>;
-  autoSearch?: boolean;
-  entityType?: string;
-  entityId?: string;
-  category?: string;
-  defaultPageSize?: number;
-  defaultSortBy?: string;
-  defaultSortOrder?: 'asc' | 'desc';
-  initialSearchTerm?: string;
-  approvalStatus?: string;
-  initialSearchParams?: Partial<DocumentSearchParams>;
-  autoFetch?: boolean;
-}
-
-export interface UseDocumentSearchReturn {
-  documents: Document[];
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-  search: (params?: Partial<DocumentSearchParams>) => Promise<void>;
-  searchParams: DocumentSearchParams;
-  updateSearchParams: (params: Partial<DocumentSearchParams>) => void;
-  pagination: {
-    totalPages: number;
-    currentPage: number;
-    totalItems: number;
-    onPageChange: (page: number) => void;
-  };
-  searchTerm?: string;
-  setSearchTerm?: (term: string) => void; 
-  selectedCategory?: string;
-  setSelectedCategory?: (category: DocumentCategory | undefined) => void;
-  searchDocuments?: () => void;
-  currentPage?: number;
-  totalPages?: number;
-  itemsCount?: number;
-  itemsPerPage?: number;
-  handlePageChange?: (page: number) => void;
-  totalCount?: number;
 }
 
 export interface ApprovalInfo {
@@ -153,11 +79,7 @@ export interface ApprovalInfo {
   canApprove: boolean;
 }
 
-export interface Comment {
-  id: string;
-  text: string;
-  author: string;
-  created_at: string;
-  document_id: string;
-  user_id: string;
-}
+export type DocumentTableName = "policy_documents" | "claim_documents" | "sales_documents" | "client_documents" | "insurer_documents" | "agent_documents";
+
+// Re-export enums from common to maintain compatibility
+export { EntityType, DocumentCategory, DocumentApprovalStatus };

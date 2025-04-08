@@ -18,6 +18,7 @@ export interface User {
   companyId?: string;
   role?: UserRole;
   avatar_url?: string;
+  avatar?: string; // Avatar alias for backward compatibility
   phone?: string;
   is_active?: boolean;
   created_at?: string;
@@ -33,4 +34,10 @@ export interface CustomPrivilege {
   expires_at?: string;
   granted_by: string;
   context?: string;
+}
+
+export interface ResourceContext {
+  resource: string;
+  action: string;
+  condition?: string;
 }

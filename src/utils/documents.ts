@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
-import { EntityType } from "@/types/documents";
+import { EntityType, DocumentCategory } from "@/types/common";
+import { DocumentTableName } from "@/types/documents";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 interface DocumentUploadOptions {
@@ -70,17 +71,17 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
     };
 
     // Set the appropriate entity ID field based on the table
-    if (entityType === 'policy') {
+    if (entityType === EntityType.POLICY) {
       documentData.policy_id = entityId;
-    } else if (entityType === 'claim') {
+    } else if (entityType === EntityType.CLAIM) {
       documentData.claim_id = entityId;
-    } else if (entityType === 'sales_process') {
+    } else if (entityType === EntityType.SALES_PROCESS) {
       documentData.sales_process_id = entityId;
-    } else if (entityType === 'client') {
+    } else if (entityType === EntityType.CLIENT) {
       documentData.client_id = entityId;
-    } else if (entityType === 'insurer') {
+    } else if (entityType === EntityType.INSURER) {
       documentData.insurer_id = entityId;
-    } else if (entityType === 'agent') {
+    } else if (entityType === EntityType.AGENT) {
       documentData.agent_id = entityId;
     }
 

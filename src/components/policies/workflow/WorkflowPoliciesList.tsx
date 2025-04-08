@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Policy, WorkflowStatus } from "@/types/policies";
@@ -30,10 +31,11 @@ import {
   Building,
   FileArchive,
   Users,
-  MoreHorizontal
+  MoreHorizontal,
+  Search
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import Pagination from "@/components/ui/pagination";
+import { PaginationController } from "@/components/ui/pagination-controller";
 import { mapPolicyStatusToBadgeVariant } from "@/utils/policies/policyMappers";
 import { 
   DropdownMenu,
@@ -245,17 +247,13 @@ const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
       
       {totalCount > pageSize && onPageChange && (
         <div className="mt-4">
-          <Pagination
+          <PaginationController
             totalPages={Math.ceil(totalCount / pageSize)}
             currentPage={currentPage}
             onPageChange={onPageChange}
             itemsCount={totalCount}
             itemsPerPage={pageSize}
-          >
-            <div className="text-sm text-muted-foreground">
-              {t("showing")} {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, totalCount)} {t("of")} {totalCount} {t("policies")}
-            </div>
-          </Pagination>
+          />
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 
 import React from "react";
-import { PaginationControllerProps } from "@/types/pagination";
-import { Pagination } from "./pagination";
+import { PaginationControllerProps } from "@/types/common";
+import Pagination from "./pagination";
 
 export const PaginationController: React.FC<PaginationControllerProps> = ({
   currentPage,
@@ -25,3 +25,5 @@ export const PaginationController: React.FC<PaginationControllerProps> = ({
     />
   );
 };
+
+export default PaginationController;

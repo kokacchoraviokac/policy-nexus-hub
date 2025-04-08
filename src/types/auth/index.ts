@@ -11,6 +11,7 @@ export interface User {
   companyId?: string;
   role?: UserRole;
   avatar_url?: string;
+  avatar?: string; // Avatar alias for backward compatibility
   phone?: string;
   is_active?: boolean;
   created_at?: string;

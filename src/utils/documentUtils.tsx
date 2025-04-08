@@ -71,18 +71,18 @@ export function getDocumentTypeLabel(documentType: string): string {
  * Document category options for forms
  */
 export const documentCategories = [
-  { label: "policyDocument", value: "policy_document" },
-  { label: "claimDocument", value: "claim_document" },
-  { label: "salesDocument", value: "sales_document" },
-  { label: "financial", value: "invoice" },
-  { label: "legal", value: "contract" },
-  { label: "contract", value: "contract" },
-  { label: "invoice", value: "invoice" },
-  { label: "miscellaneous", value: "general" },
-  { label: "other", value: "general" },
-  { label: "lien", value: "authorization" },
-  { label: "notification", value: "general" },
-  { label: "correspondence", value: "general" },
+  { label: "policyDocument", value: DocumentCategory.POLICY },
+  { label: "claimDocument", value: DocumentCategory.CLAIM },
+  { label: "salesDocument", value: DocumentCategory.SALES },
+  { label: "financial", value: DocumentCategory.INVOICE },
+  { label: "legal", value: DocumentCategory.LEGAL },
+  { label: "contract", value: DocumentCategory.CONTRACT },
+  { label: "invoice", value: DocumentCategory.INVOICE },
+  { label: "miscellaneous", value: DocumentCategory.GENERAL },
+  { label: "other", value: DocumentCategory.OTHER },
+  { label: "lien", value: DocumentCategory.AUTHORIZATION },
+  { label: "notification", value: DocumentCategory.GENERAL },
+  { label: "correspondence", value: DocumentCategory.CORRESPONDENCE },
 ];
 
 /**
