@@ -1,123 +1,94 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { CodebookFilterState, SavedFilter } from '@/types/codebook';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { CodebookFilterState, SavedFilter } from "@/types/codebook";
+import { useToast } from "@/hooks/use-toast";
 
-export function useSavedFilters(
-  entityType: 'insurers' | 'clients' | 'products', 
-  userId?: string, 
-  companyId?: string
-) {
+export const useSavedFilters = (entityType: "clients" | "insurers" | "products") => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
-  // Fetch saved filters for the current user and entity type
-  const { 
-    data: savedFilters, 
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['savedFilters', entityType, userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      
-      const { data, error } = await supabase
-        .from('saved_filters')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('entity_type', entityType);
-      
-      if (error) {
-        console.error('Error fetching saved filters:', error);
-        toast({
-          title: 'Error fetching saved filters',
-          description: error.message,
-          variant: 'destructive',
-        });
-        throw error;
-      }
-      
-      return data as SavedFilter[];
-    },
-    enabled: !!userId,
-  });
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  // Save a new filter
-  const saveFilter = async (name: string, filters: CodebookFilterState): Promise<void> => {
-    if (!userId) {
-      toast({
-        title: 'Authentication required',
-        description: 'You must be logged in to save filters',
-        variant: 'destructive',
-      });
+  const fetchSavedFilters = async () => {
+    if (!user) {
+      setIsLoading(false);
       return;
     }
-    
+
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from("saved_filters")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("entity_type", entityType)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      
+      setSavedFilters(data as SavedFilter[]);
+    } catch (err) {
+      console.error("Error fetching saved filters:", err);
+      setError(err as Error);
+      toast({
+        title: "Error fetching saved filters",
+        description: "Could not load your saved filters. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSavedFilters();
+  }, [user, entityType]);
+
+  const saveFilter = async (name: string, filters: CodebookFilterState): Promise<void> => {
+    if (!user) throw new Error("User not authenticated");
+
     const newFilter = {
       name,
       entity_type: entityType,
-      filters: JSON.stringify(filters), // Convert CodebookFilterState to JSON string
-      user_id: userId,
-      company_id: companyId || '00000000-0000-0000-0000-000000000000' // Fallback if no company_id
+      user_id: user.id,
+      filters,
+      company_id: user.company_id
     };
+
+    const { error } = await supabase
+      .from("saved_filters")
+      .insert(newFilter);
+
+    if (error) throw error;
     
-    try {
-      const { error } = await supabase
-        .from('saved_filters')
-        .insert(newFilter);
-      
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType] });
-      
-      toast({
-        title: 'Filter saved',
-        description: `Filter "${name}" has been saved successfully`,
-      });
-    } catch (error: any) {
-      console.error('Error saving filter:', error);
-      toast({
-        title: 'Error saving filter',
-        description: error.message,
-        variant: 'destructive',
-      });
-      throw error;
-    }
+    // Refresh the list after saving
+    fetchSavedFilters();
   };
 
-  // Delete a saved filter
   const deleteFilter = async (filterId: string): Promise<void> => {
-    try {
-      const { error } = await supabase
-        .from('saved_filters')
-        .delete()
-        .eq('id', filterId);
-      
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['savedFilters', entityType] });
-      
-      toast({
-        title: 'Filter deleted',
-        description: 'The filter has been deleted successfully',
-      });
-    } catch (error: any) {
-      console.error('Error deleting filter:', error);
-      toast({
-        title: 'Error deleting filter',
-        description: error.message,
-        variant: 'destructive',
-      });
-      throw error;
-    }
+    if (!user) throw new Error("User not authenticated");
+
+    const { error } = await supabase
+      .from("saved_filters")
+      .delete()
+      .eq("id", filterId)
+      .eq("user_id", user.id);
+
+    if (error) throw error;
+    
+    // Refresh the list after deleting
+    fetchSavedFilters();
   };
 
   return {
-    savedFilters: savedFilters || [],
+    savedFilters,
     isLoading,
     error,
     saveFilter,
-    deleteFilter
+    deleteFilter,
+    refreshFilters: fetchSavedFilters
   };
-}
+};

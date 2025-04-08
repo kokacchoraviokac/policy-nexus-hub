@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Download, Clock, CheckCircle, XCircle, Upload, FileUp } from "lucide-react";
@@ -7,7 +6,7 @@ import { EntityType, Document } from "@/types/documents";
 import DocumentViewDialog from "./DocumentViewDialog";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { ApprovalStatus } from "@/types/common";
+import { ApprovalStatus } from "@/types/common"; // Import from common, not a value
 import { Card, CardContent } from "@/components/ui/card";
 
 interface DocumentListProps {
@@ -87,33 +86,33 @@ const DocumentList: React.FC<DocumentListProps> = ({
   }
 
   const getApprovalStatusBadge = (status?: string) => {
-    if (!status) return null;
-    
-    switch (status) {
-      case ApprovalStatus.APPROVED:
-        return (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
-            <CheckCircle className="h-3 w-3" />
-            {t("approved")}
-          </Badge>
-        );
-      case ApprovalStatus.REJECTED:
-        return (
-          <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
-            <XCircle className="h-3 w-3" />
-            {t("rejected")}
-          </Badge>
-        );
-      case ApprovalStatus.PENDING:
-      default:
-        return (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {t("pending")}
-          </Badge>
-        );
-    }
-  };
+  if (!status) return null;
+  
+  switch (status) {
+    case ApprovalStatus.APPROVED:
+      return (
+        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+          <CheckCircle className="h-3 w-3" />
+          {t("approved")}
+        </Badge>
+      );
+    case ApprovalStatus.REJECTED:
+      return (
+        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
+          <XCircle className="h-3 w-3" />
+          {t("rejected")}
+        </Badge>
+      );
+    case ApprovalStatus.PENDING:
+    default:
+      return (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          {t("pending")}
+        </Badge>
+      );
+  }
+};
 
   return (
     <div className="space-y-4">

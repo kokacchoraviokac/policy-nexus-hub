@@ -1,182 +1,153 @@
 
-import React, { useState, useEffect } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, CheckCircle, MoreHorizontal, Save, Bookmark } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { useSavedFilters } from "@/hooks/useSavedFilters";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { PlusCircle, Filter, Save, Trash2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { SaveFilterDialog } from "./SaveFilterDialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { CodebookFilterState, SavedFilter } from "@/types/codebook";
+import SaveFilterDialog from "./SaveFilterDialog";
 import DeleteSavedFilterConfirmation from "./DeleteSavedFilterConfirmation";
-import { CodebookFilterState } from "@/types/codebook";
+import { useSavedFilters } from "@/hooks/useSavedFilters";
 
 interface SavedFiltersMenuProps {
-  entityType: string;
-  onSelectFilter: (filters: CodebookFilterState) => void;
+  entityType: "clients" | "insurers" | "products";
   currentFilters: CodebookFilterState;
-  defaultFilters: CodebookFilterState;
-  isFiltersApplied: boolean;
+  onLoadFilter: (filter: CodebookFilterState) => void;
 }
 
-const SavedFiltersMenu: React.FC<SavedFiltersMenuProps> = ({
-  entityType,
-  onSelectFilter,
-  currentFilters,
-  defaultFilters,
-  isFiltersApplied,
-}) => {
+const SavedFiltersMenu: React.FC<SavedFiltersMenuProps> = ({ entityType, currentFilters, onLoadFilter }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  
+  const [isSaveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<SavedFilter | null>(null);
+
   const { 
     savedFilters, 
     isLoading, 
-    createFilter, 
+    error, 
+    saveFilter,
     deleteFilter 
   } = useSavedFilters(entityType);
-  
-  const handleClearFilters = () => {
-    onSelectFilter({ status: defaultFilters.status || "all" });
-    toast({
-      title: t("filtersCleared"),
-      description: t("allFiltersHaveBeenCleared")
-    });
-  };
-  
+
   const handleSaveFilter = async (name: string) => {
     try {
-      await createFilter({
-        name,
-        filters: currentFilters,
-        entity_type: entityType
-      });
+      await saveFilter(name, currentFilters);
       setSaveDialogOpen(false);
       toast({
         title: t("filterSaved"),
-        description: t("filterSavedSuccessfully")
+        description: t("filterSavedSuccessfully"),
       });
     } catch (error) {
       console.error("Error saving filter:", error);
       toast({
         title: t("errorSavingFilter"),
-        description: t("failedToSaveFilter"),
-        variant: "destructive"
+        description: t("pleaseTryAgain"),
+        variant: "destructive",
       });
     }
   };
-  
+
   const handleDeleteFilter = async () => {
     if (!selectedFilter) return;
     
     try {
-      await deleteFilter(selectedFilter);
+      await deleteFilter(selectedFilter.id);
       setDeleteDialogOpen(false);
       toast({
         title: t("filterDeleted"),
-        description: t("filterDeletedSuccessfully")
+        description: t("filterDeletedSuccessfully"),
       });
     } catch (error) {
       console.error("Error deleting filter:", error);
       toast({
         title: t("errorDeletingFilter"),
-        description: t("failedToDeleteFilter"),
-        variant: "destructive"
+        description: t("pleaseTryAgain"),
+        variant: "destructive",
       });
     }
   };
-  
-  const handleSelectFilter = (filters: CodebookFilterState) => {
-    onSelectFilter(filters);
-    toast({
-      title: t("filterApplied"),
-      description: t("savedFilterHasBeenApplied")
-    });
-  };
-  
-  const handleOpenDeleteDialog = (filterId: string) => {
-    setSelectedFilter(filterId);
-    setDeleteDialogOpen(true);
-  };
-  
+
+  if (error) {
+    console.error("Error loading saved filters:", error);
+  }
+
   return (
-    <>
+    <div className="flex items-center space-x-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Bookmark className="h-4 w-4 mr-2" />
+          <Button variant="outline" className="flex items-center">
+            <Filter className="h-4 w-4 mr-2" />
             {t("savedFilters")}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem onClick={() => setSaveDialogOpen(true)}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            {t("saveCurrentFilters")}
-          </DropdownMenuItem>
-          
-          {isFiltersApplied && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleClearFilters}>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                {t("clearAllFilters")}
+          {isLoading ? (
+            <DropdownMenuItem disabled>{t("loading")}</DropdownMenuItem>
+          ) : savedFilters.length === 0 ? (
+            <DropdownMenuItem disabled>{t("noSavedFilters")}</DropdownMenuItem>
+          ) : (
+            savedFilters.map((filter) => (
+              <DropdownMenuItem
+                key={filter.id}
+                onClick={() => {
+                  onLoadFilter(filter.filters as CodebookFilterState);
+                  toast({
+                    title: t("filterLoaded"),
+                    description: t("filterLoadedSuccessfully"),
+                  });
+                }}
+                className="flex justify-between items-center"
+              >
+                <span>{filter.name}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedFilter(filter);
+                    setDeleteDialogOpen(true);
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                </Button>
               </DropdownMenuItem>
-            </>
+            ))
           )}
-          
-          {savedFilters && savedFilters.length > 0 && (
-            <>
-              <DropdownMenuSeparator />
-              <ScrollArea className="h-[200px]">
-                {savedFilters.map((filter) => (
-                  <div key={filter.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-accent hover:text-accent-foreground">
-                    <div 
-                      className="flex-1 cursor-pointer text-sm"
-                      onClick={() => handleSelectFilter(filter.filters)}
-                    >
-                      {filter.name}
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleOpenDeleteDialog(filter.id)}>
-                          {t("delete")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                ))}
-              </ScrollArea>
-            </>
-          )}
+          <DropdownMenuItem
+            onClick={() => setSaveDialogOpen(true)}
+            className="flex items-center text-primary"
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            {t("saveCurrentFilter")}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      
+
+      <Button
+        variant="outline"
+        onClick={() => setSaveDialogOpen(true)}
+        className="flex items-center"
+      >
+        <Save className="h-4 w-4 mr-2" />
+        {t("saveFilter")}
+      </Button>
+
       <SaveFilterDialog
-        open={saveDialogOpen}
+        open={isSaveDialogOpen}
         onOpenChange={setSaveDialogOpen}
         onSave={handleSaveFilter}
       />
-      
+
       <DeleteSavedFilterConfirmation
-        open={deleteDialogOpen}
+        open={isDeleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteFilter}
+        filterName={selectedFilter?.name}
       />
-    </>
+    </div>
   );
 };
 

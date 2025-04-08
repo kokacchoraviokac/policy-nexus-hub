@@ -1,11 +1,28 @@
 
-import { BaseEntity } from "./common";
-import { EntityType, DocumentCategory, DocumentApprovalStatus, Comment } from "./common";
+import { DocumentCategory, ApprovalStatus, Comment } from '@/types/common';
 
-// Document table names for storage operations
+// Entity type enumeration
+export enum EntityType {
+  POLICY = "policy",
+  CLAIM = "claim",
+  SALES_PROCESS = "sales_process",
+  CLIENT = "client",
+  INSURER = "insurer",
+  AGENT = "agent",
+  INVOICE = "invoice",
+  POLICY_ADDENDUM = "policy_addendum",
+  ADDENDUM = "addendum",
+  SALE = "sale" // Alias for sales_process
+}
+
+// Document approval status enumeration (re-exported from common for backward compatibility)
+export { ApprovalStatus };
+export type DocumentApprovalStatus = ApprovalStatus;
+
+// Document table name type
 export type DocumentTableName = 
   | "policy_documents"
-  | "claim_documents" 
+  | "claim_documents"
   | "sales_documents"
   | "client_documents"
   | "insurer_documents"
@@ -13,75 +30,62 @@ export type DocumentTableName =
   | "invoice_documents"
   | "addendum_documents";
 
-// Core Document Interface
-export interface Document extends BaseEntity {
+// Document interface
+export interface Document {
+  id: string;
   document_name: string;
   document_type: string;
   file_path: string;
-  entity_type: EntityType;
+  entity_type: EntityType | string;
   entity_id: string;
-  mime_type?: string;
   uploaded_by: string;
   uploaded_by_name?: string;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
   version?: number;
   is_latest_version?: boolean;
-  original_document_id?: string;
-  category?: string;
-  description?: string;
-  approval_status?: DocumentApprovalStatus;
-  approval_notes?: string;
-  approved_by?: string;
+  original_document_id?: string | null;
+  category?: DocumentCategory | string;
+  status?: ApprovalStatus | string; // For approval status
+  approval_status?: ApprovalStatus | string; // For backward compatibility
   approved_at?: string;
+  approved_by?: string;
+  approval_notes?: string;
+  mime_type?: string | null;
+  description?: string;
   comments?: Comment[];
-  status?: string; // For document status tracking
 }
 
-// Document filter parameters
-export interface DocumentFilterParams {
-  page: number;
-  page_size: number;
-  search_term?: string;
-  entity_type?: EntityType;
-  entity_id?: string;
-  document_type?: string;
-  category?: DocumentCategory;
-  date_from?: string;
-  date_to?: string;
-  status?: DocumentApprovalStatus;
-  uploaded_by?: string;
-}
+// For backward compatibility
+export type PolicyDocument = Document;
 
 // Document upload options
 export interface DocumentUploadOptions {
+  entityId: string;
+  entityType: EntityType;
+  document: File;
+  documentName: string;
+  documentType: string;
+  category?: DocumentCategory;
+  originalDocumentId?: string;
+  currentVersion?: number;
+  salesStage?: string;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}
+
+// Document upload request
+export interface DocumentUploadRequest {
   file: File;
   documentName: string;
   documentType: string;
-  category?: string;
+  category?: DocumentCategory;
   entityId: string;
   entityType: EntityType;
   originalDocumentId?: string;
   currentVersion?: number;
   salesStage?: string;
-  description?: string;
-}
-
-// Document upload parameters
-export interface UseDocumentUploadParams {
-  entityType: EntityType;
-  entityId: string;
-  originalDocumentId?: string;
-  currentVersion?: number;
-  onSuccess?: (document: Document) => void;
-  onError?: (error: Error) => void;
-  salesStage?: string;
-}
-
-// Document approval info
-export interface ApprovalInfo {
-  document_id: string;
-  status: DocumentApprovalStatus;
-  notes: string;
-  canApprove: boolean;
 }
 
 // Document upload dialog props
@@ -91,98 +95,90 @@ export interface DocumentUploadDialogProps {
   entityType: EntityType;
   entityId: string;
   selectedDocument?: Document;
-  onUploadComplete?: (document?: Document) => void;
+  onUploadComplete?: () => void;
+  defaultCategory?: DocumentCategory | string;
+  salesStage?: string;
   embedMode?: boolean;
   onFileSelected?: (file: File | null) => void;
-  defaultCategory?: DocumentCategory;
-  salesStage?: string;
-}
-
-// Policy document (special case of Document)
-export interface PolicyDocument extends Document {
-  policy_id: string;
-}
-
-// Document upload request
-export interface DocumentUploadRequest {
-  file: File;
-  document_name: string;
-  document_type: string;
-  entity_type: EntityType;
-  entity_id: string;
-  category?: DocumentCategory;
-  version?: number;
-  original_document_id?: string;
-  description?: string;
-  company_id?: string;
 }
 
 // Document search parameters
-export interface DocumentSearchParams extends DocumentFilterParams {
+export interface DocumentSearchParams {
+  page: number;
+  page_size: number;
   searchTerm?: string;
-  entityType?: EntityType;
-  entityId?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  documentType?: string;
+  entity_type?: EntityType | string;
+  entity_id?: string;
+  category?: DocumentCategory | string;
+  document_type?: string;
+  date_from?: string;
+  date_to?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  approval_status?: ApprovalStatus | string;
 }
 
-// Document search props
+// Document filter parameters (alias for DocumentSearchParams)
+export type DocumentFilterParams = DocumentSearchParams;
+
+// Document search hook props
 export interface UseDocumentSearchProps {
-  pageSize?: number;
-  initialFilters?: Partial<DocumentFilterParams>;
   defaultParams?: Partial<DocumentSearchParams>;
   autoSearch?: boolean;
-  entityType?: EntityType;
+  entityType?: EntityType | string;
   entityId?: string;
-  category?: DocumentCategory;
+  category?: DocumentCategory | string;
   defaultPageSize?: number;
   defaultSortBy?: string;
   defaultSortOrder?: 'asc' | 'desc';
   initialSearchTerm?: string;
-  approvalStatus?: DocumentApprovalStatus;
+  approvalStatus?: ApprovalStatus | string;
   initialSearchParams?: Partial<DocumentSearchParams>;
   autoFetch?: boolean;
 }
 
-// Document search return type
+// Document search hook return type
 export interface UseDocumentSearchReturn {
   documents: Document[];
   isLoading: boolean;
   error: Error | null;
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalCount: number;
-  };
-  filters: DocumentFilterParams;
-  setFilters: (filters: Partial<DocumentFilterParams>) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  refetch: () => void;
-  searchParams?: DocumentSearchParams;
-  setSearchParams?: (params: Partial<DocumentSearchParams>) => void;
-  search?: () => void;
-  totalCount?: number;
-  totalPages?: number;
-  resetSearch?: () => void;
+  searchParams: DocumentSearchParams;
+  setSearchParams: (params: Partial<DocumentSearchParams>) => void;
+  search: () => void;
+  resetSearch: () => void;
+  totalCount: number;
+  totalPages: number;
 }
 
-// Document hooks return type
+// Document upload hook parameters
+export interface UseDocumentUploadParams {
+  entityId: string;
+  entityType: EntityType;
+  onSuccess?: () => void;
+  originalDocumentId?: string;
+  currentVersion?: number;
+  salesStage?: string;
+}
+
+// Approval information interface
+export interface ApprovalInfo {
+  document_id: string;
+  status: DocumentApprovalStatus;
+  notes: string;
+  canApprove: boolean;
+}
+
+// Use document return type
 export interface UseDocumentsReturn {
   documents: Document[];
   isLoading: boolean;
   error: Error | null;
-  deleteDocument: (id: string) => Promise<void>;
+  deleteDocument: (documentId: string) => Promise<void>;
   isDeletingDocument: boolean;
-  refetchDocuments?: () => void;
+  refetchDocuments: () => Promise<void>;
 }
 
-// Re-export types from common.ts to avoid importing from multiple places
-export {
-  EntityType, 
-  DocumentCategory, 
-  DocumentApprovalStatus,
-  ApprovalStatus,
-  Comment
-};
+export type { Comment };  // Re-export Comment for backward compatibility
+

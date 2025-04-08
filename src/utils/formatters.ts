@@ -26,7 +26,9 @@ export const formatDateTime = (dateString: string | Date | null | undefined, for
 /**
  * Format a date string for display (alias for formatDate)
  */
-export const formatDateString = formatDate;
+export const formatDateString = (dateString: string | Date | null | undefined, formatStr: string = 'yyyy-MM-dd'): string => {
+  return formatDate(dateString, formatStr);
+};
 
 /**
  * Format a currency value

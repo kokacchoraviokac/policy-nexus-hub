@@ -1,103 +1,162 @@
 
 import React from "react";
+import { DocumentCategory, EntityType } from "@/types/documents";
+import { Badge } from "@/components/ui/badge";
 import { 
-  FileText, FileImage, FileArchive, FileBadge, FileCode, 
-  FileJson, File, FileSpreadsheet 
+  FileText, 
+  FileImage, 
+  FilePdf, 
+  FileBox,
+  FileSpreadsheet,
+  FileCode
 } from "lucide-react";
-import { Document } from "@/types/documents";
-import { DocumentCategory } from "@/types/common";
 
-/**
- * Get an appropriate icon based on the document type or mime type
- */
-export function getDocumentIcon(document: Document): React.ReactNode {
-  const { document_type, mime_type } = document;
-
-  if (mime_type) {
-    if (mime_type.includes('image')) {
-      return <FileImage className="h-5 w-5" />;
-    } else if (mime_type.includes('pdf')) {
-      return <FileBadge className="h-5 w-5" />;
-    } else if (mime_type.includes('zip') || mime_type.includes('rar')) {
-      return <FileArchive className="h-5 w-5" />;
-    } else if (mime_type.includes('json')) {
-      return <FileJson className="h-5 w-5" />;
-    } else if (mime_type.includes('html') || mime_type.includes('javascript')) {
-      return <FileCode className="h-5 w-5" />;
-    } else if (mime_type.includes('spreadsheet') || mime_type.includes('excel') || mime_type.includes('csv')) {
-      return <FileSpreadsheet className="h-5 w-5" />;
-    }
+// Get icon based on file extension or mime type
+export const getDocumentIcon = (fileName: string, mimeType?: string, size: number = 20) => {
+  const fileExtension = fileName.split('.').pop()?.toLowerCase();
+  
+  if (mimeType?.includes('pdf') || fileExtension === 'pdf') {
+    return <FilePdf size={size} className="text-red-500" />;
+  } else if (
+    mimeType?.includes('image') || 
+    ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(fileExtension || '')
+  ) {
+    return <FileImage size={size} className="text-blue-500" />;
+  } else if (
+    ['xls', 'xlsx', 'csv'].includes(fileExtension || '') || 
+    mimeType?.includes('spreadsheet')
+  ) {
+    return <FileSpreadsheet size={size} className="text-green-500" />;
+  } else if (
+    ['html', 'js', 'css', 'ts', 'jsx', 'tsx'].includes(fileExtension || '') || 
+    mimeType?.includes('code')
+  ) {
+    return <FileCode size={size} className="text-yellow-500" />;
+  } else if (
+    ['doc', 'docx', 'txt', 'rtf'].includes(fileExtension || '') || 
+    mimeType?.includes('text')
+  ) {
+    return <FileText size={size} className="text-blue-400" />;
+  } else {
+    return <FileBox size={size} className="text-gray-500" />;
   }
+};
 
-  // Fallback to document_type if mime_type is not useful
-  if (document_type) {
-    if (document_type.toLowerCase().includes('policy')) {
-      return <FileBadge className="h-5 w-5" />;
-    } else if (document_type.toLowerCase().includes('image')) {
-      return <FileImage className="h-5 w-5" />;
-    } else if (document_type.toLowerCase().includes('contract')) {
-      return <FileText className="h-5 w-5" />;
-    } else if (document_type.toLowerCase().includes('report') || document_type.toLowerCase().includes('spreadsheet')) {
-      return <FileSpreadsheet className="h-5 w-5" />;
-    }
-  }
-
-  // Default fallback
-  return <File className="h-5 w-5" />;
-}
-
-/**
- * Get user-friendly label for document type
- */
-export function getDocumentTypeLabel(documentType: string): string {
-  const typeMap: Record<string, string> = {
-    "policy": "Policy Document",
-    "certificate": "Certificate",
-    "invoice": "Invoice",
-    "contract": "Contract",
-    "report": "Report",
-    "quote": "Quote",
-    "claim": "Claim Document",
-    "addendum": "Addendum",
-    "image": "Image",
-    "other": "Other",
-    // Add more document types as needed
+// Get document type options based on entity type
+export const getDocumentTypeOptions = (entityType: EntityType) => {
+  const typeOptionsMap: Record<string, Array<{ label: string; value: string }>> = {
+    [EntityType.POLICY]: [
+      { label: 'Policy Document', value: 'policy' },
+      { label: 'Certificate', value: 'certificate' },
+      { label: 'Terms and Conditions', value: 'terms' },
+      { label: 'Invoice', value: 'invoice' },
+      { label: 'Other', value: 'other' }
+    ],
+    [EntityType.CLAIM]: [
+      { label: 'Claim Form', value: 'claim_form' },
+      { label: 'Damage Report', value: 'damage_report' },
+      { label: 'Evidence Photos', value: 'evidence' },
+      { label: 'Medical Report', value: 'medical_report' },
+      { label: 'Other', value: 'other' }
+    ],
+    [EntityType.SALES_PROCESS]: [
+      { label: 'Quote', value: 'quote' },
+      { label: 'Proposal', value: 'proposal' },
+      { label: 'Client Authorization', value: 'authorization' },
+      { label: 'Requirements', value: 'requirements' },
+      { label: 'Other', value: 'other' }
+    ],
+    [EntityType.SALE]: [  // Include options for 'sale' alias
+      { label: 'Quote', value: 'quote' },
+      { label: 'Proposal', value: 'proposal' },
+      { label: 'Client Authorization', value: 'authorization' },
+      { label: 'Requirements', value: 'requirements' },
+      { label: 'Other', value: 'other' }
+    ],
+    [EntityType.CLIENT]: [
+      { label: 'Identification', value: 'identification' },
+      { label: 'Financial Records', value: 'financial' },
+      { label: 'Company Documents', value: 'company' },
+      { label: 'Authorization', value: 'authorization' },
+      { label: 'Other', value: 'other' }
+    ],
+    [EntityType.INSURER]: [
+      { label: 'Agreement', value: 'agreement' },
+      { label: 'Commission Schedule', value: 'commission' },
+      { label: 'Contact List', value: 'contacts' },
+      { label: 'Product Catalog', value: 'products' },
+      { label: 'Other', value: 'other' }
+    ],
+    [EntityType.AGENT]: [
+      { label: 'Contract', value: 'contract' },
+      { label: 'License', value: 'license' },
+      { label: 'Commission Agreement', value: 'commission' },
+      { label: 'Training Certificate', value: 'training' },
+      { label: 'Other', value: 'other' }
+    ],
+    [EntityType.INVOICE]: [
+      { label: 'Invoice', value: 'invoice' },
+      { label: 'Receipt', value: 'receipt' },
+      { label: 'Payment Confirmation', value: 'payment' },
+      { label: 'Other', value: 'other' }
+    ],
+    [EntityType.POLICY_ADDENDUM]: [
+      { label: 'Addendum', value: 'addendum' },
+      { label: 'Amendment', value: 'amendment' },
+      { label: 'Supplement', value: 'supplement' },
+      { label: 'Other', value: 'other' }
+    ]
   };
+  
+  return typeOptionsMap[entityType] || typeOptionsMap[EntityType.POLICY];
+};
 
-  return typeMap[documentType.toLowerCase()] || documentType;
-}
-
-/**
- * Document category options for forms
- */
 export const documentCategories = [
-  { label: "policyDocument", value: DocumentCategory.POLICY },
-  { label: "claimDocument", value: DocumentCategory.CLAIM },
-  { label: "salesDocument", value: DocumentCategory.SALES },
-  { label: "financial", value: DocumentCategory.INVOICE },
-  { label: "legal", value: DocumentCategory.LEGAL },
-  { label: "contract", value: DocumentCategory.CONTRACT },
-  { label: "invoice", value: DocumentCategory.INVOICE },
-  { label: "miscellaneous", value: DocumentCategory.MISCELLANEOUS },
-  { label: "other", value: DocumentCategory.OTHER },
-  { label: "lien", value: DocumentCategory.AUTHORIZATION },
-  { label: "notification", value: DocumentCategory.GENERAL },
-  { label: "correspondence", value: DocumentCategory.CORRESPONDENCE },
-  { label: "proposal", value: DocumentCategory.PROPOSAL },
+  { label: "Policy", value: DocumentCategory.POLICY },
+  { label: "Claim", value: DocumentCategory.CLAIM },
+  { label: "Invoice", value: DocumentCategory.INVOICE },
+  { label: "Contract", value: DocumentCategory.CONTRACT },
+  { label: "Sales", value: DocumentCategory.SALES },
+  { label: "Legal", value: DocumentCategory.LEGAL },
+  { label: "Authorization", value: DocumentCategory.AUTHORIZATION },
+  { label: "General", value: DocumentCategory.GENERAL },
+  { label: "Proposal", value: DocumentCategory.PROPOSAL },
+  { label: "Miscellaneous", value: DocumentCategory.MISCELLANEOUS }
 ];
 
-/**
- * Document type options for forms
- */
 export const supportedDocumentTypes = [
-  { label: "policyDocument", value: "policy" },
+  { label: "policy", value: "policy" },
   { label: "certificate", value: "certificate" },
   { label: "invoice", value: "invoice" },
   { label: "contract", value: "contract" },
   { label: "report", value: "report" },
+  { label: "letter", value: "letter" },
+  { label: "form", value: "form" },
+  { label: "agreement", value: "agreement" },
+  { label: "proposal", value: "proposal" },
   { label: "quote", value: "quote" },
-  { label: "claim", value: "claim" },
-  { label: "addendum", value: "addendum" },
-  { label: "image", value: "image" },
-  { label: "other", value: "other" },
+  { label: "other", value: "other" }
 ];
+
+export const getCategoryBadge = (category: string) => {
+  const categoryColors: Record<string, { bg: string; text: string }> = {
+    [DocumentCategory.POLICY]: { bg: "bg-blue-100", text: "text-blue-800" },
+    [DocumentCategory.CLAIM]: { bg: "bg-red-100", text: "text-red-800" },
+    [DocumentCategory.INVOICE]: { bg: "bg-green-100", text: "text-green-800" },
+    [DocumentCategory.CONTRACT]: { bg: "bg-purple-100", text: "text-purple-800" },
+    [DocumentCategory.SALES]: { bg: "bg-yellow-100", text: "text-yellow-800" },
+    [DocumentCategory.MISCELLANEOUS]: { bg: "bg-gray-100", text: "text-gray-800" },
+    [DocumentCategory.AUTHORIZATION]: { bg: "bg-orange-100", text: "text-orange-800" },
+    [DocumentCategory.GENERAL]: { bg: "bg-teal-100", text: "text-teal-800" },
+    [DocumentCategory.PROPOSAL]: { bg: "bg-indigo-100", text: "text-indigo-800" },
+    [DocumentCategory.LEGAL]: { bg: "bg-pink-100", text: "text-pink-800" }
+  };
+
+  const style = categoryColors[category as DocumentCategory] || { bg: "bg-gray-100", text: "text-gray-800" };
+  
+  return (
+    <Badge variant="outline" className={`${style.bg} ${style.text} border-transparent`}>
+      {category}
+    </Badge>
+  );
+};

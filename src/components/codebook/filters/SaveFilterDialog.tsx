@@ -1,50 +1,44 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CodebookFilterState } from "@/types/codebook";
-import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SaveFilterDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (name: string) => Promise<void>;
-  entityType: "clients" | "insurers" | "products"; 
-  isLoading?: boolean;
 }
 
 const SaveFilterDialog: React.FC<SaveFilterDialogProps> = ({
   open,
   onOpenChange,
   onSave,
-  entityType,
-  isLoading = false
 }) => {
+  const { t } = useLanguage();
   const [filterName, setFilterName] = useState("");
-  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = async () => {
-    if (!filterName.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a filter name",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!filterName.trim()) return;
 
+    setIsSaving(true);
     try {
-      await onSave(filterName);
+      await onSave(filterName.trim());
       setFilterName("");
-      onOpenChange(false);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save filter",
-        variant: "destructive",
-      });
+      console.error("Error saving filter:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -52,30 +46,39 @@ const SaveFilterDialog: React.FC<SaveFilterDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Save Current Filter</DialogTitle>
+          <DialogTitle>{t("saveFilter")}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="filterName" className="text-right">
-              Filter name
-            </Label>
-            <Input
-              id="filterName"
-              value={filterName}
-              onChange={(e) => setFilterName(e.target.value)}
-              className="col-span-3"
-            />
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="filterName">{t("filterName")}</Label>
+              <Input
+                id="filterName"
+                value={filterName}
+                onChange={(e) => setFilterName(e.target.value)}
+                placeholder={t("enterFilterName")}
+                autoFocus
+                required
+              />
+            </div>
           </div>
-        </div>
-        <DialogFooter>
-          <Button 
-            type="submit" 
-            onClick={handleSave}
-            disabled={isLoading}
-          >
-            {isLoading ? "Saving..." : "Save filter"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setFilterName("");
+                onOpenChange(false);
+              }}
+              disabled={isSaving}
+            >
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={!filterName.trim() || isSaving}>
+              {isSaving ? t("saving") : t("save")}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

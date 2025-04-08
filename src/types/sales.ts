@@ -1,111 +1,67 @@
 
-import { BaseEntity, EntityType, DocumentCategory } from "./common";
+import { BaseEntity } from "./common";
+
+export enum ProposalStatus {
+  DRAFT = "draft",
+  SENT = "sent",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  EXPIRED = "expired"
+}
 
 export interface Lead extends BaseEntity {
   name: string;
   email?: string;
   phone?: string;
   company_name?: string;
-  contact_person?: string;
+  company?: string; // alias for company_name
+  status: string;
   source?: string;
-  status: LeadStatus;
-  notes?: string;
   assigned_to?: string;
-  company?: string;  // For backward compatibility
-}
-
-export enum LeadStatus {
-  NEW = 'new',
-  CONTACTED = 'contacted',
-  QUALIFIED = 'qualified',
-  PROPOSAL = 'proposal',
-  NEGOTIATION = 'negotiation',
-  WON = 'won',
-  LOST = 'lost',
-  DORMANT = 'dormant',
-  CONVERTED = 'converted'
+  contact_person?: string;
+  notes?: string;
+  company_id: string;
 }
 
 export interface SalesProcess extends BaseEntity {
   lead_id?: string;
   sales_number?: string;
-  estimated_value?: number;
-  expected_close_date?: string;
-  status: SalesProcessStatus;
-  assigned_to?: string;
+  status: string;
   current_step: string;
+  assigned_to?: string;
+  expected_close_date?: string;
+  estimated_value?: number;
+  company_id: string;
   updated_at: string;
-  client_name?: string; // For backward compatibility
-  title?: string; // Add missing property
-  company?: string; // Add missing property
-  stage?: string; // Add missing property
-}
-
-export enum SalesProcessStatus {
-  ACTIVE = 'active',
-  ON_HOLD = 'on_hold',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
-}
-
-export enum ProposalStatus {
-  DRAFT = 'draft',
-  SENT = 'sent',
-  PENDING = 'pending',
-  VIEWED = 'viewed',
-  ACCEPTED = 'accepted',
-  REJECTED = 'rejected',
-  EXPIRED = 'expired',
-  APPROVED = 'approved'
+  client_name?: string;
 }
 
 export interface Proposal extends BaseEntity {
   title: string;
   client_id: string;
   client_name: string;
-  sales_process_id: string;
   insurer_id: string;
   insurer_name: string;
-  coverage_details: string;
+  sales_process_id: string;
+  status: ProposalStatus;
+  amount?: number;
   premium: number;
   currency: string;
+  coverage_details: string;
   valid_until: string;
-  status: ProposalStatus;
-  notes?: string;
-  sent_at?: string;
-  viewed_at?: string;
-  expires_at?: string;
-  document_ids?: string[];
-  amount?: number;
-  expiry_date?: string;
-  description?: string; // For backward compatibility
-  created_by?: string;  // For backward compatibility
-  accepted_at?: string; // For backward compatibility
-  rejected_at?: string; // For backward compatibility
-  version?: number; // Add missing property
-  is_latest?: boolean; // Add missing property
+  updated_by?: string;
+  rejected_at?: string;
+  accepted_at?: string;
+  description?: string;
+  company_id: string;
 }
 
-// Interface for useProposalsData hook
-export interface UseProposalsDataProps {
-  salesProcessId?: string;
-  clientId?: string;
-  status?: ProposalStatus;
-  pageSize?: number;
-  initialPage?: number;
-  searchQuery?: string;
-  statusFilter?: string;
-}
-
-// Interface for proposal statistics
 export interface ProposalStats {
-  total: number;
-  pending: number;
-  viewed: number;
+  draft: number;
+  sent: number;
   accepted: number;
   rejected: number;
   expired: number;
-  draft?: number;
-  sent?: number;
-  approved?: number;
+  approved: number;
+  total: number;
 }

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,21 +8,22 @@ import { getDocumentTableName } from "@/utils/documentUploadUtils";
 import { v4 as uuidv4 } from "uuid";
 
 interface UseDocumentUploadParams {
-  entityType: EntityType;
   entityId: string;
+  entityType: EntityType;
   onSuccess?: () => void;
-  onError?: (error: Error) => void;
-  originalDocumentId?: string; // For versioning
-  currentVersion?: number; // For versioning
+  originalDocumentId?: string;
+  currentVersion?: number;
+  salesStage?: string;
 }
 
 export function useDocumentUpload({
-  entityType,
   entityId,
+  entityType,
   onSuccess,
   onError,
   originalDocumentId,
   currentVersion = 0,
+  salesStage,
 }: UseDocumentUploadParams) {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -35,7 +35,7 @@ export function useDocumentUpload({
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [description, setDescription] = useState<string>("");
-  const [salesStage, setSalesStage] = useState<string | null>(null);
+  const [salesStageState, setSalesStage] = useState<string | null>(salesStage);
   
   const tableName = getDocumentTableName(entityType);
   
@@ -98,8 +98,8 @@ export function useDocumentUpload({
       };
       
       // Add sales stage if present and entity type is a sales process
-      if (salesStage && (entityType === EntityType.SALES_PROCESS || entityType === EntityType.SALE)) {
-        documentData.step = salesStage;
+      if (salesStageState && (entityType === EntityType.SALES_PROCESS || entityType === EntityType.SALE)) {
+        documentData.step = salesStageState;
       }
       
       // If this is a new version, update previous version
@@ -162,7 +162,7 @@ export function useDocumentUpload({
     handleUpload,
     description,
     setDescription,
-    salesStage,
+    salesStageState,
     setSalesStage,
   };
 }
