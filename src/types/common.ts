@@ -2,6 +2,13 @@
 import type { Json } from "@/types/supabase";
 import { User } from "@/types/auth";
 
+// Base entity interface
+export interface BaseEntity {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Document category enumeration
 export enum DocumentCategory {
   POLICY = "policy",
@@ -13,7 +20,8 @@ export enum DocumentCategory {
   MISCELLANEOUS = "miscellaneous",
   AUTHORIZATION = "authorization",
   GENERAL = "general",
-  PROPOSAL = "proposal"
+  PROPOSAL = "proposal",
+  OTHER = "other"
 }
 
 // Document approval status
@@ -22,6 +30,20 @@ export enum ApprovalStatus {
   APPROVED = "approved",
   REJECTED = "rejected",
   NEEDS_REVIEW = "needs_review"
+}
+
+// EntityType enum
+export enum EntityType {
+  POLICY = "policy",
+  CLAIM = "claim",
+  SALES_PROCESS = "sales_process",
+  CLIENT = "client",
+  INSURER = "insurer",
+  AGENT = "agent",
+  INVOICE = "invoice",
+  POLICY_ADDENDUM = "policy_addendum",
+  ADDENDUM = "addendum",
+  SALE = "sale" // Alias for sales_process
 }
 
 // Comment interface
@@ -36,6 +58,14 @@ export interface Comment {
   updated_at: string;
 }
 
+// Service response
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  errors?: string[];
+}
+
 // Relation name type (for database tables)
 export type RelationName = string;
 
@@ -48,6 +78,9 @@ export interface PaginationControllerProps {
   pageSizeOptions?: number[];
   onPageSizeChange?: (pageSize: number) => void;
   totalCount?: number;
+  itemsCount?: number; // Additional prop for compatibility
+  itemsPerPage?: number; // Additional prop for compatibility
+  totalItems?: number; // Additional prop for compatibility
 }
 
 // Define the pagination props interface that matches the component implementation

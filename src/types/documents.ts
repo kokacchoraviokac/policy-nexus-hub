@@ -1,5 +1,5 @@
 
-import { DocumentCategory, ApprovalStatus, Comment } from '@/types/common';
+import type { DocumentCategory, ApprovalStatus, Comment } from '@/types/common';
 
 // Entity type enumeration
 export enum EntityType {
@@ -15,7 +15,7 @@ export enum EntityType {
   SALE = "sale" // Alias for sales_process
 }
 
-// Document approval status enumeration (re-exported from common for backward compatibility)
+// Document approval status enumeration (re-exported from common)
 export { ApprovalStatus };
 export type DocumentApprovalStatus = ApprovalStatus;
 
@@ -73,6 +73,8 @@ export interface DocumentUploadOptions {
   salesStage?: string;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  description?: string;
+  file?: File; // For backward compatibility
 }
 
 // Document upload request
@@ -86,6 +88,7 @@ export interface DocumentUploadRequest {
   originalDocumentId?: string;
   currentVersion?: number;
   salesStage?: string;
+  description?: string;
 }
 
 // Document upload dialog props
@@ -157,6 +160,7 @@ export interface UseDocumentUploadParams {
   entityId: string;
   entityType: EntityType;
   onSuccess?: () => void;
+  onError?: (error: Error) => void;
   originalDocumentId?: string;
   currentVersion?: number;
   salesStage?: string;
@@ -181,4 +185,3 @@ export interface UseDocumentsReturn {
 }
 
 export type { Comment };  // Re-export Comment for backward compatibility
-

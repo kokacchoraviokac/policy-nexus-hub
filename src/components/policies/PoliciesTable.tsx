@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   ColumnDef,
@@ -77,7 +78,7 @@ const PoliciesTable: React.FC<PoliciesTableProps> = ({ policies, onViewPolicy, p
       id: 'actions',
       header: t('actions'),
       cell: ({ row }) => (
-        <Button variant="ghost" size="sm" onClick={() => onViewPolicy(row.getValue('id') as string)}>
+        <Button variant="ghost" size="sm" onClick={() => onViewPolicy(row.original.id)}>
           <Eye className="h-4 w-4 mr-2" />
           {t('view')}
         </Button>
@@ -91,10 +92,6 @@ const PoliciesTable: React.FC<PoliciesTableProps> = ({ policies, onViewPolicy, p
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
-
-  const handleViewPolicy = (policyId: string) => {
-    onViewPolicy(policyId);
-  };
 
   return (
     <>
@@ -132,8 +129,8 @@ const PoliciesTable: React.FC<PoliciesTableProps> = ({ policies, onViewPolicy, p
         </Table>
       </div>
       <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
+        page={pagination.currentPage}
+        total_pages={pagination.totalPages}
         onPageChange={pagination.onPageChange}
         itemsCount={pagination.totalCount}
         itemsPerPage={pagination.pageSize}
