@@ -42,6 +42,6 @@ export interface AuthState {
   customPrivileges: CustomPrivilege[];
 }
 
-// Re-export from index to maintain compatibility
+// Export all types
 export type { User, CustomPrivilege, AuthState };
 export { UserRole };

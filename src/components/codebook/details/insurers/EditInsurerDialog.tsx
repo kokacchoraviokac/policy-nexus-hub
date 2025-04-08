@@ -72,7 +72,7 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <InsurerForm 
-          defaultValues={{
+          initialData={{
             name: insurer.name,
             contact_person: insurer.contact_person || "",
             email: insurer.email || "",
@@ -85,8 +85,9 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
             is_active: insurer.is_active,
           }} 
           onSubmit={handleSubmit}
+          isLoading={isSubmitting}
+          isEditMode={true}
           onCancel={() => onOpenChange(false)}
-          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>
