@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -8,13 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, RotateCcw } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { PaginationController } from "@/components/ui/pagination-controller";
+import { AlertCircle, Database } from "lucide-react";
 
 export interface Column<T> {
   key: string;
@@ -31,194 +29,147 @@ export interface DataTableProps<T, K = unknown> {
   columns: Column<T>[];
   keyField: keyof T;
   isLoading?: boolean;
-  error?: Error | null;
+  error?: Error | null | string;
   onRefresh?: () => void;
   searchPlaceholder?: string;
-  onSearch?: (query: string) => void;
-  emptyMessage?: string;
-  className?: string;
-  actions?: React.ReactNode;
+  emptyState?: {
+    title: string;
+    description: string;
+    action?: React.ReactNode;
+  };
   pagination?: {
     pageIndex?: number;
     pageSize?: number;
-    totalItems?: number;
-    totalPages?: number;
-    currentPage?: number;
-    itemsPerPage?: number;
-    onPageChange: (page: number) => void;
+    onPageChange?: (page: number) => void;
     onPageSizeChange?: (pageSize: number) => void;
     pageSizeOptions?: number[];
+    totalCount?: number;
+    totalPages?: number;
+    totalItems?: number; // For backward compatibility
   };
 }
 
-export function DataTable<T, K = unknown>({
+function DataTable<T>({
   data,
   columns,
   keyField,
   isLoading = false,
-  error = null,
+  error,
   onRefresh,
-  searchPlaceholder,
-  onSearch,
-  emptyMessage,
-  className,
-  actions,
-  pagination
-}: DataTableProps<T, K>) {
+  emptyState,
+  pagination,
+}: DataTableProps<T>) {
   const { t } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSearch) {
-      onSearch(searchQuery);
-    }
-  };
-  
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className={cn("space-y-4", className)}>
-        <div className="flex justify-between items-center">
-          <div className="w-1/3">
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <Skeleton className="h-10 w-24" />
+
+  const renderLoadingSkeleton = () => (
+    <TableRow>
+      <TableCell colSpan={columns.length} className="h-24">
+        <div className="flex flex-col items-center justify-center">
+          <Skeleton className="h-8 w-8 rounded-full mb-2" />
+          <Skeleton className="h-4 w-24" />
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column) => (
-                <TableHead key={column.key} className={column.className}>
-                  <Skeleton className="h-4 w-20" />
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array(5).fill(0).map((_, idx) => (
-              <TableRow key={idx}>
-                {columns.map((column) => (
-                  <TableCell key={`${idx}-${column.key}`} className={column.className}>
-                    <Skeleton className="h-4 w-full" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    );
-  }
-  
-  // Error state
-  if (error) {
-    return (
-      <div className="rounded-md bg-destructive/10 p-6 text-center">
-        <h4 className="font-medium text-destructive mb-2">{t("errorOccurred")}</h4>
-        <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-        {onRefresh && (
-          <Button onClick={onRefresh} variant="outline" size="sm">
-            <RotateCcw className="mr-2 h-4 w-4" />
-            {t("tryAgain")}
-          </Button>
-        )}
-      </div>
-    );
-  }
-  
-  // Empty state
-  if (data.length === 0) {
-    return (
-      <div className={cn("space-y-4", className)}>
-        {(onSearch || actions) && (
-          <div className="flex justify-between items-center mb-4">
-            {onSearch && (
-              <form onSubmit={handleSearch} className="flex items-center">
-                <Input
-                  placeholder={searchPlaceholder || t("search")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="max-w-sm"
-                />
-                <Button type="submit" variant="ghost" size="sm" className="ml-2">
-                  <Search className="h-4 w-4" />
-                </Button>
-              </form>
-            )}
-            {actions}
-          </div>
-        )}
-        <div className="rounded-md bg-muted/50 p-8 text-center">
-          <p className="text-muted-foreground">
-            {emptyMessage || t("noDataAvailable")}
+      </TableCell>
+    </TableRow>
+  );
+
+  const renderError = () => (
+    <TableRow>
+      <TableCell colSpan={columns.length} className="h-24">
+        <div className="flex flex-col items-center justify-center text-center">
+          <AlertCircle className="h-8 w-8 text-destructive mb-2" />
+          <p className="text-base font-medium">{t("dataLoadError")}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {typeof error === "string" ? error : error?.message || t("unknownError")}
           </p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Render table with data
-  return (
-    <div className={cn("space-y-4", className)}>
-      {(onSearch || actions) && (
-        <div className="flex justify-between items-center mb-4">
-          {onSearch && (
-            <form onSubmit={handleSearch} className="flex items-center">
-              <Input
-                placeholder={searchPlaceholder || t("search")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-sm"
-              />
-              <Button type="submit" variant="ghost" size="sm" className="ml-2">
-                <Search className="h-4 w-4" />
-              </Button>
-            </form>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm"
+            >
+              {t("tryAgain")}
+            </button>
           )}
-          {actions}
         </div>
-      )}
-      
-      <div className="rounded-md border">
+      </TableCell>
+    </TableRow>
+  );
+
+  const renderEmptyState = () => (
+    <TableRow>
+      <TableCell colSpan={columns.length} className="h-24">
+        <div className="flex flex-col items-center justify-center text-center">
+          <Database className="h-8 w-8 text-muted-foreground mb-2" />
+          <p className="text-base font-medium">
+            {emptyState?.title || t("noData")}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {emptyState?.description || t("noDataDescription")}
+          </p>
+          {emptyState?.action && (
+            <div className="mt-4">{emptyState.action}</div>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+
+  return (
+    <div className="rounded-md border">
+      <div className="relative w-full overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
-                <TableHead key={column.key} className={column.className}>
+                <TableHeader
+                  key={column.key}
+                  className={cn(column.className)}
+                >
                   {column.header}
-                </TableHead>
+                </TableHeader>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((item) => (
-              <TableRow key={String(item[keyField])}>
-                {columns.map((column) => (
-                  <TableCell key={`${String(item[keyField])}-${column.key}`} className={column.className}>
-                    {column.render ? column.render(item) : 
-                     column.cell ? column.cell(item) : 
-                     column.accessorKey ? String(item[column.accessorKey as keyof T] || '') : 
-                     String(item[column.key as keyof T] || '')}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
+            {isLoading ? (
+              renderLoadingSkeleton()
+            ) : error ? (
+              renderError()
+            ) : data.length === 0 ? (
+              renderEmptyState()
+            ) : (
+              data.map((row) => (
+                <TableRow key={String(row[keyField])}>
+                  {columns.map((column) => (
+                    <TableCell
+                      key={`${String(row[keyField])}-${column.key}`}
+                      className={column.className}
+                    >
+                      {column.render
+                        ? column.render(row)
+                        : column.cell
+                        ? column.cell(row)
+                        : column.accessorKey
+                        ? String(row[column.accessorKey as keyof T] || "")
+                        : String(row[column.key as keyof T] || "")}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
-      {pagination && (
-        <div className="p-4 border-t">
+      {pagination && (pagination.totalCount || pagination.totalPages || pagination.totalItems) && (
+        <div className="px-2 py-2 border-t">
           <PaginationController
-            currentPage={pagination.currentPage || pagination.pageIndex || 1}
+            currentPage={pagination.pageIndex || 1}
             totalPages={pagination.totalPages || 1}
-            itemsPerPage={pagination.itemsPerPage || pagination.pageSize || 10}
-            itemsCount={data.length}
-            totalItems={pagination.totalItems}
-            onPageChange={pagination.onPageChange}
+            onPageChange={pagination.onPageChange || (() => {})}
+            pageSize={pagination.pageSize || 10}
+            pageSizeOptions={pagination.pageSizeOptions || [10, 25, 50, 100]}
             onPageSizeChange={pagination.onPageSizeChange}
-            pageSizeOptions={pagination.pageSizeOptions}
+            totalCount={pagination.totalCount || pagination.totalItems || 0}
           />
         </div>
       )}
@@ -226,4 +177,4 @@ export function DataTable<T, K = unknown>({
   );
 }
 
-export default DataTable;
+export { DataTable };

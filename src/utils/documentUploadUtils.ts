@@ -1,14 +1,5 @@
-import { EntityType } from "@/types/documents";
 
-export type DocumentTableName = 
-  | "policy_documents" 
-  | "claim_documents"
-  | "client_documents"
-  | "invoice_documents"
-  | "sales_documents"
-  | "addendum_documents"
-  | "agent_documents"
-  | "insurer_documents";
+import { EntityType, DocumentTableName, Document } from "@/types/documents";
 
 /**
  * Get the appropriate document table name for a given entity type
@@ -69,9 +60,9 @@ export const getEntityIdColumn = (tableName: DocumentTableName): string => {
 };
 
 /**
- * Convert entity type to table name
- * @param entityType The entity type
- * @returns The table name
+ * Convert entity type to base table name (removes _documents suffix)
+ * @param entityType The entity type or document table name
+ * @returns The base table name
  */
 export const asTableName = (entityType: EntityType | string | DocumentTableName): string => {
   // If it's already a document table name, get the base table name
@@ -108,4 +99,40 @@ export const asTableName = (entityType: EntityType | string | DocumentTableName)
       }
       return "unknown";
   }
+};
+
+/**
+ * Create a mock document for testing or placeholder purposes
+ * @param entityType The type of entity the document belongs to
+ * @param entityId The ID of the entity
+ * @returns A mock Document object
+ */
+export const createMockDocument = (entityType: EntityType, entityId: string): Document => {
+  const now = new Date().toISOString();
+  return {
+    id: `mock-${Math.random().toString(36).substring(2, 11)}`,
+    document_name: "Sample Document",
+    document_type: "pdf",
+    file_path: "/path/to/file.pdf",
+    entity_type: entityType,
+    entity_id: entityId,
+    uploaded_by: "system",
+    created_at: now,
+    updated_at: now,
+    company_id: "default-company",
+    mime_type: "application/pdf",
+    size: 1024,
+    version: 1,
+    is_latest_version: true
+  };
+};
+
+/**
+ * Get a document's public URL from its file path
+ * @param filePath The document file path
+ * @returns The public URL for the document
+ */
+export const getDocumentUrl = (filePath: string): string => {
+  // This is a placeholder function - you'd implement this based on your storage solution
+  return `/api/documents/view?path=${encodeURIComponent(filePath)}`;
 };

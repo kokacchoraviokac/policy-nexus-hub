@@ -1,5 +1,8 @@
 
-import { BaseEntity } from "./common";
+import { BaseEntity, EntityType as CommonEntityType } from "./common";
+
+// Re-export EntityType to maintain backward compatibility
+export { EntityType } from "./common";
 
 // Filter state for codebook entities
 export interface CodebookFilterState {
@@ -8,22 +11,11 @@ export interface CodebookFilterState {
   city?: string;
   createdAfter?: Date;
   createdBefore?: Date;
+  category?: string;
+  insurer?: string;
 }
 
 // Define document-related enums
-export enum EntityType {
-  POLICY = 'policy',
-  CLAIM = 'claim',
-  CLIENT = 'client',
-  INVOICE = 'invoice',
-  ADDENDUM = 'addendum',
-  POLICY_ADDENDUM = 'policy_addendum',
-  SALES_PROCESS = 'sales_process',
-  SALE = 'sale',
-  AGENT = 'agent',
-  INSURER = 'insurer'
-}
-
 export enum DocumentCategory {
   POLICY = 'policy',
   CLAIM = 'claim',
@@ -55,14 +47,16 @@ export enum DocumentApprovalStatus {
   NEEDS_REVIEW = 'needs_review'
 }
 
-// Filter state for codebook entities
-export interface CodebookFilterState {
-  status: 'all' | 'active' | 'inactive';
-  country?: string;
-  city?: string;
-  createdAfter?: Date;
-  createdBefore?: Date;
-}
+// Document table name based on entity type
+export type DocumentTableName =
+  | "policy_documents"
+  | "claim_documents"
+  | "sales_documents"
+  | "client_documents"
+  | "insurer_documents"
+  | "agent_documents"
+  | "invoice_documents"
+  | "addendum_documents";
 
 // Client types
 export interface Client extends BaseEntity {
@@ -106,6 +100,9 @@ export interface InsuranceProduct extends BaseEntity {
   is_active: boolean;
   insurer_id?: string;
   insurer_name?: string;
+  name_translations?: Record<string, string>;
+  description_translations?: Record<string, string>;
+  category_translations?: Record<string, string>;
 }
 
 // Contact Person types
@@ -119,17 +116,6 @@ export interface ContactPerson extends BaseEntity {
   entity_id: string;
   entity_type: 'client' | 'insurer';
 }
-
-// Document table name based on entity type
-export type DocumentTableName =
-  | "policy_documents"
-  | "claim_documents"
-  | "sales_documents"
-  | "client_documents"
-  | "insurer_documents"
-  | "agent_documents"
-  | "invoice_documents"
-  | "addendum_documents";
 
 // Base document interface
 export interface Document extends BaseEntity {
@@ -150,9 +136,19 @@ export interface Document extends BaseEntity {
   approved_at?: string;
   approved_by?: string;
   approval_notes?: string;
-  comments?: Comment[] | string[];
+  comments?: Comment[];
   status?: string;
   size?: number;
+}
+
+// Comment interface for documents
+export interface Comment {
+  id: string;
+  user_id: string;
+  user_name?: string;
+  content: string;
+  created_at: string;
+  document_id: string;
 }
 
 // Type for policy documents
@@ -292,6 +288,7 @@ export interface UseDocumentSearchReturn {
   totalCount: number;
   totalPages: number;
   resetSearch: () => void;
+  searchTerm?: string;
 }
 
 // Return type for useDocuments hook
@@ -305,12 +302,9 @@ export interface UseDocumentsReturn {
   documentsCount: number;
 }
 
-// Comment interface for documents
-export interface Comment {
-  id: string;
-  user_id: string;
-  user_name?: string;
-  content: string;
-  created_at: string;
-  document_id: string;
+// For hooks that handle parameters
+export interface UseDocumentUploadParams {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+  salesStage?: string;
 }

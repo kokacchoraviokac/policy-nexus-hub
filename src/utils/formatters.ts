@@ -22,15 +22,19 @@ export const formatDateString = (dateString?: string | null, formatStr: string =
 
 /**
  * Format a date to a localized date string
- * @param date Date object
+ * @param date Date object or string
  * @param formatStr Optional format string
  * @returns Formatted date string
  */
-export const formatDate = (date?: Date | null, formatStr: string = 'dd/MM/yyyy'): string => {
-  if (!date || !isValid(date)) return '';
+export const formatDate = (date?: Date | string | null, formatStr: string = 'dd/MM/yyyy'): string => {
+  if (!date) return '';
   
   try {
-    return format(date, formatStr);
+    // If the date is a string, parse it to a Date object
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    
+    if (!isValid(dateObj)) return '';
+    return format(dateObj, formatStr);
   } catch (error) {
     console.error('Error formatting date:', error);
     return '';

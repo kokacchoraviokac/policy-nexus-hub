@@ -1,7 +1,7 @@
 
 import { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { User, UserRole, CustomPrivilege } from "@/types/auth/userTypes";
-import { ResourceContext } from "@/types/common";
+import { ResourceContext } from "@/types/auth/userTypes";
 
 export interface AuthContextType {
   user: User | null;
@@ -10,15 +10,35 @@ export interface AuthContextType {
   isInitialized: boolean;
   isAuthenticated: boolean;
   customPrivileges: CustomPrivilege[];
-  checkPrivilege: (privilege: string, resource?: ResourceContext) => boolean;
+  
+  // Auth operations
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   signUp: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
   refreshSession: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
+  
+  // Alternative operation names for backward compatibility
+  login: (email: string, password: string) => Promise<{ error?: any }>;
+  logout: () => Promise<void>;
+  updateUserProfile: (profile: Partial<User>) => Promise<void>;
+  
+  // Password management
+  initiatePasswordReset: (email: string) => Promise<boolean>;
+  updatePassword: (newPassword: string) => Promise<boolean>;
+  
+  // Authorization and privilege checking
+  hasPrivilege: (privilege: string) => boolean;
+  hasPrivilegeWithContext: (privilege: string, context?: ResourceContext) => boolean;
+  hasRole: (role: UserRole | UserRole[]) => boolean;
+  checkPrivilege: (privilege: string, resource?: ResourceContext) => boolean;
+  
+  // User profile information
+  role: UserRole | null;
+  companyId: string | null;
 }
 
-// We need a mapper from Supabase User to our User type
+// Map Supabase User to our User type
 export const mapSupabaseUserToUser = (supabaseUser: SupabaseUser | null, existingUser?: Partial<User>): User | null => {
   if (!supabaseUser) return null;
   
@@ -30,6 +50,7 @@ export const mapSupabaseUserToUser = (supabaseUser: SupabaseUser | null, existin
     avatar_url: existingUser?.avatar_url || supabaseUser.user_metadata?.avatar_url,
     company_id: existingUser?.company_id || supabaseUser.user_metadata?.company_id,
     user_metadata: supabaseUser.user_metadata || {},
-    isAuthenticated: true
+    created_at: supabaseUser.created_at,
+    updated_at: supabaseUser.updated_at || supabaseUser.created_at
   };
 };

@@ -1,17 +1,25 @@
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useLanguage } from '@/contexts/LanguageContext';
-import InsurerForm from '../forms/InsurerForm';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Insurer } from '@/types/codebook';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import InsurerForm from "./InsurerForm";
+import { Insurer } from "@/types/documents";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditInsurerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   insurerId: string;
-  onSubmit: (data: { id: string; updateData: Partial<Insurer> }) => void;
+  onSubmit: (id: string, insurer: Partial<Insurer>) => Promise<void>;
 }
 
 const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
@@ -22,77 +30,110 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
 }) => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [insurer, setInsurer] = useState<Insurer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [insurer, setInsurer] = useState<Insurer | null>(null);
 
   useEffect(() => {
     if (open && insurerId) {
-      fetchInsurer();
+      fetchInsurerDetails();
     }
   }, [open, insurerId]);
 
-  const fetchInsurer = async () => {
+  const fetchInsurerDetails = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('insurers')
-        .select('*')
-        .eq('id', insurerId)
+        .from("insurers")
+        .select("*")
+        .eq("id", insurerId)
         .single();
 
       if (error) throw error;
       setInsurer(data as Insurer);
     } catch (error) {
-      console.error('Error fetching insurer:', error);
+      console.error("Error fetching insurer details:", error);
       toast({
-        title: t('fetchFailed'),
-        description: t('failedToFetchInsurer'),
-        variant: 'destructive'
+        title: t("fetchError"),
+        description: t("errorFetchingInsurerDetails"),
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSubmit = async (updateData: Partial<Insurer>) => {
-    if (!insurerId) return;
-    
+  const handleSubmit = async (data: Partial<Insurer>) => {
     setIsSubmitting(true);
     try {
-      await onSubmit({ id: insurerId, updateData });
+      await onSubmit(insurerId, data);
       onOpenChange(false);
       toast({
-        title: t('insurerUpdated'),
-        description: t('insurerUpdatedSuccessfully')
+        title: t("insurerUpdated"),
+        description: t("insurerUpdatedSuccessfully")
       });
     } catch (error) {
-      console.error('Error updating insurer:', error);
+      console.error("Failed to update insurer:", error);
       toast({
-        title: t('updateFailed'),
-        description: t('failedToUpdateInsurer'),
-        variant: 'destructive'
+        title: t("updateFailed"),
+        description: t("failedToUpdateInsurer"),
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <div className="flex items-center justify-center p-6">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{t('editInsurer')}</DialogTitle>
+          <DialogTitle>{t("editInsurer")}</DialogTitle>
         </DialogHeader>
-        {!isLoading && insurer && (
-          <InsurerForm
-            initialData={insurer}
-            onSubmit={handleSubmit}
-            isLoading={isSubmitting}
-            isEditMode={true}
-            onCancel={() => onOpenChange(false)}
+        
+        {insurer && (
+          <InsurerForm 
+            insurer={insurer}
+            onSubmit={handleSubmit} 
+            isSubmitting={isSubmitting}
           />
         )}
+        
+        <DialogFooter className="mt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            {t("cancel")}
+          </Button>
+          <Button 
+            type="submit"
+            form="insurer-form"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("saving")}
+              </>
+            ) : (
+              t("save")
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
