@@ -92,7 +92,7 @@ const PolicyDocumentUploadDialog: React.FC<PolicyDocumentUploadDialogProps> = ({
     setDocumentCategory,
     file,
     handleFileChange,
-    uploading: isSubmitting,
+    isUploading,
     handleUpload
   } = useDocumentUpload({ 
     entityType,
@@ -139,7 +139,7 @@ const PolicyDocumentUploadDialog: React.FC<PolicyDocumentUploadDialogProps> = ({
           <DocumentUploadActions
             onClose={onClose}
             onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
+            isSubmitting={isUploading}
             isValid={isValid}
           />
         </DialogFooter>

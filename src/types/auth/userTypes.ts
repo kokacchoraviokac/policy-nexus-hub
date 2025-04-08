@@ -20,6 +20,7 @@ export interface User {
   company_id?: string;
   companyId?: string;
   user_metadata?: Record<string, any>;
+  isAuthenticated?: boolean;
 }
 
 // Custom privilege interface
@@ -40,8 +41,7 @@ export interface AuthState {
   isInitialized: boolean;
   isLoading: boolean;
   customPrivileges: CustomPrivilege[];
+  isAuthenticated?: boolean;
 }
 
-// Export all types
-export type { User, CustomPrivilege, AuthState };
-export { UserRole };
+// Export types without redundant declarations

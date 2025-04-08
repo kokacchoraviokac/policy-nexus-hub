@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { InvoiceType } from "@/types/finances";
 import { Link, useNavigate } from "react-router-dom";
+import { CellContextWithRowAccess } from "@/types/table";
 
 interface InvoicesTableProps {
   invoices: InvoiceType[];
@@ -75,41 +76,42 @@ const InvoicesTable = ({
     {
       header: t("invoiceNumber"),
       accessorKey: "invoice_number",
-      sortable: true,
+      key: "invoice_number"
     },
     {
       header: t("entityName"),
       accessorKey: "entity_name",
-      sortable: true,
+      key: "entity_name"
     },
     {
       header: t("issueDate"),
       accessorKey: "issue_date",
-      cell: (row) => formatDate(new Date(row.issue_date)),
-      sortable: true,
+      key: "issue_date",
+      cell: (row: InvoiceType) => formatDate(new Date(row.issue_date))
     },
     {
       header: t("dueDate"),
       accessorKey: "due_date",
-      cell: (row) => formatDate(new Date(row.due_date)),
-      sortable: true,
+      key: "due_date",
+      cell: (row: InvoiceType) => formatDate(new Date(row.due_date))
     },
     {
       header: t("amount"),
       accessorKey: "total_amount",
-      cell: (row) => formatCurrency(row.total_amount, row.currency),
-      sortable: true,
+      key: "total_amount",
+      cell: (row: InvoiceType) => formatCurrency(row.total_amount, row.currency)
     },
     {
       header: t("status"),
       accessorKey: "status",
-      cell: (row) => getStatusBadge(row.status),
-      sortable: true,
+      key: "status",
+      cell: (row: InvoiceType) => getStatusBadge(row.status)
     },
     {
       header: t("actions"),
       accessorKey: "id",
-      cell: (row) => (
+      key: "actions",
+      cell: (row: InvoiceType) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -166,14 +168,15 @@ const InvoicesTable = ({
         ),
       }}
       pagination={{
-        currentPage: pagination.page,
-        itemsPerPage: pagination.pageSize,
+        pageIndex: pagination.page,
+        pageSize: pagination.pageSize,
         totalItems: pagination.totalCount,
         totalPages: pagination.totalPages,
         onPageChange: pagination.setPage,
         onPageSizeChange: pagination.setPageSize,
         pageSizeOptions: [10, 25, 50, 100],
       }}
+      keyField="id"
     />
   );
 };

@@ -17,6 +17,8 @@ export interface Column<T = any> {
 export interface Pagination {
   pageIndex: number;
   pageSize: number;
+  currentPage?: number; // Added for compatibility
+  itemsPerPage?: number; // Added for compatibility
 }
 
 export interface SortingState {
@@ -32,7 +34,7 @@ export interface TableState {
 export interface CellContext<T, V> {
   row: T;
   getValue: () => V;
-  [key: string]: any;
+  [key: string]: any; // Allow accessing row properties directly
 }
 
 export interface ColumnDef<T, V = unknown> {
@@ -44,3 +46,6 @@ export interface ColumnDef<T, V = unknown> {
   meta?: any;
   sortable?: boolean;
 }
+
+// Add direct row access mapping helper
+export type CellContextWithRowAccess<T> = CellContext<T, unknown> & T;

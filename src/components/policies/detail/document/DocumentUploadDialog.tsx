@@ -33,7 +33,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     setDocumentName,
     file,
     handleFileChange,
-    uploading,
+    isUploading,
     handleUpload,
     setDocumentType: setUploadDocumentType,
     setDocumentCategory
@@ -126,7 +126,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
             <FileUploader
               onFileSelect={(file) => handleFileChange(file)}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              uploading={uploading}
+              uploading={isUploading}
               selectedFile={file}
             />
           </div>
@@ -136,15 +136,15 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
               type="button" 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              disabled={uploading}
+              disabled={isUploading}
             >
               {t("cancel")}
             </Button>
             <Button 
               type="submit" 
-              disabled={uploading || !documentName || !documentType || !file}
+              disabled={isUploading || !documentName || !documentType || !file}
             >
-              {uploading ? t("uploading") : t("upload")}
+              {isUploading ? t("uploading") : t("upload")}
             </Button>
           </DialogFooter>
         </form>

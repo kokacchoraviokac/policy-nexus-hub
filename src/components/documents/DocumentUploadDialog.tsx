@@ -48,7 +48,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     setDocumentCategory,
     file,
     handleFileChange,
-    uploading,
+    isUploading, // Changed from uploading to isUploading
     handleUpload,
     setSalesStage
   } = useDocumentUpload({ 
@@ -73,7 +73,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
     }
   }, [defaultCategory, documentCategory, setDocumentCategory]);
 
-  // Set sales stage if provided
+  // Set sales stage if provided and the function is available
   useEffect(() => {
     if (salesStage && setSalesStage) {
       setSalesStage(salesStage);
@@ -122,7 +122,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={isNewVersion}
-          isSalesProcess={entityType === "sales_process"}
+          isSalesProcess={entityType === EntityType.SALES_PROCESS}
           salesStage={salesStage}
         />
         
@@ -133,7 +133,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
         
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
           <DocumentUploadActions
-            uploading={uploading}
+            uploading={isUploading} // Changed from uploading to isUploading
             isNewVersion={isNewVersion}
             canUpload={canUpload}
             onCancel={() => onOpenChange(false)}
@@ -170,7 +170,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
           file={file}
           handleFileChange={handleFileChange}
           isNewVersion={isNewVersion}
-          isSalesProcess={entityType === "sales_process"}
+          isSalesProcess={entityType === EntityType.SALES_PROCESS}
           salesStage={salesStage}
         />
         
@@ -181,7 +181,7 @@ const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
         
         <DialogFooter>
           <DocumentUploadActions
-            uploading={uploading}
+            uploading={isUploading} // Changed from uploading to isUploading
             isNewVersion={isNewVersion}
             canUpload={canUpload}
             onCancel={() => onOpenChange(false)}
