@@ -1,11 +1,7 @@
 
+// Resource context for authorization
 export interface ResourceContext {
-  resource: string;
-  action: string;
-  condition?: string;
-  ownerId?: string;
   companyId?: string;
-  resourceType?: string;
-  resourceValue?: any;
+  organizationId?: string;
   [key: string]: any;
 }

@@ -46,7 +46,6 @@ const InsurersDirectory = () => {
     isLoading, 
     totalItems,
     totalPages,
-    error, 
     deleteInsurer, 
     refreshInsurers,
     createInsurer,
@@ -109,6 +108,14 @@ const InsurersDirectory = () => {
   
   const columns = getInsurerColumns(handleEdit, handleDelete);
   
+  const handleCreateInsurer = async (insurerData: any) => {
+    await createInsurer(insurerData);
+  };
+  
+  const handleUpdateInsurer = async (id: string, insurerData: any) => {
+    await updateInsurer(id, insurerData);
+  };
+  
   const handleRefresh = () => {
     refreshInsurers();
   };
@@ -156,7 +163,6 @@ const InsurersDirectory = () => {
         data={insurers || []}
         columns={columns}
         isLoading={isLoading}
-        error={error}
         keyField="id"
         emptyState={{
           title: t("noInsurersFound"),
@@ -181,7 +187,7 @@ const InsurersDirectory = () => {
       <AddInsurerDialog 
         open={addDialogOpen} 
         onOpenChange={setAddDialogOpen}
-        onSubmit={createInsurer} 
+        onSubmit={handleCreateInsurer} 
       />
       
       {selectedInsurerId && (
@@ -189,7 +195,7 @@ const InsurersDirectory = () => {
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           insurerId={selectedInsurerId}
-          onSubmit={updateInsurer}
+          onSubmit={handleUpdateInsurer}
         />
       )}
       

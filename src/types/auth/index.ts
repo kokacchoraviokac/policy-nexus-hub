@@ -1,22 +1,42 @@
 
-export { UserRole } from './userTypes';
+import { UserRole } from "./userTypes";
 
-export interface User {
-  id: string;
-  email: string;
-  name?: string;
-  first_name?: string;
-  last_name?: string;
-  company_id?: string;
-  companyId?: string;
-  role?: UserRole;
-  avatar_url?: string;
-  avatar?: string; // Avatar alias for backward compatibility
-  phone?: string;
-  is_active?: boolean;
-  created_at?: string;
-  updated_at?: string;
-  privileges?: string[];
+export * from "./userTypes";
+export * from "./contextTypes";
+
+// User state
+export interface AuthState {
+  user: User | null;
+  session: any | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  isInitialized: boolean;
+  customPrivileges: CustomPrivilege[];
+  error?: Error | null;
 }
 
-export * from './userTypes';
+// User interface
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  company_id: string;
+  created_at: string;
+  updated_at: string;
+  avatar_url?: string;
+  user_metadata?: Record<string, any>;
+}
+
+// Custom privilege for users
+export interface CustomPrivilege {
+  id: string;
+  user_id: string;
+  privilege: string;
+  context?: string | Record<string, any>;
+  expires_at?: string;
+  granted_by?: string;
+  granted_at?: string;
+  created_at: string;
+  updated_at: string;
+}

@@ -1,137 +1,108 @@
 
-import { format, parseISO, isValid } from 'date-fns';
-
 /**
- * Format a date string to a localized date string
- * @param dateString ISO date string
- * @param formatStr Optional format string
- * @returns Formatted date string
+ * Format a date string to localized format
+ * @param dateString The date string to format
+ * @param localeOptions Options for the date formatter
  */
-export const formatDateString = (dateString?: string | null, formatStr: string = 'dd/MM/yyyy'): string => {
+export function formatDateString(
+  dateString: string | null | undefined,
+  localeOptions: Intl.DateTimeFormatOptions = { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  }
+): string {
   if (!dateString) return '';
   
   try {
-    const date = parseISO(dateString);
-    if (!isValid(date)) return '';
-    return format(date, formatStr);
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, localeOptions);
   } catch (error) {
     console.error('Error formatting date:', error);
-    return '';
+    return dateString || '';
   }
-};
+}
 
 /**
- * Format a date to a localized date string
- * @param date Date object or string
- * @param formatStr Optional format string
- * @returns Formatted date string
+ * Format number as currency
+ * @param amount The amount to format
+ * @param currency The currency code
  */
-export const formatDate = (date?: Date | string | null, formatStr: string = 'dd/MM/yyyy'): string => {
-  if (!date) return '';
+export function formatCurrency(
+  amount: number | null | undefined,
+  currency: string = 'EUR'
+): string {
+  if (amount === null || amount === undefined) return '';
   
   try {
-    // If the date is a string, parse it to a Date object
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
-    
-    if (!isValid(dateObj)) return '';
-    return format(dateObj, formatStr);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return '';
-  }
-};
-
-/**
- * Format a date string to a localized date and time string
- * @param dateString ISO date string
- * @param formatStr Optional format string
- * @returns Formatted date and time string
- */
-export const formatDateTime = (dateString?: string | null, formatStr: string = 'dd/MM/yyyy HH:mm'): string => {
-  if (!dateString) return '';
-  
-  try {
-    const date = parseISO(dateString);
-    if (!isValid(date)) return '';
-    return format(date, formatStr);
-  } catch (error) {
-    console.error('Error formatting date and time:', error);
-    return '';
-  }
-};
-
-/**
- * Format a currency value
- * @param value Number to format
- * @param currency Currency code (default: EUR)
- * @param locale Locale to use for formatting (default: en-US)
- * @returns Formatted currency string
- */
-export const formatCurrency = (
-  value?: number | null,
-  currency: string = 'EUR',
-  locale: string = 'en-US'
-): string => {
-  if (value === undefined || value === null) return '';
-  
-  try {
-    return new Intl.NumberFormat(locale, {
+    return new Intl.NumberFormat(undefined, {
       style: 'currency',
       currency: currency,
-    }).format(value);
+    }).format(amount);
   } catch (error) {
     console.error('Error formatting currency:', error);
-    return value.toString();
+    return `${amount} ${currency}`;
   }
-};
+}
 
 /**
- * Format a number with thousand separators
- * @param value Number to format
- * @param decimalPlaces Number of decimal places
- * @param locale Locale to use for formatting
- * @returns Formatted number string
+ * Format number with thousands separators and decimal places
+ * @param number The number to format
+ * @param decimals Number of decimal places
  */
-export const formatNumber = (
-  value?: number | null,
-  decimalPlaces: number = 2,
-  locale: string = 'en-US'
-): string => {
-  if (value === undefined || value === null) return '';
+export function formatNumber(
+  number: number | null | undefined,
+  decimals: number = 2
+): string {
+  if (number === null || number === undefined) return '';
   
   try {
-    return new Intl.NumberFormat(locale, {
-      minimumFractionDigits: decimalPlaces,
-      maximumFractionDigits: decimalPlaces,
-    }).format(value);
+    return new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(number);
   } catch (error) {
     console.error('Error formatting number:', error);
-    return value.toString();
+    return `${number}`;
   }
-};
+}
 
 /**
- * Format a percentage value
- * @param value Number to format as percentage
- * @param decimalPlaces Number of decimal places
- * @param locale Locale to use for formatting
- * @returns Formatted percentage string
+ * Format percentage value
+ * @param value The percentage value (e.g., 0.25 for 25%)
+ * @param decimals Number of decimal places
  */
-export const formatPercentage = (
-  value?: number | null,
-  decimalPlaces: number = 2,
-  locale: string = 'en-US'
-): string => {
-  if (value === undefined || value === null) return '';
+export function formatPercentage(
+  value: number | null | undefined,
+  decimals: number = 2
+): string {
+  if (value === null || value === undefined) return '';
   
   try {
-    return new Intl.NumberFormat(locale, {
+    // Convert to percentage format if the value is in decimal form
+    const percentValue = value > 1 ? value : value * 100;
+    
+    return new Intl.NumberFormat(undefined, {
       style: 'percent',
-      minimumFractionDigits: decimalPlaces,
-      maximumFractionDigits: decimalPlaces,
-    }).format(value / 100);
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(value);
   } catch (error) {
     console.error('Error formatting percentage:', error);
     return `${value}%`;
   }
-};
+}
+
+/**
+ * Format file size in human readable format
+ * @param bytes Size in bytes
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}

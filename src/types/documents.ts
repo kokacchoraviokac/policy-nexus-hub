@@ -1,8 +1,5 @@
 
-import { BaseEntity, EntityType as CommonEntityType } from "./common";
-
-// Re-export EntityType to maintain backward compatibility
-export { EntityType } from "./common";
+import { BaseEntity, EntityType, DocumentCategory, DocumentApprovalStatus, Comment } from "./common";
 
 // Filter state for codebook entities
 export interface CodebookFilterState {
@@ -13,38 +10,6 @@ export interface CodebookFilterState {
   createdBefore?: Date;
   category?: string;
   insurer?: string;
-}
-
-// Define document-related enums
-export enum DocumentCategory {
-  POLICY = 'policy',
-  CLAIM = 'claim',
-  CLIENT = 'client',
-  INVOICE = 'invoice',
-  OTHER = 'other',
-  CLAIM_EVIDENCE = 'claim_evidence',
-  MEDICAL = 'medical',
-  LEGAL = 'legal',
-  FINANCIAL = 'financial',
-  LIEN = 'lien', 
-  NOTIFICATION = 'notification',
-  CORRESPONDENCE = 'correspondence',
-  DISCOVERY = 'discovery',
-  QUOTE = 'quote',
-  PROPOSAL = 'proposal',
-  CONTRACT = 'contract',
-  CLOSEOUT = 'closeout',
-  SALES = 'sales',
-  GENERAL = 'general',
-  AUTHORIZATION = 'authorization',
-  MISCELLANEOUS = 'miscellaneous'
-}
-
-export enum DocumentApprovalStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  NEEDS_REVIEW = 'needs_review'
 }
 
 // Document table name based on entity type
@@ -139,16 +104,6 @@ export interface Document extends BaseEntity {
   comments?: Comment[];
   status?: string;
   size?: number;
-}
-
-// Comment interface for documents
-export interface Comment {
-  id: string;
-  user_id: string;
-  user_name?: string;
-  content: string;
-  created_at: string;
-  document_id: string;
 }
 
 // Type for policy documents
