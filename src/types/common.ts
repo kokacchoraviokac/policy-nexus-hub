@@ -1,6 +1,5 @@
 
-import type { Json } from "@/types/supabase";
-import { User } from "@/types/auth";
+import type { User } from "@/types/auth";
 
 // Base entity interface
 export interface BaseEntity {
@@ -31,6 +30,9 @@ export enum ApprovalStatus {
   REJECTED = "rejected",
   NEEDS_REVIEW = "needs_review"
 }
+
+// For backward compatibility
+export type DocumentApprovalStatus = ApprovalStatus;
 
 // EntityType enum
 export enum EntityType {
@@ -68,6 +70,15 @@ export interface ServiceResponse<T = any> {
 
 // Relation name type (for database tables)
 export type RelationName = string;
+
+// JSON type for Supabase
+export type Json = 
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 // Pagination controller props
 export interface PaginationControllerProps {

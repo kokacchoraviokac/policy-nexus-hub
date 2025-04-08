@@ -8,13 +8,13 @@ import {
   Loader2 
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { DocumentApprovalStatus } from "@/types/documents";
+import { ApprovalStatus } from "@/types/common";
 
 interface ApprovalActionsProps {
   onApprove: () => void;
   onReject: () => void;
   onNeedsReview: () => void;
-  currentStatus: DocumentApprovalStatus;
+  currentStatus: ApprovalStatus | string;
   isPending: boolean;
 }
 
@@ -33,7 +33,7 @@ export const ApprovalActions: React.FC<ApprovalActionsProps> = ({
         variant="default" 
         className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
         onClick={onApprove}
-        disabled={isPending || currentStatus === DocumentApprovalStatus.APPROVED}
+        disabled={isPending || currentStatus === ApprovalStatus.APPROVED}
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
         {t("approve")}
@@ -42,7 +42,7 @@ export const ApprovalActions: React.FC<ApprovalActionsProps> = ({
         variant="default"
         className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600"
         onClick={onNeedsReview}
-        disabled={isPending || currentStatus === DocumentApprovalStatus.NEEDS_REVIEW}
+        disabled={isPending || currentStatus === ApprovalStatus.NEEDS_REVIEW}
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <AlertCircle className="mr-2 h-4 w-4" />}
         {t("needsReview")}
@@ -51,7 +51,7 @@ export const ApprovalActions: React.FC<ApprovalActionsProps> = ({
         variant="destructive"
         className="w-full sm:w-auto"
         onClick={onReject}
-        disabled={isPending || currentStatus === DocumentApprovalStatus.REJECTED}
+        disabled={isPending || currentStatus === ApprovalStatus.REJECTED}
       >
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-4 w-4" />}
         {t("reject")}

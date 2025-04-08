@@ -1,23 +1,17 @@
 
-import type { DocumentCategory, ApprovalStatus, Comment } from '@/types/common';
+import type { BaseEntity, Comment, DocumentCategory as CommonDocumentCategory, EntityType as CommonEntityType, ApprovalStatus } from '@/types/common';
 
-// Entity type enumeration
-export enum EntityType {
-  POLICY = "policy",
-  CLAIM = "claim",
-  SALES_PROCESS = "sales_process",
-  CLIENT = "client",
-  INSURER = "insurer",
-  AGENT = "agent",
-  INVOICE = "invoice",
-  POLICY_ADDENDUM = "policy_addendum",
-  ADDENDUM = "addendum",
-  SALE = "sale" // Alias for sales_process
-}
+// Re-export EntityType from common.ts
+export type EntityType = CommonEntityType;
+export { CommonEntityType as EntityType };
 
-// Document approval status enumeration (re-exported from common)
-export { ApprovalStatus };
+// Re-export DocumentCategory from common.ts
+export type DocumentCategory = CommonDocumentCategory;
+export { CommonDocumentCategory as DocumentCategory };
+
+// Export ApprovalStatus and DocumentApprovalStatus as type (for backward compatibility)
 export type DocumentApprovalStatus = ApprovalStatus;
+export { ApprovalStatus };
 
 // Document table name type
 export type DocumentTableName = 
@@ -31,8 +25,7 @@ export type DocumentTableName =
   | "addendum_documents";
 
 // Document interface
-export interface Document {
-  id: string;
+export interface Document extends BaseEntity {
   document_name: string;
   document_type: string;
   file_path: string;
@@ -41,8 +34,6 @@ export interface Document {
   uploaded_by: string;
   uploaded_by_name?: string;
   company_id: string;
-  created_at: string;
-  updated_at: string;
   version?: number;
   is_latest_version?: boolean;
   original_document_id?: string | null;
@@ -169,7 +160,7 @@ export interface UseDocumentUploadParams {
 // Approval information interface
 export interface ApprovalInfo {
   document_id: string;
-  status: DocumentApprovalStatus;
+  status: ApprovalStatus;
   notes: string;
   canApprove: boolean;
 }

@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { DocumentApprovalStatus, EntityType } from '@/types/common';
+import { ApprovalStatus, DocumentApprovalStatus, EntityType } from '@/types/common';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDocumentTableName } from '@/utils/documentUploadUtils';
@@ -53,8 +53,8 @@ export const useDocumentApproval = () => {
         .update({
           approval_status: status,
           approval_notes: notes,
-          approved_at: status === DocumentApprovalStatus.APPROVED ? new Date().toISOString() : null,
-          approved_by: status === DocumentApprovalStatus.APPROVED ? user.id : null
+          approved_at: status === ApprovalStatus.APPROVED ? new Date().toISOString() : null,
+          approved_by: status === ApprovalStatus.APPROVED ? user.id : null
         })
         .eq('id', documentId));
       
@@ -66,7 +66,7 @@ export const useDocumentApproval = () => {
         .insert({
           entity_id: documentId,
           entity_type: 'document',
-          action: status === DocumentApprovalStatus.APPROVED ? 'approve' : 'reject',
+          action: status === ApprovalStatus.APPROVED ? 'approve' : 'reject',
           user_id: user.id,
           company_id: user.company_id,
           details: {
@@ -80,11 +80,11 @@ export const useDocumentApproval = () => {
       
       // Show a success message
       toast({
-        title: status === DocumentApprovalStatus.APPROVED ? "Document approved" : "Document rejected",
-        description: status === DocumentApprovalStatus.APPROVED 
+        title: status === ApprovalStatus.APPROVED ? "Document approved" : "Document rejected",
+        description: status === ApprovalStatus.APPROVED 
           ? "The document has been successfully approved" 
           : "The document has been rejected",
-        variant: status === DocumentApprovalStatus.APPROVED ? "default" : "destructive"
+        variant: status === ApprovalStatus.APPROVED ? "default" : "destructive"
       });
       
       return { success: true };
