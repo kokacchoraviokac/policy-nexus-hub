@@ -1,5 +1,5 @@
 
-import { EntityType, DocumentCategory, DocumentApprovalStatus } from './common';
+import { EntityType, DocumentCategory, DocumentApprovalStatus, ApprovalStatus } from './common';
 
 export interface Document {
   id: string;
@@ -22,6 +22,11 @@ export interface Document {
   is_latest_version?: boolean;
   original_document_id?: string;
   mime_type?: string;
+  
+  // Add missing properties to fix errors
+  description?: string;
+  status?: string; // Document status
+  approval_notes?: string;
 }
 
 export interface PolicyDocument extends Document {
@@ -49,6 +54,7 @@ export interface DocumentUploadDialogProps {
   onFileSelected?: (file: File | null) => void;
   defaultCategory?: DocumentCategory;
   salesStage?: string;
+  filterCategory?: string; // Add missing property
 }
 
 export interface Comment {
@@ -70,6 +76,7 @@ export interface DocumentUploadOptions {
   originalDocumentId?: string;
   currentVersion?: number;
   salesStage?: string;
+  description?: string; // Add missing property
 }
 
 export interface ApprovalInfo {
@@ -79,7 +86,37 @@ export interface ApprovalInfo {
   canApprove: boolean;
 }
 
-export type DocumentTableName = "policy_documents" | "claim_documents" | "sales_documents" | "client_documents" | "insurer_documents" | "agent_documents";
+export type DocumentTableName = "policy_documents" | "claim_documents" | "sales_documents" | "client_documents" | "insurer_documents" | "agent_documents" | "invoice_documents" | "addendum_documents";
+
+// Add missing interfaces for document search
+export interface DocumentSearchParams {
+  entityType?: EntityType;
+  entityId?: string;
+  category?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  searchTerm?: string;
+  documentType?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface UseDocumentSearchProps {
+  defaultParams?: Partial<DocumentSearchParams>;
+  autoSearch?: boolean;
+}
+
+export interface UseDocumentSearchReturn {
+  documents: Document[];
+  isLoading: boolean;
+  error: Error | null;
+  searchParams: DocumentSearchParams;
+  setSearchParams: (params: Partial<DocumentSearchParams>) => void;
+  search: () => void;
+  totalCount: number;
+  totalPages: number;
+  resetSearch: () => void;
+}
 
 // Re-export enums from common to maintain compatibility
-export { EntityType, DocumentCategory, DocumentApprovalStatus };
+export { EntityType, DocumentCategory, DocumentApprovalStatus, ApprovalStatus };

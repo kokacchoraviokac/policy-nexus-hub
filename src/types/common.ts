@@ -11,7 +11,8 @@ export enum EntityType {
   AGENT = "agent",
   DOCUMENT = "document",
   POLICY_ADDENDUM = "policy_addendum",
-  INVOICE = "invoice"
+  INVOICE = "invoice",
+  ADDENDUM = "addendum" // Add missing ADDENDUM type
 }
 
 export enum DocumentCategory {
@@ -25,7 +26,9 @@ export enum DocumentCategory {
   CLIENT = "client",
   OTHER = "other",
   GENERAL = "general",
-  AUTHORIZATION = "authorization"
+  AUTHORIZATION = "authorization",
+  MISCELLANEOUS = "miscellaneous", // Add missing MISCELLANEOUS category
+  PROPOSAL = "proposal" // Add missing PROPOSAL category
 }
 
 export enum DocumentApprovalStatus {
@@ -35,11 +38,40 @@ export enum DocumentApprovalStatus {
   NEEDS_REVIEW = "needs_review"
 }
 
+// Add missing ApprovalStatus enum
+export enum ApprovalStatus {
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  NEEDS_REVIEW = "needs_review"
+}
+
+export enum CommissionStatus {
+  DUE = "due",
+  PAID = "paid",
+  PARTIALLY_PAID = "partially_paid"
+}
+
+export enum PolicyStatus {
+  ACTIVE = "active",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled",
+  PENDING = "pending"
+}
+
+export enum WorkflowStatus {
+  DRAFT = "draft",
+  REVIEW = "review",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  COMPLETE = "complete"
+}
+
 export interface ServiceResponse<T> {
   data?: T;
-  error?: string;
   status: number;
   success: boolean;
+  error?: string;
 }
 
 export interface PaginationControllerProps {
@@ -61,4 +93,21 @@ export interface PaginationProps {
   itemsCount?: number;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: number[];
+}
+
+// Add Document Comments interface
+export interface DocumentComment {
+  id: string;
+  document_id: string;
+  author: string;
+  text: string;
+  created_at: string;
+  user_id: string;
+}
+
+// Add ResourceContext interface to fix auth-related issues
+export interface ResourceContext {
+  resource: string;
+  action: string;
+  condition?: string;
 }

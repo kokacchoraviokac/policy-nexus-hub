@@ -78,11 +78,12 @@ export const documentCategories = [
   { label: "legal", value: DocumentCategory.LEGAL },
   { label: "contract", value: DocumentCategory.CONTRACT },
   { label: "invoice", value: DocumentCategory.INVOICE },
-  { label: "miscellaneous", value: DocumentCategory.GENERAL },
+  { label: "miscellaneous", value: DocumentCategory.MISCELLANEOUS },
   { label: "other", value: DocumentCategory.OTHER },
   { label: "lien", value: DocumentCategory.AUTHORIZATION },
   { label: "notification", value: DocumentCategory.GENERAL },
   { label: "correspondence", value: DocumentCategory.CORRESPONDENCE },
+  { label: "proposal", value: DocumentCategory.PROPOSAL },
 ];
 
 /**

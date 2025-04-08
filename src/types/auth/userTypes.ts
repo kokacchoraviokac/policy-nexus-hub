@@ -36,8 +36,6 @@ export interface CustomPrivilege {
   context?: string;
 }
 
-export interface ResourceContext {
-  resource: string;
-  action: string;
-  condition?: string;
-}
+// Import ResourceContext from common.ts
+import { ResourceContext } from '../common';
+export { ResourceContext };
