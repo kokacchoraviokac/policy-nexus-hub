@@ -1,6 +1,6 @@
 
 import { BaseEntity } from "./common";
-import { EntityType, DocumentCategory, DocumentApprovalStatus } from "./common";
+import { EntityType, DocumentCategory, DocumentApprovalStatus, Comment } from "./common";
 
 // Document table names for storage operations
 export type DocumentTableName = 
@@ -51,15 +51,6 @@ export interface DocumentFilterParams {
   uploaded_by?: string;
 }
 
-// Comment interface for document comments
-export interface Comment extends BaseEntity {
-  document_id: string;
-  user_id: string;
-  content: string;
-  author?: string; // Backward compatibility
-  text?: string;   // Backward compatibility
-}
-
 // Document upload options
 export interface DocumentUploadOptions {
   file: File;
@@ -78,9 +69,11 @@ export interface DocumentUploadOptions {
 export interface UseDocumentUploadParams {
   entityType: EntityType;
   entityId: string;
-  salesStage?: string;
+  originalDocumentId?: string;
+  currentVersion?: number;
   onSuccess?: (document: Document) => void;
   onError?: (error: Error) => void;
+  salesStage?: string;
 }
 
 // Document approval info
@@ -98,7 +91,11 @@ export interface DocumentUploadDialogProps {
   entityType: EntityType;
   entityId: string;
   selectedDocument?: Document;
-  onSuccess?: (document: Document) => void;
+  onUploadComplete?: (document?: Document) => void;
+  embedMode?: boolean;
+  onFileSelected?: (file: File | null) => void;
+  defaultCategory?: DocumentCategory;
+  salesStage?: string;
 }
 
 // Policy document (special case of Document)
@@ -106,15 +103,46 @@ export interface PolicyDocument extends Document {
   policy_id: string;
 }
 
+// Document upload request
+export interface DocumentUploadRequest {
+  file: File;
+  document_name: string;
+  document_type: string;
+  entity_type: EntityType;
+  entity_id: string;
+  category?: DocumentCategory;
+  version?: number;
+  original_document_id?: string;
+  description?: string;
+  company_id?: string;
+}
+
 // Document search parameters
 export interface DocumentSearchParams extends DocumentFilterParams {
   searchTerm?: string;
+  entityType?: EntityType;
+  entityId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  documentType?: string;
 }
 
 // Document search props
 export interface UseDocumentSearchProps {
-  initialFilters?: Partial<DocumentFilterParams>;
   pageSize?: number;
+  initialFilters?: Partial<DocumentFilterParams>;
+  defaultParams?: Partial<DocumentSearchParams>;
+  autoSearch?: boolean;
+  entityType?: EntityType;
+  entityId?: string;
+  category?: DocumentCategory;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  initialSearchParams?: Partial<DocumentSearchParams>;
+  autoFetch?: boolean;
 }
 
 // Document search return type
@@ -132,7 +160,29 @@ export interface UseDocumentSearchReturn {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   refetch: () => void;
+  searchParams?: DocumentSearchParams;
+  setSearchParams?: (params: Partial<DocumentSearchParams>) => void;
+  search?: () => void;
+  totalCount?: number;
+  totalPages?: number;
+  resetSearch?: () => void;
 }
 
-// Re-export important types from common.ts
-export { EntityType, DocumentCategory, DocumentApprovalStatus } from "./common";
+// Document hooks return type
+export interface UseDocumentsReturn {
+  documents: Document[];
+  isLoading: boolean;
+  error: Error | null;
+  deleteDocument: (id: string) => Promise<void>;
+  isDeletingDocument: boolean;
+  refetchDocuments?: () => void;
+}
+
+// Re-export types from common.ts to avoid importing from multiple places
+export {
+  EntityType, 
+  DocumentCategory, 
+  DocumentApprovalStatus,
+  ApprovalStatus,
+  Comment
+};

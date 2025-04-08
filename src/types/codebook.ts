@@ -67,6 +67,3 @@ export interface InsuranceProduct extends BaseEntity {
   description_translations?: Record<string, string>;
   category_translations?: Record<string, string>;
 }
-
-// Export types
-export type { SavedFilter, Client, Insurer, InsuranceProduct, CodebookFilterState, ProductCategory, EntityStatus };

@@ -36,6 +36,9 @@ export interface SalesProcess extends BaseEntity {
   current_step: string;
   updated_at: string;
   client_name?: string; // For backward compatibility
+  title?: string; // Add missing property
+  company?: string; // Add missing property
+  stage?: string; // Add missing property
 }
 
 export enum SalesProcessStatus {
@@ -79,6 +82,8 @@ export interface Proposal extends BaseEntity {
   created_by?: string;  // For backward compatibility
   accepted_at?: string; // For backward compatibility
   rejected_at?: string; // For backward compatibility
+  version?: number; // Add missing property
+  is_latest?: boolean; // Add missing property
 }
 
 // Interface for useProposalsData hook
@@ -102,4 +107,5 @@ export interface ProposalStats {
   expired: number;
   draft?: number;
   sent?: number;
+  approved?: number;
 }

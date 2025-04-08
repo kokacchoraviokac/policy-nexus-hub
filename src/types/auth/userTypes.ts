@@ -23,6 +23,10 @@ export interface User {
   updated_at: string;
   avatar_url?: string;
   user_metadata?: Record<string, any>;
+  
+  // Backward compatibility aliases
+  companyId?: string;  // Alias for company_id
+  avatar?: string;     // Alias for avatar_url
 }
 
 // Interfaces for authentication providers
@@ -61,6 +65,7 @@ export interface CreateInvitationRequest {
   email: string;
   role: UserRole;
   company_id?: string;
+  expiry_days?: number; // Adding this prop since it's referenced in the code
 }
 
 // User invitation
@@ -69,7 +74,7 @@ export interface Invitation {
   email: string;
   role: UserRole;
   token: string;
-  status: 'pending' | 'accepted' | 'expired';
+  status: 'pending' | 'accepted' | 'expired' | 'cancelled';
   company_id: string | null;
   created_by: string | null;
   created_at: string;
@@ -97,5 +102,5 @@ export interface CustomPrivilege {
   updated_at: string;
 }
 
-// Re-export type to avoid circular dependency
+// Export type to avoid circular dependency
 export type { ResourceContext };

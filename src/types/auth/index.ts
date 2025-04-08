@@ -1,8 +1,9 @@
 
+import type { ResourceContext } from "./contextTypes";
 import { UserRole } from "./userTypes";
 
 export * from "./userTypes";
-export type { ResourceContext } from "./contextTypes";
+export type { ResourceContext };
 
 // User state
 export interface AuthState {
