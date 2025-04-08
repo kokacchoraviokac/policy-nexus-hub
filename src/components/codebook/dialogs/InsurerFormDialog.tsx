@@ -41,6 +41,10 @@ const InsurerFormDialog: React.FC<InsurerFormDialogProps> = ({
     }
   };
 
+  const handleCancel = () => {
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">

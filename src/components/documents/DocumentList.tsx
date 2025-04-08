@@ -74,7 +74,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
   // Filter documents by category if filterCategory is provided
   const filteredDocuments = useMemo(() => {
     if (!filterCategory) return documents;
-    return documents.filter(doc => doc.category === filterCategory);
+    return documents?.filter(doc => doc.category === filterCategory) || [];
   }, [documents, filterCategory]);
 
   const handleUploadClick = () => {

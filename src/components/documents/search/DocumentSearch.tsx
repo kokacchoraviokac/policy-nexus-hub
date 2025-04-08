@@ -22,8 +22,7 @@ import {
 } from '@/components/ui/table';
 import { formatDateToLocal } from '@/utils/dateUtils';
 import { useDocumentSearch } from '@/hooks/useDocumentSearch';
-import { PolicyDocument } from '@/types/documents';
-import { DocumentCategory } from '@/types/common';
+import { DocumentCategory, Document } from '@/types/documents';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Pagination from '@/components/ui/pagination';
 import DocumentViewDialog from '../DocumentViewDialog';
@@ -31,42 +30,53 @@ import DocumentViewDialog from '../DocumentViewDialog';
 const DocumentSearch: React.FC = () => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>('all');
-  const [viewDocument, setViewDocument] = useState<PolicyDocument | null>(null);
+  const [viewDocument, setViewDocument] = useState<Document | null>(null);
+  const [searchText, setSearchText] = useState<string>('');
+  const [selectedCategoryState, setSelectedCategoryState] = useState<DocumentCategory | undefined>(undefined);
   
   const {
     documents,
     isLoading,
     error,
-    searchTerm,
-    setSearchTerm,
-    selectedCategory,
-    setSelectedCategory,
-    searchDocuments,
-    currentPage,
+    searchParams,
+    setSearchParams,
+    search,
+    totalCount,
     totalPages,
-    itemsCount,
-    itemsPerPage,
-    handlePageChange,
-    isError
+    resetSearch
   } = useDocumentSearch({
-    defaultPageSize: 10
+    defaultParams: {
+      pageSize: 10
+    }
   });
   
   const handleSearch = () => {
-    searchDocuments();
+    setSearchParams({
+      searchTerm: searchText,
+      category: selectedCategoryState
+    });
+    search();
   };
   
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     
     if (value === 'all') {
-      setSelectedCategory(undefined);
+      setSelectedCategoryState(undefined);
     } else {
-      setSelectedCategory(value as DocumentCategory);
+      setSelectedCategoryState(value as DocumentCategory);
     }
   };
   
-  const handleViewDocument = (document: PolicyDocument) => {
+  const handlePageChange = (page: number) => {
+    setSearchParams({
+      ...searchParams,
+      page
+    });
+    search();
+  };
+  
+  const handleViewDocument = (document: Document) => {
     setViewDocument(document);
   };
   
@@ -79,7 +89,7 @@ const DocumentSearch: React.FC = () => {
       );
     }
     
-    if (isError) {
+    if (error) {
       return (
         <div className="p-8 text-center">
           <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
@@ -137,11 +147,11 @@ const DocumentSearch: React.FC = () => {
         {totalPages > 1 && (
           <div className="flex justify-center mt-4">
             <Pagination 
-              currentPage={currentPage}
+              currentPage={searchParams.page || 1}
               totalPages={totalPages}
               onPageChange={handlePageChange}
-              itemsCount={itemsCount}
-              itemsPerPage={itemsPerPage}
+              itemsCount={totalCount}
+              itemsPerPage={searchParams.pageSize || 10}
             />
           </div>
         )}
@@ -159,8 +169,8 @@ const DocumentSearch: React.FC = () => {
               <Input
                 placeholder={t("searchDocuments")}
                 className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleSearch();
@@ -171,8 +181,8 @@ const DocumentSearch: React.FC = () => {
             
             <div className="flex gap-2">
               <Select
-                value={selectedCategory?.toString() || ''}
-                onValueChange={(value) => setSelectedCategory(value as DocumentCategory)}
+                value={selectedCategoryState?.toString() || ''}
+                onValueChange={(value) => setSelectedCategoryState(value as DocumentCategory)}
               >
                 <SelectTrigger className="w-[180px]">
                   <Filter className="h-4 w-4 mr-2" />

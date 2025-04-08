@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Document, DocumentApprovalStatus, EntityType } from "@/types/documents";
+import { Document, DocumentApprovalStatus, EntityType, Comment } from "@/types/documents";
 import { formatDate, formatDateTime } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle, AlertTriangle, Clock, Loader2 } from "lucide-react";
@@ -19,12 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useDocumentApproval } from "@/hooks/useDocumentApproval";
 import { toast } from "sonner";
-
-interface Comment {
-  author: string;
-  text: string;
-  created_at: string;
-}
 
 interface DocumentViewDialogProps {
   open: boolean;
@@ -98,7 +92,7 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
 
   // Fix the rendering of comments
   const renderComments = () => {
-    if (!document.comments || document.comments.length === 0) {
+    if (!document.comments || (Array.isArray(document.comments) && document.comments.length === 0)) {
       return (
         <div className="text-sm text-muted-foreground text-center p-4">
           No comments yet
@@ -107,16 +101,19 @@ const DocumentViewDialog: React.FC<DocumentViewDialogProps> = ({
     }
     
     // Handle both string[] and Comment[] types for comments
-    const comments = document.comments.map(comment => {
+    const comments = Array.isArray(document.comments) ? document.comments.map(comment => {
       if (typeof comment === 'string') {
         return { 
+          id: String(Math.random()),
+          document_id: document.id,
           author: 'System', 
           text: comment,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          user_id: 'system'
         };
       }
       return comment as Comment;
-    });
+    }) : [];
     
     return (
       <div className="space-y-4">

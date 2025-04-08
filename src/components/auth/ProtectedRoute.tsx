@@ -2,17 +2,12 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { ResourceContext } from "@/types/auth/contextTypes";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredPrivilege?: string;
-  contextData?: {
-    ownerId?: string;
-    companyId?: string;
-    resourceType?: string;
-    resourceValue?: any;
-    [key: string]: any;
-  };
+  contextData?: ResourceContext;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({

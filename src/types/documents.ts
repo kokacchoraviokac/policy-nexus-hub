@@ -27,6 +27,7 @@ export interface Document {
   description?: string;
   status?: string; // Document status
   approval_notes?: string;
+  comments?: Comment[] | string[]; // Add comments property
 }
 
 export interface PolicyDocument extends Document {
@@ -54,7 +55,7 @@ export interface DocumentUploadDialogProps {
   onFileSelected?: (file: File | null) => void;
   defaultCategory?: DocumentCategory;
   salesStage?: string;
-  filterCategory?: string; // Add missing property
+  filterCategory?: string;
 }
 
 export interface Comment {
@@ -76,7 +77,7 @@ export interface DocumentUploadOptions {
   originalDocumentId?: string;
   currentVersion?: number;
   salesStage?: string;
-  description?: string; // Add missing property
+  description?: string;
 }
 
 export interface ApprovalInfo {
@@ -104,6 +105,16 @@ export interface DocumentSearchParams {
 export interface UseDocumentSearchProps {
   defaultParams?: Partial<DocumentSearchParams>;
   autoSearch?: boolean;
+  entityType?: EntityType;
+  entityId?: string;
+  category?: string;
+  defaultPageSize?: number;
+  defaultSortBy?: string;
+  defaultSortOrder?: 'asc' | 'desc';
+  initialSearchTerm?: string;
+  approvalStatus?: DocumentApprovalStatus;
+  initialSearchParams?: Partial<DocumentSearchParams>;
+  autoFetch?: boolean;
 }
 
 export interface UseDocumentSearchReturn {
@@ -116,6 +127,17 @@ export interface UseDocumentSearchReturn {
   totalCount: number;
   totalPages: number;
   resetSearch: () => void;
+  searchTerm?: string;
+  setSearchTerm?: (term: string) => void;
+  selectedCategory?: DocumentCategory;
+  setSelectedCategory?: (category: DocumentCategory | undefined) => void;
+  searchDocuments?: () => void;
+  currentPage?: number;
+  handlePageChange?: (page: number) => void;
+  itemsCount?: number;
+  itemsPerPage?: number;
+  isError?: boolean;
+  page?: number;
 }
 
 // Re-export enums from common to maintain compatibility

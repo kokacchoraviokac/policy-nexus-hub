@@ -1,121 +1,108 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Plus, FileText } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useDocuments } from '@/hooks/useDocuments';
-import DocumentList from '@/components/documents/unified/DocumentList';
+import { EntityType, DocumentCategory } from '@/types/documents';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DocumentList from '@/components/documents/DocumentList';
 import DocumentUploadDialog from '@/components/documents/unified/DocumentUploadDialog';
-import { EntityType } from '@/types/common';
-import { SalesProcess } from '@/types/sales';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { SalesProcess } from '@/types/salesProcess';
 
-interface DocumentsTabProps {
-  salesProcessId: string;
-  currentStep?: string;
+interface SalesProcessDocumentsProps {
+  salesProcess: SalesProcess;
+  salesStage?: string;
 }
 
-const SalesProcessDocuments: React.FC<DocumentsTabProps> = ({ 
-  salesProcessId, 
-  currentStep
+const documentCategories = [
+  { value: 'discovery', label: 'discovery' },
+  { value: 'quote', label: 'quoteManagement' },
+  { value: 'proposal', label: 'proposals' },
+  { value: 'contract', label: 'contracts' },
+  { value: 'closeout', label: 'closeout' },
+];
+
+const SalesProcessDocuments: React.FC<SalesProcessDocumentsProps> = ({
+  salesProcess,
+  salesStage = 'discovery',
 }) => {
   const { t } = useLanguage();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState(salesStage);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   
+  // Fetch all documents for this sales process
   const {
     documents,
     isLoading,
-    isError,
     error,
-    refetch: refreshDocuments,
     deleteDocument,
     isDeletingDocument,
-  } = useDocuments(EntityType.SALES_PROCESS, salesProcessId);
+    refetchDocuments
+  } = useDocuments(EntityType.SALES_PROCESS, salesProcess.id);
   
-  const documentCategories = [
-    { value: 'all', label: t('allDocuments') },
-    { value: 'quote', label: t('quoteManagement') },
-    { value: 'authorization', label: t('clientAuthorization') },
-    { value: 'proposal', label: t('proposals') },
-    { value: 'contract', label: t('contracts') },
-    { value: 'closeout', label: t('closeout') },
-    { value: 'other', label: t('other') },
-  ];
+  // Set the active tab based on the sales stage (if provided)
+  useEffect(() => {
+    if (salesStage) {
+      setActiveTab(salesStage);
+    }
+  }, [salesStage]);
   
-  const filteredDocuments = selectedCategory === 'all'
-    ? documents
-    : documents.filter(doc => doc.category === selectedCategory);
+  const handleUploadComplete = () => {
+    refetchDocuments();
+    setUploadDialogOpen(false);
+  };
   
-  const handleOpenUploadDialog = () => {
+  const handleUploadClick = () => {
     setUploadDialogOpen(true);
   };
   
   return (
-    <Card className="border-none shadow-none">
-      <CardHeader className="px-0">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl font-semibold">
-            <FileText className="inline-block mr-2 h-5 w-5" />
-            {t('documents')}
-          </CardTitle>
-          <Button 
-            size="sm" 
-            className="ml-auto"
-            onClick={handleOpenUploadDialog}
-          >
-            <Plus className="h-4 w-4 mr-1" /> {t('addDocument')}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="px-0">
-        <Tabs 
-          defaultValue={selectedCategory} 
-          onValueChange={setSelectedCategory}
-          className="w-full"
-        >
-          <TabsList className="mb-4 flex flex-wrap h-auto">
-            {documentCategories.map(category => (
-              <TabsTrigger 
-                key={category.value} 
-                value={category.value}
-                className="rounded-full px-3 py-1 text-xs sm:text-sm"
-              >
-                {category.label}
-              </TabsTrigger>
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('salesDocuments')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full justify-start mb-4 overflow-x-auto">
+              {documentCategories.map((category) => (
+                <TabsTrigger key={category.value} value={category.value}>
+                  {t(category.label)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            
+            {documentCategories.map((category) => (
+              <TabsContent key={category.value} value={category.value} className="pt-4">
+                <DocumentList
+                  entityType={EntityType.SALES_PROCESS}
+                  entityId={salesProcess.id}
+                  documents={documents?.filter(doc => doc.category === category.value)}
+                  isLoading={isLoading}
+                  isError={!!error}
+                  error={error as Error}
+                  onDelete={deleteDocument}
+                  isDeleting={isDeletingDocument}
+                  showUploadButton={false}
+                />
+                
+                <div className="mt-4 flex justify-end">
+                  <DocumentUploadDialog
+                    open={uploadDialogOpen && activeTab === category.value}
+                    onOpenChange={setUploadDialogOpen}
+                    entityType={EntityType.SALES_PROCESS}
+                    entityId={salesProcess.id}
+                    onUploadComplete={handleUploadComplete}
+                    defaultCategory={category.value as DocumentCategory}
+                    salesStage={category.value}
+                  />
+                </div>
+              </TabsContent>
             ))}
-          </TabsList>
-          
-          {documentCategories.map(category => (
-            <TabsContent key={category.value} value={category.value}>
-              <DocumentList
-                entityType={EntityType.SALES_PROCESS}
-                entityId={salesProcessId}
-                documents={filteredDocuments}
-                isLoading={isLoading}
-                isError={isError}
-                error={error}
-                onDelete={deleteDocument}
-                isDeleting={isDeletingDocument}
-                showUploadButton={false}
-                filterCategory={category.value === 'all' ? undefined : category.value}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
-        
-        <DocumentUploadDialog
-          open={uploadDialogOpen}
-          onOpenChange={setUploadDialogOpen}
-          entityType={EntityType.SALES_PROCESS}
-          entityId={salesProcessId}
-          onUploadComplete={refreshDocuments}
-          salesStage={currentStep}
-          defaultCategory={currentStep as any}
-        />
-      </CardContent>
-    </Card>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

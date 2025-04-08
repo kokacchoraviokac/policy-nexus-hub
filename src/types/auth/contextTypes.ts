@@ -1,14 +1,11 @@
 
 export interface ResourceContext {
+  resource: string;
+  action: string;
+  condition?: string;
+  ownerId?: string;
+  companyId?: string;
+  resourceType?: string;
+  resourceValue?: any;
   [key: string]: any;
-  policy?: string;
-  claim?: string;
-  client?: string;
-  insurer?: string;
-  invoice?: string;
-  user?: string;
-  document?: string;
-  sales_process?: string;
-  product?: string;
-  agent?: string;
 }

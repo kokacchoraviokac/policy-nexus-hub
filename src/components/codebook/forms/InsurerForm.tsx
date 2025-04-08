@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
+import { Insurer } from "@/types/codebook";
 
 const insurerSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -34,16 +35,16 @@ export type InsurerFormValues = z.infer<typeof insurerSchema>;
 
 export interface InsurerFormProps {
   onSubmit: (values: InsurerFormValues) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-  defaultValues?: InsurerFormValues;
+  isLoading: boolean;
+  isEditMode: boolean;
+  initialData?: Partial<Insurer>;
 }
 
 const InsurerForm: React.FC<InsurerFormProps> = ({
   onSubmit,
-  onCancel,
-  isSubmitting,
-  defaultValues = {
+  isLoading,
+  isEditMode,
+  initialData = {
     name: "",
     contact_person: "",
     email: "",
@@ -60,7 +61,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
   
   const form = useForm<InsurerFormValues>({
     resolver: zodResolver(insurerSchema),
-    defaultValues,
+    defaultValues: initialData as InsurerFormValues,
   });
 
   const handleSubmit = (values: InsurerFormValues) => {
@@ -79,7 +80,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("insurerName")}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={isSubmitting} />
+                  <Input {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -94,7 +95,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("registrationNumber")}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={isSubmitting} />
+                  <Input {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -109,7 +110,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("contactPerson")}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={isSubmitting} />
+                  <Input {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -124,7 +125,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("email")}</FormLabel>
                 <FormControl>
-                  <Input {...field} type="email" disabled={isSubmitting} />
+                  <Input {...field} type="email" disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -139,7 +140,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("phone")}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={isSubmitting} />
+                  <Input {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -154,7 +155,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("address")}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={isSubmitting} />
+                  <Input {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -169,7 +170,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("city")}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={isSubmitting} />
+                  <Input {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -184,7 +185,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("postalCode")}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={isSubmitting} />
+                  <Input {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -199,7 +200,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
               <FormItem>
                 <FormLabel>{t("country")}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled={isSubmitting} />
+                  <Input {...field} disabled={isLoading} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -217,7 +218,7 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
-                    disabled={isSubmitting}
+                    disabled={isLoading}
                   />
                 </FormControl>
                 <FormMessage />
@@ -230,13 +231,13 @@ const InsurerForm: React.FC<InsurerFormProps> = ({
           <Button
             type="button"
             variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
+            onClick={() => form.reset()}
+            disabled={isLoading}
           >
             {t("cancel")}
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {t("saving")}
