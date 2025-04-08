@@ -1,21 +1,11 @@
 
-import { BaseEntity, EntityType, DocumentCategory, DocumentApprovalStatus, Comment } from "./common";
+import { BaseEntity } from "./common";
+import { EntityType, DocumentCategory, DocumentApprovalStatus } from "./common";
 
-// Filter state for codebook entities
-export interface CodebookFilterState {
-  status: 'all' | 'active' | 'inactive';
-  country?: string;
-  city?: string;
-  createdAfter?: Date;
-  createdBefore?: Date;
-  category?: string;
-  insurer?: string;
-}
-
-// Document table name based on entity type
-export type DocumentTableName =
+// Document table names for storage operations
+export type DocumentTableName = 
   | "policy_documents"
-  | "claim_documents"
+  | "claim_documents" 
   | "sales_documents"
   | "client_documents"
   | "insurer_documents"
@@ -23,195 +13,42 @@ export type DocumentTableName =
   | "invoice_documents"
   | "addendum_documents";
 
-// Re-export necessary types from common
-export { EntityType, DocumentCategory, DocumentApprovalStatus, Comment };
-
-// Base document interface
+// Core Document Interface
 export interface Document extends BaseEntity {
   document_name: string;
   document_type: string;
   file_path: string;
   entity_type: EntityType;
   entity_id: string;
+  mime_type?: string;
   uploaded_by: string;
   uploaded_by_name?: string;
   version?: number;
   is_latest_version?: boolean;
   original_document_id?: string;
-  category?: DocumentCategory;
-  mime_type?: string;
+  category?: string;
   description?: string;
   approval_status?: DocumentApprovalStatus;
-  approved_at?: string;
-  approved_by?: string;
   approval_notes?: string;
+  approved_by?: string;
+  approved_at?: string;
   comments?: Comment[];
-  status?: string;
-  size?: number;
 }
 
-// Type for policy documents
-export interface PolicyDocument extends Document {
-  policy_id: string;
-  addendum_id?: string;
-}
-
-// Type for claim documents
-export interface ClaimDocument extends Document {
-  claim_id: string;
-}
-
-// Type for sales documents
-export interface SalesDocument extends Document {
-  sales_process_id: string;
-  step?: string;
-}
-
-// Document filter params
+// Document filter parameters
 export interface DocumentFilterParams {
+  page: number;
+  page_size: number;
+  search_term?: string;
   entity_type?: EntityType;
   entity_id?: string;
   document_type?: string;
   category?: DocumentCategory;
-  uploaded_by?: string;
-  search_term?: string;
   date_from?: string;
   date_to?: string;
-  approval_status?: DocumentApprovalStatus;
-  is_latest_version?: boolean;
-  page?: number;
-  page_size?: number;
-  sort_by?: string;
-  sort_direction?: 'asc' | 'desc';
-  // Aliases for backward compatibility
-  entityType?: EntityType;
-  entityId?: string;
-  documentType?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  searchTerm?: string;
-  pageSize?: number;
+  status?: DocumentApprovalStatus;
+  uploaded_by?: string;
 }
 
-// For backward compatibility - aliases to DocumentFilterParams
-export type DocumentSearchParams = DocumentFilterParams;
-
-// Document upload request interface
-export interface DocumentUploadRequest {
-  document_name: string;
-  document_type: string;
-  entity_type: EntityType;
-  entity_id: string;
-  file: File;
-  category?: DocumentCategory;
-  description?: string;
-  original_document_id?: string;
-  current_version?: number;
-  meta?: Record<string, any>;
-  step?: string;
-}
-
-// Document approval info
-export interface ApprovalInfo {
-  document_id: string;
-  status: DocumentApprovalStatus;
-  notes: string;
-  canApprove: boolean;
-}
-
-// Document approval request
-export interface DocumentApprovalRequest {
-  document_id: string;
-  status: DocumentApprovalStatus;
-  notes?: string;
-  entity_type: EntityType;
-}
-
-// Document upload dialog props
-export interface DocumentUploadDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  entityType: EntityType;
-  entityId: string;
-  onUploadComplete?: () => void;
-  defaultCategory?: DocumentCategory;
-  salesStage?: string;
-  selectedDocument?: Document;
-  embedMode?: boolean;
-  onFileSelected?: (file: File | null) => void;
-}
-
-// Document upload options
-export interface DocumentUploadOptions {
-  file: File;
-  documentName: string;
-  documentType: string;
-  category: DocumentCategory | string;
-  entityId: string;
-  entityType: EntityType;
-  originalDocumentId?: string | null;
-  currentVersion?: number;
-  salesStage?: string;
-  description?: string;
-}
-
-// Interface for the useDocumentSearch hook
-export interface UseDocumentSearchProps {
-  entityType?: EntityType;
-  entityId?: string;
-  initialFilters?: Partial<DocumentFilterParams>;
-  defaultParams?: DocumentFilterParams;
-  autoSearch?: boolean;
-  category?: DocumentCategory;
-  defaultPageSize?: number;
-  defaultSortBy?: string;
-  defaultSortOrder?: 'asc' | 'desc';
-  initialSearchTerm?: string;
-  approvalStatus?: DocumentApprovalStatus;
-  initialSearchParams?: DocumentFilterParams;
-  autoFetch?: boolean;
-}
-
-// Return type for useDocumentSearch
-export interface UseDocumentSearchReturn {
-  documents: Document[];
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-  filters: DocumentFilterParams;
-  setFilters: (filters: Partial<DocumentFilterParams>) => void;
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    itemsPerPage: number;
-    totalItems: number;
-    onPageChange: (page: number) => void;
-    onPageSizeChange: (pageSize: number) => void;
-  };
-  refetch: () => void;
-  searchParams: DocumentFilterParams;
-  setSearchParams: (params: Partial<DocumentFilterParams>) => void;
-  search: () => void;
-  totalCount: number;
-  totalPages: number;
-  resetSearch: () => void;
-  searchTerm?: string;
-}
-
-// Return type for useDocuments hook
-export interface UseDocumentsReturn {
-  documents: Document[];
-  isLoading: boolean;
-  error: Error | null;
-  deleteDocument: (documentId: string) => Promise<void>;
-  isDeletingDocument: boolean;
-  refetchDocuments: () => Promise<void>;
-  documentsCount: number;
-}
-
-// For hooks that handle parameters
-export interface UseDocumentUploadParams {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
-  salesStage?: string;
-}
+// Re-export important types from common.ts
+export { EntityType, DocumentCategory, DocumentApprovalStatus } from "./common";

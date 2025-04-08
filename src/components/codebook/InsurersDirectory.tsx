@@ -4,11 +4,12 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import DataTable from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SearchIcon, PlusCircle, Settings2 } from "lucide-react";
+import { SearchIcon, PlusCircle } from "lucide-react";
 import { useInsurers } from "@/hooks/useInsurers";
 import getInsurerColumns from "@/components/codebook/insurers/InsurersColumns";
 import AddInsurerDialog from "@/components/codebook/dialogs/AddInsurerDialog";
 import EditInsurerDialog from "@/components/codebook/dialogs/EditInsurerDialog";
+import { Insurer, EntityStatus } from "@/types/codebook";
 import { 
   Select, 
   SelectContent, 
@@ -32,7 +33,7 @@ const InsurersDirectory = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState<EntityStatus | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   
@@ -101,19 +102,21 @@ const InsurersDirectory = () => {
     }
   };
   
-  const handleStatusChange = (value: string) => {
+  const handleStatusChange = (value: EntityStatus | "all") => {
     setStatus(value);
     setCurrentPage(1);
   };
   
   const columns = getInsurerColumns(handleEdit, handleDelete);
   
-  const handleCreateInsurer = async (insurerData: any) => {
+  const handleCreateInsurer = async (insurerData: Partial<Insurer>) => {
     await createInsurer(insurerData);
   };
   
-  const handleUpdateInsurer = async (id: string, insurerData: any) => {
-    await updateInsurer(id, insurerData);
+  const handleUpdateInsurer = async (insurerData: Partial<Insurer>) => {
+    if (selectedInsurerId) {
+      await updateInsurer(selectedInsurerId, insurerData);
+    }
   };
   
   const handleRefresh = () => {
@@ -146,7 +149,10 @@ const InsurersDirectory = () => {
         
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <span className="text-sm whitespace-nowrap">{t("status")}:</span>
-          <Select value={status} onValueChange={handleStatusChange}>
+          <Select 
+            value={status} 
+            onValueChange={(value) => handleStatusChange(value as EntityStatus | "all")}
+          >
             <SelectTrigger className="w-full sm:w-[150px]">
               <SelectValue placeholder={t("selectStatus")} />
             </SelectTrigger>

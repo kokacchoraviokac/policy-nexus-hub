@@ -22,7 +22,8 @@ export enum EntityType {
   SALES_PROCESS = 'sales_process',
   SALE = 'sale',
   AGENT = 'agent',
-  INSURER = 'insurer'
+  INSURER = 'insurer',
+  DOCUMENT = 'document'
 }
 
 // Document approval status
@@ -74,8 +75,6 @@ export interface Comment {
   content: string;
   created_at: string;
   document_id: string;
-  author?: string; // Alias for user_name for backward compatibility
-  text?: string;   // Alias for content for backward compatibility
 }
 
 // Resource context for authorization checks
@@ -103,10 +102,6 @@ export interface PaginationParams {
 export interface PaginationProps extends PaginationParams {
   total_pages: number;
   total_items: number;
-  currentPage?: number; // Alias for page for backward compatibility
-  totalPages?: number; // Alias for total_pages for backward compatibility
-  itemsCount?: number; // Alias for total_items for backward compatibility
-  itemsPerPage?: number; // Alias for page_size for backward compatibility
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: number[];
@@ -116,9 +111,10 @@ export interface PaginationControllerProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  itemsPerPage?: number; // Alias for page_size for backward compatibility
-  itemsCount?: number; // Alias for total_items for backward compatibility
-  totalItems?: number; // Alias for total_items for backward compatibility
+  pageSize?: number;
+  itemsPerPage?: number;
+  itemsCount?: number;
+  totalItems?: number;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizeOptions?: number[];
 }

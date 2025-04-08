@@ -1,9 +1,9 @@
 
-import { BaseEntity } from '../common';
+import { ResourceContext } from "./contextTypes";
 
-// User roles in the system
+// User roles
 export enum UserRole {
-  SUPER_ADMIN = 'superAdmin',
+  SUPER_ADMIN = 'super_admin',
   ADMIN = 'admin',
   EMPLOYEE = 'employee',
   AGENT = 'agent',
@@ -11,58 +11,90 @@ export enum UserRole {
   USER = 'user'
 }
 
-// Basic user interface
-export interface User extends BaseEntity {
+// User interface
+export interface User {
+  id: string;
   name: string;
   email: string;
   role: UserRole;
   company_id: string;
+  created_at: string;
+  updated_at: string;
   avatar_url?: string;
   user_metadata?: Record<string, any>;
-  companyId?: string; // Keeping for backward compatibility
-  avatar?: string; // Keeping for backward compatibility
+}
+
+// Interfaces for authentication providers
+export interface AuthProvider {
+  id: string;
+  name: string;
+  icon: string;
+  // Additional provider-specific properties here
+}
+
+// User authentication request
+export interface AuthRequest {
+  email: string;
+  password: string;
+  remember?: boolean;
+}
+
+// User registration request
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+// User invitation data
+export interface InvitationData {
+  email: string;
+  role: UserRole;
+  company_id?: string;
+  expires_at?: string | Date;
+}
+
+// User invitation create request
+export interface CreateInvitationRequest {
+  email: string;
+  role: UserRole;
+  company_id?: string;
+}
+
+// User invitation
+export interface Invitation {
+  id: string;
+  email: string;
+  role: UserRole;
+  token: string;
+  status: 'pending' | 'accepted' | 'expired';
+  company_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+}
+
+// Auth error
+export interface AuthError {
+  message: string;
+  code?: string;
+  status?: number;
 }
 
 // Custom privilege for users
-export interface CustomPrivilege extends BaseEntity {
+export interface CustomPrivilege {
+  id: string;
   user_id: string;
   privilege: string;
   context?: string | Record<string, any>;
   expires_at?: string;
   granted_by?: string;
   granted_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-// User state with session info
-export interface UserState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  isInitialized: boolean;
-  error: Error | null;
-}
-
-// Resource context for authorization
-export interface ResourceContext {
-  companyId?: string;
-  organizationId?: string;
-  [key: string]: any;
-}
-
-// Registration data
-export interface RegistrationData {
-  email: string;
-  password: string;
-  name: string;
-  companyName?: string;
-  role?: UserRole;
-  company_id?: string;
-}
-
-// User profile update data
-export interface UserProfileUpdate {
-  name?: string;
-  email?: string;
-  avatar_url?: string;
-  avatar?: string; // Backward compatibility
-}
+// Prevent circular dependency
+export { ResourceContext }

@@ -8,9 +8,6 @@ import { ResourceContext } from '@/types/auth/contextTypes';
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
-  userProfile: null,
-  role: null,
-  companyId: null,
   isInitialized: false,
   isAuthenticated: false,
   isLoading: true,
@@ -28,6 +25,7 @@ export const AuthContext = createContext<AuthContextType>({
   updatePassword: async () => false,
   refreshSession: async () => {},
   customPrivileges: [],
+  checkPrivilege: (privilege: string, resource?: ResourceContext) => false,
 });
 
 // Create a hook for using the auth context

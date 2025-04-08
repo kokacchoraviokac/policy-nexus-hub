@@ -72,18 +72,7 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <InsurerForm 
-          initialData={{
-            name: insurer.name,
-            contact_person: insurer.contact_person || "",
-            email: insurer.email || "",
-            phone: insurer.phone || "",
-            address: insurer.address || "",
-            city: insurer.city || "",
-            postal_code: insurer.postal_code || "",
-            country: insurer.country || "",
-            registration_number: insurer.registration_number || "",
-            is_active: insurer.is_active,
-          }} 
+          initialData={insurer}
           onSubmit={handleSubmit}
           isLoading={isSubmitting}
           isEditMode={true}

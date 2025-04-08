@@ -1,88 +1,99 @@
 
 import { UserRole } from "@/types/auth/userTypes";
 
-// Default privileges by role - these are used when no custom privileges are set
-const DEFAULT_PRIVILEGES_BY_ROLE: Record<UserRole, string[]> = {
-  [UserRole.ADMIN]: [
-    "read:all",
-    "write:all",
-    "delete:all",
-    "manage:users",
-    "manage:settings",
-  ],
+// Define role-based privileges
+export const ROLE_PRIVILEGES: Record<UserRole, string[]> = {
   [UserRole.SUPER_ADMIN]: [
-    "read:all",
-    "write:all",
-    "delete:all",
-    "manage:users",
-    "manage:companies",
-    "manage:settings",
-    "system:admin",
+    // All admin privileges plus these
+    "manage.system.settings",
+    "view.all.companies",
+    "manage.all.companies",
+    "manage.super.admin.permissions"
+  ],
+  [UserRole.ADMIN]: [
+    // Company admin privileges
+    "manage.company.settings",
+    "manage.users",
+    "manage.roles",
+    "view.all.policies",
+    "manage.all.policies",
+    "view.all.claims",
+    "manage.all.claims",
+    "view.reports",
+    "export.data",
+    "manage.templates"
   ],
   [UserRole.EMPLOYEE]: [
-    "read:policies",
-    "write:policies",
-    "read:clients",
-    "write:clients",
-    "read:claims",
-    "write:claims",
+    // Regular employee privileges
+    "view.assigned.policies",
+    "manage.assigned.policies",
+    "view.assigned.claims",
+    "manage.assigned.claims"
   ],
   [UserRole.AGENT]: [
-    "read:policies",
-    "read:clients",
-    "write:clients",
-    "read:commissions",
+    // Agent privileges
+    "view.own.policies",
+    "view.own.commissions",
+    "manage.own.profile"
   ],
   [UserRole.CLIENT]: [
-    "read:own_policies",
-    "read:own_claims",
-    "write:own_claims",
+    // Client privileges
+    "view.own.policies",
+    "view.own.claims",
+    "submit.claim"
   ],
+  [UserRole.USER]: [
+    // Basic user privileges
+    "view.own.profile",
+    "manage.own.profile"
+  ]
 };
 
 /**
- * Check if a user role has a specific privilege by default
- * @param role User role to check
- * @param privilege Privilege string to check
- * @returns boolean indicating if the role has the privilege
+ * Check if a specific role has a certain privilege
  */
-export function roleHasPrivilege(role: UserRole, privilege: string): boolean {
-  // Admin roles have all privileges by default
-  if (role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN) {
+export function hasRolePrivilege(role: UserRole, privilege: string): boolean {
+  const privileges = ROLE_PRIVILEGES[role] || [];
+  
+  // Check for exact privilege match
+  if (privileges.includes(privilege)) {
     return true;
   }
-
-  // Check if the role's default privileges include the requested privilege
-  const rolePrivileges = DEFAULT_PRIVILEGES_BY_ROLE[role] || [];
-  return rolePrivileges.includes(privilege);
+  
+  // Check for wildcard privileges (e.g., "manage.*" matches "manage.users")
+  const wildcardPrivileges = privileges.filter(p => p.endsWith('.*'));
+  for (const wildcardPrivilege of wildcardPrivileges) {
+    const prefix = wildcardPrivilege.replace('.*', '');
+    if (privilege.startsWith(prefix)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**
- * Get all default privileges for a specific role
- * @param role User role
- * @returns Array of privilege strings
+ * Get all privileges for a role
  */
-export function getDefaultPrivilegesForRole(role: UserRole): string[] {
-  return DEFAULT_PRIVILEGES_BY_ROLE[role] || [];
+export function getRolePrivileges(role: UserRole): string[] {
+  return ROLE_PRIVILEGES[role] || [];
 }
 
 /**
- * Check if a user can access a particular resource based on role
- * @param resource Resource string (e.g., "policies", "claims")
- * @param action Action string (e.g., "read", "write", "delete")
- * @param userRole User's role
- * @returns boolean indicating if the user can access the resource
+ * Check if a role has higher privileges than another role
  */
-export function canAccessResource(
-  resource: string,
-  action: string,
-  userRole: UserRole
-): boolean {
-  // Admins can access everything
-  if (userRole === UserRole.ADMIN || userRole === UserRole.SUPER_ADMIN) {
-    return true;
-  }
-
-  const privilege = `${action}:${resource}`;
-  return roleHasPrivilege(userRole, privilege);
+export function isRoleHigherThan(role: UserRole, thanRole: UserRole): boolean {
+  const roleOrder = [
+    UserRole.CLIENT,
+    UserRole.USER,
+    UserRole.AGENT,
+    UserRole.EMPLOYEE,
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN
+  ];
+  
+  const roleIndex = roleOrder.indexOf(role);
+  const thanRoleIndex = roleOrder.indexOf(thanRole);
+  
+  return roleIndex > thanRoleIndex;
 }

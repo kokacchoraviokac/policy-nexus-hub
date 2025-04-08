@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import InsurerForm from "./InsurerForm";
-import { Insurer } from "@/types/documents";
+import { Insurer } from "@/types/codebook";
 
 interface AddInsurerDialogProps {
   open: boolean;

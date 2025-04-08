@@ -1,6 +1,5 @@
 
 import { BaseEntity } from "./common";
-import { CodebookFilterState } from "./documents";
 
 // Saved filter for codebook entities
 export interface SavedFilter extends BaseEntity {
@@ -16,8 +15,11 @@ export type ProductCategory = 'life' | 'non-life';
 // Codebook entity status
 export type EntityStatus = 'active' | 'inactive';
 
-// Re-export CodebookFilterState from documents.ts
-export { CodebookFilterState } from "./documents";
+// Define the CodebookFilterState
+export interface CodebookFilterState {
+  status: string;
+  [key: string]: any;
+}
 
 // Client interface
 export interface Client extends BaseEntity {
@@ -57,7 +59,7 @@ export interface InsuranceProduct extends BaseEntity {
   name: string;
   english_name?: string;
   description?: string;
-  category: 'life' | 'non-life';
+  category: ProductCategory;
   is_active: boolean;
   insurer_id?: string;
   insurer_name?: string;

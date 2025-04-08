@@ -1,70 +1,71 @@
 
-import { DocumentTableName } from "@/types/documents";
-import { EntityType } from "@/types/common";
 import { ServiceResponse } from "@/types/common";
-import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 /**
- * Safe type assertion for dealing with Supabase polymorphic return types
- * 
- * @param data The data returned from Supabase
- * @returns The data cast to the specified type
+ * Safely handle Supabase response
+ * @param action Function that makes a Supabase request
+ * @returns ServiceResponse with data or error
  */
-export function safeDataCast<T>(data: any): T {
-  return data as T;
-}
-
-/**
- * Helper function to safely execute a Supabase query that returns a document
- * 
- * @param tableName The table name to query
- * @param query The query function to execute
- * @returns A promise with the service response
- */
-export async function executeDocumentQuery<T>(
-  entityType: EntityType,
-  query: (tableName: string) => Promise<{ data: any; error: any }>
+export async function handleSupabaseRequest<T>(
+  action: () => Promise<{ data: T; error: any }>
 ): Promise<ServiceResponse<T>> {
   try {
-    // Get table name from entity type
-    const tableName = getDocumentTableName(entityType);
+    const { data, error } = await action();
     
-    const { data, error } = await query(tableName);
+    if (error) {
+      console.error('Supabase error:', error);
+      return {
+        success: false,
+        data: null,
+        error: new Error(error.message || 'An error occurred')
+      };
+    }
     
-    if (error) throw error;
+    return {
+      success: true,
+      data,
+      error: null
+    };
+  } catch (err) {
+    console.error('Error in Supabase request:', err);
     
-    return { success: true, data: safeDataCast<T>(data) };
-  } catch (error) {
-    console.error(`Error executing document query for ${entityType}:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error : new Error("Failed to execute document query") 
+    const error = err instanceof Error ? err : new Error('An unknown error occurred');
+    
+    return {
+      success: false,
+      data: null,
+      error
     };
   }
 }
 
 /**
- * Helper function to get the entity ID column name based on entity type
+ * Format Supabase error for user-friendly display
+ * @param error Supabase error object
+ * @returns Formatted error message
  */
-export function getEntityIdColumn(entityType: EntityType): string {
-  switch (entityType) {
-    case 'policy':
-      return 'policy_id';
-    case 'claim':
-      return 'claim_id';
-    case 'sales_process':
-      return 'sales_process_id';
-    case 'client':
-      return 'client_id';
-    case 'insurer':
-      return 'insurer_id';
-    case 'agent':
-      return 'agent_id';
-    case 'invoice':
-      return 'invoice_id';
-    case 'addendum':
-      return 'addendum_id';
-    default:
-      throw new Error(`Unsupported entity type: ${entityType}`);
+export function formatSupabaseError(error: any): string {
+  if (!error) {
+    return 'An unknown error occurred';
   }
+  
+  // If the error is a string, just return it
+  if (typeof error === 'string') {
+    return error;
+  }
+  
+  // If the error has a message property, return that
+  if (error.message) {
+    return error.message;
+  }
+  
+  // If the error has details, return those
+  if (error.details) {
+    return typeof error.details === 'string' 
+      ? error.details 
+      : JSON.stringify(error.details);
+  }
+  
+  // Default error message
+  return 'An error occurred while processing your request';
 }

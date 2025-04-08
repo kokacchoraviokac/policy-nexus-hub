@@ -1,5 +1,5 @@
 
-import { EntityType } from "@/types/common";
+import { EntityType, RelationName } from "@/types/common";
 import { DocumentTableName } from "@/types/documents";
 
 /**
@@ -54,7 +54,7 @@ export function getEntityIdColumn(entityType: EntityType): string {
     case EntityType.POLICY_ADDENDUM:
       return 'addendum_id';
     default:
-      throw new Error(`Unsupported entity type: ${entityType}`);
+      return 'entity_id';
   }
 }
 
@@ -63,9 +63,24 @@ export function getEntityIdColumn(entityType: EntityType): string {
  * This helps prevent TypeScript errors when using dynamic table names
  */
 export function asTableName(tableName: string | DocumentTableName): DocumentTableName {
-  // This is a type assertion function to help TypeScript understand
-  // that the string is a valid table name
-  return tableName as DocumentTableName;
+  // Validate the table name is a valid DocumentTableName
+  const validTableNames: DocumentTableName[] = [
+    "policy_documents",
+    "claim_documents",
+    "sales_documents",
+    "client_documents",
+    "insurer_documents",
+    "agent_documents",
+    "invoice_documents",
+    "addendum_documents"
+  ];
+
+  if (validTableNames.includes(tableName as DocumentTableName)) {
+    return tableName as DocumentTableName;
+  }
+  
+  // Default fallback
+  return "policy_documents";
 }
 
 /**
@@ -89,4 +104,22 @@ export function toTableName(tableName: string): DocumentTableName {
   
   // Default fallback
   return "policy_documents";
+}
+
+/**
+ * Convert DocumentTableName to RelationName for Supabase queries
+ */
+export function toRelationName(tableName: DocumentTableName): RelationName {
+  const relationMapping: Record<DocumentTableName, RelationName> = {
+    "policy_documents": "policy_documents",
+    "claim_documents": "claim_documents",
+    "sales_documents": "sales_documents",
+    "client_documents": "client_documents",
+    "insurer_documents": "insurer_documents",
+    "agent_documents": "agent_documents",
+    "invoice_documents": "invoice_documents",
+    "addendum_documents": "addendum_documents"
+  };
+  
+  return relationMapping[tableName];
 }

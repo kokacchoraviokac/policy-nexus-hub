@@ -2,6 +2,7 @@
 import { UserRole } from "./userTypes";
 
 export * from "./userTypes";
+export type { ResourceContext } from "./contextTypes";
 export * from "./contextTypes";
 
 // User state
@@ -26,8 +27,6 @@ export interface User {
   updated_at: string;
   avatar_url?: string;
   user_metadata?: Record<string, any>;
-  companyId?: string; // Alias for company_id for backward compatibility
-  avatar?: string; // Alias for avatar_url for backward compatibility
 }
 
 // Custom privilege for users
