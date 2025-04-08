@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import DataTable from "@/components/ui/data-table";
+import DataTable, { Column } from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/utils/format";
@@ -13,20 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { InvoiceType } from "@/types/finances";
 import { Link, useNavigate } from "react-router-dom";
-
-export interface Invoice {
-  id: string;
-  invoice_number: string;
-  entity_name: string;
-  issue_date: string;
-  due_date: string;
-  total_amount: number;
-  currency: string;
-  status: string;
-}
-
-export type InvoiceType = Invoice;
 
 interface InvoicesTableProps {
   invoices: InvoiceType[];
@@ -83,39 +71,45 @@ const InvoicesTable = ({
     navigate(`/finances/invoicing/${id}`);
   };
 
-  const columns = [
+  const columns: Column<InvoiceType>[] = [
     {
-      accessorKey: "invoice_number",
       header: t("invoiceNumber"),
+      accessorKey: "invoice_number",
+      sortable: true,
     },
     {
-      accessorKey: "entity_name",
       header: t("entityName"),
+      accessorKey: "entity_name",
+      sortable: true,
     },
     {
-      accessorKey: "issue_date",
       header: t("issueDate"),
-      cell: (props: { row: { original: InvoiceType } }) => formatDate(new Date(props.row.original.issue_date)),
+      accessorKey: "issue_date",
+      cell: (row) => formatDate(new Date(row.issue_date)),
+      sortable: true,
     },
     {
-      accessorKey: "due_date",
       header: t("dueDate"),
-      cell: (props: { row: { original: InvoiceType } }) => formatDate(new Date(props.row.original.due_date)),
+      accessorKey: "due_date",
+      cell: (row) => formatDate(new Date(row.due_date)),
+      sortable: true,
     },
     {
-      accessorKey: "total_amount",
       header: t("amount"),
-      cell: (props: { row: { original: InvoiceType } }) => formatCurrency(props.row.original.total_amount, props.row.original.currency),
+      accessorKey: "total_amount",
+      cell: (row) => formatCurrency(row.total_amount, row.currency),
+      sortable: true,
     },
     {
-      accessorKey: "status",
       header: t("status"),
-      cell: (props: { row: { original: InvoiceType } }) => getStatusBadge(props.row.original.status),
+      accessorKey: "status",
+      cell: (row) => getStatusBadge(row.status),
+      sortable: true,
     },
     {
-      id: "actions",
       header: t("actions"),
-      cell: (props: { row: { original: InvoiceType } }) => (
+      accessorKey: "id",
+      cell: (row) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -124,11 +118,11 @@ const InvoicesTable = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleViewInvoice(props.row.original.id)}>
+            <DropdownMenuItem onClick={() => handleViewInvoice(row.id)}>
               <Eye className="mr-2 h-4 w-4" />
               {t("view")}
             </DropdownMenuItem>
-            {props.row.original.status === 'draft' && (
+            {row.status === 'draft' && (
               <>
                 <DropdownMenuItem>
                   <Receipt className="mr-2 h-4 w-4" />
@@ -140,7 +134,7 @@ const InvoicesTable = ({
                 </DropdownMenuItem>
               </>
             )}
-            {props.row.original.status === 'issued' && (
+            {row.status === 'issued' && (
               <DropdownMenuItem>
                 <Receipt className="mr-2 h-4 w-4" />
                 {t("markAsPaid")}
@@ -172,15 +166,14 @@ const InvoicesTable = ({
         ),
       }}
       pagination={{
-        pageIndex: pagination.page,
-        pageSize: pagination.pageSize,
+        currentPage: pagination.page,
+        itemsPerPage: pagination.pageSize,
         totalItems: pagination.totalCount,
         totalPages: pagination.totalPages,
         onPageChange: pagination.setPage,
         onPageSizeChange: pagination.setPageSize,
         pageSizeOptions: [10, 25, 50, 100],
       }}
-      keyField="id"
     />
   );
 };

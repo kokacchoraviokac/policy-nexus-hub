@@ -2,7 +2,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { PolicyWorkflowStatus } from "@/types/policies";
 
 interface WorkflowStatusBadgeProps {
   status: string;
@@ -11,25 +10,16 @@ interface WorkflowStatusBadgeProps {
 const WorkflowStatusBadge: React.FC<WorkflowStatusBadgeProps> = ({ status }) => {
   const { t } = useLanguage();
   
-  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" | "success" | "warning" => {
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
-      case PolicyWorkflowStatus.DRAFT:
+      case 'draft':
         return "outline";
-      case PolicyWorkflowStatus.IN_REVIEW:
-      case PolicyWorkflowStatus.REVIEW:
-        return "warning";
-      case PolicyWorkflowStatus.READY:
-        return "default";
-      case PolicyWorkflowStatus.COMPLETE:
-      case PolicyWorkflowStatus.FINALIZED:
-        return "success";
-      case PolicyWorkflowStatus.REJECTED:
-      case PolicyWorkflowStatus.NEEDS_REVIEW:
-        return "destructive";
-      case PolicyWorkflowStatus.PENDING:
+      case 'in_review':
         return "secondary";
-      case PolicyWorkflowStatus.PROCESSING:
-        return "warning";
+      case 'ready':
+        return "default";
+      case 'complete':
+        return "default";
       default:
         return "outline";
     }

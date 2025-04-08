@@ -5,10 +5,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EntityType } from "@/types/common";
+import { Document, EntityType } from "@/types/documents";
 import { useDocuments } from "@/hooks/useDocuments";
-import DocumentList from "@/components/documents/unified/DocumentList";
-import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
+import DocumentList from "@/components/shared/DocumentList";
+import DocumentUploadDialog from "@/components/policies/detail/DocumentUploadDialog";
 import { useActivityLogger } from "@/utils/activityLogger";
 
 interface PolicyDocumentsTabProps {
@@ -36,7 +36,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
     refetch,
     deleteDocument,
     isDeletingDocument,
-  } = useDocuments(EntityType.POLICY, policyId);
+  } = useDocuments("policy", policyId);
   
   useEffect(() => {
     setIsComplete(initialIsComplete);
@@ -48,11 +48,11 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
     
     // Log the activity
     logActivity({
-      entity_type: EntityType.POLICY,
+      entity_type: "policy",
       entity_id: policyId,
       action: "update",
       details: {
-        status: checked ? "complete" : "incomplete",
+        status: isComplete ? "complete" : "incomplete",
         timestamp: new Date().toISOString()
       }
     });
@@ -69,12 +69,11 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
         </div>
         
         <DocumentList
-          entityType={EntityType.POLICY}
-          entityId={policyId}
           documents={documents}
           isLoading={isLoading}
           isError={isError}
           error={error}
+          refetch={refetch}
           onDelete={deleteDocument}
           isDeleting={isDeletingDocument}
         />
@@ -97,12 +96,12 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({
       
       <DocumentUploadDialog
         open={showUploadDialog}
-        onOpenChange={setShowUploadDialog}
-        entityType={EntityType.POLICY}
+        onClose={() => setShowUploadDialog(false)}
         entityId={policyId}
-        onUploadComplete={() => {
+        entityType="policy"
+        onSuccess={() => {
           // Invalidate the documents query to refresh the list
-          queryClient.invalidateQueries({ queryKey: ["documents", EntityType.POLICY, policyId] });
+          queryClient.invalidateQueries({ queryKey: ["documents", "policy", policyId] });
         }}
       />
     </Card>

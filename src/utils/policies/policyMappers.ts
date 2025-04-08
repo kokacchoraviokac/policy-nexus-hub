@@ -1,67 +1,64 @@
 
-import { Policy, PolicyAddendum, PolicyWorkflowStatus } from "@/types/policies";
+import { Policy } from "@/types/policies";
 
-export interface WorkflowPolicy extends Policy {
-  workflow_status: string;
+export interface WorkflowPolicy {
+  id: string;
+  policyNumber: string;
+  policyholderName: string;
+  insurerName: string;
+  startDate: string;
+  expiryDate: string;
+  premium: number;
+  currency: string;
+  status: string;
+  workflowStatus: string;
+  lastUpdated: string;
 }
 
 /**
- * Converts a list of Policy objects to WorkflowPolicy objects
+ * Map Policy objects to WorkflowPolicy objects for display in the workflow UI
  */
-export function mapPoliciesToWorkflowPolicies(policies: Policy[]): WorkflowPolicy[] {
+export const policiesToWorkflowPolicies = (policies: Policy[]): WorkflowPolicy[] => {
   return policies.map(policy => ({
-    ...policy,
-    workflow_status: policy.workflow_status || PolicyWorkflowStatus.DRAFT,
+    id: policy.id,
+    policyNumber: policy.policy_number,
+    policyholderName: policy.policyholder_name,
+    insurerName: policy.insurer_name,
+    startDate: policy.start_date,
+    expiryDate: policy.expiry_date,
+    premium: policy.premium,
+    currency: policy.currency,
+    status: policy.status,
+    workflowStatus: policy.workflow_status,
+    lastUpdated: policy.updated_at
   }));
-}
-
-// Alias for backward compatibility
-export const policiesToWorkflowPolicies = mapPoliciesToWorkflowPolicies;
+};
 
 /**
- * Map policy status to human-readable text
+ * Group policies by their workflow status
  */
-export function mapPolicyStatusToText(status: string): string {
-  const statusMap: Record<string, string> = {
-    [PolicyWorkflowStatus.DRAFT]: 'Draft',
-    [PolicyWorkflowStatus.IN_REVIEW]: 'In Review',
-    [PolicyWorkflowStatus.READY]: 'Ready',
-    [PolicyWorkflowStatus.COMPLETE]: 'Complete',
-    [PolicyWorkflowStatus.REVIEW]: 'Review',
-    [PolicyWorkflowStatus.REJECTED]: 'Rejected',
-    [PolicyWorkflowStatus.PENDING]: 'Pending',
-    [PolicyWorkflowStatus.PROCESSING]: 'Processing',
-    [PolicyWorkflowStatus.FINALIZED]: 'Finalized',
-    [PolicyWorkflowStatus.NEEDS_REVIEW]: 'Needs Review',
-    'active': 'Active',
-    'pending': 'Pending',
-    'expired': 'Expired',
-    'cancelled': 'Cancelled'
-  };
-  
-  return statusMap[status] || status;
-}
+export const groupPoliciesByWorkflowStatus = (policies: Policy[]) => {
+  return policies.reduce((groups, policy) => {
+    const status = policy.workflow_status;
+    if (!groups[status]) {
+      groups[status] = [];
+    }
+    groups[status].push(policy);
+    return groups;
+  }, {} as Record<string, Policy[]>);
+};
 
 /**
- * Map policy status to badge variants
+ * Calculate policy statistics by workflow status
  */
-export function mapPolicyStatusToBadgeVariant(status: string): string {
-  const variantMap: Record<string, string> = {
-    [PolicyWorkflowStatus.DRAFT]: 'secondary',
-    [PolicyWorkflowStatus.IN_REVIEW]: 'warning',
-    [PolicyWorkflowStatus.READY]: 'info',
-    [PolicyWorkflowStatus.COMPLETE]: 'success',
-    [PolicyWorkflowStatus.REVIEW]: 'warning',
-    [PolicyWorkflowStatus.REJECTED]: 'destructive',
-    [PolicyWorkflowStatus.PENDING]: 'warning',
-    [PolicyWorkflowStatus.PROCESSING]: 'info',
-    [PolicyWorkflowStatus.FINALIZED]: 'success',
-    [PolicyWorkflowStatus.NEEDS_REVIEW]: 'destructive',
-    'active': 'success',
-    'pending': 'warning',
-    'expired': 'destructive',
-    'cancelled': 'default'
-  };
+export const calculatePolicyWorkflowStats = (policies: Policy[]) => {
+  const grouped = groupPoliciesByWorkflowStatus(policies);
   
-  return variantMap[status] || 'default';
-}
+  return {
+    draft: grouped.draft?.length || 0,
+    in_review: grouped.in_review?.length || 0,
+    ready: grouped.ready?.length || 0,
+    complete: grouped.complete?.length || 0,
+    total: policies.length
+  };
+};

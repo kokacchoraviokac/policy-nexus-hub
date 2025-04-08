@@ -1,8 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
-import { EntityType, DocumentCategory } from "@/types/common";
-import { DocumentTableName } from "@/types/documents";
+import { EntityType } from "@/types/documents";
 import { getDocumentTableName } from "@/utils/documentUploadUtils";
 
 interface DocumentUploadOptions {
@@ -71,23 +70,17 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
     };
 
     // Set the appropriate entity ID field based on the table
-    if (entityType === EntityType.POLICY) {
+    if (tableName === "policy_documents") {
       documentData.policy_id = entityId;
-    } else if (entityType === EntityType.CLAIM) {
+    } else if (tableName === "claim_documents") {
       documentData.claim_id = entityId;
-    } else if (entityType === EntityType.SALES_PROCESS) {
+    } else if (tableName === "sales_documents") {
       documentData.sales_process_id = entityId;
-    } else if (entityType === EntityType.CLIENT) {
-      documentData.client_id = entityId;
-    } else if (entityType === EntityType.INSURER) {
-      documentData.insurer_id = entityId;
-    } else if (entityType === EntityType.AGENT) {
-      documentData.agent_id = entityId;
     }
 
-    // Insert the document record using the resolved table name with type assertion
+    // Insert the document record using the resolved table name
     const { data, error: dbError } = await supabase
-      .from(tableName as any)
+      .from(tableName)
       .insert(documentData)
       .select()
       .single();
@@ -106,7 +99,7 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
     // If this is a new version, update previous version
     if (originalDocumentId) {
       await supabase
-        .from(tableName as any)
+        .from(tableName)
         .update({ is_latest_version: false })
         .eq('id', originalDocumentId);
     }

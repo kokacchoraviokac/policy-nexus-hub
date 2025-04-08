@@ -1,236 +1,192 @@
 
-import React from 'react';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { PaginationControllerProps } from '@/types/common';
+import React from "react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useLanguage } from '@/contexts/LanguageContext';
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-export const PaginationController: React.FC<PaginationControllerProps> = ({
+export interface PaginationControllerProps {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+  pageSizeOptions?: number[];
+  showPageSize?: boolean;
+  showingText?: string;
+  ofText?: string;
+  itemsText?: string;
+  nextText?: string;
+  previousText?: string;
+  pageText?: string;
+  pageXOfYText?: string;
+  rowsPerPageText?: string;
+  goToText?: string;
+}
+
+const PaginationController: React.FC<PaginationControllerProps> = ({
   currentPage,
   totalPages,
-  itemsPerPage,
-  itemsCount,
   totalItems,
+  itemsPerPage,
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 25, 50, 100],
+  showPageSize = true,
+  showingText,
+  ofText,
+  itemsText,
+  nextText,
+  previousText,
+  pageText,
+  pageXOfYText,
+  rowsPerPageText,
+  goToText,
 }) => {
   const { t } = useLanguage();
   
-  const handlePageSizeChange = (value: string) => {
-    if (onPageSizeChange) {
-      onPageSizeChange(Number(value));
-    }
-  };
-
-  const isFirstPage = currentPage === 1;
-  const isLastPage = currentPage === totalPages || totalPages === 0;
+  // Use provided text or fallback to translations
+  const localizedShowingText = showingText || t('showingItemsOf');
+  const localizedOfText = ofText || t('of');
+  const localizedItemsText = itemsText || t('items');
+  const localizedNextText = nextText || t('next');
+  const localizedPreviousText = previousText || t('previous');
+  const localizedPageText = pageText || t('page');
+  const localizedPageXOfYText = pageXOfYText || t('pageXOfY');
+  const localizedRowsPerPageText = rowsPerPageText || t('rowsPerPage');
+  const localizedGoToText = goToText || t('goTo');
   
-  // Show at most 7 page buttons (including first, last, and ellipses)
-  const getPageButtons = () => {
-    const buttons = [];
+  // Calculate start and end items on current page
+  const startItem = totalItems === 0 ? 0 : (currentPage * itemsPerPage) + 1;
+  const endItem = Math.min((currentPage + 1) * itemsPerPage, totalItems);
+  
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
     
     if (totalPages <= 7) {
-      // If we have 7 or fewer pages, show all of them
-      for (let i = 1; i <= totalPages; i++) {
-        buttons.push(
-          <Button
-            key={i}
-            variant={currentPage === i ? 'default' : 'outline'}
-            size="icon"
-            onClick={() => onPageChange(i)}
-            className="h-8 w-8"
-          >
-            {i}
-          </Button>
-        );
+      // If fewer than 7 pages, show all
+      for (let i = 0; i < totalPages; i++) {
+        pages.push(i);
       }
     } else {
-      // Always show first page
-      buttons.push(
-        <Button
-          key={1}
-          variant={currentPage === 1 ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => onPageChange(1)}
-          className="h-8 w-8"
-        >
-          1
-        </Button>
-      );
+      // Always include first page
+      pages.push(0);
       
-      // Logic for showing ellipses and middle pages
-      if (currentPage <= 3) {
-        // If we're near the start, show the first 5 pages
-        for (let i = 2; i <= 5; i++) {
-          buttons.push(
-            <Button
-              key={i}
-              variant={currentPage === i ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => onPageChange(i)}
-              className="h-8 w-8"
-            >
-              {i}
-            </Button>
-          );
-        }
-        buttons.push(
-          <Button key="ellipsis1" variant="outline" size="icon" disabled className="h-8 w-8">
-            ...
-          </Button>
-        );
-      } else if (currentPage >= totalPages - 2) {
-        // If we're near the end, show the last 5 pages
-        buttons.push(
-          <Button key="ellipsis1" variant="outline" size="icon" disabled className="h-8 w-8">
-            ...
-          </Button>
-        );
-        for (let i = totalPages - 4; i < totalPages; i++) {
-          buttons.push(
-            <Button
-              key={i}
-              variant={currentPage === i ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => onPageChange(i)}
-              className="h-8 w-8"
-            >
-              {i}
-            </Button>
-          );
-        }
-      } else {
-        // We're in the middle, show current page and siblings
-        buttons.push(
-          <Button key="ellipsis1" variant="outline" size="icon" disabled className="h-8 w-8">
-            ...
-          </Button>
-        );
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          buttons.push(
-            <Button
-              key={i}
-              variant={currentPage === i ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => onPageChange(i)}
-              className="h-8 w-8"
-            >
-              {i}
-            </Button>
-          );
-        }
-        buttons.push(
-          <Button key="ellipsis2" variant="outline" size="icon" disabled className="h-8 w-8">
-            ...
-          </Button>
-        );
+      // Add ellipsis or additional pages
+      if (currentPage > 2) {
+        pages.push("ellipsis-start");
       }
       
-      // Always show last page
-      buttons.push(
-        <Button
-          key={totalPages}
-          variant={currentPage === totalPages ? 'default' : 'outline'}
-          size="icon"
-          onClick={() => onPageChange(totalPages)}
-          className="h-8 w-8"
-        >
-          {totalPages}
-        </Button>
-      );
+      // Pages around current page
+      let startPage = Math.max(1, currentPage - 1);
+      let endPage = Math.min(totalPages - 2, currentPage + 1);
+      
+      // Adjust if at the beginning
+      if (currentPage <= 2) {
+        endPage = 3;
+      }
+      
+      // Adjust if at the end
+      if (currentPage >= totalPages - 3) {
+        startPage = totalPages - 4;
+      }
+      
+      // Add the pages around current page
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis or additional pages
+      if (currentPage < totalPages - 3) {
+        pages.push("ellipsis-end");
+      }
+      
+      // Always include last page
+      pages.push(totalPages - 1);
     }
     
-    return buttons;
+    return pages;
   };
+  
+  const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
+    <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 py-2">
       <div className="text-sm text-muted-foreground">
-        {totalItems !== undefined ? (
-          t('showingCountOfTotal', {
-            count: itemsCount,
-            total: totalItems,
-          })
-        ) : (
-          t('itemsPerPage', { count: itemsCount })
-        )}
+        {totalItems > 0 
+          ? localizedShowingText
+            .replace('{0}', startItem.toString())
+            .replace('{1}', endItem.toString())
+            .replace('{2}', totalItems.toString())
+          : t('noItemsToShow')
+        }
       </div>
-      <div className="flex items-center space-x-6 lg:space-x-8">
-        {onPageSizeChange && (
+      
+      <div className="flex items-center space-x-6">
+        {showPageSize && (
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">{t('rowsPerPage')}</p>
+            <span className="text-sm font-medium">{localizedRowsPerPageText}:</span>
             <Select
-              value={String(itemsPerPage)}
-              onValueChange={handlePageSizeChange}
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => onPageSizeChange(Number(value))}
             >
               <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={itemsPerPage} />
+                <SelectValue placeholder={itemsPerPage.toString()} />
               </SelectTrigger>
-              <SelectContent side="top">
-                {pageSizeOptions.map((pageSize) => (
-                  <SelectItem key={pageSize} value={String(pageSize)}>
-                    {pageSize}
+              <SelectContent>
+                {pageSizeOptions.map((option) => (
+                  <SelectItem key={option} value={option.toString()}>
+                    {option}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
         )}
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(1)}
-            disabled={isFirstPage}
-            className="hidden sm:flex h-8 w-8"
-          >
-            <ChevronsLeft className="h-4 w-4" />
-            <span className="sr-only">{t('firstPage')}</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={isFirstPage}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">{t('previousPage')}</span>
-          </Button>
-          
-          <div className="flex items-center space-x-1">
-            {getPageButtons()}
-          </div>
-          
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={isLastPage}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">{t('nextPage')}</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onPageChange(totalPages)}
-            disabled={isLastPage}
-            className="hidden sm:flex h-8 w-8"
-          >
-            <ChevronsRight className="h-4 w-4" />
-            <span className="sr-only">{t('lastPage')}</span>
-          </Button>
-        </div>
+        
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious 
+                onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+                aria-disabled={currentPage === 0}
+                className={currentPage === 0 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            
+            {pageNumbers.map((page, index) => (
+              <PaginationItem key={`${page}-${index}`}>
+                {page === "ellipsis-start" || page === "ellipsis-end" ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink
+                    isActive={page === currentPage}
+                    onClick={() => onPageChange(page as number)}
+                  >
+                    {(page as number) + 1}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+            
+            <PaginationItem>
+              <PaginationNext 
+                onClick={() => onPageChange(Math.min(totalPages - 1, currentPage + 1))}
+                aria-disabled={currentPage === totalPages - 1}
+                className={currentPage === totalPages - 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </div>
   );

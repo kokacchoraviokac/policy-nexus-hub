@@ -1,13 +1,12 @@
 
 import React from "react";
-import { DataTable } from "@/components/ui/data-table";
+import DataTable from "@/components/ui/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Client } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ColumnDef } from "@tanstack/react-table";
 
 interface ClientsTableProps {
   clients: Client[];
@@ -24,96 +23,84 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  const columns: ColumnDef<Client>[] = [
+  const columns = [
     {
-      accessorKey: "name",
       header: t("name"),
-      cell: ({ row }) => {
-        const client = row.original;
-        return (
-          <div>
-            <span className="font-medium">{client.name}</span>
-            {!client.is_active && (
-              <Badge variant="outline" className="ml-2 bg-muted text-muted-foreground">
-                {t("inactive")}
-              </Badge>
-            )}
-          </div>
-        );
-      }
+      accessorKey: "name" as keyof Client,
+      sortable: true
     },
     {
-      accessorKey: "contact_person",
       header: t("contactPerson"),
-      cell: ({ row }) => row.original.contact_person || "-",
+      accessorKey: "contact_person" as keyof Client,
+      cell: (row: Client) => row.contact_person || "-",
+      sortable: true
     },
     {
-      accessorKey: "email",
       header: t("email"),
-      cell: ({ row }) => row.original.email || "-",
+      accessorKey: "email" as keyof Client,
+      cell: (row: Client) => row.email || "-",
+      sortable: true
     },
     {
-      accessorKey: "phone",
       header: t("phone"),
-      cell: ({ row }) => row.original.phone || "-",
+      accessorKey: "phone" as keyof Client,
+      cell: (row: Client) => row.phone || "-",
     },
     {
-      accessorKey: "city",
       header: t("city"),
-      cell: ({ row }) => row.original.city || "-",
+      accessorKey: "city" as keyof Client,
+      cell: (row: Client) => row.city || "-",
+      sortable: true
     },
     {
-      accessorKey: "is_active",
       header: t("status"),
-      cell: ({ row }) => (
-        <Badge variant={row.original.is_active ? "default" : "secondary"}>
-          {row.original.is_active ? t("active") : t("inactive")}
+      accessorKey: "is_active" as keyof Client,
+      cell: (row: Client) => (
+        <Badge variant={row.is_active ? "default" : "secondary"}>
+          {row.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
+      sortable: true
     },
     {
-      accessorKey: "id",
       header: t("actions"),
-      cell: ({ row }) => {
-        const client = row.original;
-        return (
-          <div className="flex gap-2 justify-end">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 w-8 p-0"
-              onClick={() => onEdit(client.id)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-destructive"
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t("deleteClientConfirmation").replace("{0}", client.name)}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDelete(client.id)} className="bg-destructive text-destructive-foreground">
-                    {t("delete")}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        );
-      },
+      accessorKey: (row: Client) => (
+        <div className="flex gap-2 justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 w-8 p-0"
+            onClick={() => onEdit(row.id)}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0 text-destructive"
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t("deleteClientConfirmation").replace("{0}", row.name)}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(row.id)} className="bg-destructive text-destructive-foreground">
+                  {t("delete")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      ),
     },
   ];
 
@@ -121,7 +108,6 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
     <DataTable
       data={clients || []}
       columns={columns}
-      keyField="id"
       isLoading={isLoading}
       emptyState={{
         title: t("noClientsFound"),

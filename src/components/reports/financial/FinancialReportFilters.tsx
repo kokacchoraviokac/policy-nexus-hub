@@ -1,149 +1,229 @@
 
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import type { FinancialReportFilters } from '@/types/reports';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { SearchIcon, FileDownIcon, RefreshCw } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Filter, RefreshCw, Download, X } from "lucide-react";
+import { FinancialReportFilters as FiltersType } from "@/utils/reports/financialReportUtils";
+import { Badge } from "@/components/ui/badge";
 
 interface FinancialReportFiltersProps {
-  filters: FinancialReportFilters;
-  setFilters: (filters: Partial<FinancialReportFilters>) => void;
-  onApply: () => void;
-  onChange?: (filters: Partial<FinancialReportFilters>) => void;
+  filters: FiltersType;
+  onFiltersChange: (filters: FiltersType) => void;
+  onExport: () => void;
+  onRefresh: () => void;
+  isExporting: boolean;
 }
 
-const FinancialReportFiltersComponent: React.FC<FinancialReportFiltersProps> = ({
+const FinancialReportFilters: React.FC<FinancialReportFiltersProps> = ({
   filters,
-  setFilters,
-  onApply,
-  onChange
+  onFiltersChange,
+  onExport,
+  onRefresh,
+  isExporting
 }) => {
   const { t } = useLanguage();
+  const [localFilters, setLocalFilters] = useState<FiltersType>(filters);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   
-  const handleDateChange = (field: 'dateFrom' | 'dateTo') => (date: Date | undefined) => {
-    if (date) {
-      setFilters({ [field]: date });
-      if (onChange) onChange({ [field]: date });
-    }
+  useEffect(() => {
+    // Calculate active filters for display
+    const active: string[] = [];
+    if (localFilters.searchTerm) active.push('search');
+    if (localFilters.transactionType && localFilters.transactionType !== 'all') active.push('type');
+    if (localFilters.category && localFilters.category !== 'all') active.push('category');
+    if (localFilters.startDate || localFilters.endDate) active.push('dateRange');
+    
+    setActiveFilters(active);
+  }, [localFilters]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLocalFilters(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleStatusChange = (value: string) => {
-    setFilters({ status: value });
-    if (onChange) onChange({ status: value });
+  const handleSelectChange = (name: string, value: string) => {
+    setLocalFilters(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleDateChange = (name: string, date: Date | undefined) => {
+    setLocalFilters(prev => ({ ...prev, [name]: date }));
+  };
+  
+  const applyFilters = () => {
+    onFiltersChange(localFilters);
+  };
+  
+  const resetFilters = () => {
+    const currentDate = new Date();
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    
+    const emptyFilters: FiltersType = {
+      startDate: firstDayOfMonth,
+      endDate: currentDate
+    };
+    setLocalFilters(emptyFilters);
+    onFiltersChange(emptyFilters);
+  };
+  
+  const removeFilter = (filterName: string) => {
+    const updatedFilters = { ...localFilters };
+    if (filterName === 'search') updatedFilters.searchTerm = '';
+    if (filterName === 'type') updatedFilters.transactionType = 'all';
+    if (filterName === 'category') updatedFilters.category = 'all';
+    if (filterName === 'dateRange') {
+      const currentDate = new Date();
+      const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      updatedFilters.startDate = firstDayOfMonth;
+      updatedFilters.endDate = currentDate;
+    }
+    
+    setLocalFilters(updatedFilters);
+    onFiltersChange(updatedFilters);
   };
   
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="dateFrom">{t("dateFrom")}</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !filters.dateFrom && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filters.dateFrom ? (
-                    format(new Date(filters.dateFrom), "PPP")
-                  ) : (
-                    <span>{t("pickADate")}</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  defaultMonth={filters.dateFrom ? new Date(filters.dateFrom) : undefined}
-                  selected={filters.dateFrom ? new Date(filters.dateFrom) : undefined}
-                  onSelect={handleDateChange('dateFrom')}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="dateTo">{t("dateTo")}</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !filters.dateTo && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {filters.dateTo ? (
-                    format(new Date(filters.dateTo), "PPP")
-                  ) : (
-                    <span>{t("pickADate")}</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  defaultMonth={filters.dateTo ? new Date(filters.dateTo) : undefined}
-                  selected={filters.dateTo ? new Date(filters.dateTo) : undefined}
-                  onSelect={handleDateChange('dateTo')}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="status">{t("status")}</Label>
-            <Select 
-              value={filters.status || ''} 
-              onValueChange={handleStatusChange}
-            >
-              <SelectTrigger id="status">
-                <SelectValue placeholder={t("allStatuses")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">{t("allStatuses")}</SelectItem>
-                <SelectItem value="pending">{t("pending")}</SelectItem>
-                <SelectItem value="completed">{t("completed")}</SelectItem>
-                <SelectItem value="canceled">{t("canceled")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t("search")}</label>
+          <Input 
+            placeholder={t("searchByDescriptionOrReference")}
+            name="searchTerm"
+            value={localFilters.searchTerm || ""}
+            onChange={handleInputChange}
+          />
         </div>
         
-        <div className="flex justify-end mt-4 space-x-2">
-          <Button
-            variant="outline"
-            onClick={onApply}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t("transactionType")}</label>
+          <Select
+            value={localFilters.transactionType || "all"}
+            onValueChange={(value) => handleSelectChange("transactionType", value)}
           >
-            <SearchIcon className="h-4 w-4 mr-2" />
-            {t("search")}
+            <SelectTrigger>
+              <SelectValue placeholder={t("allTransactionTypes")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("allTransactionTypes")}</SelectItem>
+              <SelectItem value="income">{t("income")}</SelectItem>
+              <SelectItem value="expense">{t("expense")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t("category")}</label>
+          <Select
+            value={localFilters.category || "all"}
+            onValueChange={(value) => handleSelectChange("category", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t("allCategories")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("allCategories")}</SelectItem>
+              <SelectItem value="commission">{t("commission")}</SelectItem>
+              <SelectItem value="invoice">{t("invoice")}</SelectItem>
+              <SelectItem value="office">{t("office")}</SelectItem>
+              <SelectItem value="software">{t("software")}</SelectItem>
+              <SelectItem value="rent">{t("rent")}</SelectItem>
+              <SelectItem value="marketing">{t("marketing")}</SelectItem>
+              <SelectItem value="salary">{t("salary")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{t("dateRange")}</label>
+          <div className="flex space-x-2">
+            <DatePicker
+              date={localFilters.startDate}
+              setDate={(date) => handleDateChange("startDate", date)}
+              placeholder={t("from")}
+            />
+            <DatePicker
+              date={localFilters.endDate}
+              setDate={(date) => handleDateChange("endDate", date)}
+              placeholder={t("to")}
+            />
+          </div>
+        </div>
+      </div>
+      
+      {activeFilters.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {activeFilters.includes('search') && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              {t("search")}: {localFilters.searchTerm}
+              <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 p-0" onClick={() => removeFilter('search')}>
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          {activeFilters.includes('type') && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              {t("type")}: {t(localFilters.transactionType || '')}
+              <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 p-0" onClick={() => removeFilter('type')}>
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          {activeFilters.includes('category') && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              {t("category")}: {t(localFilters.category || '')}
+              <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 p-0" onClick={() => removeFilter('category')}>
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          {activeFilters.includes('dateRange') && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              {t("dateRange")}: {localFilters.startDate?.toLocaleDateString()} - {localFilters.endDate?.toLocaleDateString()}
+              <Button variant="ghost" size="icon" className="h-4 w-4 ml-1 p-0" onClick={() => removeFilter('dateRange')}>
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          {activeFilters.length > 1 && (
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={resetFilters}>
+              {t("clearAll")}
+            </Button>
+          )}
+        </div>
+      )}
+      
+      <div className="flex justify-between pt-2">
+        <div className="space-x-2">
+          <Button onClick={applyFilters} variant="default" className="flex items-center">
+            <Filter className="mr-2 h-4 w-4" />
+            {t("applyFilters")}
+          </Button>
+          <Button onClick={resetFilters} variant="outline">
+            {t("resetFilters")}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+        
+        <div className="space-x-2">
+          <Button onClick={onRefresh} variant="outline" className="flex items-center">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            {t("refresh")}
+          </Button>
+          <Button 
+            onClick={onExport} 
+            variant="outline" 
+            className="flex items-center"
+            disabled={isExporting}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            {isExporting ? t("exporting") : t("exportToExcel")}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default FinancialReportFiltersComponent;
+export default FinancialReportFilters;

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TabsContent, Tabs } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import AnalysisResult from "./AnalysisResult";
 
 interface AnalysisTabsProps {
@@ -18,7 +18,7 @@ const AnalysisTabs: React.FC<AnalysisTabsProps> = ({ activeTab, result, error })
   const { t } = useLanguage();
 
   return (
-    <Tabs value={activeTab}>
+    <>
       <TabsContent value="classify">
         <p className="text-sm text-muted-foreground mb-4">
           {t("classifyDocumentDescription")}
@@ -38,7 +38,7 @@ const AnalysisTabs: React.FC<AnalysisTabsProps> = ({ activeTab, result, error })
       </TabsContent>
       
       <AnalysisResult result={result} error={error} />
-    </Tabs>
+    </>
   );
 };
 

@@ -1,6 +1,8 @@
 
 import React from 'react';
-import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Company } from '@/hooks/useCompanies';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -24,25 +26,20 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import useZodForm from '@/hooks/useZodForm';
-import { emailSchema } from '@/utils/formSchemas';
 
 interface CreateInvitationFormProps {
   companies: Company[];
   isSuperAdmin: boolean;
   defaultCompanyId?: string;
   isSubmitting: boolean;
-  onSubmit: (values: InviteFormValues) => Promise<void>;
+  onSubmit: (values: z.infer<ReturnType<typeof createInviteFormSchema>>) => Promise<void>;
 }
 
-// Export the schema so it can be imported elsewhere
 export const createInviteFormSchema = (t: (key: string) => string) => z.object({
-  email: emailSchema(t('invalidEmail')),
+  email: z.string().email(t('invalidEmail')),
   role: z.enum(['admin', 'employee']),
-  company_id: z.string().min(1, { message: t('companyRequired') }),
+  company_id: z.string().uuid(),
 });
-
-export type InviteFormValues = z.infer<ReturnType<typeof createInviteFormSchema>>;
 
 const CreateInvitationForm: React.FC<CreateInvitationFormProps> = ({
   companies,
@@ -55,16 +52,13 @@ const CreateInvitationForm: React.FC<CreateInvitationFormProps> = ({
   
   const inviteFormSchema = createInviteFormSchema(t);
   
-  const form = useZodForm({
-    schema: inviteFormSchema,
+  const form = useForm<z.infer<typeof inviteFormSchema>>({
+    resolver: zodResolver(inviteFormSchema),
     defaultValues: {
       email: '',
       role: 'employee',
       company_id: defaultCompanyId || '',
     },
-    onSubmit,
-    successMessage: t('invitationSentSuccess'),
-    errorMessage: t('invitationSentError'),
   });
 
   return (
@@ -145,9 +139,9 @@ const CreateInvitationForm: React.FC<CreateInvitationFormProps> = ({
           </DialogClose>
           <Button 
             type="submit" 
-            disabled={isSubmitting || form.isSubmitting}
+            disabled={isSubmitting}
           >
-            {isSubmitting || form.isSubmitting ? 'Sending...' : 'Send Invitation'}
+            {isSubmitting ? 'Sending...' : 'Send Invitation'}
           </Button>
         </DialogFooter>
       </form>

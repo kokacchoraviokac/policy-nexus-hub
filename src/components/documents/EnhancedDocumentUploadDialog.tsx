@@ -4,8 +4,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Sparkles } from "lucide-react";
-import { EntityType, DocumentCategory } from "@/types/documents";
-import DocumentUploadDialog from "./unified/DocumentUploadDialog";
+import { EntityType } from "@/types/documents";
+import DocumentUploadDialog from "./DocumentUploadDialog";
 import DocumentAnalysisPanel from "./DocumentAnalysisPanel";
 
 interface EnhancedDocumentUploadDialogProps {
@@ -27,11 +27,6 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
   
   const handleFileSelected = (file: File | null) => {
     setSelectedFile(file);
-  };
-  
-  const handleCategoryDetected = (category: DocumentCategory) => {
-    console.log("Category detected:", category);
-    // You can update the form with the detected category
   };
   
   return (
@@ -59,7 +54,7 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
               onOpenChange={() => {}}
               entityType={entityType}
               entityId={entityId}
-              embedMode
+              embedMode={true}
               onUploadComplete={() => onOpenChange(false)}
               onFileSelected={handleFileSelected}
             />
@@ -72,18 +67,18 @@ const EnhancedDocumentUploadDialog: React.FC<EnhancedDocumentUploadDialogProps> 
                 onOpenChange={() => {}}
                 entityType={entityType}
                 entityId={entityId}
-                embedMode
+                embedMode={true}
                 onUploadComplete={() => onOpenChange(false)}
                 onFileSelected={handleFileSelected}
               />
               
-              {selectedFile && (
-                <DocumentAnalysisPanel
-                  file={selectedFile}
-                  onCategoryDetected={handleCategoryDetected}
-                  onAnalysisComplete={() => console.log("Analysis complete")}
-                />
-              )}
+              <DocumentAnalysisPanel 
+                file={selectedFile}
+                documentType="policy"
+                onCategoryDetected={(category) => {
+                  // Implement action on category detection if needed
+                }}
+              />
             </div>
           </TabsContent>
         </Tabs>

@@ -6,7 +6,6 @@ import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogger } from "@/utils/activityLogger";
-import { EntityType } from "@/types/common";
 
 interface EditInsurerDialogProps {
   open: boolean;
@@ -48,7 +47,7 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
       
       // Log update activity
       await logActivity({
-        entity_type: EntityType.INSURER,
+        entity_type: "insurer",
         entity_id: insurer.id,
         action: "update",
         details: { changes }
@@ -72,11 +71,21 @@ const EditInsurerDialog: React.FC<EditInsurerDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <InsurerForm 
-          initialData={insurer}
+          defaultValues={{
+            name: insurer.name,
+            contact_person: insurer.contact_person || "",
+            email: insurer.email || "",
+            phone: insurer.phone || "",
+            address: insurer.address || "",
+            city: insurer.city || "",
+            postal_code: insurer.postal_code || "",
+            country: insurer.country || "",
+            registration_number: insurer.registration_number || "",
+            is_active: insurer.is_active,
+          }} 
           onSubmit={handleSubmit}
-          isLoading={isSubmitting}
-          isEditMode={true}
           onCancel={() => onOpenChange(false)}
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>

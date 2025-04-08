@@ -1,112 +1,101 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { DocumentApprovalStatus, ApprovalInfo } from "@/types/documents";
-import { useActivityLogger } from "@/utils/activityLogger";
+import { DocumentApprovalStatus, Document } from "@/types/documents";
 
-interface UseDocumentApprovalInfoProps {
-  documentId: string;
+// Define activity log details interface
+interface ApprovalActivityDetails {
+  document_id?: string;
+  action_type?: string;
+  approval_status?: string;
+  approved_by?: string;
+  approved_at?: string;
+  notes?: string;
 }
 
-export function useDocumentApprovalInfo({ documentId }: UseDocumentApprovalInfoProps) {
+// Define activity log row type
+interface ActivityLogRow {
+  id: string;
+  user_id: string;
+  created_at: string;
+  details: ApprovalActivityDetails;
+}
+
+export interface ApprovalInfo {
+  status: DocumentApprovalStatus;
+  approved_by?: string;
+  approved_at?: string;
+  notes?: string;
+}
+
+export const useDocumentApprovalInfo = (document: Document) => {
   const [approvalInfo, setApprovalInfo] = useState<ApprovalInfo>({
-    document_id: documentId,
-    status: DocumentApprovalStatus.PENDING,
-    notes: ""
+    status: (document.approval_status as DocumentApprovalStatus) || "pending",
+    approved_by: document.approved_by,
+    approved_at: document.approved_at,
+    notes: document.approval_notes
   });
   
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const { logActivity } = useActivityLogger();
   
   useEffect(() => {
-    if (!documentId) return;
-    
-    async function fetchApprovalInfo() {
-      setIsLoading(true);
+    const fetchApprovalInfo = async () => {
+      if (!document.entity_type || !document.entity_id || !document.id) return;
+      
+      setLoading(true);
       setError(null);
       
       try {
-        // Using activity logs to fetch approval info since we don't have a dedicated table
+        // Fetch the activity logs directly
         const { data, error } = await supabase
           .from('activity_logs')
-          .select('*')
-          .eq('entity_id', documentId)
-          .eq('action', 'update')
+          .select('id, user_id, created_at, details')
+          .eq('entity_type', document.entity_type)
+          .eq('entity_id', document.entity_id)
           .order('created_at', { ascending: false })
-          .limit(1);
+          .limit(10);
           
-        if (error) throw error;
+        if (error) {
+          throw new Error(`Error fetching approval info: ${error.message}`);
+        }
         
+        // Type-safe filtering of logs in JavaScript
         if (data && data.length > 0) {
-          const latestActivity = data[0];
-          const details = latestActivity.details;
+          // Safe type assertion
+          const activityLogs = data as ActivityLogRow[];
           
-          if (details && details.action_type && details.action_type.startsWith('document_')) {
-            const status = details.action_type.replace('document_', '') as DocumentApprovalStatus;
+          // Find relevant approval logs
+          const filteredLogs = activityLogs.filter(log => {
+            const details = log.details as ApprovalActivityDetails;
+            return details && 
+                  details.action_type === 'document_approval' && 
+                  details.document_id === document.id;
+          });
+          
+          if (filteredLogs.length > 0) {
+            const latestApproval = filteredLogs[0];
+            const details = latestApproval.details as ApprovalActivityDetails;
+            
             setApprovalInfo({
-              document_id: documentId,
-              status: status,
-              notes: details.notes || ""
+              status: (details.approval_status as DocumentApprovalStatus) || "pending",
+              approved_by: latestApproval.user_id,
+              approved_at: latestApproval.created_at,
+              notes: details.notes
             });
           }
         }
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Failed to fetch approval info'));
-        console.error("Error fetching document approval info:", err);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error("Error in fetchApprovalInfo:", errorMessage);
+        setError(error instanceof Error ? error : new Error('Unknown error'));
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
-    }
+    };
     
     fetchApprovalInfo();
-  }, [documentId]);
+  }, [document, document.entity_type, document.entity_id, document.id]);
   
-  const updateApprovalStatus = async (status: DocumentApprovalStatus, notes?: string) => {
-    if (!documentId) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Log the approval activity
-      await logActivity({
-        entity_type: 'policy', // TODO: This should be dynamic based on document entity type
-        entity_id: documentId,
-        action: 'update',
-        details: {
-          action_type: `document_${status}`,
-          document_id: documentId,
-          notes: notes || null,
-          status
-        }
-      });
-      
-      // Update local state
-      setApprovalInfo({
-        document_id: documentId,
-        status,
-        notes: notes || ""
-      });
-      
-      // In a real implementation, you would update the document's approval_status here
-      // Since we don't have direct access to update document tables,
-      // we'll use activity logs as our source of truth
-      
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to update approval status'));
-      console.error("Error updating document approval status:", err);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  return {
-    approvalInfo,
-    isLoading,
-    error,
-    updateApprovalStatus
-  };
-}
+  return { approvalInfo, setApprovalInfo, loading, error };
+};

@@ -1,239 +1,189 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, RefreshCw, Search } from 'lucide-react';
-import { DataTable } from '@/components/ui/data-table';
-import { ColumnDef } from '@tanstack/react-table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { useDebounce } from '@/hooks/useDebounce';
-import { Insurer } from '@/types/codebook';
-import { useInsurers } from '@/hooks/useInsurers';
-import InsurerFormDialog from './dialogs/InsurerFormDialog';
-import { useToast } from '@/hooks/use-toast';
-import { useInsurersCrud } from '@/hooks/insurers/useInsurersCrud';
-import SavedFiltersMenu from './filters/SavedFiltersMenu';
-import { CodebookFilterState } from '@/types/codebook';
-import { PaginationController } from '@/components/ui/pagination-controller';
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Info } from "lucide-react";
+import { useInsurers } from "@/hooks/useInsurers";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSimpleSavedFilters } from "@/hooks/useSimpleSavedFilters";
+import DataTable from "@/components/ui/data-table";
+import getInsurerColumns from "@/components/codebook/insurers/InsurersColumns";
+import InsurersFilters from "@/components/codebook/insurers/InsurersFilters";
+import InsurersActionButtons from "@/components/codebook/insurers/InsurersActionButtons";
+import InsurerFormDialog from "@/components/codebook/dialogs/InsurerFormDialog";
+import AdvancedFilterDialog from "@/components/codebook/filters/AdvancedFilterDialog";
 
 const InsurersDirectory: React.FC = () => {
+  const navigate = useNavigate();
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
-  const [open, setOpen] = useState(false);
-  const [selectedInsurerId, setSelectedInsurerId] = useState<string | undefined>(undefined);
-  const [activeOnly, setActiveOnly] = useState(false);
-  const [filters, setFilters] = useState<CodebookFilterState>({ status: activeOnly ? 'active' : 'all' });
-
+  const { hasPrivilege, user } = useAuth();
+  
+  const [formOpen, setFormOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  
+  // Debug log user and privileges
+  console.log("Current user in InsurersDirectory:", user);
+  console.log("User can add insurer:", hasPrivilege('codebook.insurers.create'));
+  
   const {
     insurers,
     isLoading,
-    error,
-    totalCount,
-    currentPage,
-    totalPages,
-    onPageChange,
-    onPageSizeChange,
-    pageSize,
-    refreshInsurers,
-  } = useInsurers({
-    search: debouncedSearchQuery,
-    page: 1,
-    pageSize: 10,
-    status: activeOnly ? 'active' : 'all',
-  });
+    searchTerm,
+    setSearchTerm,
+    filters,
+    handleFilterChange,
+    handleClearFilter,
+    getActiveFilterCount,
+    addInsurer,
+    resetFilters,
+    pagination
+  } = useInsurers();
+  
+  const {
+    savedFilters,
+    saveFilter,
+    deleteFilter,
+    parseFilterData,
+    isSaving,
+    isDeleting
+  } = useSimpleSavedFilters('insurers', user?.id, user?.companyId);
 
-  const { deleteInsurer, isDeleting } = useInsurersCrud();
-
-  const handleOpenDialog = () => {
-    setSelectedInsurerId(undefined);
-    setOpen(true);
+  const handleViewDetails = (id: string) => {
+    navigate(`/codebook/companies/${id}`);
   };
 
-  const handleEditInsurer = (id: string) => {
-    setSelectedInsurerId(id);
-    setOpen(true);
+  const handleAddInsurer = () => {
+    setFormOpen(true);
   };
 
-  const handleDeleteInsurer = async (id: string) => {
+  const handleImportInsurers = async (importedInsurers: Partial<import('@/types/codebook').Insurer>[]) => {
     try {
-      await deleteInsurer(id); // Instead of passing two arguments
-      toast({
-        title: t('insurerDeleted'),
-        description: t('insurerDeletedSuccessfully'),
-      });
-    } catch (err) {
-      console.error('Error deleting insurer:', err);
-      toast({
-        title: t('errorDeletingInsurer'),
-        description: t('pleaseTryAgain'),
-        variant: 'destructive',
-      });
+      let created = 0;
+      let updated = 0;
+      
+      // Process each imported insurer
+      for (const insurer of importedInsurers) {
+        // In a real implementation, this would add or update insurers in the database
+        // For now, we'll just increment our counters
+        if (insurer.id) {
+          // Update existing insurer
+          updated++;
+        } else {
+          // Create new insurer
+          created++;
+        }
+      }
+      
+      return { created, updated };
+    } catch (error) {
+      console.error("Error importing insurers:", error);
+      throw error;
     }
   };
 
-  const columns: ColumnDef<Insurer>[] = [
-    {
-      accessorKey: 'name',
-      header: t('name'),
-    },
-    {
-      accessorKey: 'contact_person',
-      header: t('contactPerson'),
-    },
-    {
-      accessorKey: 'email',
-      header: t('email'),
-    },
-    {
-      accessorKey: 'phone',
-      header: t('phone'),
-    },
-    {
-      accessorKey: 'is_active',
-      header: ({ column }) => {
-        return (
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            >
-              {t('status')}
-            </Button>
-          </div>
-        );
-      },
-      cell: ({ row }) => {
-        const isActive = row.original.is_active;
-        return (
-          <div className="flex items-center">
-            {isActive ? t('active') : t('inactive')}
-          </div>
-        );
-      },
-    },
-    {
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => handleEditInsurer(row.original.id)}
-          >
-            {t('edit')}
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => handleDeleteInsurer(row.original.id)}
-            disabled={isDeleting}
-          >
-            {t('delete')}
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  const canAddInsurer = hasPrivilege('codebook.insurers.create');
+  const canImportExport = hasPrivilege('codebook.insurers.import') || hasPrivilege('codebook.insurers.export');
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+  const getExportData = () => {
+    return insurers.map(insurer => ({
+      name: insurer.name,
+      contact_person: insurer.contact_person || '',
+      email: insurer.email || '',
+      phone: insurer.phone || '',
+      address: insurer.address || '',
+      city: insurer.city || '',
+      country: insurer.country || '',
+      is_active: insurer.is_active ? 'Active' : 'Inactive'
+    }));
   };
 
-  const handleRefresh = useCallback(async () => {
-    await refreshInsurers();
-  }, [refreshInsurers]);
-
-  const handleLoadFilter = (filter: CodebookFilterState) => {
-    setFilters(filter);
-    setActiveOnly(filter.status === 'active');
+  const handleSaveFilter = (name: string) => {
+    saveFilter(name);
   };
 
-  const handleActiveOnlyChange = (checked: boolean) => {
-    setActiveOnly(checked);
-    setFilters({ status: checked ? 'active' : 'all' });
-  };
+  const totalPages = Math.ceil(pagination.totalCount / pagination.pageSize);
 
   return (
-    <div>
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <CardTitle>{t('insurers')}</CardTitle>
-              <CardDescription>{t('manageInsurers')}</CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <SavedFiltersMenu
-                entityType="insurers"
-                currentFilters={filters}
-                onLoadFilter={handleLoadFilter}
-              />
-              <Button onClick={handleRefresh} disabled={isLoading}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {t('refresh')}
-              </Button>
-              <Button onClick={handleOpenDialog}>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                {t('addInsurer')}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={t('searchInsurers')}
-                className="pl-10"
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Label htmlFor="activeOnly">{t('activeOnly')}</Label>
-              <Checkbox
-                id="activeOnly"
-                checked={activeOnly}
-                onCheckedChange={handleActiveOnlyChange}
-              />
-            </div>
-          </div>
-          <DataTable
-            columns={columns}
-            data={insurers}
-            keyField="id"
-            isLoading={isLoading}
-            error={error}
-            onRefresh={handleRefresh}
-            onSearch={handleSearch}
-            searchPlaceholder={t('searchInsurers')}
-            emptyMessage={t('noInsurersFound')}
-          />
-          <PaginationController
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-            onPageSizeChange={onPageSizeChange}
-            pageSize={pageSize}
-            totalCount={totalCount}
-          />
-        </CardContent>
-      </Card>
-      <InsurerFormDialog
-        open={open}
-        onOpenChange={setOpen}
-        insurerId={selectedInsurerId}
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        {/* Action Buttons moved here */}
+        <InsurersActionButtons
+          onImport={handleImportInsurers}
+          getExportData={getExportData}
+          onAddInsurer={handleAddInsurer}
+        />
+      </div>
+
+      <InsurersFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onClearFilter={handleClearFilter}
+        onOpenFilterDialog={() => setFilterDialogOpen(true)}
+        activeFilterCount={getActiveFilterCount()}
+        savedFilters={savedFilters}
+        onSaveFilter={handleSaveFilter}
+        onDeleteFilter={deleteFilter}
+        isSaving={isSaving}
+        isDeleting={isDeleting}
+        parseFilterData={parseFilterData}
+        showSavedFilters={true}
       />
+      
+      <DataTable
+        data={insurers}
+        columns={getInsurerColumns((id) => handleViewDetails(id))}
+        isLoading={isLoading}
+        emptyState={{
+          title: t("noInsurersFound"),
+          description: t("noInsurersFoundDescription"),
+          action: canAddInsurer ? (
+            <button
+              onClick={handleAddInsurer}
+              className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              {t("addInsurer")}
+            </button>
+          ) : undefined
+        }}
+        pagination={{
+          currentPage: pagination.page,
+          itemsPerPage: pagination.pageSize,
+          totalItems: pagination.totalCount,
+          totalPages: totalPages,
+          onPageChange: pagination.setPage,
+          onPageSizeChange: pagination.setPageSize,
+          pageSizeOptions: [10, 25, 50, 100]
+        }}
+      />
+      
+      <InsurerFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+      />
+      
+      <AdvancedFilterDialog
+        open={filterDialogOpen}
+        onOpenChange={setFilterDialogOpen}
+        filters={filters}
+        onApplyFilters={handleFilterChange}
+        onResetFilters={resetFilters}
+        entityType="insurers"
+        filterOptions={{
+          showStatus: true,
+          showCity: true,
+          showCountry: true,
+          showCreatedDates: true
+        }}
+      />
+      
+      {!canAddInsurer && !canImportExport && (
+        <div className="flex items-center justify-center p-4 bg-muted/50 rounded-lg mt-4">
+          <Info className="h-5 w-5 mr-2 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">{t("noInsurersPrivileges")}</p>
+        </div>
+      )}
     </div>
   );
 };

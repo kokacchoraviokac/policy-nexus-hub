@@ -1,8 +1,24 @@
-import { EntityType } from '@/types/common';
+
 import { supabase } from "@/integrations/supabase/client";
 
-// Use EntityType from common
-export type { EntityType };
+// Redefine EntityType to be compatible with documents.EntityType
+export type EntityType = 
+  | 'policy' 
+  | 'claim' 
+  | 'client' 
+  | 'invoice' 
+  | 'addendum' 
+  | 'sales_process' 
+  | 'agent' 
+  | 'insurer'
+  | 'policy_document'
+  | 'claim_document'
+  | 'client_document'
+  | 'invoice_document'
+  | 'addendum_document'
+  | 'sales_document'
+  | 'agent_document'
+  | 'insurer_document';
 
 export interface ActivityLog {
   entity_type: EntityType;

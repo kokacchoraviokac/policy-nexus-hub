@@ -8,8 +8,6 @@ import PipelineOverview from "@/pages/sales/PipelineOverview";
 import Leads from "@/pages/sales/Leads";
 import SalesProcesses from "@/pages/sales/SalesProcesses";
 import ResponsiblePersons from "@/pages/sales/ResponsiblePersons";
-import ClientAuthorizations from "@/pages/sales/ClientAuthorizations";
-import PolicyProposals from "@/pages/sales/PolicyProposals";
 
 export const SalesRoutes = [
   <Route
@@ -57,34 +55,12 @@ export const SalesRoutes = [
     }
   />,
   <Route
-    key="sales-proposals"
-    path="/sales/proposals"
-    element={
-      <ProtectedRoute requiredPrivilege="sales:view">
-        <AppLayout>
-          <PolicyProposals />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  <Route
     key="sales-responsible"
     path="/sales/responsible"
     element={
       <ProtectedRoute requiredPrivilege="sales:view">
         <AppLayout>
           <ResponsiblePersons />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="sales-authorizations"
-    path="/sales/authorizations"
-    element={
-      <ProtectedRoute requiredPrivilege="sales:view">
-        <AppLayout>
-          <ClientAuthorizations />
         </AppLayout>
       </ProtectedRoute>
     }

@@ -3,82 +3,94 @@ import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CodebookFilterState } from "@/types/codebook";
+import { EntityType } from "@/types/savedFilters";
 
 interface SaveFilterDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (name: string) => Promise<void>;
+  onSave: (name: string) => void;
+  isSaving?: boolean;
+  filterCount?: number;
+  filters?: CodebookFilterState;
+  entityType?: EntityType;
 }
 
 const SaveFilterDialog: React.FC<SaveFilterDialogProps> = ({
   open,
   onOpenChange,
   onSave,
+  isSaving = false,
+  filterCount,
+  filters,
+  entityType
 }) => {
   const { t } = useLanguage();
-  const [filterName, setFilterName] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!filterName.trim()) return;
-
-    setIsSaving(true);
-    try {
-      await onSave(filterName.trim());
-      setFilterName("");
-    } catch (error) {
-      console.error("Error saving filter:", error);
-    } finally {
-      setIsSaving(false);
+  const handleSave = () => {
+    if (!name.trim()) {
+      setError(t("filterNameRequired"));
+      return;
     }
+    onSave(name);
+  };
+
+  const handleClose = () => {
+    setName("");
+    setError("");
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("saveFilter")}</DialogTitle>
+          <DialogDescription>
+            {filterCount
+              ? t("saveFilterDescriptionWithCount", { count: filterCount })
+              : t("saveFilterDescription")}
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="filterName">{t("filterName")}</Label>
-              <Input
-                id="filterName"
-                value={filterName}
-                onChange={(e) => setFilterName(e.target.value)}
-                placeholder={t("enterFilterName")}
-                autoFocus
-                required
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setFilterName("");
-                onOpenChange(false);
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="filter-name">{t("filterName")}</Label>
+            <Input
+              id="filter-name"
+              placeholder={t("enterFilterName")}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (e.target.value.trim()) setError("");
               }}
-              disabled={isSaving}
-            >
-              {t("cancel")}
-            </Button>
-            <Button type="submit" disabled={!filterName.trim() || isSaving}>
-              {isSaving ? t("saving") : t("save")}
-            </Button>
-          </DialogFooter>
-        </form>
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            disabled={isSaving}
+          >
+            {t("cancel")}
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? t("saving") : t("saveFilter")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

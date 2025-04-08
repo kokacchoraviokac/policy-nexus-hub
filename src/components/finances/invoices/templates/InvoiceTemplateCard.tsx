@@ -8,8 +8,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Crown, Trash2 } from "lucide-react";
 
 interface InvoiceTemplateCardProps {
-  template: InvoiceTemplateSettings & { id: string; is_default: boolean };
-  onEdit: (template: InvoiceTemplateSettings & { id: string; is_default: boolean }) => void;
+  template: InvoiceTemplateSettings;
+  onEdit: (template: InvoiceTemplateSettings) => void;
   onDelete: (templateId: string) => void;
   onSetDefault: (templateId: string) => void;
 }

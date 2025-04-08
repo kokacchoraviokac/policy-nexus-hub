@@ -1,6 +1,8 @@
 
 import React from "react";
-import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,27 +24,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SelectedPolicyDisplay from "./SelectedPolicyDisplay";
-import useZodForm from "@/hooks/useZodForm";
-import {
-  claimStatusSchema,
-  damageDescriptionSchema,
-  claimAmountSchema,
-  createModelSchema
-} from "@/utils/formSchemas";
 
-// Create the schema for claim form validation
-const createClaimSchema = (t: (key: string) => string) => z.object({
-  policy_id: createModelSchema("Policy", { isRequired: true, errorMessage: t("policyRequired") }),
-  claim_number: z.string().min(1, { message: t("claimNumberRequired") }),
-  damage_description: damageDescriptionSchema(t("damageDescriptionRequired")),
-  incident_date: z.string().min(1, { message: t("incidentDateRequired") }),
-  claimed_amount: claimAmountSchema(t("claimedAmountInvalid")),
+// Schema for claim form validation
+const claimFormSchema = z.object({
+  policy_id: z.string().min(1, { message: "Policy is required" }),
+  claim_number: z.string().min(1, { message: "Claim number is required" }),
+  damage_description: z.string().min(1, { message: "Damage description is required" }),
+  incident_date: z.string().min(1, { message: "Incident date is required" }),
+  claimed_amount: z.number().min(0, { message: "Amount must be greater than or equal to 0" }),
   deductible: z.number().optional(),
-  status: claimStatusSchema(),
+  status: z.string().min(1, { message: "Status is required" }),
   notes: z.string().optional(),
 });
 
-export type ClaimFormValues = z.infer<ReturnType<typeof createClaimSchema>>;
+export type ClaimFormValues = z.infer<typeof claimFormSchema>;
 
 interface ClaimDetailsFormProps {
   defaultValues: ClaimFormValues;
@@ -65,19 +60,18 @@ const ClaimDetailsForm: React.FC<ClaimDetailsFormProps> = ({
 }) => {
   const { t } = useLanguage();
   
-  const claimSchema = createClaimSchema(t);
-  
-  const form = useZodForm({
-    schema: claimSchema,
-    defaultValues,
-    onSubmit,
-    successMessage: t("claimSavedSuccess"),
-    errorMessage: t("claimSaveError")
+  const form = useForm<ClaimFormValues>({
+    resolver: zodResolver(claimFormSchema),
+    defaultValues
   });
+
+  const handleSubmit = (values: ClaimFormValues) => {
+    onSubmit(values);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         {/* Policy Section */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
@@ -197,10 +191,10 @@ const ClaimDetailsForm: React.FC<ClaimDetailsFormProps> = ({
               control={form.control}
               name="status"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-1 md:col-span-2">
                   <FormLabel>{t("status")}</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                     disabled={isFormDisabled || isSubmitting}
                   >
@@ -210,51 +204,54 @@ const ClaimDetailsForm: React.FC<ClaimDetailsFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="in_processing">{t("inProcessing")}</SelectItem>
+                      <SelectItem value="in processing">{t("inProcessing")}</SelectItem>
                       <SelectItem value="reported">{t("reported")}</SelectItem>
                       <SelectItem value="accepted">{t("accepted")}</SelectItem>
                       <SelectItem value="rejected">{t("rejected")}</SelectItem>
-                      <SelectItem value="partially_accepted">{t("partiallyAccepted")}</SelectItem>
                       <SelectItem value="appealed">{t("appealed")}</SelectItem>
-                      <SelectItem value="withdrawn">{t("withdrawn")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
-            <FormField
-              control={form.control}
-              name="damage_description"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>{t("damageDescription")}</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      {...field}
-                      className="min-h-[100px]" 
-                      disabled={isFormDisabled || isSubmitting} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
+        </div>
+        
+        {/* Damage Description */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">{t("damageInformation")}</h3>
+          
+          <FormField
+            control={form.control}
+            name="damage_description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("damageDescription")}</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    {...field} 
+                    rows={4}
+                    disabled={isFormDisabled || isSubmitting} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
           <FormField
             control={form.control}
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("notes")}</FormLabel>
+                <FormLabel>{t("additionalNotes")}</FormLabel>
                 <FormControl>
                   <Textarea 
-                    {...field}
-                    className="min-h-[80px]" 
+                    {...field} 
+                    rows={3}
+                    placeholder={t("additionalNotesDescription")}
                     disabled={isFormDisabled || isSubmitting} 
-                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -263,26 +260,27 @@ const ClaimDetailsForm: React.FC<ClaimDetailsFormProps> = ({
           />
         </div>
         
-        <div className="flex justify-end gap-2">
-          <Button 
-            type="button" 
+        {/* Form Actions */}
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button
+            type="button"
             variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
           >
             {t("cancel")}
           </Button>
-          <Button 
+          <Button
             type="submit"
-            disabled={isSubmitting || isFormDisabled}
+            disabled={isFormDisabled || isSubmitting || !selectedPolicy}
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {t("saving")}
+                {t("creating")}
               </>
             ) : (
-              t("save")
+              t("createClaim")
             )}
           </Button>
         </div>

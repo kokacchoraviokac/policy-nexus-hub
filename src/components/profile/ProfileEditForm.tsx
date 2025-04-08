@@ -1,103 +1,157 @@
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { User } from "@/types/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
-import { User } from "@/types/auth/user";
-import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { toast } from "sonner";
 
-export interface ProfileEditFormProps {
+interface ProfileEditFormProps {
   user: User;
-  updateUser: (userData: Partial<User>) => Promise<void>;
+  updateUser: (data: Partial<User>) => Promise<void>;
 }
 
-const formSchema = z.object({
+const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Please enter a valid email"),
+  role: z.enum(["superAdmin", "admin", "employee"] as const),
+  avatar: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ user, updateUser }) => {
-  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user.name || '',
-      email: user.email || '',
+      name: user?.name || "",
+      email: user?.email || "",
+      role: user?.role || "employee",
+      avatar: user?.avatar || "",
     },
   });
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: ProfileFormValues) => {
     setIsSubmitting(true);
     try {
       await updateUser({
         name: values.name,
-        email: values.email,
+        avatar: values.avatar,
       });
+      toast.success("Profile updated successfully");
     } catch (error) {
-      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+      console.error("Update profile error:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const getRoleLabel = (role: ProfileFormValues["role"]) => {
+    switch (role) {
+      case "superAdmin":
+        return "Super Admin";
+      case "admin":
+        return "Admin";
+      case "employee":
+        return "Employee";
+      default:
+        return "User";
+    }
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("fullName")}</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder={t("enterYourName")} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("emailAddress")}</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder={t("enterYourEmail")} type="email" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t("saving")}
-            </>
-          ) : (
-            t("saveChanges")
-          )}
-        </Button>
-      </form>
-    </Form>
+    <Card>
+      <CardHeader>
+        <CardTitle>Edit Profile</CardTitle>
+        <CardDescription>
+          Update your personal information
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled />
+                  </FormControl>
+                  <FormDescription>
+                    Email cannot be changed
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled value={getRoleLabel(field.value)} />
+                  </FormControl>
+                  <FormDescription>
+                    Your role is assigned by an administrator
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="avatar"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Avatar URL</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="https://example.com/avatar.png" />
+                  </FormControl>
+                  <FormDescription>
+                    Enter a URL for your profile picture
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !form.formState.isDirty}
+            >
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "sonner";
 import { fetchUserCustomPrivileges, grantCustomPrivilege, revokeCustomPrivilege } from "@/utils/authUtils";
-import { CustomPrivilege } from "@/types/auth/index";
+import { CustomPrivilege } from "@/types/auth";
 
 const privilegeFormSchema = z.object({
   userId: z.string().uuid("Invalid user ID"),
@@ -63,13 +62,7 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
     
     // If we're looking at the current user, use the context value
     if (targetUserId === user?.id) {
-      // Cast to convert context to ensure type compatibility
-      const convertedPrivileges = [...customPrivileges].map(priv => ({
-        ...priv,
-        // Ensure context is always a string
-        context: typeof priv.context === 'object' ? JSON.stringify(priv.context) : priv.context
-      }));
-      setPrivileges(convertedPrivileges);
+      setPrivileges(customPrivileges);
       return;
     }
     
@@ -78,13 +71,7 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
       setIsLoading(true);
       try {
         const userPrivileges = await fetchUserCustomPrivileges(targetUserId);
-        // Convert any object contexts to strings to ensure type compatibility
-        const convertedPrivileges = userPrivileges.map(priv => ({
-          ...priv,
-          // Ensure context is always a string
-          context: typeof priv.context === 'object' ? JSON.stringify(priv.context) : priv.context
-        }));
-        setPrivileges(convertedPrivileges);
+        setPrivileges(userPrivileges);
       } catch (error) {
         console.error("Error loading privileges:", error);
         toast.error("Failed to load custom privileges");
@@ -101,27 +88,23 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
     
     setIsLoading(true);
     try {
-      // Convert the Date to ISO string if present
-      const expiresAtString = values.expiresAt ? values.expiresAt.toISOString() : undefined;
-      
-      await grantCustomPrivilege(
+      const success = await grantCustomPrivilege(
         values.userId,
         values.privilege,
         user.id,
-        expiresAtString
+        values.expiresAt
       );
       
-      // Refresh privileges
-      const updatedPrivileges = await fetchUserCustomPrivileges(values.userId);
-      // Convert any object contexts to strings
-      const convertedPrivileges = updatedPrivileges.map(priv => ({
-        ...priv,
-        context: typeof priv.context === 'object' ? JSON.stringify(priv.context) : priv.context
-      }));
-      setPrivileges(convertedPrivileges);
-      setIsDialogOpen(false);
-      form.reset();
-      toast.success("Privilege granted successfully");
+      if (success) {
+        toast.success("Privilege granted successfully");
+        // Refresh privileges
+        const updatedPrivileges = await fetchUserCustomPrivileges(values.userId);
+        setPrivileges(updatedPrivileges);
+        setIsDialogOpen(false);
+        form.reset();
+      } else {
+        toast.error("Failed to grant privilege");
+      }
     } catch (error) {
       console.error("Error granting privilege:", error);
       toast.error("Failed to grant privilege");
@@ -133,11 +116,15 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
   const handleRevokePrivilege = async (privilegeId: string) => {
     setIsLoading(true);
     try {
-      await revokeCustomPrivilege(privilegeId);
+      const success = await revokeCustomPrivilege(privilegeId);
       
-      // Update local state
-      setPrivileges(prev => prev.filter(p => p.id !== privilegeId));
-      toast.success("Privilege revoked successfully");
+      if (success) {
+        toast.success("Privilege revoked successfully");
+        // Update local state
+        setPrivileges(prev => prev.filter(p => p.id !== privilegeId));
+      } else {
+        toast.error("Failed to revoke privilege");
+      }
     } catch (error) {
       console.error("Error revoking privilege:", error);
       toast.error("Failed to revoke privilege");
@@ -281,11 +268,11 @@ const CustomPrivilegeManager: React.FC<CustomPrivilegeManagerProps> = ({
                     <TableCell>
                       <Badge variant="outline">{privilege.privilege}</Badge>
                     </TableCell>
-                    <TableCell>{privilege.granted_by}</TableCell>
-                    <TableCell>{new Date(privilege.granted_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{privilege.grantedBy}</TableCell>
+                    <TableCell>{new Date(privilege.grantedAt).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      {privilege.expires_at 
-                        ? new Date(privilege.expires_at).toLocaleDateString()
+                      {privilege.expiresAt 
+                        ? new Date(privilege.expiresAt).toLocaleDateString()
                         : "Never"
                       }
                     </TableCell>

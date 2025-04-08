@@ -9,8 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, ShieldCheck, ShieldX, Shield } from "lucide-react";
-import { Document } from "@/types/documents";
-import { ApprovalStatus, EntityType } from "@/types/common"; 
+import { Document, DocumentApprovalStatus } from "@/types/documents";
 
 interface DocumentApprovalPanelProps {
   document: Document;
@@ -30,15 +29,12 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
   
   // Determine the table based on entity type
   const getDocumentTable = () => {
-    const entityType = document.entity_type as EntityType;
-    
-    switch (entityType) {
-      case EntityType.POLICY:
+    switch (document.entity_type) {
+      case "policy":
         return "policy_documents";
-      case EntityType.CLAIM:
+      case "claim":
         return "claim_documents";
-      case EntityType.SALES_PROCESS:
-      case EntityType.SALE:  // Handle 'sale' as an alias for 'sales_process'
+      case "sales_process":
         return "sales_documents";
       default:
         return "policy_documents"; // Default fallback
@@ -46,7 +42,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
   };
   
   const updateApprovalStatus = useMutation({
-    mutationFn: async (newStatus: ApprovalStatus) => {
+    mutationFn: async (newStatus: DocumentApprovalStatus) => {
       const tableName = getDocumentTable();
       
       // For now, we'll just log the activity and not update the document table
@@ -54,7 +50,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
       
       // Log the activity
       await logActivity({
-        entity_type: document.entity_type as EntityType,
+        entity_type: document.entity_type,
         entity_id: document.entity_id || "",
         action: "update",
         details: {
@@ -70,11 +66,11 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
     },
     onSuccess: (newStatus) => {
       let title = "";
-      if (newStatus === ApprovalStatus.APPROVED) {
+      if (newStatus === "approved") {
         title = t("documentApproved");
-      } else if (newStatus === ApprovalStatus.REJECTED) {
+      } else if (newStatus === "rejected") {
         title = t("documentRejected");
-      } else if (newStatus === ApprovalStatus.NEEDS_REVIEW) {
+      } else if (newStatus === "needs_review") {
         title = t("documentMarkedForReview");
       } else {
         title = t("documentStatusUpdated");
@@ -102,7 +98,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
     }
   });
   
-  const handleApprovalAction = (status: ApprovalStatus) => {
+  const handleApprovalAction = (status: DocumentApprovalStatus) => {
     updateApprovalStatus.mutate(status);
   };
   
@@ -127,7 +123,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
         {document.approved_at && (
           <div className="text-xs flex justify-between">
             <span className="text-muted-foreground">
-              {document.approval_status === ApprovalStatus.APPROVED ? t("approvedOn") : t("reviewedOn")}:
+              {document.approval_status === "approved" ? t("approvedOn") : t("reviewedOn")}:
             </span>
             <span>
               {formatDate(document.approved_at)}
@@ -146,7 +142,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => handleApprovalAction(ApprovalStatus.NEEDS_REVIEW)}
+          onClick={() => handleApprovalAction("needs_review")}
           disabled={updateApprovalStatus.isPending}
           className="w-full"
         >
@@ -162,7 +158,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => handleApprovalAction(ApprovalStatus.REJECTED)}
+            onClick={() => handleApprovalAction("rejected")}
             disabled={updateApprovalStatus.isPending}
           >
             {updateApprovalStatus.isPending ? (
@@ -176,7 +172,7 @@ const DocumentApprovalPanel: React.FC<DocumentApprovalPanelProps> = ({
           <Button
             variant="default"
             size="sm"
-            onClick={() => handleApprovalAction(ApprovalStatus.APPROVED)}
+            onClick={() => handleApprovalAction("approved")}
             disabled={updateApprovalStatus.isPending}
           >
             {updateApprovalStatus.isPending ? (

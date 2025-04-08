@@ -1,16 +1,6 @@
 
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Policy, WorkflowStatus } from "@/types/policies";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -19,241 +9,288 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { 
-  Edit,
-  Loader2,
-  AlertTriangle,
-  Filter,
-  ChevronRight,
-  ClipboardList,
-  FileCheck,
-  Calendar,
-  Building,
-  FileArchive,
-  Users,
-  MoreHorizontal,
-  Search
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PaginationController } from "@/components/ui/pagination-controller";
-import { mapPolicyStatusToBadgeVariant } from "@/utils/policies/policyMappers";
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Card } from "@/components/ui/card";
+  Eye, 
+  AlertTriangle,
+  FileSpreadsheet,
+  Loader2,
+  ClipboardCheck,
+  ArrowRightCircle
+} from "lucide-react";
+import { WorkflowPolicy } from "@/utils/policies/policyMappers";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface WorkflowPoliciesListProps {
-  policies: Policy[];
+  policies: WorkflowPolicy[];
   isLoading: boolean;
-  onReviewPolicy?: (policyId: string) => void;
-  error?: Error | null;
   isError?: boolean;
+  onReviewPolicy: (policyId: string) => void;
   totalCount?: number;
   currentPage?: number;
   pageSize?: number;
-  onPageChange?: (page: number) => void;
   workflowStatus?: string;
+  onPageChange?: (page: number) => void;
   onStatusChange?: (status: string) => void;
 }
 
-const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({
-  policies,
-  isLoading,
+const WorkflowPoliciesList: React.FC<WorkflowPoliciesListProps> = ({ 
+  policies, 
+  isLoading, 
+  isError = false,
   onReviewPolicy,
-  error,
-  isError,
   totalCount = 0,
   currentPage = 1,
   pageSize = 10,
+  workflowStatus = "all",
   onPageChange,
-  workflowStatus,
-  onStatusChange
+  onStatusChange,
 }) => {
   const { t, formatDate, formatCurrency } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredPolicies, setFilteredPolicies] = useState<Policy[]>(policies);
   
-  const statusOptions = [
-    { id: "all", label: t("allStatuses"), value: "all" },
-    { id: "draft", label: t("draft"), value: WorkflowStatus.DRAFT },
-    { id: "in_review", label: t("inReview"), value: WorkflowStatus.IN_REVIEW },
-    { id: "ready", label: t("ready"), value: WorkflowStatus.READY },
-    { id: "complete", label: t("complete"), value: WorkflowStatus.COMPLETE },
-    { id: "review", label: t("review"), value: WorkflowStatus.REVIEW },
-    { id: "rejected", label: t("rejected"), value: WorkflowStatus.REJECTED },
-  ];
-  
-  React.useEffect(() => {
-    if (!searchQuery) {
-      setFilteredPolicies(policies);
-      return;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Page numbering logic for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('ellipsis');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('ellipsis');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('ellipsis');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('ellipsis');
+        pages.push(totalPages);
+      }
     }
     
-    const results = policies.filter((policy) => {
-      const searchableFields = [
-        policy.policy_number,
-        policy.policyholder_name,
-        policy.insurer_name,
-        policy.client_name || policy.policyholder_name,
-      ];
-      
-      return searchableFields.some((field) =>
-        field?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    });
-    
-    setFilteredPolicies(results);
-  }, [policies, searchQuery]);
-  
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+    return pages;
   };
   
-  const renderWorkflowStatusBadge = (status?: string) => {
-    const statusMap: Record<string, { label: string; variant: string }> = {
-      [WorkflowStatus.DRAFT]: { label: t("draft"), variant: "secondary" },
-      [WorkflowStatus.IN_REVIEW]: { label: t("inReview"), variant: "warning" },
-      [WorkflowStatus.READY]: { label: t("ready"), variant: "info" },
-      [WorkflowStatus.COMPLETE]: { label: t("complete"), variant: "success" },
-      [WorkflowStatus.REVIEW]: { label: t("review"), variant: "warning" },
-      [WorkflowStatus.REJECTED]: { label: t("rejected"), variant: "destructive" },
-    };
-    
-    const { label, variant } = statusMap[status || ""] || { label: status || t("unknown"), variant: "default" };
-    
-    return <Badge variant={variant as any}>{label}</Badge>;
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages && onPageChange) {
+      onPageChange(page);
+    }
+  };
+
+  const getWorkflowStatusBadge = (status: string) => {
+    switch(status) {
+      case 'draft':
+        return <Badge variant="outline">{t("draft")}</Badge>;
+      case 'in_review':
+        return <Badge variant="secondary">{t("inReview")}</Badge>;
+      case 'ready':
+        return <Badge variant="success">{t("ready")}</Badge>;
+      case 'complete':
+        return <Badge variant="default">{t("complete")}</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
   
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-10">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }
   
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 space-y-4">
-        <AlertTriangle className="h-12 w-12 text-destructive" />
-        <h3 className="text-lg font-medium">{t("errorLoadingPolicies")}</h3>
-        <p className="text-sm text-muted-foreground">{error?.message || t("unknownError")}</p>
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <AlertTriangle className="h-8 w-8 text-destructive mb-4" />
+        <p className="font-medium mb-2">{t("errorLoadingPolicies")}</p>
+        <p className="text-muted-foreground mb-4">{t("unknownError")}</p>
+        <Button onClick={() => window.location.reload()}>{t("retry")}</Button>
       </div>
     );
   }
   
-  if (filteredPolicies.length === 0) {
+  if (policies.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 space-y-4">
-        <FileArchive className="h-12 w-12 text-muted-foreground" />
-        <h3 className="text-lg font-medium">{t("noPoliciesFound")}</h3>
-        <p className="text-sm text-muted-foreground">{t("tryAdjustingYourSearch")}</p>
+      <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+        <FileSpreadsheet className="h-12 w-12 text-muted-foreground mb-4" />
+        <p className="font-medium mb-2">{t("noPoliciesInWorkflow")}</p>
+        <p className="text-muted-foreground mb-6 max-w-md">{t("noPoliciesInWorkflowDescription")}</p>
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button onClick={() => window.location.href = "/policies/import"}>
+            {t("importPolicies")}
+          </Button>
+          
+          {workflowStatus !== "all" && onStatusChange && (
+            <Button variant="outline" onClick={() => onStatusChange("all")}>
+              {t("showAllWorkflowStatuses")}
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-4">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder={t("searchPolicies")}
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Button type="submit" size="icon">
-            <Search className="h-4 w-4" />
-            <span className="sr-only">{t("search")}</span>
-          </Button>
-        </form>
-        
-        {onStatusChange && (
-          <Select
-            value={workflowStatus || "all"}
-            onValueChange={onStatusChange}
-          >
-            <SelectTrigger className="w-auto">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder={t("filterByStatus")} />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((option) => (
-                <SelectItem key={option.id} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
-      
-      <Card>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("policyNumber")}</TableHead>
-                <TableHead>{t("client")}</TableHead>
-                <TableHead>{t("insurer")}</TableHead>
-                <TableHead>{t("startDate")}</TableHead>
-                <TableHead>{t("expiryDate")}</TableHead>
-                <TableHead>{t("premium")}</TableHead>
-                <TableHead>{t("status")}</TableHead>
-                <TableHead className="text-right">{t("actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPolicies.map((policy) => (
-                <TableRow key={policy.id}>
-                  <TableCell className="font-medium">{policy.policy_number}</TableCell>
-                  <TableCell>
-                    {policy.client_name || policy.policyholder_name}
-                  </TableCell>
-                  <TableCell>{policy.insurer_name}</TableCell>
-                  <TableCell>{formatDate(policy.start_date)}</TableCell>
-                  <TableCell>{formatDate(policy.expiry_date)}</TableCell>
-                  <TableCell>
-                    {formatCurrency(policy.premium, policy.currency || "EUR")}
-                  </TableCell>
-                  <TableCell>
-                    {renderWorkflowStatusBadge(policy.workflow_status)}
-                  </TableCell>
-                  <TableCell className="text-right">
+      <div className="border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("policyNumber")}</TableHead>
+              <TableHead>{t("policyholder")}</TableHead>
+              <TableHead>{t("insurer")}</TableHead>
+              <TableHead>{t("startDate")}</TableHead>
+              <TableHead>{t("expiryDate")}</TableHead>
+              <TableHead>{t("premium")}</TableHead>
+              <TableHead>{t("workflowStatus")}</TableHead>
+              <TableHead className="text-right">{t("actions")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {policies.map((policy) => (
+              <TableRow key={policy.id}>
+                <TableCell className="font-medium">{policy.policyNumber}</TableCell>
+                <TableCell>{policy.policyholderName}</TableCell>
+                <TableCell>{policy.insurerName}</TableCell>
+                <TableCell>{formatDate(policy.startDate)}</TableCell>
+                <TableCell>{formatDate(policy.expiryDate)}</TableCell>
+                <TableCell>{formatCurrency(policy.premium, policy.currency)}</TableCell>
+                <TableCell>{getWorkflowStatusBadge(policy.workflowStatus)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
                     <Button
-                      size="sm"
                       variant="outline"
-                      onClick={() => onReviewPolicy && onReviewPolicy(policy.id)}
+                      size="sm"
+                      onClick={() => window.location.href = `/policies/${policy.id}`}
                     >
-                      <Edit className="h-4 w-4 mr-1.5" />
-                      {t("review")}
+                      <Eye className="h-4 w-4" />
+                      <span className="sr-only">{t("view")}</span>
                     </Button>
-                  </TableCell>
-                </TableRow>
+                    
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => onReviewPolicy(policy.id)}
+                    >
+                      {policy.workflowStatus === 'draft' && (
+                        <ClipboardCheck className="h-4 w-4 mr-2" />
+                      )}
+                      {policy.workflowStatus === 'in_review' && (
+                        <ClipboardCheck className="h-4 w-4 mr-2" />
+                      )}
+                      {policy.workflowStatus === 'ready' && (
+                        <ArrowRightCircle className="h-4 w-4 mr-2" />
+                      )}
+                      {policy.workflowStatus === 'draft' && t("review")}
+                      {policy.workflowStatus === 'in_review' && t("review")}
+                      {policy.workflowStatus === 'ready' && t("finalizePolicy")}
+                      {policy.workflowStatus === 'complete' && t("view")}
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            {t("showing")} {Math.min((currentPage - 1) * pageSize + 1, totalCount)}-
+            {Math.min(currentPage * pageSize, totalCount)} {t("of")} {totalCount} {t("policies")}
+          </div>
+          
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              {getPageNumbers().map((page, index) => (
+                <PaginationItem key={index}>
+                  {page === 'ellipsis' ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      onClick={() => handlePageChange(page as number)}
+                      isActive={currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
               ))}
-            </TableBody>
-          </Table>
+              
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
-      </Card>
-      
-      {totalCount > pageSize && onPageChange && (
-        <div className="mt-4">
-          <PaginationController
-            totalPages={Math.ceil(totalCount / pageSize)}
-            currentPage={currentPage}
-            onPageChange={onPageChange}
-            itemsCount={totalCount}
-            itemsPerPage={pageSize}
-          />
+      )}
+
+      {onStatusChange && (
+        <div className="flex mt-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">{t("workflowStatus")}:</span>
+            <Select 
+              value={workflowStatus} 
+              onValueChange={onStatusChange}
+            >
+              <SelectTrigger className="w-[180px] h-8 text-xs">
+                <SelectValue placeholder={t("allWorkflowStatuses")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allWorkflowStatuses")}</SelectItem>
+                <SelectItem value="draft">{t("draft")}</SelectItem>
+                <SelectItem value="in_review">{t("inReview")}</SelectItem>
+                <SelectItem value="ready">{t("ready")}</SelectItem>
+                <SelectItem value="complete">{t("complete")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
     </div>

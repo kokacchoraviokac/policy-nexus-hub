@@ -1,83 +1,107 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Policy } from '@/types/policies';
-import { formatCurrency, formatDate } from '@/utils/formatters';
-import { ChevronRight } from 'lucide-react';
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Badge } from "@/components/ui/badge";
+import { ClipboardList } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import PolicyStatusWorkflow from "@/components/policies/workflow/PolicyStatusWorkflow";
+import { Policy } from "@/types/policies";
 
 interface PolicyWorkflowCardProps {
-  policy: Partial<Policy>; // Make Policy partial to avoid missing properties error
-  onClick?: () => void;
+  policy: {
+    id: string;
+    status: string;
+    workflow_status: string;
+    updated_at: string;
+  };
 }
 
-const PolicyWorkflowCard: React.FC<PolicyWorkflowCardProps> = ({ policy, onClick }) => {
-  const { t } = useLanguage();
+const PolicyWorkflowCard: React.FC<PolicyWorkflowCardProps> = ({ policy }) => {
+  const { t, formatDate } = useLanguage();
   
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'bg-amber-100 text-amber-800';
-      case 'in_review':
-        return 'bg-blue-100 text-blue-800';
-      case 'ready':
-        return 'bg-green-100 text-green-800';
-      case 'complete':
-        return 'bg-purple-100 text-purple-800';
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return "default";
+      case 'pending':
+        return "secondary";
+      case 'expired':
+      case 'cancelled':
+        return "destructive";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "outline";
     }
   };
   
+  const getWorkflowStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status.toLowerCase()) {
+      case 'complete':
+        return "default";
+      case 'in_review':
+      case 'ready':
+        return "secondary";
+      case 'draft':
+        return "outline";
+      default:
+        return "outline";
+    }
+  };
+
+  // Create a Policy object from the limited data we have
+  const policyData: Policy = {
+    id: policy.id,
+    policy_number: "", // We don't have this data, but it's required by the Policy type
+    policy_type: "",
+    policyholder_name: "",
+    insurer_name: "",
+    start_date: "",
+    expiry_date: "",
+    premium: 0,
+    currency: "",
+    status: policy.status,
+    workflow_status: policy.workflow_status,
+    created_at: "",
+    updated_at: policy.updated_at,
+    company_id: ""
+  };
+
   return (
-    <Card className="cursor-pointer hover:bg-accent/5 transition-colors border-l-4 border-l-primary" onClick={onClick}>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle className="text-base font-medium">{policy.policy_number}</CardTitle>
-            <p className="text-sm text-muted-foreground">{policy.policyholder_name}</p>
-          </div>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(policy.workflow_status || 'draft')}`}>
-            {t(policy.workflow_status || 'draft')}
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-4">
-        <div className="grid grid-cols-2 gap-y-2 text-sm mb-3">
-          <div>
-            <span className="text-muted-foreground">{t('insurer')}:</span>
-          </div>
-          <div className="font-medium truncate">{policy.insurer_name}</div>
-          
-          <div>
-            <span className="text-muted-foreground">{t('premium')}:</span>
-          </div>
-          <div className="font-medium">
-            {policy.premium && policy.currency
-              ? formatCurrency(policy.premium, policy.currency)
-              : '-'}
-          </div>
-          
-          <div>
-            <span className="text-muted-foreground">{t('startDate')}:</span>
-          </div>
-          <div className="font-medium">
-            {policy.start_date ? formatDate(policy.start_date) : '-'}
-          </div>
-          
-          <div>
-            <span className="text-muted-foreground">{t('expiryDate')}:</span>
-          </div>
-          <div className="font-medium">
-            {policy.expiry_date ? formatDate(policy.expiry_date) : '-'}
-          </div>
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-start mb-4">
+          <ClipboardList className="h-5 w-5 text-muted-foreground mr-2" />
+          <h3 className="font-semibold">{t("workflowManagement")}</h3>
         </div>
         
-        <Button variant="ghost" size="sm" className="w-full justify-between">
-          {t('viewDetails')}
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col space-y-1">
+              <span className="text-sm text-muted-foreground">{t("policyStatus")}</span>
+              <Badge variant={getStatusVariant(policy.status)}>
+                {policy.status}
+              </Badge>
+            </div>
+            
+            <div className="flex flex-col space-y-1">
+              <span className="text-sm text-muted-foreground">{t("workflowStatus")}</span>
+              <Badge variant={getWorkflowStatusVariant(policy.workflow_status)}>
+                {policy.workflow_status}
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="text-sm text-muted-foreground">
+            {t("lastUpdated")}: {formatDate(policy.updated_at)} 
+            ({formatDistanceToNow(new Date(policy.updated_at), { addSuffix: true })})
+          </div>
+          
+          {/* Pass the full Policy object instead of just the ID */}
+          <PolicyStatusWorkflow 
+            policy={policyData}
+            onStatusUpdated={() => {}}
+          />
+        </div>
       </CardContent>
     </Card>
   );

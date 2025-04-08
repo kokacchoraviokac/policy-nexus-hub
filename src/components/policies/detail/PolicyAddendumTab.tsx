@@ -39,13 +39,9 @@ const PolicyAddendumTab: React.FC<PolicyAddendumTabProps> = ({ policyId }) => {
   const { 
     addendums, 
     isLoading, 
-    error,
-    refetch,
-    addendumCount
+    isError, 
+    refetch 
   } = usePolicyAddendums(policyId);
-  
-  // Derive isError from error
-  const isError = !!error;
   
   const handleCreateAddendum = () => {
     setShowAddendumForm(true);

@@ -1,112 +1,107 @@
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { ApprovalStatus, DocumentApprovalStatus, EntityType } from '@/types/common';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { getDocumentTableName } from '@/utils/documentUploadUtils';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useActivityLogger } from "@/utils/activityLogger";
+import { DocumentApprovalStatus, EntityType } from "@/types/documents";
 
-interface ApprovalUpdateParams {
+interface ApproveDocumentParams {
   documentId: string;
-  entityType: EntityType;
   status: DocumentApprovalStatus;
   notes?: string;
+  entityType: EntityType;
+  entityId: string;
 }
 
 export const useDocumentApproval = () => {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const { t } = useLanguage();
+  const { logActivity } = useActivityLogger();
   
-  const updateApprovalStatus = async ({
-    documentId,
-    entityType,
-    status,
-    notes = ''
-  }: ApprovalUpdateParams) => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "You must be logged in to approve documents",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsUpdating(true);
-    setError(null);
-    
-    try {
-      // Get the appropriate table name based on entity type
-      const tableName = getDocumentTableName(entityType);
+  return useMutation({
+    mutationFn: async ({ documentId, status, notes, entityType, entityId }: ApproveDocumentParams) => {
+      // Get user info
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
       
-      // For safety, handle it with runtime type checking
-      if (typeof tableName !== 'string') {
-        throw new Error('Invalid table name');
+      if (!userId) {
+        throw new Error("User not authenticated");
+      }
+
+      // Map entityType to a valid activityLogger EntityType
+      const logEntityType = `${entityType}_document` as any;
+          
+      // Update the document with approval information
+      const updateData = {
+        updated_at: new Date().toISOString(),
+        // We store approval info in activity logs since the document tables don't have these columns
+      };
+      
+      // Use type assertion to fix the Supabase query type error
+      const tableName = entityType === "policy" 
+        ? "policy_documents" 
+        : entityType === "claim" 
+          ? "claim_documents" 
+          : "sales_documents";
+          
+      const { data, error } = await supabase
+        .from(tableName)
+        .update(updateData)
+        .eq('id', documentId)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      // Log the approval activity with all details
+      await logActivity({
+        entity_type: logEntityType,
+        entity_id: entityId,
+        action: "update",
+        details: {
+          action_type: "document_approval",
+          document_id: documentId,
+          approval_status: status,
+          approved_by: userId,
+          approved_at: new Date().toISOString(),
+          notes
+        }
+      });
+      
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      const { status, entityType, entityId } = variables;
+      
+      // Success message based on the approval status
+      let message = "";
+      if (status === "approved") {
+        message = t("documentApproved");
+      } else if (status === "rejected") {
+        message = t("documentRejected");
+      } else if (status === "needs_review") {
+        message = t("documentMarkedForReview");
+      } else {
+        message = t("documentStatusUpdated");
       }
       
-      // Update the document with the new approval status using a valid table name
-      // Cast to 'any' to bypass the TypeScript error about dynamic table names
-      const { error: updateError } = await (supabase
-        .from(tableName as any)
-        .update({
-          approval_status: status,
-          approval_notes: notes,
-          approved_at: status === ApprovalStatus.APPROVED ? new Date().toISOString() : null,
-          approved_by: status === ApprovalStatus.APPROVED ? user.id : null
-        })
-        .eq('id', documentId));
-      
-      if (updateError) throw updateError;
-      
-      // Log the approval action
-      const { error: logError } = await supabase
-        .from('activity_logs')
-        .insert({
-          entity_id: documentId,
-          entity_type: 'document',
-          action: status === ApprovalStatus.APPROVED ? 'approve' : 'reject',
-          user_id: user.id,
-          company_id: user.company_id,
-          details: {
-            status,
-            notes,
-            timestamp: new Date().toISOString()
-          }
-        });
-      
-      if (logError) throw logError;
-      
-      // Show a success message
       toast({
-        title: status === ApprovalStatus.APPROVED ? "Document approved" : "Document rejected",
-        description: status === ApprovalStatus.APPROVED 
-          ? "The document has been successfully approved" 
-          : "The document has been rejected",
-        variant: status === ApprovalStatus.APPROVED ? "default" : "destructive"
+        title: message,
+        description: t("documentStatusUpdateSuccess")
       });
       
-      return { success: true };
-    } catch (err) {
-      console.error('Error updating document approval status:', err);
-      setError(err as Error);
-      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
+    },
+    onError: (error) => {
+      console.error("Error updating document approval status:", error);
       toast({
-        title: "Error updating document",
-        description: err instanceof Error ? err.message : "An unknown error occurred",
+        title: t("errorUpdatingDocument"),
+        description: t("errorOccurredTryAgain"),
         variant: "destructive"
       });
-      
-      return { success: false, error: err };
-    } finally {
-      setIsUpdating(false);
     }
-  };
-  
-  return {
-    updateApprovalStatus,
-    isUpdating,
-    error
-  };
+  });
 };

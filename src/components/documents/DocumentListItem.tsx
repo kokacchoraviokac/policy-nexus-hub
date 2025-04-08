@@ -80,9 +80,9 @@ const DocumentListItem: React.FC<DocumentListItemProps> = ({
               <div className="flex items-center mt-1 text-xs text-muted-foreground">
                 <Clock className="mr-1 h-3 w-3" />
                 {formatDateTime(document.created_at)}
-                {document.uploaded_by && (
+                {document.uploaded_by_name && (
                   <span className="ml-2">
-                    {t("uploadedBy")}: {document.uploaded_by_name || document.uploaded_by}
+                    {t("uploadedBy")}: {document.uploaded_by_name}
                   </span>
                 )}
               </div>

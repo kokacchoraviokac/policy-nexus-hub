@@ -1,17 +1,4 @@
-
-import React from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-  getSortedRowModel,
-  getFilteredRowModel,
-  SortingState,
-  ColumnDef,
-  ColumnFiltersState,
-  CellContext
-} from "@tanstack/react-table";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -20,162 +7,148 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Pagination from "@/components/ui/pagination";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import EmptyState from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
+import PaginationController from "./pagination-controller";
 
-export type Column<TData> = ColumnDef<TData, unknown>;
-
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  isLoading?: boolean;
-  pagination?: {
-    pageIndex?: number;
-    pageSize?: number;
-    onPageChange?: (page: number) => void;
-    onPageSizeChange?: (pageSize: number) => void;
-    pageSizeOptions?: number[];
-    totalCount?: number;
-    totalPages?: number;
-  };
-  keyField: string; // Required field for key identification
-  emptyState?: {
-    title: string;
-    description: string;
-    action?: React.ReactNode;
-  };
-  onRowClick?: (row: TData) => void;
-  sortable?: boolean;
-  rowClassName?: (row: TData) => string;
+interface SortConfig {
+  key: string;
+  direction: 'asc' | 'desc';
 }
 
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-  isLoading = false,
-  pagination,
-  keyField,
+export interface Column<T> {
+  header: string;
+  accessorKey?: keyof T | ((row: T) => React.ReactNode);
+  cell?: (row: T) => React.ReactNode;
+  sortable?: boolean;
+  id?: string;
+}
+
+interface DataTableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  isLoading?: boolean;
+  emptyState?: {
+    title: string;
+    description?: string;
+    action?: React.ReactNode;
+  };
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    itemsPerPage: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
+    pageSizeOptions?: number[];
+  };
+}
+
+function DataTable<T>({ 
+  data, 
+  columns, 
+  isLoading, 
   emptyState,
-  onRowClick,
-  sortable = false,
-  rowClassName,
-}: DataTableProps<TData, TValue>) {
-  const { t } = useLanguage();
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  pagination 
+}: DataTableProps<T>) {
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-      pagination: pagination
-        ? {
-            pageIndex: pagination.pageIndex || 0,
-            pageSize: pagination.pageSize || 10,
-          }
-        : undefined,
-    },
-    enableSorting: sortable,
-    manualPagination: !!pagination,
-  });
-
-  // Handle empty or loading state
   if (isLoading) {
     return (
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {Array(columns.length)
-                .fill(0)
-                .map((_, i) => (
-                  <TableHead key={`header-${i}`}>
-                    <Skeleton className="h-4 w-24" />
-                  </TableHead>
-                ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array(5)
-              .fill(0)
-              .map((_, rowIndex) => (
-                <TableRow key={`row-${rowIndex}`}>
-                  {Array(columns.length)
-                    .fill(0)
-                    .map((_, colIndex) => (
-                      <TableCell key={`cell-${rowIndex}-${colIndex}`}>
-                        <Skeleton className="h-4 w-full" />
-                      </TableCell>
-                    ))}
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!isLoading && data.length === 0 && emptyState) {
+  if (!data?.length && emptyState) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <h3 className="text-lg font-medium">{emptyState.title}</h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          {emptyState.description}
-        </p>
-        {emptyState.action && (
-          <div className="mt-4">{emptyState.action}</div>
-        )}
-      </div>
+      <EmptyState
+        title={emptyState.title}
+        description={emptyState.description}
+        action={emptyState.action}
+      />
     );
   }
 
-  const getRowKey = (row: TData) => {
-    // @ts-ignore - We know the keyField exists on TData
-    return row[keyField] || `row-${Math.random()}`;
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig && sortConfig.key === key) {
+      direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    }
+    
+    setSortConfig({ key, direction });
   };
+
+  const sortedData = React.useMemo(() => {
+    if (!sortConfig) return data;
+
+    return [...data].sort((a, b) => {
+      const key = sortConfig.key as keyof T;
+      const valueA = typeof a[key] === 'string' ? (a[key] as string).toLowerCase() : a[key];
+      const valueB = typeof b[key] === 'string' ? (b[key] as string).toLowerCase() : b[key];
+
+      if (valueA < valueB) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (valueA > valueB) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [data, sortConfig]);
+
+  const getSortIcon = (columnKey: string) => {
+    if (!sortConfig || sortConfig.key !== columnKey) {
+      return <ArrowUpDown className="ml-2 h-4 w-4" />;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp className="ml-2 h-4 w-4" /> 
+      : <ArrowDown className="ml-2 h-4 w-4" />;
+  };
+
+  const totalPages = pagination 
+    ? Math.ceil(pagination.totalItems / pagination.itemsPerPage) 
+    : 1;
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-hidden">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
+            <TableRow>
+              {columns.map((column, index) => (
+                <TableHead key={index}>
+                  {column.sortable ? (
+                    <Button
+                      variant="ghost"
+                      className="p-0 h-auto font-medium flex items-center"
+                      onClick={() => handleSort(column.id || column.accessorKey as string)}
+                    >
+                      {column.header}
+                      {getSortIcon(column.id || column.accessorKey as string)}
+                    </Button>
+                  ) : (
+                    column.header
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={getRowKey(row.original)}
-                onClick={() => onRowClick && onRowClick(row.original)}
-                className={cn(
-                  onRowClick && "cursor-pointer hover:bg-muted",
-                  rowClassName && rowClassName(row.original)
-                )}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            {sortedData.map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {columns.map((column, colIndex) => (
+                  <TableCell key={colIndex}>
+                    {column.cell
+                      ? column.cell(row)
+                      : typeof column.accessorKey === "function"
+                      ? column.accessorKey(row)
+                      : column.accessorKey 
+                        ? row[column.accessorKey] as unknown as React.ReactNode
+                        : null}
                   </TableCell>
                 ))}
               </TableRow>
@@ -183,25 +156,20 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-
-      {pagination && pagination.totalPages && pagination.totalPages > 1 && (
-        <Pagination
+      
+      {pagination && pagination.totalItems > 0 && (
+        <PaginationController
+          currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
-          currentPage={(pagination.pageIndex || 0) + 1}
-          onPageChange={(page) =>
-            pagination.onPageChange && pagination.onPageChange(page - 1)
-          }
-          itemsCount={pagination.totalCount}
-          itemsPerPage={pagination.pageSize || 10}
+          itemsPerPage={pagination.itemsPerPage}
+          totalItems={pagination.totalItems}
+          onPageChange={pagination.onPageChange}
+          onPageSizeChange={pagination.onPageSizeChange}
+          pageSizeOptions={pagination.pageSizeOptions}
         />
       )}
     </div>
   );
-}
-
-// Helper function for conditional class names
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
 }
 
 export default DataTable;

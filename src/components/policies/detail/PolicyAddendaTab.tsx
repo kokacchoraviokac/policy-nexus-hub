@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { usePolicyAddendums } from "@/hooks/usePolicyAddendums";
 
 interface PolicyAddendaTabProps {
   policyId: string;
@@ -30,9 +29,6 @@ const PolicyAddendaTab: React.FC<PolicyAddendaTabProps> = ({ policyId }) => {
     }
   });
   
-  // Get addendums using the hook
-  const { addendums, isLoading, addendumCount } = usePolicyAddendums(policyId);
-  
   // This is a placeholder component - will be implemented fully later
   return (
     <Card>
@@ -54,11 +50,7 @@ const PolicyAddendaTab: React.FC<PolicyAddendaTabProps> = ({ policyId }) => {
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-center p-6 text-muted-foreground">
-          {addendumCount > 0 ? (
-            <p>{t("policyHasAddenda", { count: addendumCount })}</p>
-          ) : (
-            <p>{t("noAddendaForPolicy")}</p>
-          )}
+          <p>{t("noAddendaForPolicy")}</p>
         </div>
       </CardContent>
     </Card>

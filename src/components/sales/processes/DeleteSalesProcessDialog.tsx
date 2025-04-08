@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { SalesProcess } from "@/types/salesProcess";
+import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,

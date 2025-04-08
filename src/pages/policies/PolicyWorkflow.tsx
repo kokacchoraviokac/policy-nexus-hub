@@ -1,18 +1,17 @@
+
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileCheck, FileEdit, FileSpreadsheet, Clock, CheckCircle2, Import, RefreshCcw } from "lucide-react";
+import { FileCheck, FileEdit, FileSpreadsheet, Clock, CheckCircle2, Import } from "lucide-react";
 import WorkflowPoliciesList from "@/components/policies/workflow/WorkflowPoliciesList";
+import WorkflowFilters from "@/components/policies/workflow/WorkflowFilters";
+import { Policy } from "@/types/policies";
 import { policiesToWorkflowPolicies } from "@/utils/policies/policyMappers";
-import { usePoliciesWorkflow } from "@/hooks/usePoliciesWorkflow";
-import { 
-  PageHeader, 
-  FilterBar, 
-  ActionButtons,
-  Button
-} from "@/components/ui/common";
 
 const PolicyWorkflow = () => {
   const { t } = useLanguage();
@@ -20,12 +19,35 @@ const PolicyWorkflow = () => {
   const [activeTab, setActiveTab] = useState("draft");
   const [searchTerm, setSearchTerm] = useState("");
   
-  const { 
-    policies, 
-    isLoading, 
-    handleRefresh,
-    totalCount
-  } = usePoliciesWorkflow();
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['policies-workflow', activeTab, searchTerm],
+    queryFn: async () => {
+      let query = supabase
+        .from('policies')
+        .select('*', { count: 'exact' });
+      
+      if (activeTab !== 'all') {
+        query = query.eq('workflow_status', activeTab);
+      }
+      
+      if (searchTerm) {
+        query = query.or(
+          `policy_number.ilike.%${searchTerm}%,` +
+          `policyholder_name.ilike.%${searchTerm}%,` +
+          `insurer_name.ilike.%${searchTerm}%`
+        );
+      }
+      
+      const { data, error, count } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return {
+        policies: data as Policy[],
+        totalCount: count || 0
+      };
+    }
+  });
   
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -33,6 +55,10 @@ const PolicyWorkflow = () => {
   
   const handleSearch = (term: string) => {
     setSearchTerm(term);
+  };
+  
+  const handleRefresh = () => {
+    refetch();
   };
   
   const handleReviewPolicy = (policyId: string) => {
@@ -74,41 +100,23 @@ const PolicyWorkflow = () => {
     },
   ];
   
-  // Define filter options for the FilterBar
-  const filterGroups = [
-    {
-      id: "search",
-      label: t("search"),
-      options: []
-    },
-    {
-      id: "status",
-      label: t("workflowStatus"),
-      options: [
-        { id: "all", label: t("all"), value: "all" },
-        { id: "draft", label: t("draft"), value: "draft" },
-        { id: "in_review", label: t("inReview"), value: "in_review" },
-        { id: "ready", label: t("ready"), value: "ready" },
-        { id: "complete", label: t("complete"), value: "complete" }
-      ]
-    }
-  ];
-  
   return (
-    <div className="max-w-7xl mx-auto space-y-6 p-6">
-      <PageHeader
-        title={t("policiesWorkflow")}
-        description={t("policiesWorkflowDescription")}
-        actions={
-          <ActionButtons
-            primaryAction={{
-              label: t("importPolicy"),
-              onClick: handleImportPolicy,
-              icon: <Import className="h-4 w-4 mr-2" />
-            }}
-          />
-        }
-      />
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("policiesWorkflow")}</h1>
+          <p className="text-muted-foreground">
+            {t("policiesWorkflowDescription")}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button onClick={handleImportPolicy}>
+            <Import className="mr-2 h-4 w-4" />
+            {t("importPolicy")}
+          </Button>
+        </div>
+      </div>
       
       <Card>
         <CardHeader>
@@ -132,26 +140,6 @@ const PolicyWorkflow = () => {
         </CardContent>
       </Card>
       
-      <FilterBar
-        filterGroups={filterGroups}
-        activeFilters={[]}
-        onFilterChange={() => {}}
-        onSearch={handleSearch}
-        searchPlaceholder={t("searchPolicies")}
-        searchQuery={searchTerm}
-        rightSection={
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCcw className="h-4 w-4 mr-2" />
-            {t("refresh")}
-          </Button>
-        }
-      />
-      
       <Tabs defaultValue="draft" onValueChange={handleTabChange}>
         <TabsList className="mb-4">
           <TabsTrigger value="draft">{t("draft")}</TabsTrigger>
@@ -160,6 +148,12 @@ const PolicyWorkflow = () => {
           <TabsTrigger value="complete">{t("complete")}</TabsTrigger>
           <TabsTrigger value="all">{t("allWorkflowStatuses")}</TabsTrigger>
         </TabsList>
+        
+        <WorkflowFilters 
+          searchTerm={searchTerm}
+          onSearchChange={handleSearch}
+          onRefresh={handleRefresh}
+        />
         
         <div className="mt-4">
           <TabsContent value="draft" className="m-0 mt-4">
@@ -170,7 +164,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={policiesToWorkflowPolicies(policies.filter(p => p.workflow_status === 'draft') || [])}
+                  policies={policiesToWorkflowPolicies(data?.policies.filter(p => p.workflow_status === 'draft') || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />
@@ -186,7 +180,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={policiesToWorkflowPolicies(policies.filter(p => p.workflow_status === 'in_review') || [])}
+                  policies={policiesToWorkflowPolicies(data?.policies.filter(p => p.workflow_status === 'in_review') || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />
@@ -202,7 +196,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={policiesToWorkflowPolicies(policies.filter(p => p.workflow_status === 'ready') || [])}
+                  policies={policiesToWorkflowPolicies(data?.policies.filter(p => p.workflow_status === 'ready') || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />
@@ -218,7 +212,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={policiesToWorkflowPolicies(policies.filter(p => p.workflow_status === 'complete') || [])}
+                  policies={policiesToWorkflowPolicies(data?.policies.filter(p => p.workflow_status === 'complete') || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />
@@ -234,7 +228,7 @@ const PolicyWorkflow = () => {
               </CardHeader>
               <CardContent>
                 <WorkflowPoliciesList 
-                  policies={policiesToWorkflowPolicies(policies || [])}
+                  policies={policiesToWorkflowPolicies(data?.policies || [])}
                   isLoading={isLoading}
                   onReviewPolicy={handleReviewPolicy}
                 />

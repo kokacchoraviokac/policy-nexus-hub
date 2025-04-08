@@ -1,105 +1,33 @@
 
-// Enum for policy status
-export enum PolicyStatus {
-  ACTIVE = "active",
-  EXPIRED = "expired",
-  PENDING = "pending",
-  CANCELLED = "cancelled",
-  RENEWED = "renewed"
-}
-
-// Enum for policy workflow status
-export enum PolicyWorkflowStatus {
-  DRAFT = "draft",
-  IN_REVIEW = "in_review",
-  REVIEW = "review",
-  READY = "ready",
-  COMPLETE = "complete",
-  FINALIZED = "finalized",
-  REJECTED = "rejected",
-  NEEDS_REVIEW = "needs_review",
-  PENDING = "pending",
-  PROCESSING = "processing"
-}
-
-// Alias WorkflowStatus to PolicyWorkflowStatus for backward compatibility
-export const WorkflowStatus = PolicyWorkflowStatus;
-
-// Type definitions for a policy
 export interface Policy {
   id: string;
   policy_number: string;
   policy_type: string;
-  start_date: string;
-  expiry_date: string;
+  policyholder_name: string;
+  insurer_name: string;
+  insured_name?: string;
+  product_name?: string;
+  product_code?: string;
+  product_id?: string;
   client_id?: string;
   insurer_id?: string;
-  product_id?: string;
+  insured_id?: string;
+  start_date: string;
+  expiry_date: string;
   premium: number;
   currency: string;
   payment_frequency?: string;
-  commission_type?: string;
+  status: string;
+  workflow_status: string;
   commission_percentage?: number;
   commission_amount?: number;
-  status: string | PolicyStatus;
-  workflow_status: string;
+  commission_type?: string;
   notes?: string;
+  assigned_to?: string;
+  created_by?: string;
   created_at: string;
   updated_at: string;
   company_id: string;
-  created_by?: string;
-  assigned_to?: string;
-  policyholder_name: string;
-  insurer_name: string;
-  product_name?: string;
-  insured_id?: string;
-  insured_name?: string;
-  product_code?: string;
-  policy_type_id?: string;
-  client_name?: string;
-}
-
-export interface PolicyFilterParams {
-  page: number;
-  page_size: number;
-  search?: string;
-  status?: string;
-  workflow_status?: string;
-  client_id?: string;
-  insurer_id?: string;
-  product_id?: string;
-  assigned_to?: string;
-  date_from?: string;
-  date_to?: string;
-  sort_by?: string;
-  sort_direction?: "asc" | "desc";
-  start_date_from?: string;
-  start_date_to?: string;
-  expiry_from?: string;
-  expiry_to?: string;
-}
-
-export interface ImportedPolicyData {
-  policy_number: string;
-  start_date: string;
-  expiry_date: string;
-  client_name: string;
-  insurer_name: string;
-  premium: number;
-  currency: string;
-  policy_type: string;
-  product_name?: string;
-  insured_name?: string;
-}
-
-export interface InvalidPolicy {
-  policy: Partial<Policy>;
-  errors: any[];
-}
-
-export interface ValidationErrors {
-  [key: string]: string[];
-  general?: string[];
 }
 
 export interface PolicyAddendum {
@@ -109,27 +37,44 @@ export interface PolicyAddendum {
   description: string;
   effective_date: string;
   premium_adjustment?: number;
-  lien_status: boolean;
+  lien_status: boolean; // Changed from optional to required
   status: string;
   workflow_status: string;
+  created_by?: string;
   created_at: string;
   updated_at: string;
-  created_by?: string;
   company_id: string;
+}
+
+export interface PolicyDocument {
+  id: string;
+  policy_id: string;
+  document_name: string;
+  document_type: string;
+  file_path: string;
+  uploaded_by: string;
+  created_at: string;
+  updated_at: string;
+  version: number;
+  is_latest_version: boolean;
+  original_document_id?: string;
+  category?: string;
+  company_id: string;
+  mime_type?: string;
 }
 
 export interface UnlinkedPaymentType {
   id: string;
-  amount: number;
-  payment_date: string;
-  status: string;
   reference?: string;
   payer_name?: string;
-  linked_policy_id?: string;
-  linked_at?: string;
-  linked_by?: string;
-  company_id: string;
+  amount: number;
+  payment_date: string;
+  status: 'linked' | 'unlinked';
+  policy_id?: string;
   created_at: string;
-  updated_at: string;
+  company_id: string;
   currency: string;
+  linked_policy_id?: string;
+  linked_by?: string;
+  linked_at?: string;
 }

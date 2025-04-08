@@ -14,7 +14,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserCircle, Settings, LogOut } from "lucide-react";
 import { toast } from "sonner";
-import { UserRole } from "@/types/auth/userTypes";
 
 const UserProfileMenu: React.FC = () => {
   const { user, logout } = useAuth();
@@ -34,11 +33,11 @@ const UserProfileMenu: React.FC = () => {
 
   const roleLabel = () => {
     switch (user.role) {
-      case UserRole.SUPER_ADMIN:
+      case "superAdmin":
         return "Super Admin";
-      case UserRole.ADMIN:
+      case "admin":
         return "Admin";
-      case UserRole.EMPLOYEE:
+      case "employee":
         return "Employee";
       default:
         return "User";

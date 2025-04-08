@@ -27,7 +27,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PolicyReviewFormProps {
   policy: Policy;
-  onSave?: (updatedPolicy: Partial<Policy>) => void;
+  onSave: (updatedPolicy: Partial<Policy>) => void;
   isProcessing: boolean;
 }
 
@@ -44,7 +44,7 @@ const PolicyReviewForm: React.FC<PolicyReviewFormProps> = ({
       insured_name: policy.insured_name,
       insurer_name: policy.insurer_name,
       product_name: policy.product_name,
-      product_id: policy.product_id, // Use product_id instead of product_code
+      product_code: policy.product_code,
       start_date: policy.start_date,
       expiry_date: policy.expiry_date,
       premium: policy.premium,
@@ -83,9 +83,7 @@ const PolicyReviewForm: React.FC<PolicyReviewFormProps> = ({
   };
   
   const onSubmit = (data: Partial<Policy>) => {
-    if (onSave) {
-      onSave(data);
-    }
+    onSave(data);
   };
   
   return (
@@ -148,8 +146,8 @@ const PolicyReviewForm: React.FC<PolicyReviewFormProps> = ({
                 
                 <div>
                   <Label htmlFor="currency">{t("currency")}</Label>
-                  <Select
-                    value={watch("currency")}
+                  <Select 
+                    defaultValue={policy.currency} 
                     onValueChange={(value) => handleSelectChange("currency", value)}
                   >
                     <SelectTrigger id="currency">
@@ -167,12 +165,12 @@ const PolicyReviewForm: React.FC<PolicyReviewFormProps> = ({
                 
                 <div>
                   <Label htmlFor="payment_frequency">{t("paymentFrequency")}</Label>
-                  <Select
-                    value={watch("payment_frequency") || ""}
+                  <Select 
+                    defaultValue={policy.payment_frequency} 
                     onValueChange={(value) => handleSelectChange("payment_frequency", value)}
                   >
                     <SelectTrigger id="payment_frequency">
-                      <SelectValue placeholder={t("selectPaymentFrequency")} />
+                      <SelectValue placeholder={t("selectFrequency")} />
                     </SelectTrigger>
                     <SelectContent>
                       {paymentFrequencies.map((frequency) => (
@@ -186,11 +184,53 @@ const PolicyReviewForm: React.FC<PolicyReviewFormProps> = ({
               </div>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="policyholder_name">{t("policyholder")}</Label>
+                <Input 
+                  id="policyholder_name" 
+                  {...register("policyholder_name", { required: true })}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="insured_name">{t("insured")}</Label>
+                <Input 
+                  id="insured_name" 
+                  {...register("insured_name")}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="insurer_name">{t("insurer")}</Label>
+                <Input 
+                  id="insurer_name" 
+                  {...register("insurer_name", { required: true })}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="product_name">{t("product")}</Label>
+                <Input 
+                  id="product_name" 
+                  {...register("product_name")}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="product_code">{t("productCode")}</Label>
+                <Input 
+                  id="product_code" 
+                  {...register("product_code")}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
               <div>
                 <Label htmlFor="commission_type">{t("commissionType")}</Label>
-                <Select
-                  value={watch("commission_type") || ""}
+                <Select 
+                  defaultValue={policy.commission_type} 
                   onValueChange={(value) => handleSelectChange("commission_type", value)}
                 >
                   <SelectTrigger id="commission_type">
@@ -207,28 +247,39 @@ const PolicyReviewForm: React.FC<PolicyReviewFormProps> = ({
               </div>
               
               <div>
-                <Label htmlFor="commission_percentage">{t("commissionPercentage")}</Label>
+                <Label htmlFor="commission_percentage">
+                  {t("commissionPercentage")}
+                </Label>
                 <Input 
                   id="commission_percentage" 
-                  type="number"
-                  step="0.01"
-                  {...register("commission_percentage", { valueAsNumber: true })}
-                  disabled={watch("commission_type") === "automatic" || watch("commission_type") === "none"}
+                  type="number" 
+                  step="0.01" 
+                  {...register("commission_percentage", { 
+                    valueAsNumber: true 
+                  })}
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t("commissionPercentageDescription")}
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="notes">{t("notes")}</Label>
+                <Textarea 
+                  id="notes" 
+                  rows={4} 
+                  {...register("notes")}
+                  placeholder={t("enterNotes")}
                 />
               </div>
             </div>
-            
-            <div>
-              <Label htmlFor="notes">{t("notes")}</Label>
-              <Textarea 
-                id="notes" 
-                {...register("notes")}
-                className="min-h-[100px]" 
-              />
-            </div>
           </CardContent>
-          <CardFooter className="flex justify-end space-x-2">
-            <Button type="submit" disabled={isProcessing}>
+          <CardFooter>
+            <Button 
+              type="submit" 
+              disabled={isProcessing || !formState.isDirty}
+              className="w-full sm:w-auto"
+            >
               {isProcessing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

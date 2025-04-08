@@ -13,7 +13,6 @@ import { createSignupSchema, SignupFormValues } from "@/types/auth/signup";
 import UserInformation from "./signup/UserInformation";
 import CompanySelection from "./signup/CompanySelection";
 import InvitationSection from "./signup/InvitationSection";
-import { UserRole } from "@/types/auth/userTypes";
 
 interface SignupFormProps {
   onSuccess: () => void;
@@ -31,7 +30,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
       name: "",
       email: "",
       password: "",
-      role: UserRole.EMPLOYEE,
+      role: "employee",
       companyOption: "existing",
       companyId: "",
       companyName: "",

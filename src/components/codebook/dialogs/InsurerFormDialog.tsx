@@ -1,11 +1,10 @@
 
-import React from 'react';
-import { useInsurer } from '@/hooks/useInsurer';
-import { useInsurersCrud } from '@/hooks/insurers/useInsurersCrud';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useLanguage } from '@/contexts/LanguageContext';
-import InsurerForm, { InsurerFormValues } from '../forms/InsurerForm';
-import { Insurer } from '@/types/codebook';
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import InsurerForm from "../forms/InsurerForm";
+import { useInsurers } from "@/hooks/useInsurers";
+import { useAuth } from "@/contexts/auth/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface InsurerFormDialogProps {
   open: boolean;
@@ -18,48 +17,78 @@ const InsurerFormDialog: React.FC<InsurerFormDialogProps> = ({
   onOpenChange,
   insurerId,
 }) => {
-  const { t } = useLanguage();
-  const { insurer, isLoading: isLoadingInsurer } = useInsurer(insurerId);
-  const { addInsurer, updateInsurer, isAdding, isUpdating } = useInsurersCrud();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const { insurers, addInsurer, updateInsurer } = useInsurers();
+  
+  const currentInsurer = insurerId
+    ? insurers?.find((insurer) => insurer.id === insurerId)
+    : undefined;
 
-  const isLoading = isLoadingInsurer || isAdding || isUpdating;
-  const isEditMode = !!insurerId;
-
-  const handleSubmit = async (data: InsurerFormValues) => {
+  const handleSubmit = async (values: any) => {
+    setIsSubmitting(true);
+    
     try {
-      if (isEditMode && insurerId) {
-        await updateInsurer({ 
-          id: insurerId, 
-          updateData: data 
+      if (insurerId && currentInsurer) {
+        await updateInsurer(insurerId, {
+          ...values,
+          company_id: user?.companyId,
+        });
+        toast({
+          title: "Insurance company updated",
+          description: "The insurance company has been updated successfully.",
         });
       } else {
-        await addInsurer(data);
+        await addInsurer({
+          ...values,
+          company_id: user?.companyId,
+        });
+        toast({
+          title: "Insurance company added",
+          description: "The insurance company has been added successfully.",
+        });
       }
       onOpenChange(false);
-    } catch (error) {
-      console.error('Failed to save insurer:', error);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred while saving the insurance company.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const handleCancel = () => {
-    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? t('editInsurer') : t('addInsurer')}
+            {insurerId ? "Edit Insurance Company" : "Add Insurance Company"}
           </DialogTitle>
         </DialogHeader>
-
         <InsurerForm
-          initialData={insurer}
+          defaultValues={
+            currentInsurer
+              ? {
+                  name: currentInsurer.name,
+                  contact_person: currentInsurer.contact_person || "",
+                  email: currentInsurer.email || "",
+                  phone: currentInsurer.phone || "",
+                  address: currentInsurer.address || "",
+                  city: currentInsurer.city || "",
+                  postal_code: currentInsurer.postal_code || "",
+                  country: currentInsurer.country || "",
+                  registration_number: currentInsurer.registration_number || "",
+                  is_active: currentInsurer.is_active,
+                }
+              : undefined
+          }
           onSubmit={handleSubmit}
-          isLoading={isLoading}
-          isEditMode={isEditMode}
-          onCancel={handleCancel}
+          onCancel={() => onOpenChange(false)}
+          isSubmitting={isSubmitting}
         />
       </DialogContent>
     </Dialog>

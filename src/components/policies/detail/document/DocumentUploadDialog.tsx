@@ -1,153 +1,91 @@
 
-import React, { useState } from "react";
+import React from "react";
+import { FileUp, Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { FileUploader } from "@/components/ui/file-uploader";
 import { useDocumentUpload } from "@/hooks/useDocumentUpload";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { EntityType, DocumentCategory } from "@/types/common";
+import DocumentTypeSelector from "@/components/documents/DocumentTypeSelector";
+import FileUploadField from "@/components/documents/FileUploadField";
 
 interface DocumentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  entityType: "policy" | "claim" | "client" | "insurer" | "sales_process" | "agent";
   entityId: string;
-  onSuccess?: () => void;
 }
 
 const DocumentUploadDialog: React.FC<DocumentUploadDialogProps> = ({
   open,
   onOpenChange,
-  entityId,
-  onSuccess,
+  entityType,
+  entityId
 }) => {
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const [documentType, setDocumentType] = useState("");
   
   const {
     documentName,
     setDocumentName,
+    documentType, 
+    setDocumentType,
     file,
     handleFileChange,
-    isUploading,
-    handleUpload,
-    setDocumentType: setUploadDocumentType,
-    setDocumentCategory
-  } = useDocumentUpload({
-    entityType: EntityType.POLICY,
+    uploading,
+    handleUpload
+  } = useDocumentUpload({ 
+    entityType,
     entityId,
-    onSuccess: () => {
-      onOpenChange(false);
-      if (onSuccess) onSuccess();
-      toast({
-        title: t("documentUploaded"),
-        description: t("documentUploadedSuccessfully"),
-      });
-    }
+    onSuccess: () => onOpenChange(false)
   });
-  
-  // Sync local state with hook state
-  const handleDocumentTypeChange = (value: string) => {
-    setDocumentType(value);
-    setUploadDocumentType(value);
-    // Set document category based on document type
-    if (value === 'policy') {
-      setDocumentCategory(DocumentCategory.POLICY);
-    } else if (value === 'claim') {
-      setDocumentCategory(DocumentCategory.CLAIM);
-    } else if (value === 'invoice') {
-      setDocumentCategory(DocumentCategory.INVOICE);
-    } else if (value === 'contract') {
-      setDocumentCategory(DocumentCategory.CONTRACT);
-    } else {
-      setDocumentCategory(DocumentCategory.OTHER);
-    }
-  };
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!documentName || !documentType || !file) {
-      toast({
-        title: t("validationError"),
-        description: t("pleaseCompleteAllFields"),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    await handleUpload();
-  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("uploadDocument")}</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="document-name">{t("documentName")}</Label>
-            <Input
-              id="document-name"
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <label htmlFor="documentName" className="text-sm font-medium">{t("documentName")} *</label>
+            <input
+              id="documentName"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={documentName}
               onChange={(e) => setDocumentName(e.target.value)}
               placeholder={t("enterDocumentName")}
-              required
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="document-type">{t("documentType")}</Label>
-            <Select
-              value={documentType}
-              onValueChange={handleDocumentTypeChange}
-              required
-            >
-              <SelectTrigger id="document-type">
-                <SelectValue placeholder={t("selectDocumentType")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="policy">{t("policyDocument")}</SelectItem>
-                <SelectItem value="certificate">{t("certificate")}</SelectItem>
-                <SelectItem value="invoice">{t("invoice")}</SelectItem>
-                <SelectItem value="terms">{t("termsAndConditions")}</SelectItem>
-                <SelectItem value="other">{t("other")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <DocumentTypeSelector 
+            value={documentType} 
+            onValueChange={setDocumentType} 
+          />
           
-          <div className="space-y-2">
-            <Label>{t("file")}</Label>
-            <FileUploader
-              onFileSelect={(file) => handleFileChange(file)}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-              uploading={isUploading}
-              selectedFile={file}
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isUploading}
-            >
-              {t("cancel")}
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={isUploading || !documentName || !documentType || !file}
-            >
-              {isUploading ? t("uploading") : t("upload")}
-            </Button>
-          </DialogFooter>
-        </form>
+          <FileUploadField 
+            onChange={handleFileChange}
+            file={file}
+          />
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={uploading}>
+            {t("cancel")}
+          </Button>
+          <Button onClick={handleUpload} disabled={!file || uploading || !documentName}>
+            {uploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t("uploading")}
+              </>
+            ) : (
+              <>
+                <FileUp className="mr-2 h-4 w-4" />
+                {t("upload")}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

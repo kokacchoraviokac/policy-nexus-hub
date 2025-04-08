@@ -31,41 +31,45 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
   
   const columns = [
     {
-      accessorKey: "code",
       header: t("code"),
+      accessorKey: "code" as keyof InsuranceProduct,
+      sortable: true
     },
     {
-      accessorKey: "name",
       header: t("name"),
+      accessorKey: "name" as keyof InsuranceProduct,
+      sortable: true
     },
     {
-      accessorKey: "category",
       header: t("category"),
-      cell: (props: { row: { original: InsuranceProduct } }) => props.row.original.category || "-",
+      accessorKey: "category" as keyof InsuranceProduct,
+      cell: (row: InsuranceProduct) => row.category || "-",
+      sortable: true
     },
     {
-      accessorKey: "insurer_name",
       header: t("insurer"),
+      accessorKey: "insurer_name" as keyof InsuranceProduct,
+      sortable: true
     },
     {
-      accessorKey: "is_active",
       header: t("status"),
-      cell: (props: { row: { original: InsuranceProduct } }) => (
-        <Badge variant={props.row.original.is_active ? "default" : "secondary"}>
-          {props.row.original.is_active ? t("active") : t("inactive")}
+      accessorKey: "is_active" as keyof InsuranceProduct,
+      cell: (row: InsuranceProduct) => (
+        <Badge variant={row.is_active ? "default" : "secondary"}>
+          {row.is_active ? t("active") : t("inactive")}
         </Badge>
       ),
+      sortable: true
     },
     {
-      accessorKey: "id",
       header: t("actions"),
-      cell: (props: { row: { original: InsuranceProduct } }) => (
+      accessorKey: (row: InsuranceProduct) => (
         <div className="flex gap-2 justify-end">
           <Button 
             variant="outline" 
             size="sm" 
             className="h-8 w-8 p-0"
-            onClick={() => onEdit(props.row.original.id)}
+            onClick={() => onEdit(row.id)}
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -75,7 +79,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                 variant="outline"
                 size="sm"
                 className="h-8 w-8 p-0 text-destructive"
-                onClick={() => setProductToDelete(props.row.original.id)}
+                onClick={() => setProductToDelete(row.id)}
               >
                 <Trash className="h-4 w-4" />
               </Button>
@@ -84,7 +88,7 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
               <AlertDialogHeader>
                 <AlertDialogTitle>{t("areYouSure")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  {t("deleteProductConfirmation").replace("{0}", props.row.original.name)}
+                  {t("deleteProductConfirmation").replace("{0}", row.name)}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -104,7 +108,6 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
     <DataTable
       data={products || []}
       columns={columns}
-      keyField="id"
       isLoading={isLoading}
       emptyState={{
         title: t("noProductsFound"),

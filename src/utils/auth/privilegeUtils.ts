@@ -1,99 +1,124 @@
 
-import { UserRole } from "@/types/auth/userTypes";
+import { supabase } from "@/integrations/supabase/client";
+import { UserRole, CustomPrivilege } from "@/types/auth";
+import { ResourceContext } from "@/types/auth/contextTypes";
+import { rolePrivileges } from "@/types/auth/roles";
+import { checkGranularPrivilege } from "@/types/auth/privileges";
 
-// Define role-based privileges
-export const ROLE_PRIVILEGES: Record<UserRole, string[]> = {
-  [UserRole.SUPER_ADMIN]: [
-    // All admin privileges plus these
-    "manage.system.settings",
-    "view.all.companies",
-    "manage.all.companies",
-    "manage.super.admin.permissions"
-  ],
-  [UserRole.ADMIN]: [
-    // Company admin privileges
-    "manage.company.settings",
-    "manage.users",
-    "manage.roles",
-    "view.all.policies",
-    "manage.all.policies",
-    "view.all.claims",
-    "manage.all.claims",
-    "view.reports",
-    "export.data",
-    "manage.templates"
-  ],
-  [UserRole.EMPLOYEE]: [
-    // Regular employee privileges
-    "view.assigned.policies",
-    "manage.assigned.policies",
-    "view.assigned.claims",
-    "manage.assigned.claims"
-  ],
-  [UserRole.AGENT]: [
-    // Agent privileges
-    "view.own.policies",
-    "view.own.commissions",
-    "manage.own.profile"
-  ],
-  [UserRole.CLIENT]: [
-    // Client privileges
-    "view.own.policies",
-    "view.own.claims",
-    "submit.claim"
-  ],
-  [UserRole.USER]: [
-    // Basic user privileges
-    "view.own.profile",
-    "manage.own.profile"
-  ]
-};
-
-/**
- * Check if a specific role has a certain privilege
- */
-export function hasRolePrivilege(role: UserRole, privilege: string): boolean {
-  const privileges = ROLE_PRIVILEGES[role] || [];
+// Simple privilege check (backward compatible)
+export const checkPrivilege = (
+  role: UserRole | undefined,
+  privilege: string
+): boolean => {
+  if (!role) {
+    console.log("No role provided in checkPrivilege");
+    return false;
+  }
   
-  // Check for exact privilege match
-  if (privileges.includes(privilege)) {
+  // For superadmin, grant all permissions
+  if (role === 'superAdmin') {
+    console.log(`Superadmin automatically granted privilege: ${privilege}`);
     return true;
   }
   
-  // Check for wildcard privileges (e.g., "manage.*" matches "manage.users")
-  const wildcardPrivileges = privileges.filter(p => p.endsWith('.*'));
-  for (const wildcardPrivilege of wildcardPrivileges) {
-    const prefix = wildcardPrivilege.replace('.*', '');
-    if (privilege.startsWith(prefix)) {
-      return true;
-    }
+  const userPrivileges = rolePrivileges[role];
+  if (!userPrivileges) {
+    console.log(`No privileges found for role: ${role}`);
+    return false;
   }
   
-  return false;
-}
+  const hasPrivilege = userPrivileges.includes(privilege);
+  console.log(`Checking if role '${role}' has privilege '${privilege}': ${hasPrivilege}`);
+  return hasPrivilege;
+};
 
-/**
- * Get all privileges for a role
- */
-export function getRolePrivileges(role: UserRole): string[] {
-  return ROLE_PRIVILEGES[role] || [];
-}
+// Enhanced check with context
+export const checkPrivilegeWithContext = (
+  role: UserRole | undefined,
+  privilege: string,
+  context?: ResourceContext
+): boolean => {
+  // For superadmin, grant all permissions
+  if (role === 'superAdmin') {
+    return true;
+  }
+  
+  return checkGranularPrivilege(role, privilege, context);
+};
 
-/**
- * Check if a role has higher privileges than another role
- */
-export function isRoleHigherThan(role: UserRole, thanRole: UserRole): boolean {
-  const roleOrder = [
-    UserRole.CLIENT,
-    UserRole.USER,
-    UserRole.AGENT,
-    UserRole.EMPLOYEE,
-    UserRole.ADMIN,
-    UserRole.SUPER_ADMIN
-  ];
-  
-  const roleIndex = roleOrder.indexOf(role);
-  const thanRoleIndex = roleOrder.indexOf(thanRole);
-  
-  return roleIndex > thanRoleIndex;
-}
+// Custom privilege management for the user_custom_privileges table
+export const fetchUserCustomPrivileges = async (userId: string): Promise<CustomPrivilege[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_custom_privileges')
+      .select('*')
+      .eq('user_id', userId)
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+      
+    if (error) {
+      console.error("Error fetching user custom privileges:", error);
+      return [];
+    }
+    
+    if (!data) return [];
+    
+    return data.map(item => ({
+      id: item.id,
+      userId: item.user_id,
+      privilege: item.privilege,
+      grantedBy: item.granted_by,
+      grantedAt: new Date(item.granted_at),
+      expiresAt: item.expires_at ? new Date(item.expires_at) : undefined
+    }));
+  } catch (error) {
+    console.error("Error in custom privileges fetch:", error);
+    return [];
+  }
+};
+
+export const grantCustomPrivilege = async (
+  userId: string,
+  privilege: string,
+  grantedBy: string,
+  expiresAt?: Date
+): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('user_custom_privileges')
+      .insert({
+        user_id: userId,
+        privilege,
+        granted_by: grantedBy,
+        expires_at: expiresAt?.toISOString()
+      });
+      
+    if (error) {
+      console.error("Error granting custom privilege:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in custom privilege grant:", error);
+    return false;
+  }
+};
+
+export const revokeCustomPrivilege = async (privilegeId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('user_custom_privileges')
+      .delete()
+      .eq('id', privilegeId);
+      
+    if (error) {
+      console.error("Error revoking custom privilege:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in custom privilege revocation:", error);
+    return false;
+  }
+};

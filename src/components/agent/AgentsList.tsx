@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import DataTable from "@/components/ui/data-table";
@@ -65,6 +66,7 @@ const AgentsList = () => {
     },
     {
       header: t("actions"),
+      id: "actions",
       accessorKey: "id",
       cell: (row: any) => (
         <div className="flex space-x-2">
@@ -115,13 +117,12 @@ const AgentsList = () => {
         <DataTable
           data={agents}
           columns={columns}
-          keyField="id"
           isLoading={isLoading}
           pagination={{
-            pageIndex: pagination.pageIndex,
-            pageSize: pagination.pageSize,
+            currentPage: pagination.pageIndex,
             totalPages: Math.ceil(totalCount / pagination.pageSize),
-            totalCount: totalCount,
+            itemsPerPage: pagination.pageSize,
+            totalItems: totalCount,
             onPageChange: (page) => pagination.onPageChange(page),
             onPageSizeChange: (size) => pagination.onPageSizeChange(size)
           }}

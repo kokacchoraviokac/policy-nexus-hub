@@ -82,13 +82,12 @@ const FixedCommissions = () => {
         <DataTable
           data={fixedCommissions}
           columns={columns}
-          keyField="id"
           isLoading={isLoading}
           pagination={{
-            pageIndex: pagination.pageIndex,
-            pageSize: pagination.pageSize,
+            currentPage: pagination.pageIndex,
             totalPages: Math.ceil(totalCount / pagination.pageSize),
-            totalCount: totalCount,
+            itemsPerPage: pagination.pageSize,
+            totalItems: totalCount,
             onPageChange: (page) => pagination.onPageChange(page),
             onPageSizeChange: (size) => pagination.onPageSizeChange(size)
           }}

@@ -31,7 +31,7 @@ const LoginForm: React.FC = () => {
 
   type LoginFormValues = z.infer<typeof loginSchema>;
 
-  const formMethods = useForm<LoginFormValues>({
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -43,16 +43,9 @@ const LoginForm: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      if (login) {
-        const result = await login(values.email, values.password);
-        
-        if (result && result.error) {
-          throw new Error(result.error.message || t("invalidCredentials"));
-        }
-        
-        toast.success(t("loginSuccessful"));
-        navigate(from, { replace: true });
-      }
+      await login(values.email, values.password);
+      toast.success(t("loginSuccessful"));
+      navigate(from, { replace: true });
     } catch (error: any) {
       toast.error(error.message || t("invalidCredentials"));
       console.error("Login error:", error);
@@ -70,16 +63,10 @@ const LoginForm: React.FC = () => {
     setIsResetting(true);
     
     try {
-      if (initiatePasswordReset) {
-        const success = await initiatePasswordReset(resetEmail);
-        if (success) {
-          setResetPasswordDialogOpen(false);
-          toast.success("Password reset email sent. Check your inbox for instructions.");
-        } else {
-          toast.error("Failed to send password reset email. Please try again.");
-        }
-      } else {
-        toast.error("Password reset functionality is not available");
+      const success = await initiatePasswordReset(resetEmail);
+      if (success) {
+        setResetPasswordDialogOpen(false);
+        toast.success("Password reset email sent. Check your inbox for instructions.");
       }
     } catch (error) {
       console.error("Password reset error:", error);
@@ -91,10 +78,10 @@ const LoginForm: React.FC = () => {
 
   return (
     <>
-      <Form {...formMethods}>
-        <form onSubmit={formMethods.handleSubmit(handleLogin)} className="space-y-5">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-5">
           <FormField
-            control={formMethods.control}
+            control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
@@ -108,7 +95,7 @@ const LoginForm: React.FC = () => {
           />
           
           <FormField
-            control={formMethods.control}
+            control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>

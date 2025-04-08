@@ -25,7 +25,7 @@ const DocumentTypeSelector: React.FC<DocumentTypeSelectorProps> = ({
       <label htmlFor="documentType" className="text-sm font-medium">
         {t("documentType")} *
       </label>
-      <Select value={value || "other"} onValueChange={onValueChange}>
+      <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger id="documentType">
           <SelectValue placeholder={t("selectDocumentType")} />
         </SelectTrigger>

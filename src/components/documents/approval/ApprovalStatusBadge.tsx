@@ -8,29 +8,28 @@ import {
   Clock
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ApprovalStatus } from "@/types/common";
+import { DocumentApprovalStatus } from "@/types/documents";
 
 interface ApprovalStatusBadgeProps {
-  status: ApprovalStatus | string;
+  status: DocumentApprovalStatus;
 }
 
 export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status }) => {
   const { t } = useLanguage();
   
   switch (status) {
-    case ApprovalStatus.APPROVED:
+    case "approved":
       return (
         <Badge className="bg-green-100 text-green-800 hover:bg-green-100">{t("approved")}</Badge>
       );
-    case ApprovalStatus.REJECTED:
+    case "rejected":
       return (
         <Badge variant="destructive">{t("rejected")}</Badge>
       );
-    case ApprovalStatus.NEEDS_REVIEW:
+    case "needs_review":
       return (
         <Badge variant="outline" className="bg-amber-100 text-amber-800 hover:bg-amber-100">{t("needsReview")}</Badge>
       );
-    case ApprovalStatus.PENDING:
     default:
       return (
         <Badge variant="outline" className="bg-slate-100">{t("pending")}</Badge>
@@ -38,15 +37,14 @@ export const ApprovalStatusBadge: React.FC<ApprovalStatusBadgeProps> = ({ status
   }
 };
 
-export const getStatusIcon = (status: ApprovalStatus | string) => {
+export const getStatusIcon = (status: DocumentApprovalStatus) => {
   switch (status) {
-    case ApprovalStatus.APPROVED:
+    case "approved":
       return <ShieldCheck className="h-5 w-5 text-green-500" />;
-    case ApprovalStatus.REJECTED:
+    case "rejected":
       return <ShieldX className="h-5 w-5 text-red-500" />;
-    case ApprovalStatus.NEEDS_REVIEW:
+    case "needs_review":
       return <ShieldQuestion className="h-5 w-5 text-amber-500" />;
-    case ApprovalStatus.PENDING:
     default:
       return <Clock className="h-5 w-5 text-muted-foreground" />;
   }

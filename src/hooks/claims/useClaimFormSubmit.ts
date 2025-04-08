@@ -9,7 +9,7 @@ import { ClaimFormValues } from '@/components/claims/forms/ClaimDetailsForm';
 interface UseClaimFormSubmitProps {
   currentUser: any;
   userProfile: any;
-  onSuccess?: () => void;
+  onSuccess?: () => void; // Added onSuccess callback as an optional prop
 }
 
 export const useClaimFormSubmit = ({ currentUser, userProfile, onSuccess }: UseClaimFormSubmitProps) => {
@@ -37,10 +37,9 @@ export const useClaimFormSubmit = ({ currentUser, userProfile, onSuccess }: UseC
         notes: values.notes || null
       };
       
-      // Type assertion to handle the complex type requirements of Supabase
       const { data, error } = await supabase
         .from('claims')
-        .insert(claimData as any)
+        .insert(claimData)
         .select('id')
         .single();
         

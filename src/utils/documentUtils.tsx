@@ -1,114 +1,91 @@
 
-import React from 'react';
-import { 
-  FileText, FileIcon, FileImage, FileArchive, FileCog, 
-  FileCode, FileJson, FileSpreadsheet, FileCheck, File
-} from 'lucide-react';
-import { DocumentCategory, EntityType } from '@/types/common';
+import { Document, DocumentCategory, EntityType } from "@/types/documents";
+import { FileText, Clipboard, File, Receipt, Info } from "lucide-react";
+import React from "react";
 
-/**
- * Get the icon component for a document type
- * @param mimeType MIME type of the document
- * @returns The icon component
- */
-export const getDocumentIcon = (mimeType: string | null) => {
-  if (!mimeType) return <FileIcon className="h-8 w-8" />;
-  
-  if (mimeType.includes('pdf')) return <FileText className="h-8 w-8 text-red-500" />;
-  if (mimeType.includes('image')) return <FileImage className="h-8 w-8 text-blue-500" />;
-  if (mimeType.includes('zip') || mimeType.includes('rar')) return <FileArchive className="h-8 w-8 text-orange-500" />;
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet') || mimeType.includes('xlsx') || mimeType.includes('xls')) {
-    return <FileSpreadsheet className="h-8 w-8 text-green-600" />;
-  }
-  if (mimeType.includes('word') || mimeType.includes('document') || mimeType.includes('docx') || mimeType.includes('doc')) {
-    return <FileText className="h-8 w-8 text-blue-500" />;
-  }
-  if (mimeType.includes('text') || mimeType.includes('txt')) return <FileText className="h-8 w-8 text-gray-500" />;
-  if (mimeType.includes('json')) return <FileJson className="h-8 w-8 text-yellow-500" />;
-  if (mimeType.includes('code') || mimeType.includes('xml') || mimeType.includes('html')) {
-    return <FileCode className="h-8 w-8 text-purple-500" />;
-  }
-  
-  return <File className="h-8 w-8 text-gray-500" />;
-};
-
-/**
- * Get a human-readable label for a document category
- * @param category Document category
- * @returns The human-readable label
- */
-export const getDocumentCategoryLabel = (category: string | undefined) => {
-  if (!category) return 'Uncategorized';
-  
-  switch (category) {
-    case DocumentCategory.POLICY:
-      return 'Policy Document';
-    case DocumentCategory.CLAIM:
-      return 'Claim Document';
-    case DocumentCategory.INVOICE:
-      return 'Invoice Document';
-    case DocumentCategory.CONTRACT:
-      return 'Contract';
-    case DocumentCategory.SALES:
-      return 'Sales Document';
-    case DocumentCategory.LEGAL:
-      return 'Legal Document';
-    case DocumentCategory.MISCELLANEOUS:
-      return 'Miscellaneous';
-    case DocumentCategory.AUTHORIZATION:
-      return 'Authorization';
-    case DocumentCategory.GENERAL:
-      return 'General Document';
-    case DocumentCategory.PROPOSAL:
-      return 'Proposal';
+export const getDocumentIcon = (document: Document | { category: DocumentCategory }) => {
+  switch (document.category) {
+    case 'policy':
+      return <FileText className="h-4 w-4" />;
+    case 'claim':
+      return <Clipboard className="h-4 w-4" />;
+    case 'invoice':
+      return <Receipt className="h-4 w-4" />;
+    case 'client':
+      return <File className="h-4 w-4" />;
     default:
-      return category.charAt(0).toUpperCase() + category.slice(1);
+      return <Info className="h-4 w-4" />;
   }
 };
 
-/**
- * Get a human-readable label for a document type
- * @param type Document type
- * @returns The human-readable label
- */
-export const getDocumentTypeLabel = (type: string) => {
-  if (!type) return 'Unknown Type';
+export const getDocumentTypeLabel = (documentType: string): string => {
+  const documentTypes: Record<string, string> = {
+    'policy': 'Policy Document',
+    'certificate': 'Certificate',
+    'invoice': 'Invoice',
+    'claim': 'Claim Document',
+    'report': 'Report',
+    'contract': 'Contract',
+    'amendment': 'Amendment',
+    'correspondence': 'Correspondence',
+    'other': 'Other'
+  };
   
-  // Remove underscores and capitalize each word
-  return type
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+  return documentTypes[documentType] || documentType;
 };
 
-/**
- * Get a human-readable label for an entity type
- * @param entityType Entity type
- * @returns The human-readable label
- */
-export const getEntityTypeLabel = (entityType: string | undefined) => {
-  if (!entityType) return 'Unknown Entity';
-  
+export const getDocumentDownloadUrl = async (filePath: string): Promise<string> => {
+  try {
+    const { data, error } = await fetch(`/api/documents/signed-url?path=${encodeURIComponent(filePath)}`)
+      .then(response => response.json());
+      
+    if (error) throw error;
+    return data.signedUrl;
+  } catch (error) {
+    console.error("Error getting document download URL:", error);
+    throw error;
+  }
+};
+
+export const getEntityTableName = (entityType: EntityType): string => {
   switch (entityType) {
-    case EntityType.POLICY:
-      return 'Policy';
-    case EntityType.CLAIM:
-      return 'Claim';
-    case EntityType.SALES_PROCESS:
-    case EntityType.SALE:
-      return 'Sales Process';
-    case EntityType.CLIENT:
-      return 'Client';
-    case EntityType.INSURER:
-      return 'Insurer';
-    case EntityType.AGENT:
-      return 'Agent';
-    case EntityType.INVOICE:
-      return 'Invoice';
-    case EntityType.POLICY_ADDENDUM:
-    case EntityType.ADDENDUM:
-      return 'Policy Addendum';
+    case 'policy':
+      return 'policy_documents';
+    case 'claim':
+      return 'claim_documents';
+    case 'client':
+      return 'client_documents';
+    case 'invoice':
+      return 'invoice_documents';
+    case 'addendum':
+      return 'addendum_documents';
+    case 'sales_process':
+      return 'sales_documents';
+    case 'agent':
+      return 'agent_documents';
+    case 'insurer':
+      return 'insurer_documents';
     default:
-      return entityType.charAt(0).toUpperCase() + entityType.slice(1);
+      throw new Error(`Unsupported entity type: ${entityType}`);
   }
 };
+
+export const supportedDocumentTypes = [
+  { value: 'policy', label: 'Policy Document' },
+  { value: 'certificate', label: 'Certificate' },
+  { value: 'invoice', label: 'Invoice' },
+  { value: 'claim', label: 'Claim Document' },
+  { value: 'report', label: 'Report' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'amendment', label: 'Amendment' },
+  { value: 'correspondence', label: 'Correspondence' },
+  { value: 'other', label: 'Other' }
+];
+
+export const documentCategories = [
+  { value: 'policy', label: 'Policy' },
+  { value: 'claim', label: 'Claim' },
+  { value: 'client', label: 'Client' },
+  { value: 'invoice', label: 'Invoice' },
+  { value: 'other', label: 'Other' }
+];

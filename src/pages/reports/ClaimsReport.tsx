@@ -21,30 +21,101 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import ClaimStatusBadge from "@/components/claims/ClaimStatusBadge";
-import { ClaimsReportFilters, useClaimsReport } from "@/hooks/reports/useClaimsReport";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface ClaimsReportFilters {
+  startDate?: Date;
+  endDate?: Date;
+  status?: string;
+  searchTerm?: string;
+}
+
+interface ClaimReportData {
+  id: string;
+  claim_number: string;
+  policy_number: string;
+  policyholder_name: string;
+  incident_date: string;
+  claimed_amount: number;
+  approved_amount?: number;
+  status: string;
+  policy_id: string;
+}
 
 const ClaimsReport = () => {
   const { t, formatDate, formatCurrency } = useLanguage();
   const navigate = useNavigate();
+  const { toast: legacyToast } = useToast();
   const [filters, setFilters] = useState<ClaimsReportFilters>({
     startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)),
     endDate: new Date(),
     status: "all"
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
   
-  // Use our new standardized hook
-  const { 
-    data, 
-    isLoading, 
-    refetch, 
-    isExporting, 
-    setIsExporting 
-  } = useClaimsReport({
-    ...filters,
-    searchTerm
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['claims-report', filters],
+    queryFn: async () => {
+      let query = supabase
+        .from('claims')
+        .select(`
+          id,
+          claim_number,
+          incident_date,
+          claimed_amount,
+          approved_amount,
+          status,
+          policy_id,
+          policies:policy_id (
+            policy_number,
+            policyholder_name
+          )
+        `)
+        .order('created_at', { ascending: false });
+      
+      // Apply filters
+      if (filters.status && filters.status !== "all") {
+        query = query.eq('status', filters.status);
+      }
+      
+      if (filters.startDate) {
+        const startDateString = filters.startDate.toISOString().split('T')[0];
+        query = query.gte('incident_date', startDateString);
+      }
+      
+      if (filters.endDate) {
+        const endDateString = filters.endDate.toISOString().split('T')[0];
+        query = query.lte('incident_date', endDateString);
+      }
+      
+      if (searchTerm) {
+        query = query.or(`claim_number.ilike.%${searchTerm}%,policies.policy_number.ilike.%${searchTerm}%,policies.policyholder_name.ilike.%${searchTerm}%`);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      // Map and format the data
+      const formattedData: ClaimReportData[] = data.map(claim => ({
+        id: claim.id,
+        claim_number: claim.claim_number,
+        policy_number: claim.policies?.policy_number || "-",
+        policyholder_name: claim.policies?.policyholder_name || "-",
+        incident_date: claim.incident_date,
+        claimed_amount: claim.claimed_amount,
+        approved_amount: claim.approved_amount,
+        status: claim.status,
+        policy_id: claim.policy_id
+      }));
+      
+      return formattedData;
+    }
   });
   
   const handleBackToReports = () => {
@@ -52,7 +123,7 @@ const ClaimsReport = () => {
   };
   
   const handleExport = async () => {
-    if (!data?.claims || data.claims.length === 0) {
+    if (!data || data.length === 0) {
       toast.error(t("noDataToExport"), {
         description: t("pleaseRefineFilters")
       });
@@ -73,7 +144,7 @@ const ClaimsReport = () => {
         "Status"
       ];
       
-      const rows = data.claims.map(claim => [
+      const rows = data.map(claim => [
         claim.claim_number,
         claim.policy_number,
         claim.policyholder_name,
@@ -126,11 +197,10 @@ const ClaimsReport = () => {
     });
   };
   
-  // Get summary data from the hook result
-  const claims = data?.claims || [];
-  const totalClaimedAmount = data?.summary.totalClaimedAmount || 0;
-  const totalApprovedAmount = data?.summary.totalApprovedAmount || 0;
-  const claimCount = data?.claims.length || 0;
+  // Calculate summary data
+  const totalClaimedAmount = data?.reduce((sum, claim) => sum + claim.claimed_amount, 0) || 0;
+  const totalApprovedAmount = data?.reduce((sum, claim) => sum + (claim.approved_amount || 0), 0) || 0;
+  const claimCount = data?.length || 0;
   
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -210,7 +280,7 @@ const ClaimsReport = () => {
               
               <Button 
                 onClick={handleExport}
-                disabled={isExporting || !data || data.claims.length === 0}
+                disabled={isExporting || !data || data.length === 0}
                 className="transition-all hover:-translate-y-1"
               >
                 <FileDown className="h-4 w-4 mr-2" />
@@ -257,7 +327,7 @@ const ClaimsReport = () => {
               <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
               <p className="text-muted-foreground">{t("loadingClaims")}</p>
             </div>
-          ) : !claims || claims.length === 0 ? (
+          ) : !data || data.length === 0 ? (
             <div className="text-center py-12 space-y-3">
               <div className="rounded-full bg-muted/20 p-3 w-12 h-12 mx-auto flex items-center justify-center">
                 <FileSpreadsheet className="h-6 w-6 text-muted-foreground" />
@@ -284,7 +354,7 @@ const ClaimsReport = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {claims.map((claim) => (
+                  {data.map((claim) => (
                     <TableRow 
                       key={claim.id}
                       className="cursor-pointer hover:bg-muted/50 transition-colors"

@@ -1,131 +1,124 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Document, DocumentTableName, PolicyDocument } from '@/types/documents';
-import { EntityType } from '@/types/common';
-import { fromDocumentTable } from '@/utils/supabaseTypeAssertions';
-import { getDocumentTableName } from '@/utils/documentUploadUtils';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Document, EntityType } from "@/types/documents";
+import { useAuth } from "@/contexts/auth/AuthContext";
+import { getDocumentTableName, DocumentTableName } from "@/utils/documentUploadUtils";
 
-interface UseDocumentsReturn {
-  documents: Document[];
-  isLoading: boolean;
-  isError: boolean;
-  error: Error | null;
-  refetch: (options?: any) => Promise<any>;
-  documentsCount: number;
-  deleteDocument: (documentId: string) => void;
-  isDeletingDocument: boolean;
-  refresh: () => void;
-  isRefetching?: boolean;
-}
-
-export function useDocuments(entityType: EntityType | string, entityId: string): UseDocumentsReturn {
+// Update the function signature to accept two parameters
+export const useDocuments = (entityType: EntityType, entityId: string) => {
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const tableName = getDocumentTableName(entityType as EntityType);
   
-  const {
-    data: documents = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isRefetching
-  } = useQuery({
-    queryKey: ['documents', entityType, entityId],
-    queryFn: async () => {
-      try {
-        // Use the supabase client directly for now until we fix the utility functions
-        const query = supabase
-          .from(tableName)
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        // Apply condition based on entity type
-        switch (entityType) {
-          case EntityType.POLICY:
-            query.eq('policy_id', entityId);
-            break;
-          case EntityType.CLAIM:
-            query.eq('claim_id', entityId);
-            break;
-          case EntityType.SALES_PROCESS:
-          case EntityType.SALE:
-            query.eq('sales_process_id', entityId);
-            break;
-          case EntityType.CLIENT:
-            query.eq('client_id', entityId);
-            break;
-          case EntityType.AGENT:
-            query.eq('agent_id', entityId);
-            break;
-          case EntityType.INSURER:
-            query.eq('insurer_id', entityId);
-            break;
-          case EntityType.ADDENDUM:
-            query.eq('addendum_id', entityId);
-            break;
-          case EntityType.INVOICE:
-            query.eq('invoice_id', entityId);
-            break;
-          default:
-            console.warn(`Unsupported entity type: ${entityType}`);
-            break;
-        }
-
-        const { data, error } = await query;
-        
-        if (error) {
-          throw error;
-        }
-        
-        // Transform the data to include full URLs
-        return (data || []).map((doc: any) => ({
-          ...doc,
-          file_path: doc.file_path.startsWith('http') 
-            ? doc.file_path 
-            : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/documents/${doc.file_path}`
-        })) as Document[];
-      } catch (error) {
-        console.error('Error fetching documents:', error);
-        throw error;
-      }
-    }
-  });
-
-  // Mutation for deleting a document
-  const deleteDocumentMutation = useMutation({
-    mutationFn: async (documentId: string) => {
-      const { error } = await supabase
+  const tableName = getDocumentTableName(entityType);
+  
+  // Fetch all documents for the given entity
+  const fetchDocuments = async (): Promise<Document[]> => {
+    // Handle each document table type with its specific entity ID field
+    let query;
+    if (tableName === "policy_documents") {
+      query = supabase
         .from(tableName)
-        .delete()
-        .eq('id', documentId);
-      
-      if (error) throw error;
-      return documentId;
-    },
-    onSuccess: () => {
-      // Invalidate and refetch documents after successful deletion
-      queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
+        .select("*")
+        .eq("policy_id", entityId);
+    } else if (tableName === "claim_documents") {
+      query = supabase
+        .from(tableName)
+        .select("*")
+        .eq("claim_id", entityId);
+    } else if (tableName === "sales_documents") {
+      query = supabase
+        .from(tableName)
+        .select("*")
+        .eq("sales_process_id", entityId);
+    } else {
+      // This should not happen with our current implementation
+      throw new Error(`Unsupported document table: ${tableName}`);
     }
+    
+    const { data, error } = await query.order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Map the data to our Document type based on the table type
+    return (data || []).map((item: any) => {
+      let mappedEntityId = "";
+      
+      if (tableName === "policy_documents") {
+        mappedEntityId = item.policy_id;
+      } else if (tableName === "claim_documents") {
+        mappedEntityId = item.claim_id;
+      } else if (tableName === "sales_documents") {
+        mappedEntityId = item.sales_process_id;
+      }
+      
+      return {
+        id: item.id,
+        document_name: item.document_name,
+        document_type: item.document_type,
+        created_at: item.created_at,
+        file_path: item.file_path,
+        entity_type: entityType,
+        entity_id: mappedEntityId,
+        uploaded_by_id: item.uploaded_by,
+        uploaded_by_name: "", // We'll populate this if needed
+        description: item.description || "",
+        version: item.version || 1,
+        status: item.status || "active",
+        tags: item.tags || [],
+        category: item.category || "other",
+        mime_type: item.mime_type || "",
+        is_latest_version: item.is_latest_version || true,
+        original_document_id: item.original_document_id || null,
+        approval_status: item.approval_status || "pending"
+      } as Document;
+    });
+  };
+
+  // Delete document mutation - use the correct table based on entity type
+  const deleteDocument = async (documentId: string) => {
+    const { error } = await supabase
+      .from(tableName)
+      .delete()
+      .eq("id", documentId);
+
+    if (error) throw error;
+    return { success: true };
+  };
+
+  // Use react-query for data fetching
+  const documentsQuery = useQuery({
+    queryKey: ["documents", entityType, entityId],
+    queryFn: fetchDocuments,
   });
 
-  // Compute the document count
-  const documentsCount = documents?.length || 0;
-
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['documents', entityType, entityId] });
-  };
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteDocument,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents", entityType, entityId] });
+      toast({
+        title: t("documentDeleted"),
+        description: t("documentDeletedSuccessfully"),
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t("errorDeletingDocument"),
+        description: error.message || t("unknownError"),
+        variant: "destructive",
+      });
+    },
+  });
 
   return {
-    documents: documents as Document[],
-    isLoading,
-    isError,
-    error: error as Error,
-    refetch,
-    documentsCount,
-    deleteDocument: deleteDocumentMutation.mutate,
-    isDeletingDocument: deleteDocumentMutation.isPending,
-    refresh,
-    isRefetching
+    ...documentsQuery,
+    documents: documentsQuery.data || [],
+    deleteDocument: deleteMutation.mutate,
+    isDeletingDocument: deleteMutation.isPending,
   };
-}
+};

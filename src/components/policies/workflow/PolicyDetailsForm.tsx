@@ -1,246 +1,194 @@
 
 import React from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { DatePicker } from "@/components/ui/date-picker";
-import { 
-  currencySchema, 
-  dateSchema 
-} from "@/utils/formSchemas";
-
-// Create schema for policy details form
-const policyDetailsSchema = z.object({
-  policy_number: z.string().min(1, { message: "Policy number is required" }),
-  policyholder_name: z.string().min(1, { message: "Policyholder name is required" }),
-  insurer_name: z.string().min(1, { message: "Insurer name is required" }),
-  premium: z.coerce.number().min(0, { message: "Premium must be a positive number" }),
-  start_date: z.string().min(1, { message: "Start date is required" }),
-  expiry_date: z.string().min(1, { message: "Expiry date is required" }),
-  currency: z.string().min(1, { message: "Currency is required" }),
-});
-
-type PolicyDetailsFormValues = z.infer<typeof policyDetailsSchema>;
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Policy } from "@/types/policies";
+import { useActivityLogger } from "@/utils/activityLogger";
 
 interface PolicyDetailsFormProps {
-  initialData?: Partial<PolicyDetailsFormValues>;
-  onSubmit?: (data: PolicyDetailsFormValues) => void;
-  onCancel?: () => void;
-  isSubmitting?: boolean;
+  policy: Policy;
 }
 
-const PolicyDetailsForm: React.FC<PolicyDetailsFormProps> = ({
-  initialData,
-  onSubmit,
-  onCancel,
-  isSubmitting = false,
-}) => {
+type FormData = {
+  policy_number: string;
+  policyholder_name: string;
+  insurer_name: string;
+  premium: number;
+  start_date: string;
+  expiry_date: string;
+  currency: string;
+};
+
+const PolicyDetailsForm: React.FC<PolicyDetailsFormProps> = ({ policy }) => {
   const { t } = useLanguage();
-
-  const form = useForm<PolicyDetailsFormValues>({
-    resolver: zodResolver(policyDetailsSchema),
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { logActivity } = useActivityLogger();
+  
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     defaultValues: {
-      policy_number: initialData?.policy_number || "",
-      policyholder_name: initialData?.policyholder_name || "",
-      insurer_name: initialData?.insurer_name || "",
-      premium: initialData?.premium || 0,
-      start_date: initialData?.start_date || "",
-      expiry_date: initialData?.expiry_date || "",
-      currency: initialData?.currency || "EUR",
-    },
+      policy_number: policy.policy_number,
+      policyholder_name: policy.policyholder_name,
+      insurer_name: policy.insurer_name,
+      premium: policy.premium,
+      start_date: policy.start_date,
+      expiry_date: policy.expiry_date,
+      currency: policy.currency,
+    }
   });
+  
+  const updatePolicy = useMutation({
+    mutationFn: async (data: FormData) => {
+      const { error } = await supabase
+        .from('policies')
+        .update({
+          ...data,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', policy.id);
+      
+      if (error) throw error;
 
-  const handleSubmitWithToast = async (data: PolicyDetailsFormValues) => {
-    try {
-      // Update the updated_at field
-      const updatedData = {
-        ...data,
-        updated_at: new Date().toISOString(),
-      };
-      
-      if (onSubmit) {
-        onSubmit(updatedData);
-      }
-      
-      toast({
-        title: t("saved"),
-        description: t("policyDetailsSaved"),
+      // Log the activity
+      logActivity({
+        entity_type: "policy",
+        entity_id: policy.id,
+        action: "update",
+        details: {
+          fields_updated: Object.keys(data),
+          timestamp: new Date().toISOString()
+        }
       });
-    } catch (error) {
+      
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['policy', policy.id] });
       toast({
-        title: t("error"),
-        description: t("errorSavingPolicyDetails"),
+        title: t("policyUpdated"),
+        description: t("policyDetailsUpdatedSuccessfully"),
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t("errorUpdatingPolicy"),
+        description: error.message || t("unknownError"),
         variant: "destructive",
       });
-    }
+    },
+  });
+  
+  const onSubmit = (data: FormData) => {
+    updatePolicy.mutate(data);
   };
-
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t("policyDetails")}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form className="space-y-6" onSubmit={form.handleSubmit(handleSubmitWithToast)}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="policy_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("policyNumber")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="policyholder_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("policyholder")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="insurer_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("insurer")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="premium"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("premium")}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        step="0.01"
-                        value={field.value}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="start_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>{t("startDate")}</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center">
-                        <Input 
-                          {...field} 
-                          type="date" 
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="expiry_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>{t("expiryDate")}</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center">
-                        <Input 
-                          {...field} 
-                          type="date" 
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="currency"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("currency")}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isSubmitting}
-                >
-                  {t("cancel")}
-                </Button>
-              )}
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("saving")}
-                  </>
-                ) : (
-                  t("save")
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="policy_number">{t("policyNumber")}</Label>
+          <Input 
+            id="policy_number" 
+            {...register("policy_number", { required: true })}
+            className={errors.policy_number ? "border-destructive" : ""}
+          />
+          {errors.policy_number && (
+            <p className="text-sm text-destructive">{t("policyNumberRequired")}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="policyholder_name">{t("policyholderName")}</Label>
+          <Input 
+            id="policyholder_name" 
+            {...register("policyholder_name", { required: true })}
+            className={errors.policyholder_name ? "border-destructive" : ""}
+          />
+          {errors.policyholder_name && (
+            <p className="text-sm text-destructive">{t("policyholderNameRequired")}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="insurer_name">{t("insurerName")}</Label>
+          <Input 
+            id="insurer_name" 
+            {...register("insurer_name", { required: true })}
+            className={errors.insurer_name ? "border-destructive" : ""}
+          />
+          {errors.insurer_name && (
+            <p className="text-sm text-destructive">{t("insurerNameRequired")}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="premium">{t("premium")}</Label>
+          <Input 
+            id="premium" 
+            type="number"
+            step="0.01"
+            {...register("premium", { 
+              required: true,
+              valueAsNumber: true,
+              min: 0
+            })}
+            className={errors.premium ? "border-destructive" : ""}
+          />
+          {errors.premium && (
+            <p className="text-sm text-destructive">{t("validPremiumRequired")}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="start_date">{t("startDate")}</Label>
+          <Input 
+            id="start_date" 
+            type="date"
+            {...register("start_date", { required: true })}
+            className={errors.start_date ? "border-destructive" : ""}
+          />
+          {errors.start_date && (
+            <p className="text-sm text-destructive">{t("startDateRequired")}</p>
+          )}
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="expiry_date">{t("expiryDate")}</Label>
+          <Input 
+            id="expiry_date" 
+            type="date"
+            {...register("expiry_date", { required: true })}
+            className={errors.expiry_date ? "border-destructive" : ""}
+          />
+          {errors.expiry_date && (
+            <p className="text-sm text-destructive">{t("expiryDateRequired")}</p>
+          )}
+        </div>
+      </div>
+      
+      <div className="flex justify-end">
+        <Button 
+          type="submit" 
+          disabled={updatePolicy.isPending}
+        >
+          {updatePolicy.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t("saving")}
+            </>
+          ) : (
+            t("saveChanges")
+          )}
+        </Button>
+      </div>
+    </form>
   );
 };
 

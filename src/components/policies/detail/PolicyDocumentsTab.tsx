@@ -4,10 +4,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
-import { useDocumentManager } from "@/hooks/useDocumentManager";
-import DocumentUploadDialog from "@/components/documents/unified/DocumentUploadDialog";
-import DocumentList from "@/components/documents/unified/DocumentList";
-import { EntityType } from "@/types/common";
+import EnhancedDocumentUploadDialog from "@/components/documents/EnhancedDocumentUploadDialog";
+import DocumentList from "@/components/documents/DocumentList";
 
 interface PolicyDocumentsTabProps {
   policyId: string;
@@ -16,31 +14,7 @@ interface PolicyDocumentsTabProps {
 const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => {
   const { t } = useLanguage();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
   
-  const {
-    documents,
-    isLoading,
-    isError,
-    error,
-    refreshDocuments,
-    deleteDocument,
-    isDeleting,
-  } = useDocumentManager({ 
-    entityType: EntityType.POLICY,
-    entityId: policyId
-  });
-  
-  const handleUploadClick = () => {
-    setSelectedDocument(null);
-    setUploadDialogOpen(true);
-  };
-  
-  const handleUploadVersion = (document: any) => {
-    setSelectedDocument(document);
-    setUploadDialogOpen(true);
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -49,7 +23,7 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
             <CardTitle>{t("policyDocuments")}</CardTitle>
             <CardDescription>{t("documentsAttachedToPolicy")}</CardDescription>
           </div>
-          <Button onClick={handleUploadClick}>
+          <Button onClick={() => setUploadDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             {t("uploadDocument")}
           </Button>
@@ -57,25 +31,16 @@ const PolicyDocumentsTab: React.FC<PolicyDocumentsTabProps> = ({ policyId }) => 
       </CardHeader>
       <CardContent>
         <DocumentList 
-          documents={documents || []}
-          isLoading={isLoading}
-          isError={isError}
-          error={error as Error}
-          onDelete={deleteDocument}
-          isDeleting={isDeleting}
-          showUploadButton={false}
-          onUploadVersion={handleUploadVersion}
-          entityType={EntityType.POLICY}
+          entityType="policy"
           entityId={policyId}
+          showUploadButton={false}
         />
         
-        <DocumentUploadDialog
+        <EnhancedDocumentUploadDialog
           open={uploadDialogOpen}
           onOpenChange={setUploadDialogOpen}
-          entityType={EntityType.POLICY}
+          entityType="policy"
           entityId={policyId}
-          selectedDocument={selectedDocument}
-          onUploadComplete={refreshDocuments}
         />
       </CardContent>
     </Card>

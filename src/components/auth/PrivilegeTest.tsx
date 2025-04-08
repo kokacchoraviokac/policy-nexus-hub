@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ResourceContext } from "@/types/auth/contextTypes";
 import {
   Select,
   SelectContent,
@@ -16,15 +15,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+interface ContextData {
+  ownerId?: string;
+  companyId?: string;
+  resourceType?: string;
+  resourceValue?: any;
+}
+
 const PrivilegeTest: React.FC = () => {
   const { user, hasPrivilege, hasPrivilegeWithContext } = useAuth();
   const [privilegeToCheck, setPrivilegeToCheck] = useState("");
   const [result, setResult] = useState<boolean | null>(null);
   const [useContext, setUseContext] = useState(false);
-  const [contextData, setContextData] = useState<ResourceContext>({
-    resource: "",
-    action: "",
-  });
+  const [contextData, setContextData] = useState<ContextData>({});
 
   const handleCheck = () => {
     if (!privilegeToCheck) return;
@@ -70,28 +73,6 @@ const PrivilegeTest: React.FC = () => {
           
           {useContext && (
             <div className="space-y-3 border p-3 rounded-md">
-              <div>
-                <Label htmlFor="resource">Resource:</Label>
-                <Input
-                  id="resource"
-                  value={contextData.resource || ""}
-                  onChange={(e) => setContextData({...contextData, resource: e.target.value})}
-                  placeholder="Resource (e.g., policy, claim)"
-                  className="mt-1"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="action">Action:</Label>
-                <Input
-                  id="action"
-                  value={contextData.action || ""}
-                  onChange={(e) => setContextData({...contextData, action: e.target.value})}
-                  placeholder="Action (e.g., view, edit, delete)"
-                  className="mt-1"
-                />
-              </div>
-              
               <div>
                 <Label htmlFor="ownerId">Owner ID (optional):</Label>
                 <Input

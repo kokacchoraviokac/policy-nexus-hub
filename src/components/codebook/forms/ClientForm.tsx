@@ -1,6 +1,8 @@
 
 import React from "react";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth/AuthContext";
 import { ContactFields } from "./shared/ContactFields";
@@ -8,39 +10,23 @@ import { AddressFields } from "./shared/AddressFields";
 import { CompanyFields } from "./shared/CompanyFields";
 import { FormActions } from "./shared/FormActions";
 import { StatusField } from "./shared/StatusField";
-import useZodForm from "@/hooks/useZodForm";
-import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  nameSchema,
-  emailSchema,
-  phoneSchema,
-  addressSchema,
-  citySchema,
-  postalCodeSchema,
-  countrySchema,
-  taxIdSchema,
-  registrationNumberSchema,
-  notesSchema,
-  isActiveSchema,
-} from "@/utils/formSchemas";
 
-const createClientFormSchema = (t: (key: string) => string) =>
-  z.object({
-    name: nameSchema(t("companyNameRequired")),
-    contact_person: z.string().optional(),
-    email: emailSchema(t("invalidEmail")),
-    phone: phoneSchema(),
-    address: addressSchema(),
-    city: citySchema(),
-    postal_code: postalCodeSchema(),
-    country: countrySchema(),
-    tax_id: taxIdSchema(),
-    registration_number: registrationNumberSchema(),
-    notes: notesSchema(),
-    is_active: isActiveSchema(),
-  });
+const clientFormSchema = z.object({
+  name: z.string().min(1, "Company name is required"),
+  contact_person: z.string().optional(),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postal_code: z.string().optional(),
+  country: z.string().optional(),
+  tax_id: z.string().optional(),
+  registration_number: z.string().optional(),
+  notes: z.string().optional(),
+  is_active: z.boolean().default(true),
+});
 
-type ClientFormValues = z.infer<ReturnType<typeof createClientFormSchema>>;
+type ClientFormValues = z.infer<typeof clientFormSchema>;
 
 interface ClientFormProps {
   defaultValues?: Partial<ClientFormValues>;
@@ -66,23 +52,13 @@ const ClientForm: React.FC<ClientFormProps> = ({
   },
   onSubmit,
   onCancel,
-  isSubmitting: externalIsSubmitting,
+  isSubmitting,
 }) => {
   const { user } = useAuth();
-  const { t } = useLanguage();
-  
-  const schema = createClientFormSchema(t);
 
-  const form = useZodForm({
-    schema,
+  const form = useForm<ClientFormValues>({
+    resolver: zodResolver(clientFormSchema),
     defaultValues,
-    onSubmit,
-    successMessage: defaultValues.name 
-      ? t("clientUpdateSuccess") 
-      : t("clientCreateSuccess"),
-    errorMessage: defaultValues.name 
-      ? t("clientUpdateError") 
-      : t("clientCreateError"),
   });
 
   return (
@@ -106,7 +82,7 @@ const ClientForm: React.FC<ClientFormProps> = ({
 
         <FormActions
           onCancel={onCancel}
-          isSubmitting={externalIsSubmitting || form.isSubmitting}
+          isSubmitting={isSubmitting}
           isEditing={!!defaultValues.name}
           entityName="Client"
         />

@@ -6,7 +6,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Insurer } from "@/types/codebook";
 import { supabase } from "@/integrations/supabase/client";
 import { useActivityLogger } from "@/utils/activityLogger";
-import { EntityType } from "@/types/common";
 
 interface AddProductDialogProps {
   open: boolean;
@@ -43,7 +42,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
       // Log product creation
       if (data) {
         await logActivity({
-          entity_type: EntityType.INSURER, // Using EntityType enum
+          entity_type: "insurer", // Using a valid EntityType
           entity_id: insurer.id,
           action: "create",
           details: { 

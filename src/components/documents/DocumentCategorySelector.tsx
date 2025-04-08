@@ -36,10 +36,7 @@ const DocumentCategorySelector: React.FC<DocumentCategorySelectorProps> = ({
         </SelectTrigger>
         <SelectContent>
           {options.map((category) => (
-            <SelectItem 
-              key={category.value} 
-              value={category.value || "undefined_category"} // Ensure no empty strings
-            >
+            <SelectItem key={category.value} value={category.value || "undefined"}>
               {category.label}
             </SelectItem>
           ))}

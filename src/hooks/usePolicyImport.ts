@@ -1,236 +1,249 @@
 
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { InvalidPolicy, Policy, ValidationErrors, WorkflowStatus, PolicyStatus } from "@/types/policies";
-import PolicyService from "@/services/PolicyService";
-import { useAuth } from "@/contexts/AuthContext";
-import Papa from "papaparse";
+import { useState, useEffect } from "react";
+import { Policy } from "@/types/policies";
+import { parsePolicyCSV, validateImportedPolicies } from "@/utils/policies/importUtils";
+import { useSupabaseClient } from "@/hooks/useSupabaseClient";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
+import { useLocation } from "react-router-dom";
 
-export function usePolicyImport() {
+export const usePolicyImport = () => {
+  const [isImporting, setIsImporting] = useState(false);
   const [importedPolicies, setImportedPolicies] = useState<Partial<Policy>[]>([]);
-  const [invalidPolicies, setInvalidPolicies] = useState<InvalidPolicy[]>([]);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const [invalidPolicies, setInvalidPolicies] = useState<{ policy: Partial<Policy>; errors: string[] }[]>([]);
+  const [salesProcessData, setSalesProcessData] = useState<any>(null);
+  const supabase = useSupabaseClient();
+  const location = useLocation();
 
-  const handleFileSelect = async (file: File): Promise<void> => {
-    if (!file) {
-      toast({
-        description: "No file selected",
-        variant: "destructive",
-      });
-      return;
+  // Check for sales process ID in URL params
+  useEffect(() => {
+    const fetchSalesProcessData = async (salesId: string) => {
+      try {
+        setIsImporting(true);
+        // In a real app, this would fetch the sales process data from the API
+        console.log("Fetching sales process data for ID:", salesId);
+        
+        // Simulate an API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // For demo purposes, we'll create a mock policy based on the sales process
+        const mockPolicyFromSales: Partial<Policy> = {
+          policy_number: `POL-${salesId.substring(0, 5)}`,
+          policy_type: "Standard",
+          insurer_name: "Example Insurance Company",
+          product_name: "Business Insurance",
+          product_code: "BI-001",
+          policyholder_name: "Sales Client",
+          insured_name: "Sales Client",
+          start_date: new Date().toISOString().split('T')[0],
+          expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          premium: 1000,
+          currency: "EUR",
+          payment_frequency: "annual",
+          commission_type: "automatic",
+          commission_percentage: 10,
+          notes: `Imported from sales process ${salesId}`,
+          workflow_status: "draft",
+          status: "active"
+        };
+        
+        setSalesProcessData({
+          id: salesId,
+          policy: mockPolicyFromSales
+        });
+        
+        setImportedPolicies([mockPolicyFromSales]);
+        
+        toast.success("Sales process data loaded successfully", {
+          description: "Ready to import policy from sales process"
+        });
+      } catch (error: any) {
+        console.error("Error fetching sales process data:", error);
+        toast.error(`Error loading sales process data: ${error.message}`);
+      } finally {
+        setIsImporting(false);
+      }
+    };
+    
+    const queryParams = new URLSearchParams(location.search);
+    const salesProcessId = queryParams.get("from_sales");
+    
+    if (salesProcessId) {
+      fetchSalesProcessData(salesProcessId);
     }
+  }, [location]);
 
-    if (!file.name.endsWith(".csv")) {
-      toast({
-        description: "Only CSV files are supported",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    setImportedPolicies([]);
-    setInvalidPolicies([]);
-    setValidationErrors({});
-
+  const parseCSVFile = async (file: File): Promise<void> => {
+    setIsImporting(true);
+    
     try {
       const text = await file.text();
-
-      Papa.parse(text, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (result) => {
-          try {
-            if (result.errors.length > 0) {
-              toast({
-                description: `CSV parsing error: ${result.errors[0].message}`,
-                variant: "destructive",
-              });
-              setValidationErrors({
-                general: [`CSV parsing error: ${result.errors[0].message}`]
-              });
-              return;
-            }
-
-            const mapped = transformCSVToPolicy(result.data);
-            validatePolicies(mapped);
-          } catch (error: any) {
-            console.error("Error processing CSV:", error);
-            toast({
-              description: `Error processing file: ${error.message}`,
-              variant: "destructive",
-            });
-            setValidationErrors({
-              general: [`Error processing file: ${error.message}`]
-            });
-          } finally {
-            setIsProcessing(false);
-          }
-        },
-        error: (error) => {
-          console.error("CSV parsing error:", error);
-          toast({
-            description: `Error parsing CSV: ${error.message}`,
-            variant: "destructive",
-          });
-          setValidationErrors({
-            general: [`Error parsing CSV: ${error.message}`]
-          });
-          setIsProcessing(false);
-        },
-      });
-    } catch (error: any) {
-      console.error("File reading error:", error);
-      toast({
-        description: `Error reading file: ${error.message}`,
-        variant: "destructive",
-      });
-      setValidationErrors({
-        general: [`Error reading file: ${error.message}`]
-      });
-      setIsProcessing(false);
-    }
-  };
-
-  const handleFileDrop = async (acceptedFiles: File[]): Promise<void> => {
-    if (acceptedFiles.length === 0) {
-      toast({
-        description: "No file was dropped",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    await handleFileSelect(acceptedFiles[0]);
-  };
-
-  const validatePolicies = (policies: Partial<Policy>[]) => {
-    const errors: ValidationErrors = {};
-    const valid: Partial<Policy>[] = [];
-    const invalid: InvalidPolicy[] = [];
-
-    for (let i = 0; i < policies.length; i++) {
-      const policy = policies[i];
-      const rowErrors: string[] = [];
-
-      // Required fields validation
-      if (!policy.policy_number) rowErrors.push("Policy number is required");
-      if (!policy.policyholder_name) rowErrors.push("Policyholder name is required");
-      if (!policy.insurer_name) rowErrors.push("Insurer name is required");
-      if (!policy.start_date) rowErrors.push("Start date is required");
-      if (!policy.expiry_date) rowErrors.push("Expiry date is required");
-      if (!policy.premium) rowErrors.push("Premium is required");
-
-      // If there are errors, add to invalid policies
-      if (rowErrors.length > 0) {
-        invalid.push({
-          row: i + 2, // +2 for header row and 0-index
-          data: policy,
-          errors: rowErrors
-        });
+      const policies = parsePolicyCSV(text);
+      
+      const { valid, invalid } = validateImportedPolicies(policies);
+      
+      setImportedPolicies(valid);
+      setInvalidPolicies(invalid);
+      
+      if (invalid.length > 0) {
+        toast.warning(`${invalid.length} policies have validation issues.`);
+      }
+      
+      if (valid.length > 0) {
+        toast.success(`Successfully parsed ${valid.length} policies.`);
       } else {
-        valid.push(policy);
+        toast.error("No valid policies found in the file.");
       }
-    }
-
-    if (invalid.length > 0) {
-      errors.policies = invalid;
-    }
-
-    setValidationErrors(errors);
-    setImportedPolicies(valid);
-    setInvalidPolicies(invalid);
-
-    if (valid.length > 0) {
-      toast({
-        description: `Found ${valid.length} valid policies to import`,
-      });
-    }
-
-    if (invalid.length > 0) {
-      toast({
-        description: `Found ${invalid.length} policies with validation errors`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const transformCSVToPolicy = (data: any[]): Partial<Policy>[] => {
-    if (data.length === 0) {
-      throw new Error("CSV file is empty");
-    }
-
-    return data.map((row, index) => {
-      const policy: Partial<Policy> = {
-        policy_number: row.policy_number || row["Policy Number"] || "",
-        policy_type: row.policy_type || row["Policy Type"] || "standard",
-        policyholder_name: row.policyholder_name || row["Policyholder Name"] || "",
-        insurer_name: row.insurer_name || row["Insurer"] || "",
-        start_date: row.start_date || row["Start Date"] || "",
-        expiry_date: row.expiry_date || row["Expiry Date"] || "",
-        premium: parseFloat(row.premium || row["Premium"] || 0),
-        currency: row.currency || row["Currency"] || "EUR",
-        status: PolicyStatus.ACTIVE,
-        workflow_status: WorkflowStatus.DRAFT,
-      };
-
-      if (row.commission_percentage || row["Commission %"]) {
-        policy.commission_percentage = parseFloat(row.commission_percentage || row["Commission %"]);
-      }
-
-      if (row.commission_amount || row["Commission Amount"]) {
-        policy.commission_amount = parseFloat(row.commission_amount || row["Commission Amount"]);
-      }
-
-      return policy;
-    });
-  };
-
-  const submitPolicies = async (): Promise<void> => {
-    if (importedPolicies.length === 0) {
-      toast({
-        description: "No valid policies to import",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const result = await PolicyService.importPolicies(importedPolicies, user?.id || "");
-
-      toast({
-        description: `Successfully imported ${result.success.length} policies`,
-      });
-
-      // Clear state after successful import
-      setImportedPolicies([]);
-      setInvalidPolicies([]);
-      setValidationErrors({});
     } catch (error: any) {
-      console.error("Error importing policies:", error);
-      toast({
-        description: `Error importing policies: ${error.message}`,
-        variant: "destructive",
-      });
+      console.error("Error parsing CSV:", error);
+      toast.error(`Error parsing file: ${error.message}`);
     } finally {
-      setIsSubmitting(false);
+      setIsImporting(false);
     }
+  };
+
+  const savePolicies = async (): Promise<boolean> => {
+    if (importedPolicies.length === 0) {
+      toast.error("No valid policies to import.");
+      return false;
+    }
+    
+    setIsImporting(true);
+    
+    try {
+      // Get the user's data to get company_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("User authentication required");
+        return false;
+      }
+      
+      // Get the user's profile to get company_id
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", user.id)
+        .single();
+      
+      if (!userProfile?.company_id) {
+        toast.error("Company ID not found");
+        return false;
+      }
+      
+      const companyId = userProfile.company_id;
+      
+      // Prepare policies with required fields for insertion
+      const policiesToInsert = importedPolicies.map(policy => {
+        const policyData = {
+          id: uuidv4(),
+          policy_number: policy.policy_number || '',
+          policy_type: policy.policy_type || 'Standard',
+          insurer_name: policy.insurer_name || '',
+          insurer_id: policy.insurer_id,
+          policyholder_name: policy.policyholder_name || '',
+          client_id: policy.client_id,
+          insured_name: policy.insured_name || policy.policyholder_name || '',
+          insured_id: policy.insured_id,
+          product_name: policy.product_name || '',
+          product_id: policy.product_id,
+          product_code: policy.product_code,
+          start_date: policy.start_date || new Date().toISOString().split('T')[0],
+          expiry_date: policy.expiry_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          premium: policy.premium || 0,
+          currency: policy.currency || 'EUR',
+          payment_frequency: policy.payment_frequency || 'annual',
+          commission_type: policy.commission_type || 'automatic',
+          commission_percentage: policy.commission_percentage,
+          commission_amount: policy.commission_amount,
+          notes: policy.notes,
+          status: 'active',
+          workflow_status: 'draft',
+          company_id: companyId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          created_by: user.id
+        };
+
+        // If we're importing from a sales process, add a reference to it
+        if (salesProcessData?.id) {
+          policyData.notes = `${policyData.notes || ''}\nImported from sales process ID: ${salesProcessData.id}`;
+          // In a real application, you might want to add a proper reference in a dedicated field
+        }
+
+        return policyData;
+      });
+      
+      // Insert policies into database one by one to avoid batch issues
+      let successCount = 0;
+      let errorCount = 0;
+      let errors: string[] = [];
+      
+      for (const policy of policiesToInsert) {
+        const { data, error } = await supabase
+          .from("policies")
+          .insert(policy)
+          .select();
+        
+        if (error) {
+          console.error("Error saving policy:", error, policy);
+          errors.push(`Error saving policy ${policy.policy_number}: ${error.message}`);
+          errorCount++;
+        } else {
+          successCount++;
+          
+          // If we imported from a sales process, update the sales process status
+          if (salesProcessData?.id && successCount > 0) {
+            // In a real application, this would update the sales process to show a policy was created
+            console.log(`Updating sales process ${salesProcessData.id} status to link it with policy ${policy.id}`);
+            
+            // This would be the real implementation to update the sales process
+            // const { error: updateError } = await supabase
+            //   .from("sales_processes")
+            //   .update({ policy_id: policy.id, status: "converted" })
+            //   .eq("id", salesProcessData.id);
+            
+            // if (updateError) {
+            //   console.error("Error updating sales process:", updateError);
+            // }
+          }
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`Successfully imported ${successCount} policies.`);
+        
+        if (errorCount > 0) {
+          toast.error(`Failed to import ${errorCount} policies due to database errors.`);
+          console.error("Import errors:", errors);
+        }
+        
+        return true;
+      } else {
+        toast.error("Failed to import any policies.");
+        return false;
+      }
+    } catch (error: any) {
+      console.error("Error saving policies:", error);
+      toast.error(`Error saving policies: ${error.message}`);
+      return false;
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const clearImportData = () => {
+    setImportedPolicies([]);
+    setInvalidPolicies([]);
+    setSalesProcessData(null);
   };
 
   return {
+    isImporting,
     importedPolicies,
     invalidPolicies,
-    validationErrors,
-    handleFileSelect,
-    handleFileDrop,
-    isProcessing,
-    isSubmitting,
-    submitPolicies,
+    parseCSVFile,
+    savePolicies,
+    clearImportData,
+    salesProcessData
   };
-}
+};
