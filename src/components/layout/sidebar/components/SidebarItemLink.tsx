@@ -1,19 +1,18 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, ChevronRight, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface SidebarItemLinkProps {
-  icon: LucideIcon;
+  icon: React.ElementType;
   label: string;
   path: string;
   active: boolean;
   collapsed: boolean;
-  hasSubItems: boolean;
-  isExpanded: boolean;
-  onClick: (e: React.MouseEvent) => void;
+  hasSubItems?: boolean;
+  isExpanded?: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 const SidebarItemLink: React.FC<SidebarItemLinkProps> = ({
@@ -22,38 +21,35 @@ const SidebarItemLink: React.FC<SidebarItemLinkProps> = ({
   path,
   active,
   collapsed,
-  hasSubItems,
-  isExpanded,
+  hasSubItems = false,
+  isExpanded = false,
   onClick
 }) => {
-  const { t } = useLanguage();
-  
-  const baseClasses = cn(
-    "flex items-center rounded-md transition-all duration-200 my-1",
-    collapsed ? "justify-center p-2 mx-auto" : "px-3 py-2.5 w-full",
-    active 
-      ? "bg-[#C76449] text-white font-medium" 
-      : "text-sidebar-foreground hover:bg-[#C76449]/20 hover:text-white hover:translate-x-1"
-  );
-
-  // Ensure the text is properly capitalized when displayed
-  const displayLabel = t(label);
-
   return (
     <Link
       to={path}
+      className={cn(
+        "sidebar-item group flex items-center gap-3 px-3 py-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors duration-200",
+        active && "active bg-sidebar-primary text-sidebar-primary-foreground",
+        hasSubItems && "justify-between"
+      )}
       onClick={onClick}
-      className={baseClasses}
     >
-      <Icon className={cn("h-5 w-5 flex-shrink-0", collapsed && !hasSubItems && "mx-auto")} />
+      <div className="flex items-center gap-3 min-w-0">
+        <Icon size={18} className={cn("shrink-0", active && "text-sidebar-primary-foreground")} />
+        {!collapsed && (
+          <span className="truncate">{label}</span>
+        )}
+      </div>
       
-      {!collapsed && (
-        <>
-          <span className="ml-3 flex-1 text-sm">{displayLabel}</span>
-          {hasSubItems && (
-            isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
+      {hasSubItems && !collapsed && (
+        <div className="flex items-center">
+          {isExpanded ? (
+            <ChevronDown size={16} className="opacity-70" />
+          ) : (
+            <ChevronRight size={16} className="opacity-70" />
           )}
-        </>
+        </div>
       )}
     </Link>
   );

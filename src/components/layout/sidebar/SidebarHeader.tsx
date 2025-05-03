@@ -15,7 +15,7 @@ const SidebarHeader: React.FC<SidebarHeaderProps> = ({ collapsed, setCollapsed }
       <Logo collapsed={collapsed} />
       <button 
         onClick={() => setCollapsed(!collapsed)}
-        className="text-sidebar-foreground p-1 rounded-md hover:bg-sidebar-accent transition-colors"
+        className="h-6 w-6 rounded-full bg-sidebar-accent/10 text-sidebar-foreground flex items-center justify-center hover:bg-sidebar-accent/20 transition-colors"
       >
         {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
       </button>

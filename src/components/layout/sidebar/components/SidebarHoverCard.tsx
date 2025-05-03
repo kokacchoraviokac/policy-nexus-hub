@@ -1,65 +1,66 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SubItem {
   label: string;
   path: string;
   requiredPrivilege: string;
-  icon?: LucideIcon;
+  icon?: React.ElementType;
 }
 
 interface SidebarHoverCardProps {
   label: string;
   subItems: SubItem[];
-  currentPath: string;
   children: React.ReactNode;
+  currentPath: string;
 }
 
-const SidebarHoverCard: React.FC<SidebarHoverCardProps> = ({ label, subItems, currentPath, children }) => {
+const SidebarHoverCard: React.FC<SidebarHoverCardProps> = ({
+  label,
+  subItems,
+  children,
+  currentPath
+}) => {
   const { t } = useLanguage();
 
   return (
-    <HoverCard openDelay={300} closeDelay={200}>
-      <HoverCardTrigger asChild>
-        <div className="relative cursor-pointer">
-          {children}
-        </div>
-      </HoverCardTrigger>
+    <HoverCard openDelay={200} closeDelay={100}>
+      <HoverCardTrigger asChild>{children}</HoverCardTrigger>
       <HoverCardContent 
         side="right" 
-        align="start" 
-        className="w-56 p-3 z-50 bg-popover border border-sidebar-border shadow-glass-sm"
+        align="start"
+        className="sidebar-hover-card w-64 p-2"
       >
-        <div className="font-medium text-sm mb-3 border-b border-gray-200 pb-2">{t(label)}</div>
-        <ScrollArea className="max-h-[300px]">
-          <div className="space-y-1.5">
-            {subItems.map((subItem, index) => {
-              const isSubItemActive = 
-                currentPath === subItem.path || 
-                currentPath.startsWith(`${subItem.path}/`);
+        <div className="space-y-1 p-2">
+          <h4 className="text-sm font-medium">{t(label)}</h4>
+          <div className="space-y-0.5">
+            {subItems.map((item, i) => {
+              const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
               
               return (
                 <Link
-                  key={index}
-                  to={subItem.path}
+                  key={i}
+                  to={item.path}
                   className={cn(
-                    "text-foreground hover:bg-[#C76449]/20 hover:text-[#C76449] rounded-md py-2 px-3 text-sm flex items-center transition-colors duration-200",
-                    isSubItemActive && "bg-[#C76449] text-white font-medium"
+                    "flex items-center rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted",
+                    isActive && "bg-muted font-medium"
                   )}
                 >
-                  {subItem.icon && <subItem.icon className="h-4 w-4 mr-3 flex-shrink-0" />}
-                  <span>{t(subItem.label)}</span>
+                  {item.icon && <item.icon size={16} className="mr-2 opacity-70" />}
+                  <span>{t(item.label)}</span>
                 </Link>
               );
             })}
           </div>
-        </ScrollArea>
+        </div>
       </HoverCardContent>
     </HoverCard>
   );

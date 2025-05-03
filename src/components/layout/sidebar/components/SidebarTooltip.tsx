@@ -1,6 +1,11 @@
 
 import React from "react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SidebarTooltipProps {
   label: string;
@@ -9,14 +14,17 @@ interface SidebarTooltipProps {
 
 const SidebarTooltip: React.FC<SidebarTooltipProps> = ({ label, children }) => {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div>{children}</div>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="sidebar-tooltip">
-        {label}
-      </TooltipContent>
-    </Tooltip>
+    <TooltipProvider>
+      <Tooltip delayDuration={300}>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent 
+          side="right" 
+          className="sidebar-tooltip z-50 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border"
+        >
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 

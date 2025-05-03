@@ -2,54 +2,43 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-interface SubItemProps {
+interface SubItem {
   label: string;
   path: string;
   requiredPrivilege: string;
-  icon?: LucideIcon;
+  icon?: React.ElementType;
 }
 
 interface SidebarSubItemsProps {
-  subItems: SubItemProps[];
+  subItems: SubItem[];
   currentPath: string;
 }
 
-const SidebarSubItems: React.FC<SidebarSubItemsProps> = ({ 
-  subItems, 
-  currentPath,
-}) => {
+const SidebarSubItems: React.FC<SidebarSubItemsProps> = ({ subItems, currentPath }) => {
   const { t } = useLanguage();
-  
+
   return (
-    <ul className="pl-7 mt-2 space-y-1.5">
-      {subItems.map((item, index) => {
-        const Icon = item.icon;
+    <div className="mt-1 ml-9 space-y-1">
+      {subItems.map((item, i) => {
         const isActive = currentPath === item.path || currentPath.startsWith(`${item.path}/`);
         
-        // Ensure the text is properly capitalized when displayed
-        const displayLabel = t(item.label);
-        
         return (
-          <li key={index}>
-            <Link
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors duration-200",
-                isActive 
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium" 
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
-            >
-              {Icon && <Icon className="h-4 w-4" />}
-              <span>{displayLabel}</span>
-            </Link>
-          </li>
+          <Link
+            key={i}
+            to={item.path}
+            className={cn(
+              "flex items-center text-sm px-3 py-1.5 rounded-md text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors duration-200",
+              isActive && "bg-sidebar-accent/70 text-sidebar-foreground font-medium"
+            )}
+          >
+            {item.icon && <item.icon size={16} className="mr-2 opacity-70" />}
+            <span className="truncate">{t(item.label)}</span>
+          </Link>
         );
       })}
-    </ul>
+    </div>
   );
 };
 
