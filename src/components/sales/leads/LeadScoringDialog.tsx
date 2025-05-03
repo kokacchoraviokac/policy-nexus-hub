@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +8,7 @@ import { useLeads } from "@/hooks/sales/useLeads";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useLeadScoring } from "@/hooks/sales/useLeadScoring";
+import { useNotificationService } from "@/hooks/useNotificationService";
 
 interface LeadScoringDialogProps {
   lead: Lead;
@@ -27,6 +27,7 @@ const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
   const { toast } = useToast();
   const { updateLead } = useLeads();
   const { shouldQualifyLead } = useLeadScoring();
+  const { createLeadStatusChangeNotification } = useNotificationService();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleSubmit = async (values: LeadScoringFormValues) => {
@@ -51,6 +52,7 @@ const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
       
       // Check if we should recommend status change to qualified
       let statusUpdateMessage = "";
+      let previousStatus = lead.status;
       
       // Only suggest changing to 'qualified' if current status is 'new' and score is high enough
       if (lead.status === 'new' && shouldQualifyLead(totalScore)) {
@@ -63,6 +65,14 @@ const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
       
       // Update lead
       await updateLead(lead.id, updateData);
+      
+      // Create notification if status changed
+      if (updateData.status && updateData.status !== previousStatus) {
+        await createLeadStatusChangeNotification({
+          ...lead,
+          status: updateData.status
+        }, previousStatus);
+      }
       
       // Show success message
       toast({

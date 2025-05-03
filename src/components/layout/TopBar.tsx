@@ -1,69 +1,86 @@
-
-import React, { useState, useEffect } from "react";
-import { Bell } from "lucide-react";
-import { cn } from "@/lib/utils";
-import UserProfileMenu from "@/components/auth/UserProfileMenu";
+import React from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import LanguageSelector from "@/components/language/LanguageSelector";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/contexts/ThemeContext";
+import { MoonIcon, SunIcon } from "@radix-ui/react-icons";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import UserNotificationMenu from '../notifications/UserNotificationMenu';
 
-interface TopBarProps {
-  sidebarCollapsed: boolean;
-  setSidebarCollapsed: (collapsed: boolean) => void;
-}
+const TopBar: React.FC = () => {
+  const { t } = useLanguage();
+  const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-const TopBar: React.FC<TopBarProps> = ({ sidebarCollapsed, setSidebarCollapsed }) => {
-  const { user } = useAuth();
-  const [companyName, setCompanyName] = useState<string>("");
-
-  useEffect(() => {
-    const fetchCompanyName = async () => {
-      if (user?.companyId) {
-        try {
-          const { data, error } = await supabase
-            .from('companies')
-            .select('name')
-            .eq('id', user.companyId)
-            .single();
-          
-          if (error) {
-            console.error("Error fetching company name:", error);
-            return;
-          }
-          
-          if (data) {
-            setCompanyName(data.name);
-          }
-        } catch (error) {
-          console.error("Failed to fetch company name:", error);
-        }
-      }
-    };
-    
-    fetchCompanyName();
-  }, [user]);
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
+  };
 
   return (
-    <header className="h-16 border-b border-border flex items-center px-6 bg-white/80 backdrop-blur-sm">
-      <div className="flex-1">
-        {companyName && (
-          <h2 className="text-lg font-semibold text-primary">
-            {companyName}
-          </h2>
-        )}
-      </div>
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+      <Breadcrumbs />
       
-      <div className="flex items-center space-x-5">
-        <LanguageSelector />
-        <button 
-          className="p-2 rounded-full hover:bg-secondary transition-colors relative" 
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary"></span>
-        </button>
+      <div className="ml-auto flex items-center gap-2">
+        <UserNotificationMenu />
         
-        <UserProfileMenu />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0 px-1.5">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.avatar || `https://avatar.vercel.sh/${user?.email}.png`} alt={user?.name} />
+                <AvatarFallback>{user?.name?.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <div className="grid gap-2 px-2 py-1">
+              <div className="grid gap-0.5">
+                <p className="text-sm font-medium text-foreground">
+                  {user?.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/settings/profile")}>
+              {t("profile")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate("/settings/company")}>
+              {t("company")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={toggleTheme}>
+              {theme === "light" ? (
+                <>
+                  <MoonIcon className="mr-2 h-4 w-4" />
+                  <span>{t("darkMode")}</span>
+                </>
+              ) : (
+                <>
+                  <SunIcon className="mr-2 h-4 w-4" />
+                  <span>{t("lightMode")}</span>
+                </>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout}>
+              {t("logout")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

@@ -1237,6 +1237,51 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          company_id: string
+          created_at: string
+          due_date: string | null
+          id: string
+          message: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          status: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          message: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          message?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       payout_items: {
         Row: {
           amount: number
@@ -2167,6 +2212,48 @@ export type Database = {
           granted_by?: string
           id?: string
           privilege?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notification_preferences: {
+        Row: {
+          activity_reminders: boolean
+          company_id: string
+          created_at: string
+          email_notifications: boolean
+          id: string
+          in_app_notifications: boolean
+          lead_updates: boolean
+          reminder_timing: Json
+          sales_process_updates: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_reminders?: boolean
+          company_id: string
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          in_app_notifications?: boolean
+          lead_updates?: boolean
+          reminder_timing?: Json
+          sales_process_updates?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_reminders?: boolean
+          company_id?: string
+          created_at?: string
+          email_notifications?: boolean
+          id?: string
+          in_app_notifications?: boolean
+          lead_updates?: boolean
+          reminder_timing?: Json
+          sales_process_updates?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

@@ -6,7 +6,7 @@ import { PlusCircle } from "lucide-react";
 import { useSalesActivities } from "@/hooks/sales/useSalesActivities";
 import ActivityList from "../activities/ActivityList";
 import NewActivityDialog from "../activities/NewActivityDialog";
-import { SalesActivity } from "@/types/sales/activities";
+import { useNotificationService } from "@/hooks/useNotificationService"; // Add this import
 
 interface LeadActivitiesProps {
   leadId: string;
@@ -15,6 +15,7 @@ interface LeadActivitiesProps {
 const LeadActivities: React.FC<LeadActivitiesProps> = ({ leadId }) => {
   const { t } = useLanguage();
   const [showNewActivityDialog, setShowNewActivityDialog] = useState(false);
+  const { createActivityDueNotification } = useNotificationService(); // Add this
   
   const {
     activities,
@@ -29,10 +30,18 @@ const LeadActivities: React.FC<LeadActivitiesProps> = ({ leadId }) => {
     if (leadId) {
       fetchActivities();
     }
-  }, [leadId]);
+  }, [leadId, fetchActivities]);
 
   const handleActivityCreated = async (activityData: any) => {
-    await createActivity(activityData);
+    const newActivity = await createActivity({
+      ...activityData,
+      lead_id: leadId
+    });
+    
+    // Create notification for the new activity if it has a due date
+    if (newActivity && newActivity.due_date) {
+      await createActivityDueNotification(newActivity);
+    }
   };
 
   const handleCompleteActivity = async (id: string) => {

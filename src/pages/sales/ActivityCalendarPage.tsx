@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
@@ -15,12 +14,14 @@ import { ActivityCalendar } from "@/components/sales/activities/ActivityCalendar
 import NewActivityDialog from "@/components/sales/activities/NewActivityDialog";
 import { useSalesActivities } from "@/hooks/sales/useSalesActivities";
 import { SalesActivity } from "@/types/sales/activities";
+import { useNotificationService } from "@/hooks/useNotificationService";
 
 const ActivityCalendarPage = () => {
   const { t } = useLanguage();
   const [showNewActivityDialog, setShowNewActivityDialog] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [activityTypeFilter, setActivityTypeFilter] = useState("all");
+  const { createActivityDueNotification } = useNotificationService();
   
   const {
     activities,
@@ -34,8 +35,12 @@ const ActivityCalendarPage = () => {
   }, [fetchActivities, statusFilter]);
 
   const handleActivityCreated = async (activityData: any) => {
-    await createActivity(activityData);
+    const newActivity = await createActivity(activityData);
     setShowNewActivityDialog(false);
+    
+    if (newActivity && newActivity.due_date) {
+      await createActivityDueNotification(newActivity);
+    }
   };
   
   const filteredActivities = activities.filter(activity => {
@@ -46,7 +51,6 @@ const ActivityCalendarPage = () => {
   });
 
   const handleActivityClick = (activity: SalesActivity) => {
-    // This would typically open a dialog to view/edit the activity
     console.log("Activity clicked:", activity);
   };
 
