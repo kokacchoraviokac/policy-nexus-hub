@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import LeadScoreIndicator from "./LeadScoreIndicator";
@@ -79,7 +79,7 @@ const LeadScoringForm: React.FC<LeadScoringFormProps> = ({ lead, onSubmit, isSub
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <InfoCircle className="h-4 w-4 text-muted-foreground ml-1 inline cursor-help" />
+          <Info className="h-4 w-4 text-muted-foreground ml-1 inline cursor-help" />
         </TooltipTrigger>
         <TooltipContent>
           <div className="max-w-xs">

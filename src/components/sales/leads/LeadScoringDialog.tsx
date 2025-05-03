@@ -65,7 +65,8 @@ const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
       await updateLead(lead.id, updateData);
       
       // Show success message
-      toast.success(t("leadScoreUpdated"), {
+      toast({
+        title: t("leadScoreUpdated"),
         description: statusUpdateMessage ? `${t("leadScoreUpdatedMessage")} ${statusUpdateMessage}` : t("leadScoreUpdatedMessage")
       });
       
@@ -75,7 +76,11 @@ const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
       
     } catch (error) {
       console.error("Error updating lead score:", error);
-      toast.error(t("errorUpdatingLeadScore"));
+      toast({
+        title: t("errorUpdatingLeadScore"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
