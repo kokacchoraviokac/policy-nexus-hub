@@ -1,3 +1,4 @@
+
 {
   "sales": "Sales",
   "salesDescription": "Manage your sales pipeline, leads, and processes",
@@ -266,7 +267,6 @@
   "leadStatusUpdated": "Lead status has also been updated to 'Qualified'.",
   "lostLeadScoringWarning": "This lead is marked as 'Lost'. Scoring it will not automatically change its status.",
   
-  // Notification related translations
   "notifications": "Notifications",
   "notificationSettings": "Notification Settings",
   "markAsRead": "Mark as read",

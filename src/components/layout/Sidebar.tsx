@@ -10,7 +10,7 @@ const Sidebar = ({ className }: React.HTMLAttributes<HTMLDivElement>) => {
   
   return (
     <div className={cn("h-screen", className)}>
-      <ModernSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      <ModernSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
     </div>
   );
 };
