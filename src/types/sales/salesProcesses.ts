@@ -11,7 +11,7 @@ export interface SalesProcess {
   expected_close_date?: string;
   lead_id?: string;
   assigned_to?: string;
-  notes?: string;
+  notes?: string;  // This may not exist in the database, we're adding it to the type
   company_id: string;
   created_at: string;
   updated_at: string;

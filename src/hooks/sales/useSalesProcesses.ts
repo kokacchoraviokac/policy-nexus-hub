@@ -19,13 +19,29 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
   const { t } = useLanguage();
   const { user } = useAuth();
 
+  // Define the database row type to make our type checking more accurate
+  interface DbSalesProcess {
+    id: string;
+    sales_number: string;
+    lead_id?: string;
+    company_id: string;
+    assigned_to?: string;
+    current_step: string;
+    status: string;
+    estimated_value?: number;
+    expected_close_date?: string;
+    notes?: string; // We're assuming notes might exist in the database
+    created_at: string;
+    updated_at: string;
+  }
+
   const fetchSalesProcesses = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
       // Define a function to map database column names to our type
-      const mapDbResponseToSalesProcess = (row: any): SalesProcess => {
+      const mapDbResponseToSalesProcess = (row: DbSalesProcess): SalesProcess => {
         return {
           id: row.id,
           title: row.sales_number || "", // Map sales_number to title 
@@ -38,7 +54,7 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
           expected_close_date: row.expected_close_date || undefined,
           lead_id: row.lead_id || undefined,
           assigned_to: row.assigned_to || undefined,
-          notes: row.notes || undefined,
+          notes: row.notes || undefined, // Using optional chaining for notes
           company_id: row.company_id,
           created_at: row.created_at,
           updated_at: row.updated_at
@@ -96,7 +112,7 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
         expected_close_date: processData.expected_close_date,
         lead_id: processData.lead_id,
         assigned_to: processData.assigned_to,
-        notes: processData.notes
+        notes: processData.notes // Pass notes to the database
       };
       
       const { data, error } = await supabase
@@ -117,22 +133,23 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
       });
       
       // Map the response to our type using the same mapper as in fetchSalesProcesses
+      const dbProcess = data as DbSalesProcess;
       const mappedProcess: SalesProcess = {
-        id: data.id,
-        title: data.sales_number || "", // Map sales_number to title
+        id: dbProcess.id,
+        title: dbProcess.sales_number || "", // Map sales_number to title
         client_name: "Client", // Default placeholder
         company: undefined, // Default undefined
-        stage: (data.current_step || "quote") as SalesStage,
-        status: (data.status || "active") as SalesStatus,
+        stage: (dbProcess.current_step || "quote") as SalesStage,
+        status: (dbProcess.status || "active") as SalesStatus,
         insurance_type: "Unknown", // Default value
-        estimated_value: data.estimated_value || undefined,
-        expected_close_date: data.expected_close_date || undefined,
-        lead_id: data.lead_id || undefined,
-        assigned_to: data.assigned_to || undefined,
-        notes: data.notes || undefined,
-        company_id: data.company_id,
-        created_at: data.created_at,
-        updated_at: data.updated_at
+        estimated_value: dbProcess.estimated_value || undefined,
+        expected_close_date: dbProcess.expected_close_date || undefined,
+        lead_id: dbProcess.lead_id || undefined,
+        assigned_to: dbProcess.assigned_to || undefined,
+        notes: dbProcess.notes || undefined, // Handle notes properly
+        company_id: dbProcess.company_id,
+        created_at: dbProcess.created_at,
+        updated_at: dbProcess.updated_at
       };
       
       return mappedProcess;
@@ -182,22 +199,23 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
       });
       
       // Map the response to our type using the same mapper as above
+      const dbProcess = data as DbSalesProcess;
       const mappedProcess: SalesProcess = {
-        id: data.id,
-        title: data.sales_number || "", // Map sales_number to title
+        id: dbProcess.id,
+        title: dbProcess.sales_number || "", // Map sales_number to title
         client_name: "Client", // Default placeholder
         company: undefined, // Default undefined
-        stage: (data.current_step || "quote") as SalesStage,
-        status: (data.status || "active") as SalesStatus,
+        stage: (dbProcess.current_step || "quote") as SalesStage,
+        status: (dbProcess.status || "active") as SalesStatus,
         insurance_type: "Unknown", // Default value
-        estimated_value: data.estimated_value || undefined,
-        expected_close_date: data.expected_close_date || undefined,
-        lead_id: data.lead_id || undefined,
-        assigned_to: data.assigned_to || undefined,
-        notes: data.notes || undefined,
-        company_id: data.company_id,
-        created_at: data.created_at,
-        updated_at: data.updated_at
+        estimated_value: dbProcess.estimated_value || undefined,
+        expected_close_date: dbProcess.expected_close_date || undefined,
+        lead_id: dbProcess.lead_id || undefined,
+        assigned_to: dbProcess.assigned_to || undefined,
+        notes: dbProcess.notes || undefined, // Handle notes properly
+        company_id: dbProcess.company_id,
+        created_at: dbProcess.created_at,
+        updated_at: dbProcess.updated_at
       };
       
       return mappedProcess;
