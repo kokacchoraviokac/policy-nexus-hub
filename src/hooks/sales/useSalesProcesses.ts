@@ -28,12 +28,12 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
       const mapDbResponseToSalesProcess = (row: any): SalesProcess => {
         return {
           id: row.id,
-          title: row.title || "", 
-          client_name: row.client_name || "",
-          company: row.company || undefined,
+          title: row.sales_number || "", // Map sales_number to title 
+          client_name: "Client", // Default placeholder for client name
+          company: undefined, // Default undefined for company
           stage: (row.current_step || "quote") as SalesStage, // Map current_step to stage
           status: (row.status || "active") as SalesStatus,
-          insurance_type: row.insurance_type || "",
+          insurance_type: "Unknown", // Default value for insurance_type
           estimated_value: row.estimated_value || undefined,
           expected_close_date: row.expected_close_date || undefined,
           lead_id: row.lead_id || undefined,
@@ -62,7 +62,7 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
       
       // Apply search query if provided
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,client_name.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%`);
+        query = query.or(`sales_number.ilike.%${searchQuery}%`);
       }
       
       const { data, error } = await query;
@@ -88,14 +88,15 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
     try {
       // Make sure we include the company_id and default values
       const dataWithDefaults = {
-        ...processData,
-        title: processData.title, // Ensure title is explicitly set
-        client_name: processData.client_name, // Ensure client_name is explicitly set
-        company: processData.company, // Ensure company is explicitly set
-        insurance_type: processData.insurance_type, // Ensure insurance_type is explicitly set
+        sales_number: processData.title, // Map title to sales_number
         company_id: user?.companyId,
         current_step: 'quote', // Map stage to current_step in DB
-        status: 'active' as SalesStatus
+        status: 'active',
+        estimated_value: processData.estimated_value,
+        expected_close_date: processData.expected_close_date,
+        lead_id: processData.lead_id,
+        assigned_to: processData.assigned_to,
+        notes: processData.notes
       };
       
       const { data, error } = await supabase
@@ -115,15 +116,15 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
         description: t("salesProcessCreatedDescription", { title: processData.title })
       });
       
-      // Map the response to our type
+      // Map the response to our type using the same mapper as in fetchSalesProcesses
       const mappedProcess: SalesProcess = {
         id: data.id,
-        title: data.title || "",
-        client_name: data.client_name || "",
-        company: data.company || undefined,
+        title: data.sales_number || "", // Map sales_number to title
+        client_name: "Client", // Default placeholder
+        company: undefined, // Default undefined
         stage: (data.current_step || "quote") as SalesStage,
         status: (data.status || "active") as SalesStatus,
-        insurance_type: data.insurance_type || "",
+        insurance_type: "Unknown", // Default value
         estimated_value: data.estimated_value || undefined,
         expected_close_date: data.expected_close_date || undefined,
         lead_id: data.lead_id || undefined,
@@ -145,11 +146,22 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
   const updateSalesProcess = async (id: string, processData: UpdateSalesProcessRequest): Promise<SalesProcess | null> => {
     try {
       // Map stage to current_step if it exists in the update data
-      const dataForDb = { ...processData };
+      const dataForDb: Record<string, any> = { ...processData };
+      
       if (dataForDb.stage) {
         dataForDb.current_step = dataForDb.stage;
         delete dataForDb.stage;
       }
+      
+      if (dataForDb.title) {
+        dataForDb.sales_number = dataForDb.title;
+        delete dataForDb.title;
+      }
+      
+      // Remove client_name, company, and insurance_type as they don't exist in the DB
+      if (dataForDb.client_name) delete dataForDb.client_name;
+      if (dataForDb.company) delete dataForDb.company;
+      if (dataForDb.insurance_type) delete dataForDb.insurance_type;
       
       const { data, error } = await supabase
         .from('sales_processes')
@@ -169,15 +181,15 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
         description: t("salesProcessUpdatedDescription")
       });
       
-      // Map the response to our type
+      // Map the response to our type using the same mapper as above
       const mappedProcess: SalesProcess = {
         id: data.id,
-        title: data.title || "",
-        client_name: data.client_name || "",
-        company: data.company || undefined,
+        title: data.sales_number || "", // Map sales_number to title
+        client_name: "Client", // Default placeholder
+        company: undefined, // Default undefined
         stage: (data.current_step || "quote") as SalesStage,
         status: (data.status || "active") as SalesStatus,
-        insurance_type: data.insurance_type || "",
+        insurance_type: "Unknown", // Default value
         estimated_value: data.estimated_value || undefined,
         expected_close_date: data.expected_close_date || undefined,
         lead_id: data.lead_id || undefined,
