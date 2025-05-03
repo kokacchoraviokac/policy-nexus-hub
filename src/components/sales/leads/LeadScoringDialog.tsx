@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -38,7 +39,7 @@ const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
       const totalScore = values.budgetScore + values.authorityScore + values.needScore + values.timelineScore;
       
       // Prepare update data
-      const updateData = {
+      const updateData: any = {
         score: totalScore,
         budget_score: values.budgetScore,
         authority_score: values.authorityScore,
@@ -58,7 +59,7 @@ const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
       if (lead.status === 'new' && shouldQualifyLead(totalScore)) {
         // Add status to update data if user confirms
         if (window.confirm(t("leadQualificationConfirm"))) {
-          Object.assign(updateData, { status: 'qualified' as const });
+          updateData.status = 'qualified';
           statusUpdateMessage = t("leadStatusUpdated");
         }
       }

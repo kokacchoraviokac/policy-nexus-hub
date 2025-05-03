@@ -28,15 +28,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       {/* Modern Sidebar with collapsible functionality */}
       <ModernSidebar 
         collapsed={sidebarCollapsed} 
-        setCollapsed={setSidebarCollapsed} 
+        onCollapsedChange={setSidebarCollapsed} 
       />
       
       {/* Main content + fixed footer */}
       <div className="flex flex-col flex-1 overflow-hidden">
-        <TopBar 
-          sidebarCollapsed={sidebarCollapsed} 
-          setSidebarCollapsed={setSidebarCollapsed} 
-        />
+        <TopBar />
         
         <div className="px-6 py-2">
           <BreadcrumbNav />

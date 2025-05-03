@@ -79,7 +79,10 @@ const NotificationPreferencesDialog: React.FC<NotificationPreferencesDialogProps
         activity_reminders: preferences.activity_reminders,
         lead_updates: preferences.lead_updates,
         sales_process_updates: preferences.sales_process_updates,
-        reminder_timing: preferences.reminder_timing,
+        reminder_timing: {
+          activity_due: preferences.reminder_timing.activity_due,
+          lead_followup: preferences.reminder_timing.lead_followup,
+        },
         email_notifications: preferences.email_notifications,
         in_app_notifications: preferences.in_app_notifications,
       });
@@ -88,7 +91,17 @@ const NotificationPreferencesDialog: React.FC<NotificationPreferencesDialogProps
   
   // Handle form submission
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const success = await updatePreferences(values);
+    const success = await updatePreferences({
+      activity_reminders: values.activity_reminders,
+      lead_updates: values.lead_updates,
+      sales_process_updates: values.sales_process_updates,
+      reminder_timing: {
+        activity_due: values.reminder_timing.activity_due,
+        lead_followup: values.reminder_timing.lead_followup,
+      },
+      email_notifications: values.email_notifications,
+      in_app_notifications: values.in_app_notifications,
+    });
     if (success) {
       onOpenChange(false);
     }
