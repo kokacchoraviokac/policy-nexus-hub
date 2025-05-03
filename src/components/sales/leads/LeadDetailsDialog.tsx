@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Lead } from "@/types/sales/leads";
+import LeadActivities from "./LeadActivities";
+import { ActivityList } from "@/components/codebook/details/ActivityLog";
+import { fetchActivityLogs } from "@/utils/activityLogger";
 
 interface LeadDetailsDialogProps {
   lead: Lead;
@@ -27,6 +31,26 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
   onOpenChange,
 }) => {
   const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState("info");
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+
+  // Load activity logs when the history tab is selected
+  const handleTabChange = async (value: string) => {
+    setActiveTab(value);
+    
+    if (value === "history" && !activityLogs.length) {
+      setIsLoadingLogs(true);
+      try {
+        const logs = await fetchActivityLogs("lead", lead.id);
+        setActivityLogs(logs);
+      } catch (error) {
+        console.error("Error fetching activity logs:", error);
+      } finally {
+        setIsLoadingLogs(false);
+      }
+    }
+  };
 
   // Lead status badge styling
   const getStatusBadge = (status: string) => {
@@ -46,7 +70,7 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>{lead.name}</span>
@@ -59,60 +83,74 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
           )}
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground">{t("contactInformation")}</h4>
-              <div className="mt-1 space-y-2">
-                <p className="text-sm">
-                  <span className="font-medium">{t("email")}: </span>
-                  {lead.email}
-                </p>
-                {lead.phone && (
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="info">{t("information")}</TabsTrigger>
+            <TabsTrigger value="activities">{t("activities")}</TabsTrigger>
+            <TabsTrigger value="history">{t("history")}</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="info" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">{t("contactInformation")}</h4>
+                <div className="mt-1 space-y-2">
                   <p className="text-sm">
-                    <span className="font-medium">{t("phone")}: </span>
-                    {lead.phone}
+                    <span className="font-medium">{t("email")}: </span>
+                    {lead.email}
                   </p>
-                )}
+                  {lead.phone && (
+                    <p className="text-sm">
+                      <span className="font-medium">{t("phone")}: </span>
+                      {lead.phone}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">{t("leadDetails")}</h4>
+                <div className="mt-1 space-y-2">
+                  <p className="text-sm">
+                    <span className="font-medium">{t("source")}: </span>
+                    {lead.source || t("notSpecified")}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">{t("createdAt")}: </span>
+                    {format(new Date(lead.created_at), "PPP")}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">{t("responsiblePerson")}: </span>
+                    {lead.assigned_to || t("notAssigned")}
+                  </p>
+                </div>
               </div>
             </div>
             
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground">{t("leadDetails")}</h4>
-              <div className="mt-1 space-y-2">
-                <p className="text-sm">
-                  <span className="font-medium">{t("source")}: </span>
-                  {lead.source || t("notSpecified")}
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">{t("createdAt")}: </span>
-                  {format(new Date(lead.created_at), "PPP")}
-                </p>
-                <p className="text-sm">
-                  <span className="font-medium">{t("responsiblePerson")}: </span>
-                  {lead.assigned_to || t("notAssigned")}
-                </p>
-              </div>
-            </div>
-          </div>
+            {lead.notes && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("notes")}</h4>
+                  <p className="text-sm whitespace-pre-wrap">{lead.notes}</p>
+                </div>
+              </>
+            )}
+          </TabsContent>
           
-          {lead.notes && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("notes")}</h4>
-                <p className="text-sm whitespace-pre-wrap">{lead.notes}</p>
-              </div>
-            </>
-          )}
+          <TabsContent value="activities">
+            <LeadActivities leadId={lead.id} />
+          </TabsContent>
           
-          <Separator />
-          
-          <div>
-            <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("activityTimeline")}</h4>
-            <p className="text-sm text-muted-foreground italic">{t("noActivity")}</p>
-          </div>
-        </div>
+          <TabsContent value="history">
+            <h4 className="text-sm font-medium mb-3">{t("activityTimeline")}</h4>
+            <ActivityList 
+              items={activityLogs} 
+              isLoading={isLoadingLogs}
+              maxItems={10}
+            />
+          </TabsContent>
+        </Tabs>
         
         <DialogFooter>
           <Button onClick={() => onOpenChange(false)}>
