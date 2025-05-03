@@ -1,3 +1,4 @@
+
 import auth from "./auth.json";
 import claims from "./claims.json";
 import codebook from "./codebook.json";
@@ -12,6 +13,7 @@ import settings from "./settings.json";
 import agent from "./agent.json";
 import policies from "./policies";
 import reports from "./reports.json";
+import sales from "./sales.json"; // Add sales translations
 
 const en = {
   ...auth,
@@ -27,7 +29,8 @@ const en = {
   ...policies,
   ...settings,
   ...agent,
-  ...reports
+  ...reports,
+  ...sales // Include sales translations
 };
 
 export default en;

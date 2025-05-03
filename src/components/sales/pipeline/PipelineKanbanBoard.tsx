@@ -1,178 +1,107 @@
 
-import React from "react";
+import * as React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Grid } from "@/components/ui/grid";
+import { Card, CardContent } from "@/components/ui/card";
+import { SalesProcess, SalesStage } from "@/types/sales/salesProcesses";
+import { useSalesProcesses } from "@/hooks/sales/useSalesProcesses";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building, Calendar, Users, Clipboard, ChevronRight } from "lucide-react";
-
-// Types for the pipeline stages and items
-interface PipelineItem {
-  id: string;
-  title: string;
-  company: string;
-  date: string;
-  assignedTo: string;
-  status: string;
-  category: string;
-  value?: string;
-}
-
-interface PipelineStage {
-  id: string;
-  name: string;
-  items: PipelineItem[];
-}
-
-// Mock data for the pipeline stages
-const pipelineStagesMock: PipelineStage[] = [
-  {
-    id: "new",
-    name: "leadProspect",
-    items: [
-      {
-        id: "1",
-        title: "Initial Contact",
-        company: "Global Industries",
-        date: "2023-09-12",
-        assignedTo: "John Doe",
-        status: "new",
-        category: "nonLife",
-        value: "€12,000",
-      },
-      {
-        id: "2",
-        title: "Lead Follow-up",
-        company: "Tech Solutions",
-        date: "2023-09-15",
-        assignedTo: "Jane Smith",
-        status: "new",
-        category: "life",
-        value: "€8,500",
-      },
-    ],
-  },
-  {
-    id: "quote",
-    name: "quoteManagement",
-    items: [
-      {
-        id: "3",
-        title: "Quote Preparation",
-        company: "Sunshine Corp",
-        date: "2023-09-10",
-        assignedTo: "Mike Johnson",
-        status: "quoting",
-        category: "nonLife",
-        value: "€35,200",
-      },
-    ],
-  },
-  {
-    id: "negotiation",
-    name: "insurerQuotes",
-    items: [
-      {
-        id: "4",
-        title: "Negotiation",
-        company: "Evergreen Ltd",
-        date: "2023-09-05",
-        assignedTo: "Sarah Williams",
-        status: "negotiation",
-        category: "nonLife",
-        value: "€22,750",
-      },
-      {
-        id: "5",
-        title: "Final Offer",
-        company: "Bright Future Inc",
-        date: "2023-09-08",
-        assignedTo: "John Doe",
-        status: "negotiation",
-        category: "life",
-        value: "€18,300",
-      },
-    ],
-  },
-  {
-    id: "closing",
-    name: "clientSelection",
-    items: [
-      {
-        id: "6",
-        title: "Contract Finalization",
-        company: "Golden Investments",
-        date: "2023-09-03",
-        assignedTo: "Jane Smith",
-        status: "closing",
-        category: "nonLife",
-        value: "€65,000",
-      },
-    ],
-  },
-];
+import { CalendarIcon, Clock, DollarSign } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const PipelineKanbanBoard: React.FC = () => {
   const { t } = useLanguage();
+  const { salesProcesses, isLoading } = useSalesProcesses("", "all", "active");
+
+  // Define our pipeline stages
+  const stages: SalesStage[] = [
+    'quote',
+    'authorization',
+    'request',
+    'proposal',
+    'receipt',
+    'signed',
+    'concluded'
+  ];
+
+  // Group sales processes by stage
+  const processesByStage = stages.reduce((acc, stage) => {
+    acc[stage] = salesProcesses.filter(process => process.stage === stage);
+    return acc;
+  }, {} as Record<SalesStage, SalesProcess[]>);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
-    <div className="overflow-x-auto pb-4">
-      <Grid className="grid-cols-1 md:grid-cols-4 gap-4 min-w-[1000px]">
-        {pipelineStagesMock.map((stage) => (
-          <div key={stage.id} className="flex flex-col">
-            <div className="bg-muted rounded-t-md px-4 py-2 flex items-center justify-between">
-              <h3 className="font-medium">{t(stage.name)}</h3>
-              <Badge variant="outline">{stage.items.length}</Badge>
-            </div>
-            <div className="bg-card rounded-b-md border-x border-b p-3 flex-1 space-y-3">
-              {stage.items.map((item) => (
-                <Card key={item.id} className="cursor-pointer hover:shadow-md transition-shadow border">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between">
-                      <Badge 
-                        variant={item.category === "life" ? "outline" : "secondary"}
-                        className={item.category === "life" ? "" : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"}
-                      >
-                        {t(item.category)}
-                      </Badge>
-                      {item.value && (
-                        <Badge variant="outline" className="font-medium">{item.value}</Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-base mt-2">{item.title}</CardTitle>
-                    <CardDescription className="flex items-center mt-1">
-                      <Building className="h-4 w-4 mr-1.5" /> {item.company}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <div className="text-sm text-muted-foreground space-y-1.5">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1.5" /> {item.date}
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1.5" /> {item.assignedTo}
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="pt-0">
-                    <Button variant="ghost" size="sm" className="ml-auto">
-                      <Clipboard className="h-4 w-4 mr-1.5" />
-                      {t("details")}
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-              {stage.items.length === 0 && (
-                <div className="flex items-center justify-center h-24 bg-background/50 rounded-md border border-dashed">
-                  <p className="text-sm text-muted-foreground">{t("noItemsInStage")}</p>
-                </div>
-              )}
+    <div className="grid grid-cols-1 md:grid-cols-7 gap-4 overflow-x-auto pb-6">
+      {stages.map(stage => (
+        <div key={stage} className="min-w-[250px]">
+          <div className="bg-muted rounded-t-md p-3">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-sm">{t(stage)}</h3>
+              <Badge variant="outline">{processesByStage[stage].length}</Badge>
             </div>
           </div>
-        ))}
-      </Grid>
+          
+          <div className="bg-muted/50 rounded-b-md p-2 min-h-[400px] space-y-2">
+            {processesByStage[stage].map(process => (
+              <Card 
+                key={process.id} 
+                className="bg-background border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+              >
+                <CardContent className="p-3 space-y-2">
+                  <div className="font-medium truncate">{process.title}</div>
+                  
+                  <div className="text-sm text-muted-foreground truncate">
+                    {process.client_name}
+                    {process.company && ` · ${process.company}`}
+                  </div>
+                  
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    {process.estimated_value && (
+                      <div className="flex items-center">
+                        <DollarSign className="h-3 w-3 mr-1" />
+                        {process.estimated_value}
+                      </div>
+                    )}
+                    
+                    {process.expected_close_date && (
+                      <div className="flex items-center">
+                        <CalendarIcon className="h-3 w-3 mr-1" />
+                        {new Date(process.expected_close_date).toLocaleDateString()}
+                      </div>
+                    )}
+                    
+                    <Badge 
+                      className={cn(
+                        "text-[10px] h-5",
+                        process.status === 'active' && "bg-blue-100 text-blue-800 hover:bg-blue-100",
+                        process.status === 'won' && "bg-green-100 text-green-800 hover:bg-green-100",
+                        process.status === 'lost' && "bg-red-100 text-red-800 hover:bg-red-100",
+                        process.status === 'on_hold' && "bg-orange-100 text-orange-800 hover:bg-orange-100"
+                      )}
+                      variant="outline"
+                    >
+                      {t(process.status)}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {processesByStage[stage].length === 0 && (
+              <div className="flex items-center justify-center h-full min-h-[100px] text-muted-foreground text-sm">
+                {t("noProcessesInStage")}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

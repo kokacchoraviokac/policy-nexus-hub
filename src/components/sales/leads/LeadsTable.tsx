@@ -1,243 +1,171 @@
 
-import React, { useState } from "react";
+import * as React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Edit, MoreHorizontal, Eye, Trash, UserPlus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import DataTable, { Column } from "@/components/ui/data-table";
-import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader,
+  TableRow 
+} from "@/components/ui/table";
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
+  DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
-import LeadDetailsDialog from "./LeadDetailsDialog";
-import EditLeadDialog from "./EditLeadDialog";
-import DeleteLeadDialog from "./DeleteLeadDialog";
-import ConvertLeadDialog from "./ConvertLeadDialog";
+import { Button } from "@/components/ui/button";
+import { 
+  MoreHorizontal, 
+  Edit, 
+  Trash, 
+  ExternalLink,
+  UserCheck,
+  PlusCircle
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Lead, LeadStatus } from "@/types/sales/leads";
+import { format } from "date-fns";
 
-// Define lead type
-export interface Lead {
-  id: string;
-  name: string;
-  company?: string;
-  email: string;
-  phone?: string;
-  status: 'new' | 'qualified' | 'converted' | 'lost';
-  source?: string;
-  created_at: string;
-  responsible_person?: string;
-  notes?: string;
-}
-
+// Define props for the LeadsTable component
 interface LeadsTableProps {
   leads: Lead[];
   onRefresh: () => void;
 }
 
-const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
-  const { t } = useLanguage();
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [viewOpen, setViewOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [convertOpen, setConvertOpen] = useState(false);
-
-  // Lead status badge styling
-  const getStatusBadge = (status: string) => {
+// Status badge component
+const StatusBadge = ({ status }: { status: LeadStatus }) => {
+  const getVariant = () => {
     switch (status) {
-      case 'new':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("newLeads")}</Badge>;
-      case 'qualified':
-        return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">{t("qualifiedLeads")}</Badge>;
-      case 'converted':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{t("convertedLeads")}</Badge>;
-      case 'lost':
-        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">{t("lostLeads")}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+      case "new": return "default";
+      case "qualified": return "secondary";
+      case "converted": return "success";
+      case "lost": return "destructive";
+      default: return "outline";
     }
   };
+  
+  const { t } = useLanguage();
+  
+  return <Badge variant={getVariant() as any}>{t(status)}</Badge>;
+};
 
-  // Handle view lead
-  const handleViewLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setViewOpen(true);
-  };
+// Format the date for display
+const formatDate = (dateString: string) => {
+  try {
+    return format(new Date(dateString), "MMM d, yyyy");
+  } catch (e) {
+    return dateString;
+  }
+};
 
-  // Handle edit lead
-  const handleEditLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setEditOpen(true);
-  };
-
-  // Handle delete lead
-  const handleDeleteLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setDeleteOpen(true);
-  };
-
-  // Handle convert lead
-  const handleConvertLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setConvertOpen(true);
-  };
-
-  // Handle lead update
-  const handleLeadUpdated = () => {
-    onRefresh();
-    toast.success(t("leadUpdated"), {
-      description: t("leadUpdatedDescription")
-    });
-  };
-
-  // Handle lead deletion
-  const handleLeadDeleted = () => {
-    onRefresh();
-    toast.success(t("leadDeleted"), {
-      description: t("leadDeletedDescription")
-    });
-  };
-
-  // Handle lead conversion
-  const handleLeadConverted = () => {
-    onRefresh();
-    toast.success(t("leadConverted"), {
-      description: t("leadConvertedDescription")
-    });
-  };
-
-  // Define columns
-  const columns: Column<Lead>[] = [
-    {
-      header: t("name"),
-      accessorKey: "name",
-      cell: (row) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{row.name}</span>
-          {row.company && <span className="text-sm text-muted-foreground">{row.company}</span>}
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      header: t("contact"),
-      accessorKey: "email",
-      cell: (row) => (
-        <div className="flex flex-col">
-          <span>{row.email}</span>
-          {row.phone && <span className="text-sm text-muted-foreground">{row.phone}</span>}
-        </div>
-      ),
-    },
-    {
-      header: t("status"),
-      accessorKey: "status",
-      cell: (row) => getStatusBadge(row.status),
-      sortable: true,
-    },
-    {
-      header: t("source"),
-      accessorKey: "source",
-    },
-    {
-      header: t("createdAt"),
-      accessorKey: "created_at",
-      cell: (row) => format(new Date(row.created_at), "PPP"),
-      sortable: true,
-    },
-    {
-      header: t("responsiblePerson"),
-      accessorKey: "responsible_person",
-    },
-    {
-      header: t("actions"),
-      accessorKey: "id",
-      cell: (row) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">{t("openMenu")}</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleViewLead(row)}>
-              <Eye className="mr-2 h-4 w-4" />
-              {t("viewDetails")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleEditLead(row)}>
-              <Edit className="mr-2 h-4 w-4" />
-              {t("editLead")}
-            </DropdownMenuItem>
-            {row.status !== 'converted' && (
-              <DropdownMenuItem onClick={() => handleConvertLead(row)}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                {t("convertToSalesProcess")}
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={() => handleDeleteLead(row)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              {t("deleteLead")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ];
-
+const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
+  const { t } = useLanguage();
+  const [leadToEdit, setLeadToEdit] = React.useState<Lead | null>(null);
+  const [leadToView, setLeadToView] = React.useState<Lead | null>(null);
+  const [leadToDelete, setLeadToDelete] = React.useState<Lead | null>(null);
+  const [leadToConvert, setLeadToConvert] = React.useState<Lead | null>(null);
+  
   return (
     <>
-      <DataTable
-        data={leads}
-        columns={columns}
-        emptyState={{
-          title: t("noLeadsFound"),
-          description: t("createYourFirstLead"),
-        }}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("company")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("contact")}</TableHead>
+              <TableHead>{t("status")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("created")}</TableHead>
+              <TableHead className="w-[80px]">{t("actions")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {leads.map((lead) => (
+              <TableRow key={lead.id}>
+                <TableCell className="font-medium">
+                  {lead.name}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {lead.company_name || "-"}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {lead.email || lead.phone || "-"}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={lead.status} />
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {formatDate(lead.created_at)}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">{t("openMenu")}</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>{t("leadActions")}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setLeadToView(lead)}>
+                        <ExternalLink className="mr-2 h-4 w-4" /> {t("viewDetails")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLeadToEdit(lead)}>
+                        <Edit className="mr-2 h-4 w-4" /> {t("edit")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLeadToConvert(lead)}>
+                        <UserCheck className="mr-2 h-4 w-4" /> {t("convertToSales")}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => setLeadToDelete(lead)}
+                        className="text-destructive"
+                      >
+                        <Trash className="mr-2 h-4 w-4" /> {t("delete")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {/* The dialog components would be rendered here. They'll be implemented next. */}
+      {/* 
+      <EditLeadDialog 
+        lead={leadToEdit} 
+        open={!!leadToEdit} 
+        onOpenChange={(open) => !open && setLeadToEdit(null)}
+        onLeadUpdated={onRefresh}
       />
-
-      {/* Lead Dialogs */}
-      {selectedLead && (
-        <>
-          <LeadDetailsDialog
-            lead={selectedLead}
-            open={viewOpen}
-            onOpenChange={setViewOpen}
-          />
-          
-          <EditLeadDialog
-            lead={selectedLead}
-            open={editOpen}
-            onOpenChange={setEditOpen}
-            onLeadUpdated={handleLeadUpdated}
-          />
-          
-          <DeleteLeadDialog
-            lead={selectedLead}
-            open={deleteOpen}
-            onOpenChange={setDeleteOpen}
-            onLeadDeleted={handleLeadDeleted}
-          />
-          
-          <ConvertLeadDialog
-            lead={selectedLead}
-            open={convertOpen}
-            onOpenChange={setConvertOpen}
-            onLeadConverted={handleLeadConverted}
-          />
-        </>
-      )}
+      
+      <LeadDetailsDialog
+        lead={leadToView}
+        open={!!leadToView}
+        onOpenChange={(open) => !open && setLeadToView(null)}
+      />
+      
+      <DeleteLeadDialog
+        lead={leadToDelete}
+        open={!!leadToDelete}
+        onOpenChange={(open) => !open && setLeadToDelete(null)}
+        onLeadDeleted={onRefresh}
+      />
+      
+      <ConvertLeadDialog
+        lead={leadToConvert}
+        open={!!leadToConvert}
+        onOpenChange={(open) => !open && setLeadToConvert(null)}
+        onLeadConverted={onRefresh}
+      />
+      */}
     </>
   );
 };

@@ -1692,6 +1692,69 @@ export type Database = {
           },
         ]
       }
+      sales_activities: {
+        Row: {
+          activity_type: string
+          assigned_to: string | null
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          lead_id: string | null
+          sales_process_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activity_type: string
+          assigned_to?: string | null
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          sales_process_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activity_type?: string
+          assigned_to?: string | null
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          sales_process_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_activities_sales_process_id_fkey"
+            columns: ["sales_process_id"]
+            isOneToOne: false
+            referencedRelation: "sales_processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_assignments: {
         Row: {
           assigned_by: string
@@ -1872,6 +1935,65 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_quotes: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string
+          currency: string
+          id: string
+          insurer_id: string | null
+          notes: string | null
+          quote_number: string | null
+          sales_process_id: string
+          selected: boolean | null
+          status: string
+          total_amount: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by: string
+          currency?: string
+          id?: string
+          insurer_id?: string | null
+          notes?: string | null
+          quote_number?: string | null
+          sales_process_id: string
+          selected?: boolean | null
+          status?: string
+          total_amount: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          currency?: string
+          id?: string
+          insurer_id?: string | null
+          notes?: string | null
+          quote_number?: string | null
+          sales_process_id?: string
+          selected?: boolean | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_quotes_sales_process_id_fkey"
+            columns: ["sales_process_id"]
+            isOneToOne: false
+            referencedRelation: "sales_processes"
             referencedColumns: ["id"]
           },
         ]

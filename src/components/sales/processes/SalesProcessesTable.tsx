@@ -1,187 +1,214 @@
 
-import React, { useState } from "react";
+import * as React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { format } from "date-fns";
-import {
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  ArrowRight,
-  Eye,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
   TableHeader,
-  TableRow,
+  TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
-import SalesProcessDetailsDialog from "./SalesProcessDetailsDialog";
-import DeleteSalesProcessDialog from "./DeleteSalesProcessDialog";
+import { Button } from "@/components/ui/button";
+import { 
+  MoreHorizontal, 
+  Edit, 
+  Trash, 
+  ExternalLink,
+  FileCheck,
+  ArrowUpRight
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { SalesProcess, SalesStage, SalesStatus } from "@/types/sales/salesProcesses";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
+// Define props for the SalesProcessesTable component
 interface SalesProcessesTableProps {
   salesProcesses: SalesProcess[];
   onRefresh: () => void;
 }
 
-const SalesProcessesTable: React.FC<SalesProcessesTableProps> = ({
-  salesProcesses,
-  onRefresh,
-}) => {
-  const { t } = useLanguage();
-  const [selectedProcess, setSelectedProcess] = useState<SalesProcess | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-
-  // Process stage badge styling
-  const getStageBadge = (stage: string) => {
+// Stage badge component
+const StageBadge = ({ stage }: { stage: SalesStage }) => {
+  const getVariant = () => {
     switch (stage) {
-      case 'quote':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("quoteManagement")}</Badge>;
-      case 'authorization':
-        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">{t("clientAuthorization")}</Badge>;
-      case 'proposal':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">{t("policyProposal")}</Badge>;
-      case 'signed':
-        return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">{t("signedPolicies")}</Badge>;
-      case 'concluded':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{t("concluded")}</Badge>;
-      default:
-        return <Badge variant="outline">{stage}</Badge>;
+      case "quote": return "default";
+      case "authorization": return "outline";
+      case "request": return "secondary";
+      case "proposal": return "secondary";
+      case "receipt": return "outline";
+      case "signed": return "success";
+      case "concluded": return "success";
+      default: return "outline";
     }
   };
+  
+  const { t } = useLanguage();
+  
+  return <Badge variant={getVariant() as any}>{t(stage)}</Badge>;
+};
 
-  // Insurance type badge styling
-  const getInsuranceTypeBadge = (type: string) => {
-    switch (type) {
-      case 'life':
-        return <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-200">{t("life")}</Badge>;
-      case 'nonLife':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("nonLife")}</Badge>;
-      case 'health':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{t("health")}</Badge>;
-      case 'property':
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">{t("property")}</Badge>;
-      case 'auto':
-        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">{t("auto")}</Badge>;
-      case 'travel':
-        return <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">{t("travel")}</Badge>;
-      case 'business':
-        return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">{t("business")}</Badge>;
-      default:
-        return <Badge variant="outline">{type}</Badge>;
+// Status badge component
+const StatusBadge = ({ status }: { status: SalesStatus }) => {
+  const getClassNames = () => {
+    switch (status) {
+      case "active": return "bg-blue-100 text-blue-800 hover:bg-blue-100";
+      case "won": return "bg-green-100 text-green-800 hover:bg-green-100";
+      case "lost": return "bg-red-100 text-red-800 hover:bg-red-100";
+      case "on_hold": return "bg-orange-100 text-orange-800 hover:bg-orange-100";
+      default: return "";
     }
   };
+  
+  const { t } = useLanguage();
+  
+  return (
+    <Badge 
+      variant="outline" 
+      className={cn("font-medium", getClassNames())}
+    >
+      {t(status)}
+    </Badge>
+  );
+};
 
-  const handleViewDetails = (process: SalesProcess) => {
-    setSelectedProcess(process);
-    setDetailsOpen(true);
-  };
+// Format the date for display
+const formatDate = (dateString?: string) => {
+  if (!dateString) return "-";
+  try {
+    return format(new Date(dateString), "MMM d, yyyy");
+  } catch (e) {
+    return dateString;
+  }
+};
 
-  const handleDelete = (process: SalesProcess) => {
-    setSelectedProcess(process);
-    setDeleteOpen(true);
-  };
-
+const SalesProcessesTable: React.FC<SalesProcessesTableProps> = ({ salesProcesses, onRefresh }) => {
+  const { t } = useLanguage();
+  const [processToEdit, setProcessToEdit] = React.useState<SalesProcess | null>(null);
+  const [processToView, setProcessToView] = React.useState<SalesProcess | null>(null);
+  const [processToDelete, setProcessToDelete] = React.useState<SalesProcess | null>(null);
+  const [processToImport, setProcessToImport] = React.useState<SalesProcess | null>(null);
+  
   return (
     <>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("title")}</TableHead>
-              <TableHead>{t("client")}</TableHead>
+              <TableHead>{t("processTitle")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("clientName")}</TableHead>
               <TableHead>{t("stage")}</TableHead>
-              <TableHead>{t("insuranceType")}</TableHead>
-              <TableHead>{t("createdAt")}</TableHead>
-              <TableHead>{t("responsiblePerson")}</TableHead>
-              <TableHead className="text-right">{t("actions")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("status")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("expectedCloseDate")}</TableHead>
+              <TableHead className="w-[80px]">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {salesProcesses.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  {t("noSalesProcessesFound")}
+            {salesProcesses.map((process) => (
+              <TableRow key={process.id}>
+                <TableCell className="font-medium">
+                  {process.title}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {process.client_name}
+                  {process.company && <span className="text-muted-foreground text-xs"> · {process.company}</span>}
+                </TableCell>
+                <TableCell>
+                  <StageBadge stage={process.stage} />
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <StatusBadge status={process.status} />
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {formatDate(process.expected_close_date)}
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">{t("openMenu")}</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>{t("processActions")}</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setProcessToView(process)}>
+                        <ExternalLink className="mr-2 h-4 w-4" /> {t("viewDetails")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setProcessToEdit(process)}>
+                        <Edit className="mr-2 h-4 w-4" /> {t("edit")}
+                      </DropdownMenuItem>
+                      {process.stage === 'concluded' && process.status === 'won' && (
+                        <DropdownMenuItem onClick={() => setProcessToImport(process)}>
+                          <FileCheck className="mr-2 h-4 w-4" /> {t("importPolicy")}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => setProcessToDelete(process)}
+                        className="text-destructive"
+                      >
+                        <Trash className="mr-2 h-4 w-4" /> {t("delete")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ) : (
-              salesProcesses.map((process) => (
-                <TableRow key={process.id}>
-                  <TableCell className="font-medium">
-                    {process.title}
-                    {process.company && <div className="text-xs text-muted-foreground">{process.company}</div>}
-                  </TableCell>
-                  <TableCell>{process.client_name}</TableCell>
-                  <TableCell>{getStageBadge(process.stage)}</TableCell>
-                  <TableCell>{getInsuranceTypeBadge(process.insurance_type)}</TableCell>
-                  <TableCell>{format(new Date(process.created_at), "PP")}</TableCell>
-                  <TableCell>{process.responsible_person || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">{t("openMenu")}</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewDetails(process)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          {t("viewDetails")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          {t("editProcess")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <ArrowRight className="mr-2 h-4 w-4" />
-                          {t("moveToNextStage")}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => handleDelete(process)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          {t("deleteProcess")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
+            ))}
+            
+            {salesProcesses.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="h-32 text-center">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <ArrowUpRight className="h-8 w-8 mb-2" />
+                    <p>{t("noSalesProcesses")}</p>
+                    <p className="text-sm">{t("createYourFirstProcess")}</p>
+                  </div>
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-
-      {selectedProcess && (
-        <>
-          <SalesProcessDetailsDialog 
-            process={selectedProcess} 
-            open={detailsOpen} 
-            onOpenChange={setDetailsOpen} 
-          />
-          <DeleteSalesProcessDialog 
-            process={selectedProcess} 
-            open={deleteOpen} 
-            onOpenChange={setDeleteOpen} 
-            onProcessDeleted={onRefresh} 
-          />
-        </>
-      )}
+      
+      {/* The dialog components would be rendered here. They'll be implemented in the future. */}
+      {/* 
+      <SalesProcessDetailsDialog 
+        process={processToView} 
+        open={!!processToView} 
+        onOpenChange={(open) => !open && setProcessToView(null)}
+      />
+      
+      <EditSalesProcessDialog 
+        process={processToEdit}
+        open={!!processToEdit}
+        onOpenChange={(open) => !open && setProcessToEdit(null)}
+        onProcessUpdated={onRefresh}
+      />
+      
+      <DeleteSalesProcessDialog
+        process={processToDelete}
+        open={!!processToDelete}
+        onOpenChange={(open) => !open && setProcessToDelete(null)}
+        onProcessDeleted={onRefresh}
+      />
+      
+      <ImportPolicyFromSalesDialog
+        process={processToImport}
+        open={!!processToImport}
+        onOpenChange={(open) => !open && setProcessToImport(null)}
+      />
+      */}
     </>
   );
 };
