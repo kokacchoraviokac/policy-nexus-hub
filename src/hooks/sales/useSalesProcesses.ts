@@ -89,9 +89,13 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
       // Make sure we include the company_id and default values
       const dataWithDefaults = {
         ...processData,
+        title: processData.title, // Ensure title is explicitly set
+        client_name: processData.client_name, // Ensure client_name is explicitly set
+        company: processData.company, // Ensure company is explicitly set
+        insurance_type: processData.insurance_type, // Ensure insurance_type is explicitly set
         company_id: user?.companyId,
         current_step: 'quote', // Map stage to current_step in DB
-        status: 'active'
+        status: 'active' as SalesStatus
       };
       
       const { data, error } = await supabase
@@ -116,15 +120,15 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
         id: data.id,
         title: data.title || "",
         client_name: data.client_name || "",
-        company: data.company,
-        stage: data.current_step as SalesStage, // Map current_step to stage
-        status: data.status as SalesStatus,
+        company: data.company || undefined,
+        stage: (data.current_step || "quote") as SalesStage,
+        status: (data.status || "active") as SalesStatus,
         insurance_type: data.insurance_type || "",
-        estimated_value: data.estimated_value,
-        expected_close_date: data.expected_close_date,
-        lead_id: data.lead_id,
-        assigned_to: data.assigned_to,
-        notes: data.notes,
+        estimated_value: data.estimated_value || undefined,
+        expected_close_date: data.expected_close_date || undefined,
+        lead_id: data.lead_id || undefined,
+        assigned_to: data.assigned_to || undefined,
+        notes: data.notes || undefined,
         company_id: data.company_id,
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -170,15 +174,15 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
         id: data.id,
         title: data.title || "",
         client_name: data.client_name || "",
-        company: data.company,
-        stage: data.current_step as SalesStage, // Map current_step to stage
-        status: data.status as SalesStatus,
+        company: data.company || undefined,
+        stage: (data.current_step || "quote") as SalesStage,
+        status: (data.status || "active") as SalesStatus,
         insurance_type: data.insurance_type || "",
-        estimated_value: data.estimated_value,
-        expected_close_date: data.expected_close_date,
-        lead_id: data.lead_id,
-        assigned_to: data.assigned_to,
-        notes: data.notes,
+        estimated_value: data.estimated_value || undefined,
+        expected_close_date: data.expected_close_date || undefined,
+        lead_id: data.lead_id || undefined,
+        assigned_to: data.assigned_to || undefined,
+        notes: data.notes || undefined,
         company_id: data.company_id,
         created_at: data.created_at,
         updated_at: data.updated_at
