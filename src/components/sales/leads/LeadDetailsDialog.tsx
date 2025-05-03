@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Lead } from "@/types/sales/leads";
 import LeadActivities from "./LeadActivities";
-import { ActivityList } from "@/components/codebook/details/ActivityLog";
+import { ActivityLog } from "@/components/codebook/details/ActivityLog";
 import { fetchActivityLogs } from "@/utils/activityLogger";
 
 interface LeadDetailsDialogProps {
@@ -144,7 +144,7 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
           
           <TabsContent value="history">
             <h4 className="text-sm font-medium mb-3">{t("activityTimeline")}</h4>
-            <ActivityList 
+            <ActivityLog 
               items={activityLogs} 
               isLoading={isLoadingLogs}
               maxItems={10}
