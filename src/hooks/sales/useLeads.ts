@@ -51,10 +51,11 @@ export const useLeads = (searchQuery: string = "", statusFilter: string = "all")
 
   const createLead = async (leadData: CreateLeadRequest): Promise<Lead | null> => {
     try {
-      // Make sure we include the company_id
+      // Make sure we include the company_id and default status
       const dataWithCompany = {
         ...leadData,
         company_id: user?.companyId,
+        status: 'new' // Default status for new leads
       };
       
       const { data, error } = await supabase

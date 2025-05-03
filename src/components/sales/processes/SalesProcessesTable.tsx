@@ -1,5 +1,5 @@
 
-import * as React from "react";
+import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Table, 
@@ -9,6 +9,15 @@ import {
   TableHeader,
   TableRow 
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  MoreHorizontal, 
+  ExternalLink, 
+  Edit, 
+  Trash,
+  FileUp
+} from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -17,86 +26,52 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { 
-  MoreHorizontal, 
-  Edit, 
-  Trash, 
-  ExternalLink,
-  FileCheck,
-  ArrowUpRight
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { SalesProcess, SalesStage, SalesStatus } from "@/types/sales/salesProcesses";
+import { SalesProcess } from "@/types/sales/salesProcesses";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import DeleteSalesProcessDialog from "./DeleteSalesProcessDialog";
+import SalesProcessDetailsDialog from "./SalesProcessDetailsDialog";
+import ImportPolicyFromSalesDialog from "./ImportPolicyFromSalesDialog";
 
-// Define props for the SalesProcessesTable component
 interface SalesProcessesTableProps {
   salesProcesses: SalesProcess[];
   onRefresh: () => void;
 }
 
-// Stage badge component
-const StageBadge = ({ stage }: { stage: SalesStage }) => {
+const StageBadge = ({ stage }: { stage: string }) => {
+  const { t } = useLanguage();
+  
   const getVariant = () => {
     switch (stage) {
       case "quote": return "default";
-      case "authorization": return "outline";
-      case "request": return "secondary";
-      case "proposal": return "secondary";
-      case "receipt": return "outline";
+      case "authorization": return "secondary";
+      case "proposal": return "outline";
       case "signed": return "success";
       case "concluded": return "success";
       default: return "outline";
     }
   };
   
-  const { t } = useLanguage();
-  
   return <Badge variant={getVariant() as any}>{t(stage)}</Badge>;
 };
 
-// Status badge component
-const StatusBadge = ({ status }: { status: SalesStatus }) => {
-  const getClassNames = () => {
-    switch (status) {
-      case "active": return "bg-blue-100 text-blue-800 hover:bg-blue-100";
-      case "won": return "bg-green-100 text-green-800 hover:bg-green-100";
-      case "lost": return "bg-red-100 text-red-800 hover:bg-red-100";
-      case "on_hold": return "bg-orange-100 text-orange-800 hover:bg-orange-100";
-      default: return "";
-    }
-  };
-  
-  const { t } = useLanguage();
-  
-  return (
-    <Badge 
-      variant="outline" 
-      className={cn("font-medium", getClassNames())}
-    >
-      {t(status)}
-    </Badge>
-  );
-};
-
-// Format the date for display
-const formatDate = (dateString?: string) => {
-  if (!dateString) return "-";
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return "-";
   try {
-    return format(new Date(dateString), "MMM d, yyyy");
+    return format(new Date(dateStr), "MMM d, yyyy");
   } catch (e) {
-    return dateString;
+    return dateStr;
   }
 };
 
-const SalesProcessesTable: React.FC<SalesProcessesTableProps> = ({ salesProcesses, onRefresh }) => {
+const SalesProcessesTable: React.FC<SalesProcessesTableProps> = ({
+  salesProcesses,
+  onRefresh,
+}) => {
   const { t } = useLanguage();
-  const [processToEdit, setProcessToEdit] = React.useState<SalesProcess | null>(null);
-  const [processToView, setProcessToView] = React.useState<SalesProcess | null>(null);
-  const [processToDelete, setProcessToDelete] = React.useState<SalesProcess | null>(null);
-  const [processToImport, setProcessToImport] = React.useState<SalesProcess | null>(null);
+  const [selectedProcess, setSelectedProcess] = useState<SalesProcess | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   
   return (
     <>
@@ -104,10 +79,10 @@ const SalesProcessesTable: React.FC<SalesProcessesTableProps> = ({ salesProcesse
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("processTitle")}</TableHead>
-              <TableHead className="hidden md:table-cell">{t("clientName")}</TableHead>
+              <TableHead>{t("title")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("client")}</TableHead>
               <TableHead>{t("stage")}</TableHead>
-              <TableHead className="hidden md:table-cell">{t("status")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("insuranceType")}</TableHead>
               <TableHead className="hidden md:table-cell">{t("expectedCloseDate")}</TableHead>
               <TableHead className="w-[80px]">{t("actions")}</TableHead>
             </TableRow>
@@ -120,13 +95,12 @@ const SalesProcessesTable: React.FC<SalesProcessesTableProps> = ({ salesProcesse
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   {process.client_name}
-                  {process.company && <span className="text-muted-foreground text-xs"> · {process.company}</span>}
                 </TableCell>
                 <TableCell>
                   <StageBadge stage={process.stage} />
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
-                  <StatusBadge status={process.status} />
+                  {t(process.insurance_type)}
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   {formatDate(process.expected_close_date)}
@@ -142,20 +116,34 @@ const SalesProcessesTable: React.FC<SalesProcessesTableProps> = ({ salesProcesse
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>{t("processActions")}</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setProcessToView(process)}>
+                      <DropdownMenuItem onClick={() => {
+                        setSelectedProcess(process);
+                        setDetailsDialogOpen(true);
+                      }}>
                         <ExternalLink className="mr-2 h-4 w-4" /> {t("viewDetails")}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setProcessToEdit(process)}>
+                      <DropdownMenuItem>
                         <Edit className="mr-2 h-4 w-4" /> {t("edit")}
                       </DropdownMenuItem>
-                      {process.stage === 'concluded' && process.status === 'won' && (
-                        <DropdownMenuItem onClick={() => setProcessToImport(process)}>
-                          <FileCheck className="mr-2 h-4 w-4" /> {t("importPolicy")}
-                        </DropdownMenuItem>
+                      
+                      {process.stage === "concluded" && process.status === "completed" && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedProcess(process);
+                            setImportDialogOpen(true);
+                          }}>
+                            <FileUp className="mr-2 h-4 w-4" /> {t("importPolicy")}
+                          </DropdownMenuItem>
+                        </>
                       )}
+                      
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
-                        onClick={() => setProcessToDelete(process)}
+                        onClick={() => {
+                          setSelectedProcess(process);
+                          setDeleteDialogOpen(true);
+                        }}
                         className="text-destructive"
                       >
                         <Trash className="mr-2 h-4 w-4" /> {t("delete")}
@@ -165,50 +153,32 @@ const SalesProcessesTable: React.FC<SalesProcessesTableProps> = ({ salesProcesse
                 </TableCell>
               </TableRow>
             ))}
-            
-            {salesProcesses.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center">
-                  <div className="flex flex-col items-center justify-center text-muted-foreground">
-                    <ArrowUpRight className="h-8 w-8 mb-2" />
-                    <p>{t("noSalesProcesses")}</p>
-                    <p className="text-sm">{t("createYourFirstProcess")}</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
           </TableBody>
         </Table>
       </div>
       
-      {/* The dialog components would be rendered here. They'll be implemented in the future. */}
-      {/* 
-      <SalesProcessDetailsDialog 
-        process={processToView} 
-        open={!!processToView} 
-        onOpenChange={(open) => !open && setProcessToView(null)}
-      />
-      
-      <EditSalesProcessDialog 
-        process={processToEdit}
-        open={!!processToEdit}
-        onOpenChange={(open) => !open && setProcessToEdit(null)}
-        onProcessUpdated={onRefresh}
-      />
-      
-      <DeleteSalesProcessDialog
-        process={processToDelete}
-        open={!!processToDelete}
-        onOpenChange={(open) => !open && setProcessToDelete(null)}
-        onProcessDeleted={onRefresh}
-      />
-      
-      <ImportPolicyFromSalesDialog
-        process={processToImport}
-        open={!!processToImport}
-        onOpenChange={(open) => !open && setProcessToImport(null)}
-      />
-      */}
+      {selectedProcess && (
+        <>
+          <DeleteSalesProcessDialog 
+            process={selectedProcess}
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onProcessDeleted={onRefresh}
+          />
+          
+          <SalesProcessDetailsDialog
+            process={selectedProcess}
+            open={detailsDialogOpen}
+            onOpenChange={setDetailsDialogOpen}
+          />
+          
+          <ImportPolicyFromSalesDialog
+            process={selectedProcess}
+            open={importDialogOpen}
+            onOpenChange={setImportDialogOpen}
+          />
+        </>
+      )}
     </>
   );
 };

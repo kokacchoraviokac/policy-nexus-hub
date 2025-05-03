@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess } from "@/types/sales/salesProcesses";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -80,4 +80,3 @@ const DeleteSalesProcessDialog: React.FC<DeleteSalesProcessDialogProps> = ({
 };
 
 export default DeleteSalesProcessDialog;
-

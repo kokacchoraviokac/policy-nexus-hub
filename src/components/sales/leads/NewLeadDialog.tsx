@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CreateLeadRequest, LeadSource } from "@/types/sales/leads";
@@ -46,10 +45,15 @@ const NewLeadDialog: React.FC<NewLeadDialogProps> = ({ open, onOpenChange, onLea
   });
   
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Filter out empty strings to convert them to undefined
-    const leadData: CreateLeadRequest = Object.fromEntries(
-      Object.entries(values).filter(([_, v]) => v !== "")
-    ) as CreateLeadRequest;
+    // Convert the form values to a proper CreateLeadRequest object
+    const leadData: CreateLeadRequest = {
+      name: values.name,
+      company_name: values.company_name,
+      email: values.email || undefined,
+      phone: values.phone || undefined,
+      source: values.source as LeadSource | undefined,
+      notes: values.notes || undefined,
+    };
     
     const lead = await createLead(leadData);
     

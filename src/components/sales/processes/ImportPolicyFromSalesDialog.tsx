@@ -1,7 +1,8 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess } from "@/types/sales/salesProcesses";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle, FileUp, AlertTriangle, ArrowRight } from "lucide-react";
+import { CheckCircle, FileUp, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 interface ImportPolicyFromSalesDialogProps {

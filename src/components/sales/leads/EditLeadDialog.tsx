@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Lead } from "./LeadsTable";
+import { Lead } from "@/types/sales/leads";
 
 interface EditLeadDialogProps {
   lead: Lead;
@@ -42,12 +42,12 @@ interface EditLeadDialogProps {
 // Form schema
 const formSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  company: z.string().optional(),
-  email: z.string().email(),
+  company_name: z.string().optional(),
+  email: z.string().email({ message: "Invalid email" }).optional().or(z.literal("")),
   phone: z.string().optional(),
   source: z.string().optional(),
   notes: z.string().optional(),
-  responsible_person: z.string().optional(),
+  assigned_to: z.string().optional(),
   status: z.enum(["new", "qualified", "converted", "lost"]),
 });
 
@@ -66,12 +66,12 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: lead.name,
-      company: lead.company || "",
-      email: lead.email,
+      company_name: lead.company_name || "",
+      email: lead.email || "",
       phone: lead.phone || "",
       source: lead.source || "",
       notes: lead.notes || "",
-      responsible_person: lead.responsible_person || "",
+      assigned_to: lead.assigned_to || "",
       status: lead.status,
     },
   });
@@ -120,7 +120,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
               
               <FormField
                 control={form.control}
-                name="company"
+                name="company_name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("company")}</FormLabel>
@@ -195,7 +195,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
               
               <FormField
                 control={form.control}
-                name="responsible_person"
+                name="assigned_to"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("responsiblePerson")}</FormLabel>

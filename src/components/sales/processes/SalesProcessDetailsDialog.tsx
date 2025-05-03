@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
@@ -12,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { SalesProcess } from "@/hooks/sales/useSalesProcessData";
+import { SalesProcess } from "@/types/sales/salesProcesses";
 import ImportPolicyFromSalesDialog from "./ImportPolicyFromSalesDialog";
 import { FileUp } from "lucide-react";
 
@@ -123,7 +124,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
                   )}
                   <p className="text-sm">
                     <span className="font-medium">{t("responsiblePerson")}: </span>
-                    {process.responsible_person || t("notAssigned")}
+                    {process.assigned_to || t("notAssigned")}
                   </p>
                   <p className="text-sm">
                     <span className="font-medium">{t("status")}: </span>

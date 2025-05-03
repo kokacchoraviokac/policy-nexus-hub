@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Lead } from "./LeadsTable";
+import { Lead } from "@/types/sales/leads";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,

@@ -4,7 +4,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Lead } from "./LeadsTable";
+import { Lead } from "@/types/sales/leads";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

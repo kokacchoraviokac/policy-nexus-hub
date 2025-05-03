@@ -12,8 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Lead } from "./LeadsTable";
 import { Separator } from "@/components/ui/separator";
+import { Lead } from "@/types/sales/leads";
 
 interface LeadDetailsDialogProps {
   lead: Lead;
@@ -52,9 +52,9 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
             <span>{lead.name}</span>
             {getStatusBadge(lead.status)}
           </DialogTitle>
-          {lead.company && (
+          {lead.company_name && (
             <DialogDescription>
-              {lead.company}
+              {lead.company_name}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -90,7 +90,7 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">{t("responsiblePerson")}: </span>
-                  {lead.responsible_person || t("notAssigned")}
+                  {lead.assigned_to || t("notAssigned")}
                 </p>
               </div>
             </div>

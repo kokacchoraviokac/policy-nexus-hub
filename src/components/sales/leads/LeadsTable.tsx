@@ -24,11 +24,14 @@ import {
   Trash, 
   ExternalLink,
   UserCheck,
-  PlusCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Lead, LeadStatus } from "@/types/sales/leads";
 import { format } from "date-fns";
+import EditLeadDialog from "./EditLeadDialog";
+import DeleteLeadDialog from "./DeleteLeadDialog";
+import LeadDetailsDialog from "./LeadDetailsDialog";
+import ConvertLeadDialog from "./ConvertLeadDialog";
 
 // Define props for the LeadsTable component
 interface LeadsTableProps {
@@ -137,35 +140,40 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
         </Table>
       </div>
       
-      {/* The dialog components would be rendered here. They'll be implemented next. */}
-      {/* 
-      <EditLeadDialog 
-        lead={leadToEdit} 
-        open={!!leadToEdit} 
-        onOpenChange={(open) => !open && setLeadToEdit(null)}
-        onLeadUpdated={onRefresh}
-      />
+      {leadToEdit && (
+        <EditLeadDialog 
+          lead={leadToEdit} 
+          open={!!leadToEdit} 
+          onOpenChange={(open) => !open && setLeadToEdit(null)}
+          onLeadUpdated={onRefresh}
+        />
+      )}
       
-      <LeadDetailsDialog
-        lead={leadToView}
-        open={!!leadToView}
-        onOpenChange={(open) => !open && setLeadToView(null)}
-      />
+      {leadToView && (
+        <LeadDetailsDialog
+          lead={leadToView}
+          open={!!leadToView}
+          onOpenChange={(open) => !open && setLeadToView(null)}
+        />
+      )}
       
-      <DeleteLeadDialog
-        lead={leadToDelete}
-        open={!!leadToDelete}
-        onOpenChange={(open) => !open && setLeadToDelete(null)}
-        onLeadDeleted={onRefresh}
-      />
+      {leadToDelete && (
+        <DeleteLeadDialog
+          lead={leadToDelete}
+          open={!!leadToDelete}
+          onOpenChange={(open) => !open && setLeadToDelete(null)}
+          onLeadDeleted={onRefresh}
+        />
+      )}
       
-      <ConvertLeadDialog
-        lead={leadToConvert}
-        open={!!leadToConvert}
-        onOpenChange={(open) => !open && setLeadToConvert(null)}
-        onLeadConverted={onRefresh}
-      />
-      */}
+      {leadToConvert && (
+        <ConvertLeadDialog
+          lead={leadToConvert}
+          open={!!leadToConvert}
+          onOpenChange={(open) => !open && setLeadToConvert(null)}
+          onLeadConverted={onRefresh}
+        />
+      )}
     </>
   );
 };
