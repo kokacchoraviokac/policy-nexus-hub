@@ -8,6 +8,7 @@ import PipelineOverview from "@/pages/sales/PipelineOverview";
 import Leads from "@/pages/sales/Leads";
 import SalesProcesses from "@/pages/sales/SalesProcesses";
 import ResponsiblePersons from "@/pages/sales/ResponsiblePersons";
+import ActivityCalendarPage from "@/pages/sales/ActivityCalendarPage";
 
 export const SalesRoutes = [
   <Route
@@ -61,6 +62,17 @@ export const SalesRoutes = [
       <ProtectedRoute requiredPrivilege="sales:view">
         <AppLayout>
           <ResponsiblePersons />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="sales-calendar"
+    path="/sales/calendar"
+    element={
+      <ProtectedRoute requiredPrivilege="sales:view">
+        <AppLayout>
+          <ActivityCalendarPage />
         </AppLayout>
       </ProtectedRoute>
     }

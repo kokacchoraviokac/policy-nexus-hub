@@ -192,5 +192,21 @@
   "salesProcessReadyForPolicyImport": "This sales process is concluded and can be imported as a policy",
   "salesProcessMustBeConcluded": "The sales process must be in the 'concluded' stage to import a policy",
   "salesProcessMustBeCompleted": "The sales process must have 'completed' status to import a policy",
-  "preparing": "Preparing"
+  "preparing": "Preparing",
+  
+  "activityCalendar": "Activity Calendar",
+  "activityCalendarDescription": "Visualize scheduled activities in a calendar view",
+  "viewCalendar": "View Calendar",
+  "monthView": "Month View",
+  "listView": "List View",
+  "filters": "Filters",
+  "allTypes": "All Types",
+  "activity": "Activity",
+  "activities": "Activities",
+  "today": "Today",
+  "upcoming": "Upcoming",
+  "overdue": "Overdue",
+  "thisWeek": "This Week",
+  "nextWeek": "Next Week",
+  "thisMonth": "This Month"
 }

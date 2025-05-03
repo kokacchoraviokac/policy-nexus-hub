@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { KanbanSquare, UserPlus, Clipboard, Users } from "lucide-react";
+import { KanbanSquare, UserPlus, Clipboard, Users, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
@@ -18,7 +18,7 @@ const Sales = () => {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Pipeline Overview */}
         <Card className="border shadow-sm">
           <CardHeader>
@@ -63,6 +63,22 @@ const Sales = () => {
           <CardFooter>
             <Button asChild>
               <Link to="/sales/processes">{t("manageSalesProcesses")}</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        {/* Activity Calendar - New Card */}
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <div className="flex items-start mb-2">
+              <Calendar className="h-10 w-10 text-primary" />
+            </div>
+            <CardTitle>{t("activityCalendar")}</CardTitle>
+            <CardDescription>{t("activityCalendarDescription")}</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button asChild>
+              <Link to="/sales/calendar">{t("viewCalendar")}</Link>
             </Button>
           </CardFooter>
         </Card>
