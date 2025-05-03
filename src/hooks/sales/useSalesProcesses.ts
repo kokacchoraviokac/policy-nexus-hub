@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   SalesProcess, 
   CreateSalesProcessRequest, 
-  UpdateSalesProcessRequest 
+  UpdateSalesProcessRequest,
+  SalesStatus,
+  SalesStage
 } from "@/types/sales/salesProcesses";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -29,8 +31,8 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
           title: row.title || "", 
           client_name: row.client_name || "",
           company: row.company || undefined,
-          stage: (row.current_step || "quote") as any, // Map current_step to stage
-          status: row.status || "active",
+          stage: (row.current_step || "quote") as SalesStage, // Map current_step to stage
+          status: (row.status || "active") as SalesStatus,
           insurance_type: row.insurance_type || "",
           estimated_value: row.estimated_value || undefined,
           expected_close_date: row.expected_close_date || undefined,
@@ -112,12 +114,12 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
       // Map the response to our type
       const mappedProcess: SalesProcess = {
         id: data.id,
-        title: data.title,
-        client_name: data.client_name,
+        title: data.title || "",
+        client_name: data.client_name || "",
         company: data.company,
-        stage: data.current_step as any, // Map current_step to stage
-        status: data.status,
-        insurance_type: data.insurance_type,
+        stage: data.current_step as SalesStage, // Map current_step to stage
+        status: data.status as SalesStatus,
+        insurance_type: data.insurance_type || "",
         estimated_value: data.estimated_value,
         expected_close_date: data.expected_close_date,
         lead_id: data.lead_id,
@@ -166,12 +168,12 @@ export const useSalesProcesses = (searchQuery: string = "", stageFilter: string 
       // Map the response to our type
       const mappedProcess: SalesProcess = {
         id: data.id,
-        title: data.title,
-        client_name: data.client_name,
+        title: data.title || "",
+        client_name: data.client_name || "",
         company: data.company,
-        stage: data.current_step as any, // Map current_step to stage
-        status: data.status,
-        insurance_type: data.insurance_type,
+        stage: data.current_step as SalesStage, // Map current_step to stage
+        status: data.status as SalesStatus,
+        insurance_type: data.insurance_type || "",
         estimated_value: data.estimated_value,
         expected_close_date: data.expected_close_date,
         lead_id: data.lead_id,

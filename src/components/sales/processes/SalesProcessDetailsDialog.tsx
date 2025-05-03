@@ -69,6 +69,7 @@ const SalesProcessDetailsDialog: React.FC<SalesProcessDetailsDialogProps> = ({
     }
   };
 
+  // Check if the process is ready for policy import
   const isReadyForPolicyImport = process.stage === "concluded" && process.status === "completed";
 
   return (

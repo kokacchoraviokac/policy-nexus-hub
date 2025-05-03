@@ -82,9 +82,13 @@ const CreateSalesProcessDialog: React.FC<CreateSalesProcessDialogProps> = ({
   
   const onSubmit = async (values: FormValues) => {
     await createSalesProcess({
-      ...values,
+      title: values.title, // Ensure required fields are explicitly included
+      client_name: values.client_name,
+      company: values.company,
+      insurance_type: values.insurance_type,
       estimated_value: values.estimated_value,
       expected_close_date: values.expected_close_date ? values.expected_close_date.toISOString().split('T')[0] : undefined,
+      notes: values.notes
     });
     
     if (onSalesProcessCreated) {

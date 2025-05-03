@@ -19,7 +19,7 @@ export interface SalesProcess {
 
 export type SalesStage = 'quote' | 'authorization' | 'request' | 'proposal' | 'receipt' | 'signed' | 'concluded';
 
-export type SalesStatus = 'active' | 'won' | 'lost' | 'on_hold';
+export type SalesStatus = 'active' | 'won' | 'lost' | 'on_hold' | 'completed';
 
 export interface CreateSalesProcessRequest {
   title: string;
@@ -44,4 +44,5 @@ export interface UpdateSalesProcessRequest {
   expected_close_date?: string;
   assigned_to?: string;
   notes?: string;
+  current_step?: string;
 }
