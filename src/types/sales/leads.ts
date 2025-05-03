@@ -13,6 +13,18 @@ export interface Lead {
   created_at: string;
   updated_at: string;
   score?: number;
+  
+  // BANT criteria fields
+  budget_score?: number;
+  authority_score?: number;
+  need_score?: number;
+  timeline_score?: number;
+  
+  // Additional qualification data
+  budget_notes?: string;
+  authority_notes?: string;
+  need_notes?: string;
+  timeline_notes?: string;
 }
 
 export type LeadStatus = 'new' | 'qualified' | 'converted' | 'lost';
@@ -39,4 +51,12 @@ export interface UpdateLeadRequest {
   notes?: string;
   assigned_to?: string;
   score?: number;
+  budget_score?: number;
+  authority_score?: number;
+  need_score?: number;
+  timeline_score?: number;
+  budget_notes?: string;
+  authority_notes?: string;
+  need_notes?: string;
+  timeline_notes?: string;
 }

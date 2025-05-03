@@ -24,6 +24,7 @@ import {
   Trash, 
   ExternalLink,
   UserCheck,
+  Star,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Lead, LeadStatus } from "@/types/sales/leads";
@@ -32,6 +33,8 @@ import EditLeadDialog from "./EditLeadDialog";
 import DeleteLeadDialog from "./DeleteLeadDialog";
 import LeadDetailsDialog from "./LeadDetailsDialog";
 import ConvertLeadDialog from "./ConvertLeadDialog";
+import LeadScoringDialog from "./LeadScoringDialog";
+import LeadScoreIndicator from "./LeadScoreIndicator";
 
 // Define props for the LeadsTable component
 interface LeadsTableProps {
@@ -71,6 +74,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
   const [leadToView, setLeadToView] = React.useState<Lead | null>(null);
   const [leadToDelete, setLeadToDelete] = React.useState<Lead | null>(null);
   const [leadToConvert, setLeadToConvert] = React.useState<Lead | null>(null);
+  const [leadToScore, setLeadToScore] = React.useState<Lead | null>(null);
   
   return (
     <>
@@ -82,6 +86,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
               <TableHead className="hidden md:table-cell">{t("company")}</TableHead>
               <TableHead className="hidden md:table-cell">{t("contact")}</TableHead>
               <TableHead>{t("status")}</TableHead>
+              <TableHead className="hidden md:table-cell">{t("score")}</TableHead>
               <TableHead className="hidden md:table-cell">{t("created")}</TableHead>
               <TableHead className="w-[80px]">{t("actions")}</TableHead>
             </TableRow>
@@ -102,6 +107,13 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
                   <StatusBadge status={lead.status} />
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
+                  {lead.score !== undefined ? (
+                    <LeadScoreIndicator score={lead.score} size="sm" />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
                   {formatDate(lead.created_at)}
                 </TableCell>
                 <TableCell>
@@ -120,6 +132,9 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setLeadToEdit(lead)}>
                         <Edit className="mr-2 h-4 w-4" /> {t("edit")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLeadToScore(lead)}>
+                        <Star className="mr-2 h-4 w-4" /> {t("scoreLead")}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setLeadToConvert(lead)}>
                         <UserCheck className="mr-2 h-4 w-4" /> {t("convertToSales")}
@@ -172,6 +187,15 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
           open={!!leadToConvert}
           onOpenChange={(open) => !open && setLeadToConvert(null)}
           onLeadConverted={onRefresh}
+        />
+      )}
+      
+      {leadToScore && (
+        <LeadScoringDialog
+          lead={leadToScore}
+          open={!!leadToScore}
+          onOpenChange={(open) => !open && setLeadToScore(null)}
+          onLeadScored={onRefresh}
         />
       )}
     </>

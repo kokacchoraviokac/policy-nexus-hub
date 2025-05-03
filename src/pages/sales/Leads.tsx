@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, UserPlus, X } from "lucide-react";
+import { PlusCircle, UserPlus, X, Star, Info } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
 import SearchInput from "@/components/ui/search-input";
 import LeadsTable from "@/components/sales/leads/LeadsTable";
@@ -10,7 +10,8 @@ import NewLeadDialog from "@/components/sales/leads/NewLeadDialog";
 import { useLeadsData } from "@/hooks/sales/useLeadsData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import BANTCriteriaList from "@/components/sales/leads/BANTCriteriaList";
 
 import { 
   Select,
@@ -25,6 +26,7 @@ const Leads = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showNewLeadDialog, setShowNewLeadDialog] = useState(false);
+  const [showBantInfo, setShowBantInfo] = useState(false);
   
   // Get leads data from hook
   const { 
@@ -41,11 +43,8 @@ const Leads = () => {
   const handleCloseNewLeadDialog = () => setShowNewLeadDialog(false);
   
   // Handle lead creation
-  const handleLeadCreated = (leadData: any) => {
+  const handleLeadCreated = () => {
     refresh();
-    toast.success(t("leadCreated"), {
-      description: t("leadCreatedDescription", { name: leadData.name })
-    });
   };
 
   // Clear all filters
@@ -69,6 +68,34 @@ const Leads = () => {
           {t("newLead")}
         </Button>
       </div>
+      
+      {/* BANT Criteria Info Card */}
+      <Card className="border shadow-sm bg-muted/20">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center">
+              <Star className="h-4 w-4 mr-1" />
+              {t("leadQualificationCriteria")}
+            </CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <Info className="h-4 w-4" />
+                    <span className="sr-only">{t("information")}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>{t("bantFrameworkDescription")}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <BANTCriteriaList orientation="horizontal" size="sm" />
+        </CardContent>
+      </Card>
       
       {/* Status summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">

@@ -208,5 +208,62 @@
   "overdue": "Overdue",
   "thisWeek": "This Week",
   "nextWeek": "Next Week",
-  "thisMonth": "This Month"
+  "thisMonth": "This Month",
+  
+  "leadScore": "Lead Score",
+  "score": "Score",
+  "scoreLead": "Score Lead",
+  "scoreLeadDescription": "Evaluate this lead using the BANT qualification criteria",
+  "leadScoreUpdated": "Lead Score Updated",
+  "leadScoreUpdatedMessage": "The lead score has been successfully updated.",
+  "errorUpdatingLeadScore": "Error updating lead score",
+  "updateScore": "Update Score",
+  "noLeadScore": "This lead has not been scored yet.",
+  "qualificationLevel": "Qualification Level",
+  "hot": "Hot",
+  "warm": "Warm",
+  "cold": "Cold",
+  
+  "leadQualificationScore": "Lead Qualification Score",
+  "leadQualificationCriteria": "BANT Qualification Criteria",
+  "bant": "BANT Score",
+  "qualificationNotes": "Qualification Notes",
+  "bantFrameworkDescription": "The BANT framework evaluates leads based on Budget, Authority, Need, and Timeline to determine their qualification level.",
+  
+  "totalLeadScore": "Total Lead Score",
+  "scoreBasedOnBANT": "Based on Budget, Authority, Need, and Timeline criteria",
+  
+  "budget": "Budget",
+  "budgetCriteria": "Budget",
+  "budgetCriteriaDescription": "Evaluate whether the lead has the financial resources to purchase your product or service.",
+  "budgetScore": "Budget Score",
+  "budgetNotes": "Budget Notes",
+  "enterBudgetNotes": "Note details about the lead's budget or financial capacity",
+  
+  "authority": "Authority",
+  "authorityCriteria": "Authority",
+  "authorityCriteriaDescription": "Evaluate whether the contact has the decision-making authority or influence to make a purchase.",
+  "authorityScore": "Authority Score",
+  "authorityNotes": "Authority Notes",
+  "enterAuthorityNotes": "Note details about the contact's role and decision-making power",
+  
+  "need": "Need",
+  "needCriteria": "Need",
+  "needCriteriaDescription": "Evaluate how well your product or service addresses the lead's pain points or requirements.",
+  "needScore": "Need Score", 
+  "needNotes": "Need Notes",
+  "enterNeedNotes": "Note details about the lead's specific needs or pain points",
+  
+  "timeline": "Timeline",
+  "timelineCriteria": "Timeline",
+  "timelineCriteriaDescription": "Evaluate when the lead is planning to make a purchase decision.",
+  "timelineScore": "Timeline Score",
+  "timelineNotes": "Timeline Notes",
+  "enterTimelineNotes": "Note details about the lead's purchase timeline or urgency",
+  
+  "saving": "Saving...",
+  "saveScore": "Save Score",
+  "leadQualificationConfirm": "This lead now meets the qualification criteria. Would you like to update its status to 'Qualified'?",
+  "leadStatusUpdated": "Lead status has also been updated to 'Qualified'.",
+  "lostLeadScoringWarning": "This lead is marked as 'Lost'. Scoring it will not automatically change its status."
 }
