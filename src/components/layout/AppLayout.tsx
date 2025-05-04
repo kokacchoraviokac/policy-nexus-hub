@@ -35,7 +35,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <TopBar />
         
-        <div className="px-6 py-2">
+        {/* BreadcrumbNav with improved margin/padding for better visual hierarchy */}
+        <div className="px-6 py-3">
           <BreadcrumbNav />
         </div>
         

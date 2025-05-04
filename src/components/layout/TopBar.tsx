@@ -14,7 +14,6 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import UserNotificationMenu from '../notifications/UserNotificationMenu';
 
 const TopBar: React.FC = () => {
@@ -30,7 +29,8 @@ const TopBar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
-      <Breadcrumbs />
+      {/* Flex spacer to push content to the right */}
+      <div className="flex-1"></div>
       
       <div className="ml-auto flex items-center gap-2">
         <UserNotificationMenu />
