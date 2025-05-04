@@ -1,168 +1,262 @@
 
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Lead } from '@/types/sales/leads';
-import LeadCommunicationsTab from './LeadCommunicationsTab';
-import LeadActivities from './LeadActivities';
-import { useLeadsData } from '@/hooks/sales/useLeadsData';
+import React, { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Lead } from "@/types/sales/leads";
+import LeadActivities from "./LeadActivities";
+import { ActivityLog } from "@/components/codebook/details/ActivityLog";
+import { fetchActivityLogs } from "@/utils/activityLogger";
+import LeadScoreIndicator from "./LeadScoreIndicator";
+import { Star } from "lucide-react";
+import LeadScoringDialog from "./LeadScoringDialog";
+import { Progress } from "@/components/ui/progress";
 
-export interface LeadDetailsDialogProps {
+interface LeadDetailsDialogProps {
+  lead: Lead;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  leadId?: string;
-  lead?: Lead;
 }
 
-const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({ 
-  open, 
-  onOpenChange, 
-  leadId,
-  lead: propLead 
+const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
+  lead,
+  open,
+  onOpenChange,
 }) => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('overview');
-  const { getLeadById } = useLeadsData();
-  const [lead, setLead] = useState<Lead | undefined>(propLead);
+  const [activeTab, setActiveTab] = useState("info");
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [showScoringDialog, setShowScoringDialog] = useState(false);
 
-  useEffect(() => {
-    if (leadId && !lead) {
-      const fetchLead = async () => {
-        const fetchedLead = await getLeadById(leadId);
-        if (fetchedLead) {
-          setLead(fetchedLead);
-        }
-      };
-      
-      fetchLead();
-    } else if (propLead) {
-      setLead(propLead);
+  // Load activity logs when the history tab is selected
+  const handleTabChange = async (value: string) => {
+    setActiveTab(value);
+    
+    if (value === "history" && !activityLogs.length) {
+      setIsLoadingLogs(true);
+      try {
+        const logs = await fetchActivityLogs("lead", lead.id);
+        setActivityLogs(logs);
+      } catch (error) {
+        console.error("Error fetching activity logs:", error);
+      } finally {
+        setIsLoadingLogs(false);
+      }
     }
-  }, [leadId, propLead, getLeadById, lead]);
+  };
 
-  if (!lead && !leadId) {
-    return null;
-  }
+  // Lead status badge styling
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'new':
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{t("newLeads")}</Badge>;
+      case 'qualified':
+        return <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">{t("qualifiedLeads")}</Badge>;
+      case 'converted':
+        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{t("convertedLeads")}</Badge>;
+      case 'lost':
+        return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">{t("lostLeads")}</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
-  if (!lead) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[80vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t("leadDetails")}</DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-center items-center p-8">
-            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+  // Handle dialog reload when lead score is updated
+  const handleLeadScored = () => {
+    // Could trigger a refresh of the lead data if needed
+    console.log("Lead has been scored");
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[80vw] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {lead?.company_name || t("leadDetails")}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="mb-4">
-            <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
-            <TabsTrigger value="communications">{t("communications")}</TabsTrigger>
-            <TabsTrigger value="activities">{t("activities")}</TabsTrigger>
-          </TabsList>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{lead.name}</span>
+              {getStatusBadge(lead.status)}
+            </DialogTitle>
+            {lead.company_name && (
+              <DialogDescription>
+                {lead.company_name}
+              </DialogDescription>
+            )}
+          </DialogHeader>
           
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-card rounded-lg border p-4">
-                <h3 className="font-medium mb-2">{t("companyInformation")}</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("companyName")}</span>
-                    <span>{lead?.company_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("website")}</span>
-                    <span>{lead?.website || t("notProvided")}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("industry")}</span>
-                    <span>{lead?.industry || t("notProvided")}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-card rounded-lg border p-4">
-                <h3 className="font-medium mb-2">{t("contactInformation")}</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("contactName")}</span>
-                    <span>{lead?.contact_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("email")}</span>
-                    <span>{lead?.contact_email || t("notProvided")}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("phone")}</span>
-                    <span>{lead?.contact_phone || t("notProvided")}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="info">{t("information")}</TabsTrigger>
+              <TabsTrigger value="activities">{t("activities")}</TabsTrigger>
+              <TabsTrigger value="history">{t("history")}</TabsTrigger>
+            </TabsList>
             
-            <div className="bg-card rounded-lg border p-4">
-              <h3 className="font-medium mb-2">{t("leadDetails")}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("status")}</span>
-                    <span>{lead?.status}</span>
+            <TabsContent value="info" className="space-y-4">
+              {/* Lead Score Section */}
+              <div className="border p-4 rounded-lg bg-muted/10">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-medium">{t("leadQualificationScore")}</h4>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowScoringDialog(true)}
+                    className="h-7 gap-1"
+                  >
+                    <Star className="h-3.5 w-3.5" />
+                    <span className="text-xs">{t("updateScore")}</span>
+                  </Button>
+                </div>
+                
+                {lead.score !== undefined ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="text-sm text-muted-foreground">
+                          {t("bant")}:
+                          <span className="ml-1 text-foreground">
+                            {lead.budget_score || 0}B + {lead.authority_score || 0}A + {lead.need_score || 0}N + {lead.timeline_score || 0}T
+                          </span>
+                        </div>
+                        <Progress value={lead.score} className="h-2" />
+                      </div>
+                      <LeadScoreIndicator score={lead.score} size="lg" />
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("source")}</span>
-                    <span>{lead?.source || t("notProvided")}</span>
+                ) : (
+                  <div className="text-center py-2 text-sm text-muted-foreground">
+                    {t("noLeadScore")}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("leadScore")}</span>
-                    <span>{lead?.score || '0'}/100</span>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">{t("contactInformation")}</h4>
+                  <div className="mt-1 space-y-2">
+                    <p className="text-sm">
+                      <span className="font-medium">{t("email")}: </span>
+                      {lead.email}
+                    </p>
+                    {lead.phone && (
+                      <p className="text-sm">
+                        <span className="font-medium">{t("phone")}: </span>
+                        {lead.phone}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("assignedTo")}</span>
-                    <span>{lead?.assigned_to_name || t("unassigned")}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{t("createdAt")}</span>
-                    <span>{lead?.created_at ? new Date(lead.created_at).toLocaleDateString() : ''}</span>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">{t("leadDetails")}</h4>
+                  <div className="mt-1 space-y-2">
+                    <p className="text-sm">
+                      <span className="font-medium">{t("source")}: </span>
+                      {lead.source || t("notSpecified")}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">{t("createdAt")}: </span>
+                      {format(new Date(lead.created_at), "PPP")}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">{t("responsiblePerson")}: </span>
+                      {lead.assigned_to || t("notAssigned")}
+                    </p>
                   </div>
                 </div>
               </div>
               
-              {lead?.notes && (
-                <div className="mt-4">
-                  <h4 className="font-medium mb-1">{t("notes")}</h4>
-                  <p className="text-muted-foreground">{lead.notes}</p>
-                </div>
+              {lead.notes && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("notes")}</h4>
+                    <p className="text-sm whitespace-pre-wrap">{lead.notes}</p>
+                  </div>
+                </>
               )}
-            </div>
-          </TabsContent>
+              
+              {/* BANT Notes (when available) */}
+              {(lead.budget_notes || lead.authority_notes || lead.need_notes || lead.timeline_notes) && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-2">{t("qualificationNotes")}</h4>
+                    
+                    {lead.budget_notes && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium">{t("budget")}:</p>
+                        <p className="text-sm whitespace-pre-wrap">{lead.budget_notes}</p>
+                      </div>
+                    )}
+                    
+                    {lead.authority_notes && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium">{t("authority")}:</p>
+                        <p className="text-sm whitespace-pre-wrap">{lead.authority_notes}</p>
+                      </div>
+                    )}
+                    
+                    {lead.need_notes && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium">{t("need")}:</p>
+                        <p className="text-sm whitespace-pre-wrap">{lead.need_notes}</p>
+                      </div>
+                    )}
+                    
+                    {lead.timeline_notes && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium">{t("timeline")}:</p>
+                        <p className="text-sm whitespace-pre-wrap">{lead.timeline_notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="activities">
+              <LeadActivities leadId={lead.id} />
+            </TabsContent>
+            
+            <TabsContent value="history">
+              <h4 className="text-sm font-medium mb-3">{t("activityTimeline")}</h4>
+              <ActivityLog 
+                items={activityLogs} 
+                isLoading={isLoadingLogs}
+                maxItems={10}
+              />
+            </TabsContent>
+          </Tabs>
           
-          <TabsContent value="communications">
-            <LeadCommunicationsTab lead={lead} />
-          </TabsContent>
-          
-          <TabsContent value="activities">
-            <LeadActivities leadId={lead.id} />
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button onClick={() => onOpenChange(false)}>
+              {t("close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Lead Scoring Dialog */}
+      {showScoringDialog && (
+        <LeadScoringDialog
+          lead={lead}
+          open={showScoringDialog}
+          onOpenChange={setShowScoringDialog}
+          onLeadScored={handleLeadScored}
+        />
+      )}
+    </>
   );
 };
 
