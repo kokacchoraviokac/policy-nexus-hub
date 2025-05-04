@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import EmployeeForm from "@/components/settings/employees/EmployeeForm";
-import { User } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 
 interface Employee extends User {
@@ -98,7 +98,7 @@ const EmployeesPage = () => {
           id: profile.id,
           name: profile.name,
           email: profile.email,
-          role: profile.role,
+          role: profile.role as UserRole, // Cast the role string to UserRole type
           companyId: profile.company_id,
           avatar: profile.avatar_url,
           is_active: true, // Assuming all profiles are active by default

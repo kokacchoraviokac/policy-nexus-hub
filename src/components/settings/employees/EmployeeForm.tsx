@@ -31,12 +31,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { User, UserRole } from "@/types/auth";
 
-interface Employee {
+interface Employee extends User {
   id: string;
-  name?: string;
-  email?: string;
-  role?: string;
   department?: string;
   position?: string;
   is_active?: boolean;
@@ -50,17 +48,20 @@ interface EmployeeFormProps {
   onInvite: (email: string, role: string) => void;
 }
 
+// Define proper role values constant to ensure type safety
+const ROLE_VALUES: UserRole[] = ['employee', 'admin', 'superAdmin'];
+
 const employeeFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Invalid email address." }),
-  role: z.string().min(1, { message: "Please select a role." }),
+  role: z.enum(['employee', 'admin', 'superAdmin']),
   department: z.string().optional(),
   position: z.string().optional(),
 });
 
 const invitationFormSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
-  role: z.string().min(1, { message: "Please select a role." }),
+  role: z.enum(['employee', 'admin', 'superAdmin']),
 });
 
 const EmployeeForm: React.FC<EmployeeFormProps> = ({ 
@@ -79,7 +80,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     defaultValues: {
       name: employee?.name || "",
       email: employee?.email || "",
-      role: employee?.role || "employee",
+      role: (employee?.role as UserRole) || "employee",
       department: employee?.department || "",
       position: employee?.position || "",
     }
@@ -89,7 +90,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     resolver: zodResolver(invitationFormSchema),
     defaultValues: {
       email: "",
-      role: "employee",
+      role: "employee" as UserRole,
     }
   });
   
