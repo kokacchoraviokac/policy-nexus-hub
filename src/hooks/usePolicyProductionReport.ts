@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { PolicyReportFilters, PolicyReportData } from "@/utils/policies/policyReportUtils";
+import { PolicyReportFilters, PolicyReportData, PolicyReportSummary, calculatePolicyReportSummary } from "@/utils/policies/policyReportUtils";
 
 export const usePolicyProductionReport = (filters: PolicyReportFilters) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [summary, setSummary] = useState<PolicyReportSummary | null>(null);
 
   const query = useQuery({
     queryKey: ['policy-production-report', filters],
@@ -70,8 +71,17 @@ export const usePolicyProductionReport = (filters: PolicyReportFilters) => {
     }
   });
 
+  // Calculate summary metrics when policy data changes
+  useEffect(() => {
+    if (query.data?.policies) {
+      const summaryData = calculatePolicyReportSummary(query.data.policies);
+      setSummary(summaryData);
+    }
+  }, [query.data]);
+
   return {
     ...query,
+    summary,
     isExporting,
     setIsExporting
   };

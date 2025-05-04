@@ -71,5 +71,19 @@
   "netIncome": "Net Income",
   "commissionEarned": "Commission Earned",
   "invoicesPaid": "Invoices Paid",
-  "outstandingInvoices": "Outstanding Invoices"
+  "outstandingInvoices": "Outstanding Invoices",
+  "summary": "Summary",
+  "details": "Details",
+  "totalPolicies": "Total Policies",
+  "totalPremium": "Total Premium",
+  "totalCommission": "Total Commission",
+  "avgCommissionRate": "Avg. Commission Rate",
+  "expiringPolicies": "Expiring in 30 Days",
+  "newPolicies": "New Policies (30 Days)",
+  "policiesByInsurer": "Policies by Insurer",
+  "policiesByProduct": "Policies by Product",
+  "policyTrends": "Policy Trends (6 Months)",
+  "topInsurers": "Top Insurers",
+  "policies": "Policies",
+  "premium": "Premium"
 }

@@ -26,6 +26,111 @@ export interface PolicyReportData {
   status: string;
 }
 
+export interface PolicyReportSummary {
+  totalPolicies: number;
+  totalPremium: number;
+  totalCommission: number;
+  avgCommissionRate: number;
+  expiringPolicies: number;
+  newPolicies: number;
+  insurerDistribution: { name: string; value: number }[];
+  productDistribution: { name: string; value: number }[];
+  monthlyTrends: { name: string; policies: number; premium: number; commission: number }[];
+}
+
+/**
+ * Calculates summary metrics from policy data
+ */
+export const calculatePolicyReportSummary = (data: PolicyReportData[]): PolicyReportSummary => {
+  const totalPolicies = data.length;
+  const totalPremium = data.reduce((sum, policy) => sum + policy.premium, 0);
+  const totalCommission = data.reduce((sum, policy) => sum + (policy.commission_amount || 0), 0);
+  const avgCommissionRate = totalPremium > 0 
+    ? (totalCommission / totalPremium) * 100 
+    : 0;
+  
+  // Count policies expiring within 30 days
+  const now = new Date();
+  const thirtyDaysFromNow = new Date();
+  thirtyDaysFromNow.setDate(now.getDate() + 30);
+  
+  const expiringPolicies = data.filter(policy => {
+    const expiryDate = new Date(policy.expiry_date);
+    return expiryDate >= now && expiryDate <= thirtyDaysFromNow;
+  }).length;
+  
+  // Count policies created in the last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(now.getDate() - 30);
+  
+  const newPolicies = data.filter(policy => {
+    const startDate = new Date(policy.start_date);
+    return startDate >= thirtyDaysAgo;
+  }).length;
+  
+  // Calculate insurer distribution
+  const insurerCounts = new Map<string, number>();
+  data.forEach(policy => {
+    const count = insurerCounts.get(policy.insurer_name) || 0;
+    insurerCounts.set(policy.insurer_name, count + 1);
+  });
+  
+  const insurerDistribution = Array.from(insurerCounts).map(([name, value]) => ({ name, value }));
+  
+  // Calculate product distribution
+  const productCounts = new Map<string, number>();
+  data.forEach(policy => {
+    if (!policy.product_name) return;
+    const count = productCounts.get(policy.product_name) || 0;
+    productCounts.set(policy.product_name, count + 1);
+  });
+  
+  const productDistribution = Array.from(productCounts).map(([name, value]) => ({ name, value }));
+  
+  // Calculate monthly trends (for the past 6 months)
+  const monthlyData = new Map<string, { policies: number; premium: number; commission: number }>();
+  
+  // Initialize last 6 months
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const monthKey = d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    monthlyData.set(monthKey, { policies: 0, premium: 0, commission: 0 });
+  }
+  
+  // Fill in policy data
+  data.forEach(policy => {
+    const startDate = new Date(policy.start_date);
+    const monthKey = startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+    
+    if (monthlyData.has(monthKey)) {
+      const current = monthlyData.get(monthKey)!;
+      monthlyData.set(monthKey, {
+        policies: current.policies + 1,
+        premium: current.premium + policy.premium,
+        commission: current.commission + (policy.commission_amount || 0)
+      });
+    }
+  });
+  
+  const monthlyTrends = Array.from(monthlyData).map(([name, data]) => ({
+    name,
+    ...data
+  }));
+  
+  return {
+    totalPolicies,
+    totalPremium,
+    totalCommission,
+    avgCommissionRate,
+    expiringPolicies,
+    newPolicies,
+    insurerDistribution,
+    productDistribution,
+    monthlyTrends
+  };
+};
+
 /**
  * Generate an Excel-compatible CSV file from policy report data
  */
