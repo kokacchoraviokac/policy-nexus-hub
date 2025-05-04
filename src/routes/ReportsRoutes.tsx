@@ -24,7 +24,7 @@ export const ReportsRoutes = [
   />,
   <Route
     key="production-report"
-    path="/reports/production"
+    path="/reports/policies"
     element={
       <ProtectedRoute>
         <AppLayout>

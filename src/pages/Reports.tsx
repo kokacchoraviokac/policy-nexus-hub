@@ -22,7 +22,7 @@ const Reports = () => {
       title: t("productionReport"),
       description: t("productionReportDescription"),
       icon: <FileBarChart className="h-5 w-5" />,
-      path: "/reports/production"
+      path: "/reports/policies"
     },
     {
       title: t("clientsReport"),

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardRoutes } from './DashboardRoutes';
 import { PolicyRoutes } from './PolicyRoutes';
 import { SalesRoutes } from './SalesRoutes';
@@ -45,6 +45,9 @@ const AppRoutes: React.FC = () => {
       
       {/* Reports Routes */}
       {ReportsRoutes}
+      
+      {/* Redirect from old production route to new one */}
+      <Route path="/reports/production" element={<Navigate to="/reports/policies" replace />} />
       
       {/* Settings Routes */}
       {SettingsRoutes}
