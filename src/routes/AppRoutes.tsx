@@ -3,7 +3,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { DashboardRoutes } from './DashboardRoutes';
 import { PolicyRoutes } from './PolicyRoutes';
-import { SalesRoutes } from './SalesRoutes';
+import SalesRoutes from './SalesRoutes'; // Fixed import
 import { ClaimsRoutes } from './ClaimsRoutes';
 import { FinancesRoutes } from './FinancesRoutes';
 import { CodebookRoutes } from './CodebookRoutes';
@@ -29,7 +29,7 @@ const AppRoutes: React.FC = () => {
       {PolicyRoutes}
       
       {/* Sales Routes */}
-      {SalesRoutes}
+      <SalesRoutes />
       
       {/* Claims Routes */}
       {ClaimsRoutes}

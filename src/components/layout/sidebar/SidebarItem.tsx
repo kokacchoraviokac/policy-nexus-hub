@@ -1,20 +1,11 @@
 
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { LucideIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import SidebarItemLink from "./components/SidebarItemLink";
-import SidebarSubItems from "./components/SidebarSubItems";
-import SidebarTooltip from "./components/SidebarTooltip";
-import SidebarHoverCard from "./components/SidebarHoverCard";
-
-interface SubItem {
-  label: string;
-  path: string;
-  requiredPrivilege: string;
-  icon?: LucideIcon;
-}
+import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarItemProps {
   icon: LucideIcon;
@@ -23,9 +14,6 @@ interface SidebarItemProps {
   active: boolean;
   collapsed: boolean;
   requiredPrivilege: string;
-  subItems?: SubItem[];
-  isExpanded?: boolean;
-  onToggleExpand?: () => void;
   currentPath: string;
 }
 
@@ -36,89 +24,56 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   active,
   collapsed,
   requiredPrivilege,
-  subItems,
-  isExpanded = false,
-  onToggleExpand,
   currentPath
 }) => {
   const { hasPrivilege } = useAuth();
   const { t } = useLanguage();
   
-  // Filter sub-items based on user privileges
-  const authorizedSubItems = subItems?.filter(item => 
-    hasPrivilege(item.requiredPrivilege)
-  );
-
   // Only render if user has required privilege
   if (!hasPrivilege(requiredPrivilege)) {
     return null;
   }
 
-  // If no authorized sub-items exist for this item, render it as a simple link
-  const hasSubItems = authorizedSubItems && authorizedSubItems.length > 0;
-  
-  // Check if any sub-item is currently active
-  const hasActiveSubItem = hasSubItems && 
-    authorizedSubItems.some(item => 
-      currentPath === item.path || currentPath.startsWith(`${item.path}/`)
-    );
-  
-  // Handle item click - for items with sub-items, toggle expand/collapse
-  const handleItemClick = (e: React.MouseEvent) => {
-    if (hasSubItems && onToggleExpand) {
-      e.preventDefault(); // Prevent navigation when toggling
-      onToggleExpand();
-    }
-  };
+  const Icon = icon;
   
   // Create the main item link
   const itemLink = (
-    <SidebarItemLink
-      icon={icon}
-      label={label}
-      path={path}
-      active={active}
-      collapsed={collapsed}
-      hasSubItems={hasSubItems}
-      isExpanded={isExpanded}
-      onClick={handleItemClick}
-    />
+    <Link
+      to={path}
+      className={cn(
+        "flex items-center px-3 py-2 rounded-md transition-colors",
+        "hover:bg-muted/50",
+        active ? "bg-muted text-primary" : "text-muted-foreground",
+        collapsed ? "justify-center" : "justify-start"
+      )}
+    >
+      <span className="flex items-center justify-center">
+        <Icon className="h-5 w-5" />
+      </span>
+      {!collapsed && (
+        <span className="ml-3 truncate">{t(label)}</span>
+      )}
+    </Link>
   );
 
-  // When sidebar is collapsed and has sub-items, use HoverCard
-  if (collapsed && hasSubItems) {
+  // When sidebar is collapsed, show tooltip on hover
+  if (collapsed) {
     return (
-      <SidebarHoverCard 
-        label={label} 
-        subItems={authorizedSubItems} 
-        currentPath={currentPath}
-      >
-        {itemLink}
-      </SidebarHoverCard>
-    );
-  }
-
-  // When sidebar is collapsed and no sub-items, show tooltip on hover
-  if (collapsed && !hasSubItems) {
-    return (
-      <SidebarTooltip label={t(label)}>
-        {itemLink}
-      </SidebarTooltip>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>{itemLink}</div>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            {t(label)}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
   // Default case - when sidebar is expanded
-  return (
-    <div>
-      {itemLink}
-      {!collapsed && isExpanded && hasSubItems && (
-        <SidebarSubItems 
-          subItems={authorizedSubItems} 
-          currentPath={currentPath} 
-        />
-      )}
-    </div>
-  );
+  return <div>{itemLink}</div>;
 };
 
 export default SidebarItem;

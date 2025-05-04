@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import { useCommunications } from "@/hooks/useCommunications";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 interface LogMeetingDialogProps {
   open: boolean;
@@ -31,33 +31,28 @@ const LogMeetingDialog: React.FC<LogMeetingDialogProps> = ({
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [meetingDate, setMeetingDate] = useState<Date | undefined>(new Date());
-  const [location, setLocation] = useState("");
   const [isLogging, setIsLogging] = useState(false);
 
   const resetForm = () => {
     setSubject("");
     setContent("");
     setMeetingDate(new Date());
-    setLocation("");
   };
 
   const handleLogMeeting = async () => {
     if (!subject || !meetingDate) return;
 
+    const meetingDateStr = meetingDate ? format(meetingDate, 'yyyy-MM-dd') : '';
+    const meetingContent = `<p><strong>Date:</strong> ${meetingDateStr}</p>${content ? `<p>${content}</p>` : ''}`;
+
     setIsLogging(true);
     try {
-      // Format the content to include meeting details
-      const meetingContent = `
-        <p><strong>${t("meetingDate")}:</strong> ${format(meetingDate, "PPP")}</p>
-        ${location ? `<p><strong>${t("location")}:</strong> ${location}</p>` : ''}
-        ${content ? `<p><strong>${t("notes")}:</strong></p><p>${content}</p>` : ''}
-      `;
-
       await createCommunication(
         leadId,
         'meeting',
         subject,
-        meetingContent
+        meetingContent,
+        'outbound'
       );
       
       onOpenChange(false);
@@ -88,7 +83,7 @@ const LogMeetingDialog: React.FC<LogMeetingDialogProps> = ({
               placeholder={t("meetingSubjectPlaceholder")}
             />
           </div>
-
+          
           <div className="space-y-2">
             <Label>{t("meetingDate")}</Label>
             <Popover>
@@ -101,10 +96,10 @@ const LogMeetingDialog: React.FC<LogMeetingDialogProps> = ({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {meetingDate ? format(meetingDate, "PPP") : <span>{t("pickDate")}</span>}
+                  {meetingDate ? format(meetingDate, "PPP") : <span>{t("pickADate")}</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
                   selected={meetingDate}
@@ -113,16 +108,6 @@ const LogMeetingDialog: React.FC<LogMeetingDialogProps> = ({
                 />
               </PopoverContent>
             </Popover>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="location">{t("location")}</Label>
-            <Input
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder={t("locationPlaceholder")}
-            />
           </div>
 
           <div className="space-y-2">
@@ -145,7 +130,7 @@ const LogMeetingDialog: React.FC<LogMeetingDialogProps> = ({
             onClick={handleLogMeeting} 
             disabled={isLogging || !subject || !meetingDate}
           >
-            {isLogging ? t("saving") : t("saveMeeting")}
+            {isLogging ? t("saving") : t("scheduleMeeting")}
           </Button>
         </DialogFooter>
       </DialogContent>

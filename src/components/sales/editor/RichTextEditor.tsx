@@ -105,7 +105,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           const element = e.target as HTMLDivElement;
           onChange(element.innerHTML);
         }}
-        placeholder={placeholder || t("typeHere")}
+        data-placeholder={placeholder || t("typeHere")} // Use data-placeholder instead
       />
     </div>
   );

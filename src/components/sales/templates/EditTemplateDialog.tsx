@@ -2,19 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Template } from '@/hooks/useCommunications';
 import RichTextEditor from '../editor/RichTextEditor';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 
 interface EditTemplateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   template: Template | null;
-  onSave: (data: Partial<Template>) => void;
+  onSave: (data: Omit<Template, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   mode: 'create' | 'edit';
 }
 
@@ -27,78 +26,75 @@ const EditTemplateDialog: React.FC<EditTemplateDialogProps> = ({
 }) => {
   const { t } = useLanguage();
   const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
-  const [variablesInput, setVariablesInput] = useState('');
-  const [activeTab, setActiveTab] = useState('edit');
+  const [category, setCategory] = useState('');
+  const [variables, setVariables] = useState<string[]>([]);
+  const [variableInput, setVariableInput] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const categories = [
+    'lead_welcome',
+    'lead_followup',
+    'quote',
+    'general',
+    'reminder',
+    'meeting'
+  ];
+
   useEffect(() => {
-    if (template) {
+    if (template && open) {
       setName(template.name);
-      setCategory(template.category);
       setSubject(template.subject);
       setContent(template.content);
-      setVariablesInput(template.variables.join(', '));
-    } else {
+      setCategory(template.category);
+      setVariables(template.variables || []);
+      setIsDefault(template.is_default);
+    } else if (!template && open) {
+      // Reset form for new template
       resetForm();
     }
   }, [template, open]);
 
   const resetForm = () => {
     setName('');
-    setCategory('');
     setSubject('');
     setContent('');
-    setVariablesInput('');
-    setActiveTab('edit');
+    setCategory('general');
+    setVariables([]);
+    setVariableInput('');
+    setIsDefault(false);
+  };
+
+  const handleAddVariable = () => {
+    if (variableInput && !variables.includes(variableInput)) {
+      setVariables(prev => [...prev, variableInput]);
+      setVariableInput('');
+    }
+  };
+
+  const handleRemoveVariable = (variable: string) => {
+    setVariables(prev => prev.filter(v => v !== variable));
   };
 
   const handleSave = async () => {
-    if (!name || !category || !subject || !content) return;
+    if (!name || !subject || !content || !category) return;
 
     setIsSaving(true);
     try {
-      // Parse variables from comma-separated input
-      const variables = variablesInput
-        .split(',')
-        .map(v => v.trim())
-        .filter(v => v);
-
       await onSave({
         name,
-        category,
         subject,
         content,
-        variables
+        category,
+        variables,
+        is_default: isDefault
       });
-      
-      resetForm();
       onOpenChange(false);
     } finally {
       setIsSaving(false);
     }
-  };
-
-  // Helper function to preview the template with sample data
-  const previewContent = () => {
-    let preview = content;
-    const sampleData = {
-      lead_name: "John Doe",
-      company_name: "Acme Inc.",
-      user_name: "Jane Smith",
-      topic: "Insurance Policy",
-      service: "Life Insurance",
-      amount: "$5,000"
-    };
-
-    // Replace variables with sample data
-    Object.entries(sampleData).forEach(([key, value]) => {
-      preview = preview.replace(new RegExp(`{{${key}}}`, 'g'), value);
-    });
-
-    return preview;
   };
 
   return (
@@ -106,105 +102,111 @@ const EditTemplateDialog: React.FC<EditTemplateDialogProps> = ({
       if (!isOpen) resetForm();
       onOpenChange(isOpen);
     }}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? t("createEmailTemplate") : t("editEmailTemplate")}
+            {mode === 'create' ? t("createTemplate") : t("editTemplate")}
           </DialogTitle>
         </DialogHeader>
-        
-        <Tabs defaultValue="edit" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="edit">{t("edit")}</TabsTrigger>
-            <TabsTrigger value="preview">{t("preview")}</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="edit" className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">{t("templateName")}</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t("templateNamePlaceholder")}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="category">{t("category")}</Label>
-                <Input
-                  id="category"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder={t("categoryPlaceholder")}
-                />
-              </div>
-            </div>
-            
+
+        <div className="space-y-4 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="subject">{t("subject")}</Label>
+              <Label htmlFor="template-name">{t("templateName")}</Label>
               <Input
-                id="subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder={t("subjectPlaceholder")}
+                id="template-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("templateNamePlaceholder")}
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="variables">{t("variables")}</Label>
+              <Label>{t("category")}</Label>
+              <Select
+                value={category}
+                onValueChange={setCategory}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t("selectCategory")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {t(cat)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="template-subject">{t("subject")}</Label>
+            <Input
+              id="template-subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder={t("emailSubjectPlaceholder")}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="template-content">{t("content")}</Label>
+            <RichTextEditor
+              value={content}
+              onChange={setContent}
+              placeholder={t("templateContentPlaceholder")}
+              minHeight="200px"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t("variables")}</Label>
+            <div className="flex gap-2">
               <Input
-                id="variables"
-                value={variablesInput}
-                onChange={(e) => setVariablesInput(e.target.value)}
-                placeholder={t("variablesPlaceholder")}
+                value={variableInput}
+                onChange={(e) => setVariableInput(e.target.value)}
+                placeholder={t("addVariablePlaceholder")}
               />
-              <p className="text-xs text-muted-foreground">
-                {t("variablesHelp")}
-              </p>
+              <Button
+                type="button"
+                onClick={handleAddVariable}
+                disabled={!variableInput}
+              >
+                {t("addVariable")}
+              </Button>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="content">{t("emailContent")}</Label>
-              <RichTextEditor
-                value={content}
-                onChange={setContent}
-                placeholder={t("emailContentPlaceholder")}
-                minHeight="200px"
-              />
+            <div className="flex flex-wrap gap-2 mt-2">
+              {variables.map(variable => (
+                <div key={variable} className="bg-muted px-3 py-1 rounded-md flex items-center gap-2">
+                  <span>{{variable}}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0"
+                    onClick={() => handleRemoveVariable(variable)}
+                  >
+                    &times;
+                  </Button>
+                </div>
+              ))}
+              {variables.length === 0 && (
+                <span className="text-muted-foreground text-sm">{t("noVariables")}</span>
+              )}
             </div>
-          </TabsContent>
-          
-          <TabsContent value="preview" className="space-y-4">
-            <div className="border rounded-md p-4 space-y-2">
-              <div className="font-medium">{t("subject")}: {subject}</div>
-              <div 
-                className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: previewContent() }}
-              />
-            </div>
-            
-            <div className="border rounded-md p-4 space-y-2">
-              <div className="font-medium">{t("variablesUsed")}:</div>
-              <ul className="list-disc list-inside">
-                {variablesInput.split(',').map((variable, index) => (
-                  <li key={index}>{variable.trim()}</li>
-                ))}
-              </ul>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
+          </div>
+        </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t("cancel")}
           </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving || !name || !category || !subject || !content}
+          <Button
+            onClick={handleSave}
+            disabled={isSaving || !name || !subject || !content || !category}
           >
-            {isSaving ? t("saving") : t("save")}
+            {isSaving ? t("saving") : t("saveTemplate")}
           </Button>
         </DialogFooter>
       </DialogContent>

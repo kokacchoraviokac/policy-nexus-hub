@@ -62,8 +62,21 @@ export const useCommunications = (leadId?: string) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCommunications(data || []);
-      return data;
+      
+      // Fix the type issue by mapping to the correct type
+      if (data) {
+        const typedCommunications: Communication[] = data.map(item => ({
+          ...item,
+          direction: item.direction as CommunicationDirection,
+          type: item.type as CommunicationType,
+          status: item.status as CommunicationStatus,
+          email_metadata: item.email_metadata || {}
+        }));
+        
+        setCommunications(typedCommunications);
+        return typedCommunications;
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching communications:', error);
       toast.error('Failed to load communications history');
@@ -82,8 +95,22 @@ export const useCommunications = (leadId?: string) => {
         .order('name');
 
       if (error) throw error;
-      setTemplates(data || []);
-      return data;
+      
+      // Fix the type issue by mapping to the correct type
+      if (data) {
+        const typedTemplates: Template[] = data.map(item => ({
+          ...item,
+          variables: Array.isArray(item.variables) 
+            ? item.variables 
+            : typeof item.variables === 'string' 
+              ? JSON.parse(item.variables)
+              : []
+        }));
+        
+        setTemplates(typedTemplates);
+        return typedTemplates;
+      }
+      return [];
     } catch (error) {
       console.error('Error fetching email templates:', error);
       toast.error('Failed to load email templates');
@@ -167,7 +194,7 @@ export const useCommunications = (leadId?: string) => {
     }
   };
 
-  const updateTemplate = async (id: string, updates: Partial<Template>) => {
+  const updateTemplate = async (id: string, updates: Partial<Omit<Template, 'id' | 'created_at' | 'updated_at'>>) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -264,10 +291,73 @@ export const useCommunications = (leadId?: string) => {
     templates,
     fetchCommunications,
     fetchTemplates,
-    sendEmail,
+    sendEmail: async (
+      lead: { id: string; name: string; email: string; company_id: string },
+      subject: string,
+      content: string,
+      templateId?: string
+    ) => {
+      if (!user) {
+        toast.error('You must be logged in to send emails');
+        return null;
+      }
+
+      setIsLoading(true);
+      try {
+        const payload = {
+          leadId: lead.id,
+          subject,
+          content,
+          companyId: lead.company_id,
+          sentBy: user.id,
+          templateId,
+          recipientEmail: lead.email,
+          recipientName: lead.name
+        };
+
+        const response = await supabase.functions.invoke('send-lead-email', {
+          body: payload
+        });
+
+        if (response.error) throw new Error(response.error.message);
+        
+        toast.success('Email sent successfully');
+        
+        // Refresh communications list
+        await fetchCommunications(lead.id);
+        
+        return response.data;
+      } catch (error) {
+        console.error('Error sending email:', error);
+        toast.error('Failed to send email');
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
     createTemplate,
     updateTemplate,
-    deleteTemplate,
+    deleteTemplate: async (id: string) => {
+      setIsLoading(true);
+      try {
+        const { error } = await supabase
+          .from('email_templates')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        
+        toast.success('Template deleted successfully');
+        await fetchTemplates();
+        return true;
+      } catch (error) {
+        console.error('Error deleting template:', error);
+        toast.error('Failed to delete template');
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
     createCommunication
   };
 };

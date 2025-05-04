@@ -18,7 +18,7 @@ import {
   CreditCard,
   BookOpen,
   Building2,
-  BuildingStore,
+  Store,
   Tag,
   UserCog,
   PieChart,
@@ -197,7 +197,7 @@ export const sidebarItems = [
       {
         label: "insurers",
         path: "/admin/insurers",
-        icon: BuildingStore,
+        icon: Store,
         requiredPrivilege: "manage:insurers"
       },
       {

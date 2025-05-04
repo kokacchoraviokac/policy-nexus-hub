@@ -20,14 +20,14 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
   useEffect(() => {
     const currentPath = location.pathname;
     
-    // Find which parent menu items need to be expanded based on current path
+    // Find which section items need to be expanded based on current path
     const itemsToExpand = sidebarItems
-      .filter(item => 
-        item.subItems?.some(subItem => 
-          currentPath === subItem.path || currentPath.startsWith(`${subItem.path}/`)
+      .filter(section => 
+        section.items.some(item => 
+          currentPath === item.path || currentPath.startsWith(`${item.path}/`)
         )
       )
-      .map(item => item.label);
+      .map(section => section.title);
     
     if (itemsToExpand.length > 0) {
       setExpandedItems(prev => {
@@ -41,18 +41,15 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
     }
   }, [location.pathname]);
   
-  const toggleExpand = (label: string) => {
+  const toggleExpand = (title: string) => {
     setExpandedItems(prev => 
-      prev.includes(label) 
-        ? prev.filter(item => item !== label) 
-        : [...prev, label]
+      prev.includes(title) 
+        ? prev.filter(item => item !== title) 
+        : [...prev, title]
     );
   };
   
   if (!user) return null;
-  
-  // Filter sidebarItems based on user role if needed
-  const filteredItems = sidebarItems;
   
   // Find the most specific active path
   const currentPath = location.pathname;
@@ -60,36 +57,42 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ collapsed }) => {
   return (
     <nav className="px-2 py-4 h-full overflow-y-auto sidebar-scrollbar">
       <ul className="space-y-1">
-        {filteredItems.map((item, index) => {
-          // Check if this item has an active sub-item
-          const hasActiveSubItem = item.subItems?.some(
-            subItem => 
-              subItem.path && 
-              (currentPath === subItem.path || 
-               currentPath.startsWith(`${subItem.path}/`))
-          );
+        {sidebarItems.map((section, index) => {
+          const isExpanded = expandedItems.includes(section.title);
           
-          // An item is active if:
-          // 1. It has no sub-items and its path matches the current path
-          // 2. It has no exact path match AND none of its sub-items are active
-          const isActive = item.path 
-            ? (currentPath === item.path || currentPath.startsWith(`${item.path}/`)) && !hasActiveSubItem
-            : false;
-            
           return (
-            <SidebarItem
-              key={index}
-              icon={item.icon}
-              label={item.label}
-              path={item.path}
-              active={isActive}
-              collapsed={collapsed}
-              requiredPrivilege={item.requiredPrivilege}
-              subItems={item.subItems}
-              isExpanded={expandedItems.includes(item.label)}
-              onToggleExpand={() => toggleExpand(item.label)}
-              currentPath={currentPath}
-            />
+            <li key={index} className="mb-2">
+              {/* Section title */}
+              <div 
+                className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                onClick={() => toggleExpand(section.title)}
+              >
+                {t(section.title)}
+              </div>
+              
+              {/* Section items */}
+              {(collapsed || isExpanded) && (
+                <ul className="mt-1">
+                  {section.items.map((item, itemIndex) => {
+                    const isActive = currentPath === item.path || 
+                                   currentPath.startsWith(`${item.path}/`);
+                                    
+                    return (
+                      <SidebarItem
+                        key={itemIndex}
+                        icon={item.icon}
+                        label={item.label}
+                        path={item.path}
+                        active={isActive}
+                        collapsed={collapsed}
+                        requiredPrivilege={item.requiredPrivilege}
+                        currentPath={currentPath}
+                      />
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
           );
         })}
       </ul>

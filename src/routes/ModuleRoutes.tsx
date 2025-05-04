@@ -1,7 +1,7 @@
 
 import { DashboardRoutes } from "./DashboardRoutes";
 import { PolicyRoutes } from "./PolicyRoutes";
-import { SalesRoutes } from "./SalesRoutes";
+import SalesRoutes from "./SalesRoutes"; // Fixed import
 import { ClaimsRoutes } from "./ClaimsRoutes";
 import { FinancesRoutes } from "./FinancesRoutes";
 import { CodebookRoutes } from "./CodebookRoutes";
@@ -12,7 +12,7 @@ import { AgentRoutes } from "./AgentRoutes";
 export const ModuleRoutes = [
   ...DashboardRoutes,
   ...PolicyRoutes,
-  ...SalesRoutes,
+  <SalesRoutes key="sales" />,
   ...ClaimsRoutes,
   ...FinancesRoutes,
   ...CodebookRoutes,
