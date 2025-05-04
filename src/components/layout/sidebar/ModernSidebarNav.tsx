@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LucideIcon } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
-import SidebarData from "./SidebarData";
+import { sidebarItems } from "./SidebarData";
 
 import {
   Sidebar,
@@ -61,7 +61,7 @@ const ModernSidebarNav: React.FC<ModernSidebarNavProps> = ({ collapsed }) => {
   return (
     <SidebarContent className="p-2">
       <SidebarMenu>
-        {SidebarData.map((item, index) => {
+        {sidebarItems.map((item, index) => {
           const Icon = item.icon as LucideIcon;
           const path = item.path || `/${item.id}`;
           
