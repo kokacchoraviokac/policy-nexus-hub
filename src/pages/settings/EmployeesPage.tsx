@@ -3,57 +3,16 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Search, 
-  Filter, 
-  Plus,
-  MoreHorizontal,
-  Mail,
-  UserCog,
-  CheckCircle, 
-  XCircle
-} from "lucide-react";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import EmployeeForm from "@/components/settings/employees/EmployeeForm";
-import { User, UserRole } from "@/types/auth";
-import { Badge } from "@/components/ui/badge";
+import { UserRole } from "@/types/auth";
+import { Employee } from "@/types/employees";
 
-interface Employee extends User {
-  id: string;
-  is_active?: boolean;
-  department?: string;
-  position?: string;
-  phone?: string;
-}
+// Import the new components
+import { EmployeeTable } from "@/components/settings/employees/EmployeeTable";
+import { EmployeeFilters } from "@/components/settings/employees/EmployeeFilters";
+import { EmployeeHeader } from "@/components/settings/employees/EmployeeHeader";
+import EmployeeForm from "@/components/settings/employees/EmployeeForm";
 
 const EmployeesPage = () => {
   const { user } = useAuth();
@@ -229,120 +188,23 @@ const EmployeesPage = () => {
       </div>
       
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>{t("employees")}</CardTitle>
-            <CardDescription>{t("manageEmployees")}</CardDescription>
-          </div>
-          <Button onClick={handleAddEmployee}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t("addEmployee")}
-          </Button>
-        </CardHeader>
+        <EmployeeHeader onAddEmployee={handleAddEmployee} />
         
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                className="pl-10"
-                placeholder={t("searchEmployees")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            <Tabs
-              defaultValue="all" 
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-              className="w-full md:w-auto"
-            >
-              <TabsList className="grid grid-cols-3 w-full">
-                <TabsTrigger value="all">{t("allEmployees")}</TabsTrigger>
-                <TabsTrigger value="active">{t("activeEmployees")}</TabsTrigger>
-                <TabsTrigger value="inactive">{t("inactiveEmployees")}</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+          <EmployeeFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
           
-          {isLoading ? (
-            <div className="flex justify-center p-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("name")}</TableHead>
-                    <TableHead>{t("email")}</TableHead>
-                    <TableHead>{t("role")}</TableHead>
-                    <TableHead>{t("status")}</TableHead>
-                    <TableHead className="text-right">{t("actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEmployees.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4">
-                        {t("noEmployeesFound")}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredEmployees.map((employee) => (
-                      <TableRow key={employee.id}>
-                        <TableCell className="font-medium">{employee.name}</TableCell>
-                        <TableCell>{employee.email}</TableCell>
-                        <TableCell>
-                          <Badge variant={employee.role === 'admin' ? "outline" : "secondary"}>
-                            {employee.role || 'employee'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={employee.is_active ? "success" : "destructive"}>
-                            {employee.is_active ? t("active") : t("inactive")}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" title={t("actions")}>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditEmployee(employee)}>
-                                <UserCog className="mr-2 h-4 w-4" />
-                                {t("editEmployee")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleResendInvitation(employee.email || '')}>
-                                <Mail className="mr-2 h-4 w-4" />
-                                {t("resendInvitation")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleToggleStatus(employee)}>
-                                {employee.is_active ? (
-                                  <>
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    {t("deactivate")}
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    {t("activate")}
-                                  </>
-                                )}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <EmployeeTable
+            employees={filteredEmployees}
+            isLoading={isLoading}
+            onEdit={handleEditEmployee}
+            onResendInvitation={handleResendInvitation}
+            onToggleStatus={handleToggleStatus}
+          />
         </CardContent>
       </Card>
       
