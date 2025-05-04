@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Lead, LeadStatus } from "@/types/sales/leads";
+import { Lead, LeadStatus, LeadSource } from "@/types/sales/leads";
 import { useLeads } from "@/hooks/sales/useLeads";
 
 interface EditLeadDialogProps {
@@ -47,7 +47,7 @@ const formSchema = z.object({
   company_name: z.string().optional(),
   email: z.string().email({ message: "Invalid email" }).optional().or(z.literal("")),
   phone: z.string().optional(),
-  source: z.string().optional(),
+  source: z.enum(["website", "referral", "social_media", "email", "phone", "event", "other"]).optional(),
   notes: z.string().optional(),
   assigned_to: z.string().optional(),
   status: z.enum(["new", "contacted", "qualified", "converted", "lost"]),
@@ -73,7 +73,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
       company_name: lead.company_name || "",
       email: lead.email || "",
       phone: lead.phone || "",
-      source: lead.source || "",
+      source: lead.source || undefined,
       notes: lead.notes || "",
       assigned_to: lead.assigned_to || "",
       status: lead.status,
@@ -188,6 +188,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
                         <SelectItem value="referral">{t("referral")}</SelectItem>
                         <SelectItem value="social_media">{t("socialMedia")}</SelectItem>
                         <SelectItem value="email">{t("emailMarketing")}</SelectItem>
+                        <SelectItem value="phone">{t("phone")}</SelectItem>
                         <SelectItem value="event">{t("event")}</SelectItem>
                         <SelectItem value="other">{t("other")}</SelectItem>
                       </SelectContent>
