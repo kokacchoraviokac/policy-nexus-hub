@@ -22,6 +22,7 @@ interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  minHeight?: string;
   maxHeight?: string;
   className?: string;
 }
@@ -30,6 +31,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   value,
   onChange,
   placeholder,
+  minHeight = "150px",
   maxHeight = '400px',
   className
 }) => {
@@ -214,24 +216,23 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         ref={editorRef}
         contentEditable={true}
         className={cn(
-          "p-4 min-h-[200px] focus:outline-none",
+          "p-4 focus:outline-none",
           isFocused ? "ring-1 ring-primary" : ""
         )}
-        style={{ minHeight: "150px" }}
+        style={{ minHeight: minHeight }}
         onInput={handleContentChange}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        data-placeholder={placeholder} // Use data-attribute for placeholder instead of direct attribute
+        data-placeholder={placeholder}
       />
       
-      {/* Add CSS for placeholder handling */}
-      <style jsx>{`
-        [contentEditable=true]:empty:before {
+      <style>
+        {`[contentEditable=true]:empty:before {
           content: attr(data-placeholder);
           color: gray;
           cursor: text;
-        }
-      `}</style>
+        }`}
+      </style>
     </div>
   );
 };

@@ -3,7 +3,7 @@ import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Send, Phone, Calendar, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Communication } from "@/hooks/useCommunications";
+import { Communication } from "@/types/sales/communications";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface LeadCommunicationStatsProps {

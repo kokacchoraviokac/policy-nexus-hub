@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { useCommunications, Template } from '@/hooks/useCommunications';
+import { useCommunications } from '@/hooks/useCommunications';
+import { Template } from '@/types/sales/templates';
 import EditTemplateDialog from './EditTemplateDialog';
 import RichTextEditor from '../editor/RichTextEditor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -154,15 +155,14 @@ const EmailTemplateManager = () => {
         template={selectedTemplate}
         onSave={async (data) => {
           if (selectedTemplate) {
-            await updateTemplate(selectedTemplate.id, data);
+            await updateTemplate(selectedTemplate.id, data as Partial<Template>);
           } else {
-            await createTemplate(data);
+            await createTemplate(data as Required<Omit<Template, "id" | "created_at" | "updated_at">>);
           }
           setShowCreateDialog(false);
           setShowEditDialog(false);
           setSelectedTemplate(null);
         }}
-        mode={selectedTemplate ? 'edit' : 'create'}
       />
       
       {/* Delete Confirmation Dialog */}

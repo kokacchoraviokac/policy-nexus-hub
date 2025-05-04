@@ -6,6 +6,8 @@ import { Template } from '@/types/sales/templates';
 import { Communication, CommunicationDirection, CommunicationType, CommunicationStatus, CommunicationMetadata } from '@/types/sales/communications';
 import { toast } from 'sonner';
 
+export type { Communication, Template };
+
 export interface CreateCommunicationParams {
   subject: string;
   content: string;
@@ -65,14 +67,14 @@ export const useCommunications = (leadId?: string) => {
   }, [leadId, supabase]);
 
   const fetchTemplates = useCallback(async () => {
-    if (!user?.company_id) return;
+    if (!user?.companyId) return;
     
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('email_templates')
         .select('*')
-        .eq('company_id', user.company_id);
+        .eq('company_id', user.companyId);
         
       if (error) {
         throw error;
@@ -99,12 +101,12 @@ export const useCommunications = (leadId?: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user?.company_id]);
+  }, [supabase, user?.companyId]);
 
   const createCommunication = useCallback(
-    async ({ subject, content, type, direction, status, templateId, metadata }: CreateCommunicationParams) => {
-      if (!leadId || !user?.company_id) {
-        toast.error('Missing required information');
+    async (leadId: string, type: CommunicationType, subject: string, content: string, direction: CommunicationDirection = 'outbound') => {
+      if (!user?.companyId) {
+        toast.error('Missing company information');
         return null;
       }
       
@@ -112,16 +114,15 @@ export const useCommunications = (leadId?: string) => {
       try {
         const newCommunication = {
           lead_id: leadId,
-          company_id: user.company_id,
+          company_id: user.companyId,
           subject,
           content,
           direction,
           type,
-          status,
+          status: 'completed' as CommunicationStatus,
           sent_by: user.id,
           sent_at: new Date().toISOString(),
-          template_id: templateId,
-          email_metadata: metadata || {}
+          email_metadata: {}
         };
         
         const { data, error } = await supabase
@@ -161,12 +162,84 @@ export const useCommunications = (leadId?: string) => {
         setIsLoading(false);
       }
     },
-    [leadId, supabase, user?.company_id, user?.id]
+    [supabase, user?.companyId, user?.id]
   );
 
+  const sendEmail = useCallback(
+    async (lead: { id: string, name?: string, email?: string }, subject: string, content: string, templateId?: string) => {
+      if (!lead.email || !user?.companyId) {
+        toast.error('Missing recipient email or company information');
+        return null;
+      }
+      
+      setIsLoading(true);
+      try {
+        const emailMetadata = {
+          recipientEmail: lead.email,
+          recipientName: lead.name || lead.email,
+        };
+        
+        const newCommunication = {
+          lead_id: lead.id,
+          company_id: user.companyId,
+          subject,
+          content,
+          direction: 'outbound' as CommunicationDirection,
+          type: 'email' as CommunicationType,
+          status: 'sent' as CommunicationStatus, // Assuming email is sent directly
+          sent_by: user.id,
+          sent_at: new Date().toISOString(),
+          template_id: templateId,
+          email_metadata: emailMetadata
+        };
+        
+        const { data, error } = await supabase
+          .from('lead_communications')
+          .insert(newCommunication)
+          .select()
+          .single();
+          
+        if (error) {
+          throw error;
+        }
+        
+        // TODO: Implement actual email sending functionality through an edge function
+        
+        // Add the new communication to the list
+        const typedCommunication: Communication = {
+          id: data.id,
+          lead_id: data.lead_id,
+          company_id: data.company_id,
+          subject: data.subject,
+          content: data.content,
+          direction: data.direction as CommunicationDirection,
+          type: data.type as CommunicationType,
+          status: data.status as CommunicationStatus,
+          sent_by: data.sent_by,
+          sent_at: data.sent_at,
+          template_id: data.template_id,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          email_metadata: data.email_metadata as CommunicationMetadata
+        };
+        
+        setCommunications(prev => [typedCommunication, ...prev]);
+        toast.success('Email sent successfully');
+        return typedCommunication;
+      } catch (error) {
+        console.error('Error sending email:', error);
+        toast.error('Failed to send email');
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [supabase, user?.companyId, user?.id]
+  );
+  
   const createTemplate = useCallback(
     async (template: Omit<Template, 'id' | 'created_at' | 'updated_at'>) => {
-      if (!user?.company_id) {
+      if (!user?.companyId) {
         toast.error('Missing company information');
         return null;
       }
@@ -175,7 +248,7 @@ export const useCommunications = (leadId?: string) => {
       try {
         const newTemplate = {
           ...template,
-          company_id: user.company_id,
+          company_id: user.companyId,
           created_by: user.id
         };
         
@@ -213,7 +286,7 @@ export const useCommunications = (leadId?: string) => {
         setIsLoading(false);
       }
     },
-    [supabase, user?.company_id, user?.id]
+    [supabase, user?.companyId, user?.id]
   );
 
   const updateTemplate = useCallback(
@@ -295,6 +368,7 @@ export const useCommunications = (leadId?: string) => {
     fetchCommunications,
     fetchTemplates,
     createCommunication,
+    sendEmail,
     createTemplate,
     updateTemplate,
     deleteTemplate

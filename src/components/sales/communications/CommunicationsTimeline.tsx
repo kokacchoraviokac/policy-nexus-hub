@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Send, ArrowDownLeft, Phone, Calendar, MessageCircle, CheckCircle, AlertCircle, Clock } from "lucide-react";
-import { Communication } from "@/hooks/useCommunications";
+import { Communication } from "@/types/sales/communications";
 
 interface CommunicationsTimelineProps {
   communications: Communication[];

@@ -44,8 +44,7 @@ const LogCallDialog: React.FC<LogCallDialogProps> = ({
         leadId,
         'call',
         subject,
-        content || t("noCallNotes"),
-        direction
+        content || t("noCallNotes")
       );
       
       onOpenChange(false);

@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Send, Mail, Phone, Calendar, MessageCircle, Plus } from "lucide-react";
+import { Send, Phone, Calendar, MessageCircle } from "lucide-react";
 import { useCommunications } from "@/hooks/useCommunications";
 import CommunicationsTimeline from "../communications/CommunicationsTimeline";
 import ComposeEmailDialog from "../communications/ComposeEmailDialog";
@@ -45,7 +45,7 @@ const LeadCommunicationsTab: React.FC<LeadCommunicationsTabProps> = ({ lead }) =
       fetchCommunications();
       fetchTemplates();
     }
-  }, [lead.id]);
+  }, [lead.id, fetchCommunications, fetchTemplates]);
 
   const handleSendEmail = () => {
     if (!lead.email) {

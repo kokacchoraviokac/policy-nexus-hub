@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Lead } from '@/types/sales/leads';
 import LeadCommunicationsTab from './LeadCommunicationsTab';
 import LeadActivities from './LeadActivities';
+import { useLeadsData } from '@/hooks/sales/useLeadsData';
 
 export interface LeadDetailsDialogProps {
   open: boolean;
@@ -18,13 +19,45 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
   open, 
   onOpenChange, 
   leadId,
-  lead 
+  lead: propLead 
 }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('overview');
+  const { getLeadById } = useLeadsData();
+  const [lead, setLead] = useState<Lead | undefined>(propLead);
+
+  useEffect(() => {
+    if (leadId && !lead) {
+      const fetchLead = async () => {
+        const fetchedLead = await getLeadById(leadId);
+        if (fetchedLead) {
+          setLead(fetchedLead);
+        }
+      };
+      
+      fetchLead();
+    } else if (propLead) {
+      setLead(propLead);
+    }
+  }, [leadId, propLead, getLeadById, lead]);
 
   if (!lead && !leadId) {
     return null;
+  }
+
+  if (!lead) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[80vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("leadDetails")}</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center items-center p-8">
+            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   return (
@@ -72,7 +105,7 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("email")}</span>
-                    <span>{lead?.contact_email}</span>
+                    <span>{lead?.contact_email || t("notProvided")}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("phone")}</span>
@@ -92,7 +125,7 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("source")}</span>
-                    <span>{lead?.source}</span>
+                    <span>{lead?.source || t("notProvided")}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("leadScore")}</span>
@@ -121,11 +154,11 @@ const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
           </TabsContent>
           
           <TabsContent value="communications">
-            <LeadCommunicationsTab leadId={leadId || lead?.id || ''} />
+            <LeadCommunicationsTab lead={lead} />
           </TabsContent>
           
           <TabsContent value="activities">
-            <LeadActivities leadId={leadId || lead?.id || ''} />
+            <LeadActivities leadId={lead.id} />
           </TabsContent>
         </Tabs>
       </DialogContent>

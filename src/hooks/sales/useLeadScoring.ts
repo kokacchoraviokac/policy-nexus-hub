@@ -1,79 +1,107 @@
 
-import { useState } from "react";
-import { Lead } from "@/types/sales/leads";
+import { useState } from 'react';
+import { useSupabaseClient } from '../useSupabaseClient';
+import { toast } from 'sonner';
+import { Lead } from '@/types/sales/leads';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-interface LeadScoreResult {
+export interface LeadScoreResult {
   totalScore: number;
   budgetScore: number;
   authorityScore: number;
   needScore: number;
   timelineScore: number;
+  isQualified: boolean;
+  qualificationLevel: string;
 }
 
-export function useLeadScoring() {
-  const [isCalculating, setIsCalculating] = useState(false);
-  
-  // Calculate lead score based on BANT criteria
-  const calculateScore = (lead: Lead, formData: {
-    budgetScore?: number;
-    authorityScore?: number;
-    needScore?: number;
-    timelineScore?: number;
-    budgetNotes?: string;
-    authorityNotes?: string;
-    needNotes?: string;
-    timelineNotes?: string;
-  }): LeadScoreResult => {
-    setIsCalculating(true);
+export const useLeadScoring = () => {
+  const { t } = useLanguage();
+  const supabase = useSupabaseClient();
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const updateLeadScore = async (leadId: string, score: number) => {
+    if (!leadId) return;
     
+    setIsUpdating(true);
     try {
-      // Use provided scores or existing scores from lead
-      const budgetScore = formData.budgetScore !== undefined ? formData.budgetScore : lead.budget_score || 0;
-      const authorityScore = formData.authorityScore !== undefined ? formData.authorityScore : lead.authority_score || 0;
-      const needScore = formData.needScore !== undefined ? formData.needScore : lead.need_score || 0;
-      const timelineScore = formData.timelineScore !== undefined ? formData.timelineScore : lead.timeline_score || 0;
+      const { data, error } = await supabase
+        .from('leads')
+        .update({ score })
+        .eq('id', leadId)
+        .select()
+        .single();
+        
+      if (error) throw error;
       
-      // Calculate total score - each BANT criteria can have 0-25 points
-      // This creates a total score range of 0-100
-      const totalScore = budgetScore + authorityScore + needScore + timelineScore;
-      
-      return {
-        totalScore,
-        budgetScore,
-        authorityScore,
-        needScore,
-        timelineScore
-      };
+      return data;
+    } catch (error) {
+      console.error('Error updating lead score:', error);
+      toast.error(t("failedToUpdateScore"));
+      throw error;
     } finally {
-      setIsCalculating(false);
+      setIsUpdating(false);
     }
   };
-  
-  // Get lead qualification level based on score
-  const getQualificationLevel = (score: number): {
-    level: 'cold' | 'warm' | 'hot';
-    color: string;
-    label: string;
-  } => {
-    if (score >= 75) {
-      return { level: 'hot', color: 'bg-red-500', label: 'Hot Lead' };
-    } else if (score >= 50) {
-      return { level: 'warm', color: 'bg-yellow-500', label: 'Warm Lead' };
-    } else {
-      return { level: 'cold', color: 'bg-blue-500', label: 'Cold Lead' };
+
+  const calculateScore = (
+    lead: Lead,
+    formData: {
+      budgetScore?: number;
+      authorityScore?: number;
+      needScore?: number;
+      timelineScore?: number;
+      budgetNotes?: string;
+      authorityNotes?: string;
+      needNotes?: string;
+      timelineNotes?: string;
     }
+  ): LeadScoreResult => {
+    const budget = formData.budgetScore || 0;
+    const authority = formData.authorityScore || 0;
+    const need = formData.needScore || 0;
+    const timeline = formData.timelineScore || 0;
+    
+    // Calculate total score (average of all criteria)
+    const totalScore = Math.round((budget + authority + need + timeline) / 4);
+    
+    // Determine if lead is qualified (minimum threshold)
+    const isQualified = totalScore >= 60;
+    
+    return {
+      totalScore,
+      budgetScore: budget,
+      authorityScore: authority,
+      needScore: need,
+      timelineScore: timeline,
+      isQualified,
+      qualificationLevel: getQualificationLevel(totalScore).level
+    };
   };
   
-  // Check if lead qualifies for status change based on score
-  const shouldQualifyLead = (score: number): boolean => {
-    // Suggest qualification if score is 50 or higher
-    return score >= 50;
+  const getQualificationLevel = (score: number) => {
+    if (score >= 80) return { level: 'excellent', color: 'green' };
+    if (score >= 60) return { level: 'good', color: 'emerald' };
+    if (score >= 40) return { level: 'average', color: 'yellow' };
+    if (score >= 20) return { level: 'poor', color: 'orange' };
+    return { level: 'veryPoor', color: 'red' };
+  };
+  
+  const shouldQualifyLead = (scoreResult: LeadScoreResult): boolean => {
+    // Rule: The lead should be qualified if total score is at least 60
+    // AND they have at least 50 in both "Need" and "Authority" criteria
+    return (
+      scoreResult.isQualified && 
+      scoreResult.needScore >= 50 && 
+      scoreResult.authorityScore >= 50
+    );
   };
 
   return {
     calculateScore,
     getQualificationLevel,
     shouldQualifyLead,
-    isCalculating
+    updateLeadScore,
+    isUpdating
   };
-}
+};

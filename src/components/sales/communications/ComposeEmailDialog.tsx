@@ -6,9 +6,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCommunications, Template } from "@/hooks/useCommunications";
+import { useCommunications } from "@/hooks/useCommunications";
+import { Template } from "@/types/sales/templates";
 import RichTextEditor from "../editor/RichTextEditor";
 
 interface ComposeEmailDialogProps {
@@ -81,7 +81,7 @@ const ComposeEmailDialog: React.FC<ComposeEmailDialogProps> = ({
     setIsSending(true);
     try {
       await sendEmail(
-        { ...lead, email: lead.email },  // Ensure email exists
+        { ...lead, name: lead.name, email: lead.email },
         subject,
         content,
         selectedTemplateId || undefined
