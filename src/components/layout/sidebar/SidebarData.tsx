@@ -1,3 +1,4 @@
+
 import {
   Home,
   FileText,
@@ -18,7 +19,7 @@ import {
   CreditCard,
   BookOpen,
   Building2,
-  Store,
+  Store, // Use 'Store' instead of 'BuildingStore'
   Tag,
   UserCog,
   PieChart,

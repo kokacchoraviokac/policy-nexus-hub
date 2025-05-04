@@ -1,146 +1,131 @@
-import React, { useState, useEffect } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import LeadActivities from "./LeadActivities";
-import LeadCommunicationsTab from "./LeadCommunicationsTab";
-import { useSupabaseClient } from "@/hooks/useSupabaseClient";
-import { toast } from "sonner";
 
-interface LeadDetailsDialogProps {
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Lead } from '@/types/sales/leads';
+import LeadCommunicationsTab from './LeadCommunicationsTab';
+import LeadActivities from './LeadActivities';
+
+export interface LeadDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  leadId: string;
-  onLeadUpdated?: () => void;
+  leadId?: string;
+  lead?: Lead;
 }
 
-const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({
-  open,
-  onOpenChange,
+const LeadDetailsDialog: React.FC<LeadDetailsDialogProps> = ({ 
+  open, 
+  onOpenChange, 
   leadId,
-  onLeadUpdated
+  lead 
 }) => {
   const { t } = useLanguage();
-  const [lead, setLead] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("details");
-  const supabase = useSupabaseClient();
+  const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    if (open && leadId) {
-      fetchLeadDetails();
-    }
-  }, [open, leadId]);
-
-  const fetchLeadDetails = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("id", leadId)
-        .single();
-
-      if (error) throw error;
-      setLead(data);
-    } catch (error) {
-      console.error("Error fetching lead:", error);
-      toast.error("Error loading lead details");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[800px]">
-          <div className="flex justify-center items-center h-40">
-            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
+  if (!lead && !leadId) {
+    return null;
   }
-
-  if (!lead) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[80vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-semibold">{lead.name}</h2>
-              <p className="text-sm text-muted-foreground">
-                {lead.company_name && `${lead.company_name} • `}
-                {lead.status && <span className="capitalize">{t(lead.status.toLowerCase() + "Lead")}</span>}
-              </p>
-            </div>
-          </div>
+          <DialogTitle>
+            {lead?.company_name || t("leadDetails")}
+          </DialogTitle>
         </DialogHeader>
-
-        <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="details">{t("details")}</TabsTrigger>
-            <TabsTrigger value="activities">{t("activities")}</TabsTrigger>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          <TabsList className="mb-4">
+            <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
             <TabsTrigger value="communications">{t("communications")}</TabsTrigger>
+            <TabsTrigger value="activities">{t("activities")}</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="details">
-            <div className="space-y-4">
-              {/* Contact information */}
-              <div>
+          
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-card rounded-lg border p-4">
+                <h3 className="font-medium mb-2">{t("companyInformation")}</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("companyName")}</span>
+                    <span>{lead?.company_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("website")}</span>
+                    <span>{lead?.website || t("notProvided")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("industry")}</span>
+                    <span>{lead?.industry || t("notProvided")}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-card rounded-lg border p-4">
                 <h3 className="font-medium mb-2">{t("contactInformation")}</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("contactPerson")}</p>
-                    <p>{lead.contact_person || "-"}</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("contactName")}</span>
+                    <span>{lead?.contact_name}</span>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("company")}</p>
-                    <p>{lead.company_name || "-"}</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("email")}</span>
+                    <span>{lead?.contact_email}</span>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("email")}</p>
-                    <p>{lead.email || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("phone")}</p>
-                    <p>{lead.phone || "-"}</p>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("phone")}</span>
+                    <span>{lead?.contact_phone || t("notProvided")}</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Lead information */}
-              <div>
-                <h3 className="font-medium mb-2">{t("leadInformation")}</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("source")}</p>
-                    <p>{lead.source || "-"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t("status")}</p>
-                    <p className="capitalize">{lead.status ? t(lead.status.toLowerCase() + "Lead") : "-"}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <h3 className="font-medium mb-2">{t("notes")}</h3>
-                <p className="text-sm whitespace-pre-wrap">{lead.notes || "-"}</p>
               </div>
             </div>
+            
+            <div className="bg-card rounded-lg border p-4">
+              <h3 className="font-medium mb-2">{t("leadDetails")}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("status")}</span>
+                    <span>{lead?.status}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("source")}</span>
+                    <span>{lead?.source}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("leadScore")}</span>
+                    <span>{lead?.score || '0'}/100</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("assignedTo")}</span>
+                    <span>{lead?.assigned_to_name || t("unassigned")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("createdAt")}</span>
+                    <span>{lead?.created_at ? new Date(lead.created_at).toLocaleDateString() : ''}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {lead?.notes && (
+                <div className="mt-4">
+                  <h4 className="font-medium mb-1">{t("notes")}</h4>
+                  <p className="text-muted-foreground">{lead.notes}</p>
+                </div>
+              )}
+            </div>
           </TabsContent>
-
-          <TabsContent value="activities">
-            <LeadActivities leadId={lead.id} />
-          </TabsContent>
-
+          
           <TabsContent value="communications">
-            <LeadCommunicationsTab lead={lead} />
+            <LeadCommunicationsTab leadId={leadId || lead?.id || ''} />
+          </TabsContent>
+          
+          <TabsContent value="activities">
+            <LeadActivities leadId={leadId || lead?.id || ''} />
           </TabsContent>
         </Tabs>
       </DialogContent>

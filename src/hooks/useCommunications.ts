@@ -1,363 +1,302 @@
 
-import { useState } from "react";
-import { useSupabaseClient } from "./useSupabaseClient";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNotificationService } from "./useNotificationService";
-import { toast } from "sonner";
+import { useState, useCallback } from 'react';
+import { useSupabaseClient } from './useSupabaseClient';
+import { useAuth } from '@/contexts/AuthContext';
+import { Template } from '@/types/sales/templates';
+import { Communication, CommunicationDirection, CommunicationType, CommunicationStatus, CommunicationMetadata } from '@/types/sales/communications';
+import { toast } from 'sonner';
 
-export type CommunicationType = 'email' | 'sms' | 'call' | 'meeting' | 'note';
-export type CommunicationDirection = 'outbound' | 'inbound';
-export type CommunicationStatus = 'draft' | 'sent' | 'failed' | 'delivered' | 'opened';
-
-export interface Communication {
-  id: string;
-  lead_id: string;
+export interface CreateCommunicationParams {
   subject: string;
   content: string;
-  direction: CommunicationDirection;
   type: CommunicationType;
+  direction: CommunicationDirection;
   status: CommunicationStatus;
-  sent_by?: string;
-  sent_at?: string;
-  template_id?: string;
-  created_at: string;
-  updated_at: string;
-  email_metadata?: {
-    recipientEmail?: string;
-    recipientName?: string;
-    attachments?: string[];
-    [key: string]: any;
-  };
-}
-
-export interface Template {
-  id: string;
-  name: string;
-  subject: string;
-  content: string;
-  variables: string[];
-  category: string;
-  is_default: boolean;
-  created_at: string;
-  updated_at: string;
+  templateId?: string;
+  metadata?: Record<string, any>;
 }
 
 export const useCommunications = (leadId?: string) => {
   const supabase = useSupabaseClient();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
   const [communications, setCommunications] = useState<Communication[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const { createNotification } = useNotificationService();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchCommunications = async (id: string = leadId) => {
-    if (!id) return;
-
+  const fetchCommunications = useCallback(async () => {
+    if (!leadId) return;
+    
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('lead_communications')
         .select('*')
-        .eq('lead_id', id)
+        .eq('lead_id', leadId)
         .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      // Fix the type issue by mapping to the correct type
-      if (data) {
-        const typedCommunications: Communication[] = data.map(item => ({
-          ...item,
-          direction: item.direction as CommunicationDirection,
-          type: item.type as CommunicationType,
-          status: item.status as CommunicationStatus,
-          email_metadata: item.email_metadata || {}
-        }));
         
-        setCommunications(typedCommunications);
-        return typedCommunications;
+      if (error) {
+        throw error;
       }
-      return [];
+      
+      // Map the database result to the Communication type
+      const typedCommunications: Communication[] = data.map(item => ({
+        id: item.id,
+        lead_id: item.lead_id,
+        company_id: item.company_id,
+        subject: item.subject,
+        content: item.content,
+        direction: item.direction as CommunicationDirection,
+        type: item.type as CommunicationType,
+        status: item.status as CommunicationStatus,
+        sent_by: item.sent_by,
+        sent_at: item.sent_at,
+        template_id: item.template_id,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        email_metadata: item.email_metadata as CommunicationMetadata
+      }));
+      
+      setCommunications(typedCommunications);
     } catch (error) {
       console.error('Error fetching communications:', error);
-      toast.error('Failed to load communications history');
-      return [];
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [leadId, supabase]);
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
+    if (!user?.company_id) return;
+    
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('email_templates')
         .select('*')
-        .order('name');
-
-      if (error) throw error;
-      
-      // Fix the type issue by mapping to the correct type
-      if (data) {
-        const typedTemplates: Template[] = data.map(item => ({
-          ...item,
-          variables: Array.isArray(item.variables) 
-            ? item.variables 
-            : typeof item.variables === 'string' 
-              ? JSON.parse(item.variables)
-              : []
-        }));
+        .eq('company_id', user.company_id);
         
-        setTemplates(typedTemplates);
-        return typedTemplates;
+      if (error) {
+        throw error;
       }
-      return [];
+      
+      // Map the database result to the Template type
+      const typedTemplates: Template[] = data.map(item => ({
+        id: item.id,
+        name: item.name,
+        subject: item.subject,
+        content: item.content,
+        variables: Array.isArray(item.variables) ? item.variables : [],
+        category: item.category,
+        is_default: item.is_default,
+        company_id: item.company_id,
+        created_by: item.created_by,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+      
+      setTemplates(typedTemplates);
     } catch (error) {
-      console.error('Error fetching email templates:', error);
-      toast.error('Failed to load email templates');
-      return [];
+      console.error('Error fetching templates:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [supabase, user?.company_id]);
 
-  const sendEmail = async (
-    lead: { id: string; name: string; email: string; company_id: string },
-    subject: string,
-    content: string,
-    templateId?: string
-  ) => {
-    if (!user) {
-      toast.error('You must be logged in to send emails');
-      return null;
-    }
-
-    setIsLoading(true);
-    try {
-      const payload = {
-        leadId: lead.id,
-        subject,
-        content,
-        companyId: lead.company_id,
-        sentBy: user.id,
-        templateId,
-        recipientEmail: lead.email,
-        recipientName: lead.name
-      };
-
-      const response = await supabase.functions.invoke('send-lead-email', {
-        body: payload
-      });
-
-      if (response.error) throw new Error(response.error.message);
+  const createCommunication = useCallback(
+    async ({ subject, content, type, direction, status, templateId, metadata }: CreateCommunicationParams) => {
+      if (!leadId || !user?.company_id) {
+        toast.error('Missing required information');
+        return null;
+      }
       
-      toast.success('Email sent successfully');
-      
-      // Refresh communications list
-      await fetchCommunications(lead.id);
-      
-      return response.data;
-    } catch (error) {
-      console.error('Error sending email:', error);
-      toast.error('Failed to send email');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const createTemplate = async (template: Omit<Template, 'id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return null;
-
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('email_templates')
-        .insert({
-          ...template,
-          created_by: user.id,
-          company_id: user.companyId
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      toast.success('Template created successfully');
-      await fetchTemplates();
-      return data;
-    } catch (error) {
-      console.error('Error creating template:', error);
-      toast.error('Failed to create template');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateTemplate = async (id: string, updates: Partial<Omit<Template, 'id' | 'created_at' | 'updated_at'>>) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('email_templates')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      toast.success('Template updated successfully');
-      await fetchTemplates();
-      return data;
-    } catch (error) {
-      console.error('Error updating template:', error);
-      toast.error('Failed to update template');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteTemplate = async (id: string) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('email_templates')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      
-      toast.success('Template deleted successfully');
-      await fetchTemplates();
-      return true;
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      toast.error('Failed to delete template');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Create a note or other communication type
-  const createCommunication = async (
-    leadId: string, 
-    type: CommunicationType,
-    subject: string,
-    content: string,
-    direction: CommunicationDirection = 'outbound'
-  ) => {
-    if (!user?.id || !user?.companyId) {
-      toast.error('You must be logged in to create communications');
-      return null;
-    }
-
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('lead_communications')
-        .insert({
+      setIsLoading(true);
+      try {
+        const newCommunication = {
           lead_id: leadId,
+          company_id: user.company_id,
           subject,
           content,
           direction,
           type,
-          status: type === 'note' ? 'sent' : 'draft',
+          status,
           sent_by: user.id,
-          sent_at: type === 'note' ? new Date().toISOString() : null,
-          company_id: user.companyId
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} created`);
-      await fetchCommunications(leadId);
-      return data;
-    } catch (error) {
-      console.error(`Error creating ${type}:`, error);
-      toast.error(`Failed to create ${type}`);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return {
-    isLoading,
-    communications,
-    templates,
-    fetchCommunications,
-    fetchTemplates,
-    sendEmail: async (
-      lead: { id: string; name: string; email: string; company_id: string },
-      subject: string,
-      content: string,
-      templateId?: string
-    ) => {
-      if (!user) {
-        toast.error('You must be logged in to send emails');
-        return null;
-      }
-
-      setIsLoading(true);
-      try {
-        const payload = {
-          leadId: lead.id,
-          subject,
-          content,
-          companyId: lead.company_id,
-          sentBy: user.id,
-          templateId,
-          recipientEmail: lead.email,
-          recipientName: lead.name
+          sent_at: new Date().toISOString(),
+          template_id: templateId,
+          email_metadata: metadata || {}
         };
-
-        const response = await supabase.functions.invoke('send-lead-email', {
-          body: payload
-        });
-
-        if (response.error) throw new Error(response.error.message);
         
-        toast.success('Email sent successfully');
+        const { data, error } = await supabase
+          .from('lead_communications')
+          .insert(newCommunication)
+          .select()
+          .single();
+          
+        if (error) {
+          throw error;
+        }
         
-        // Refresh communications list
-        await fetchCommunications(lead.id);
+        // Add the new communication to the list
+        const typedCommunication: Communication = {
+          id: data.id,
+          lead_id: data.lead_id,
+          company_id: data.company_id,
+          subject: data.subject,
+          content: data.content,
+          direction: data.direction as CommunicationDirection,
+          type: data.type as CommunicationType,
+          status: data.status as CommunicationStatus,
+          sent_by: data.sent_by,
+          sent_at: data.sent_at,
+          template_id: data.template_id,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
+          email_metadata: data.email_metadata as CommunicationMetadata
+        };
         
-        return response.data;
+        setCommunications(prev => [typedCommunication, ...prev]);
+        return typedCommunication;
       } catch (error) {
-        console.error('Error sending email:', error);
-        toast.error('Failed to send email');
-        return null;
+        console.error('Error creating communication:', error);
+        throw error;
       } finally {
         setIsLoading(false);
       }
     },
-    createTemplate,
-    updateTemplate,
-    deleteTemplate: async (id: string) => {
+    [leadId, supabase, user?.company_id, user?.id]
+  );
+
+  const createTemplate = useCallback(
+    async (template: Omit<Template, 'id' | 'created_at' | 'updated_at'>) => {
+      if (!user?.company_id) {
+        toast.error('Missing company information');
+        return null;
+      }
+      
+      setIsLoading(true);
+      try {
+        const newTemplate = {
+          ...template,
+          company_id: user.company_id,
+          created_by: user.id
+        };
+        
+        const { data, error } = await supabase
+          .from('email_templates')
+          .insert(newTemplate)
+          .select()
+          .single();
+          
+        if (error) {
+          throw error;
+        }
+        
+        // Convert database response to Template type
+        const typedTemplate: Template = {
+          id: data.id,
+          name: data.name,
+          subject: data.subject,
+          content: data.content,
+          variables: Array.isArray(data.variables) ? data.variables : [],
+          category: data.category,
+          is_default: data.is_default,
+          company_id: data.company_id,
+          created_by: data.created_by,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        
+        setTemplates(prev => [...prev, typedTemplate]);
+        return typedTemplate;
+      } catch (error) {
+        console.error('Error creating template:', error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [supabase, user?.company_id, user?.id]
+  );
+
+  const updateTemplate = useCallback(
+    async (id: string, templateChanges: Partial<Template>) => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('email_templates')
+          .update(templateChanges)
+          .eq('id', id)
+          .select()
+          .single();
+          
+        if (error) {
+          throw error;
+        }
+        
+        // Convert database response to Template type
+        const updatedTemplate: Template = {
+          id: data.id,
+          name: data.name,
+          subject: data.subject,
+          content: data.content,
+          variables: Array.isArray(data.variables) ? data.variables : [],
+          category: data.category,
+          is_default: data.is_default,
+          company_id: data.company_id,
+          created_by: data.created_by,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        
+        // Update the templates list
+        setTemplates(prev =>
+          prev.map(t => t.id === id ? updatedTemplate : t)
+        );
+        
+        return updatedTemplate;
+      } catch (error) {
+        console.error('Error updating template:', error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [supabase]
+  );
+
+  const deleteTemplate = useCallback(
+    async (id: string) => {
       setIsLoading(true);
       try {
         const { error } = await supabase
           .from('email_templates')
           .delete()
           .eq('id', id);
-
-        if (error) throw error;
+          
+        if (error) {
+          throw error;
+        }
         
-        toast.success('Template deleted successfully');
-        await fetchTemplates();
+        // Remove the template from the list
+        setTemplates(prev => prev.filter(t => t.id !== id));
         return true;
       } catch (error) {
         console.error('Error deleting template:', error);
-        toast.error('Failed to delete template');
-        return false;
+        throw error;
       } finally {
         setIsLoading(false);
       }
     },
-    createCommunication
+    [supabase]
+  );
+
+  return {
+    communications,
+    templates,
+    isLoading,
+    fetchCommunications,
+    fetchTemplates,
+    createCommunication,
+    createTemplate,
+    updateTemplate,
+    deleteTemplate
   };
 };

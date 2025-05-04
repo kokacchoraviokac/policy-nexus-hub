@@ -1,132 +1,111 @@
 
-import React, { useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Lead } from "@/types/sales/leads";
-import LeadScoringForm, { LeadScoringFormValues } from "./LeadScoringForm";
-import { useToast } from "@/hooks/use-toast";
-import { useLeads } from "@/hooks/sales/useLeads";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { useLeadScoring } from "@/hooks/sales/useLeadScoring";
-import { useNotificationService } from "@/hooks/useNotificationService";
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useLeadScoring } from '@/hooks/sales/useLeadScoring';
+import { Slider } from '@/components/ui/slider';
+import { toast } from 'sonner';
 
 interface LeadScoringDialogProps {
-  lead: Lead;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onLeadScored?: () => void;
+  leadId: string;
+  currentScore?: number;
+  onScoreUpdate?: (newScore: number) => void;
 }
 
-const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
-  lead,
-  open,
-  onOpenChange,
-  onLeadScored
+const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  leadId,
+  currentScore = 0,
+  onScoreUpdate
 }) => {
   const { t } = useLanguage();
-  const { toast } = useToast();
-  const { updateLead } = useLeads();
-  const { shouldQualifyLead } = useLeadScoring();
-  const { createLeadStatusChangeNotification } = useNotificationService();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [score, setScore] = useState(currentScore);
+  const { updateLeadScore, isUpdating } = useLeadScoring();
   
-  const handleSubmit = async (values: LeadScoringFormValues) => {
-    setIsSubmitting(true);
-    
+  const handleSliderChange = (value: number[]) => {
+    setScore(value[0]);
+  };
+  
+  const handleSave = async () => {
     try {
-      // Calculate total score
-      const totalScore = values.budgetScore + values.authorityScore + values.needScore + values.timelineScore;
+      await updateLeadScore(leadId, score);
+      toast.success(t("leadScoreUpdated"));
       
-      // Prepare update data
-      const updateData: any = {
-        score: totalScore,
-        budget_score: values.budgetScore,
-        authority_score: values.authorityScore,
-        need_score: values.needScore,
-        timeline_score: values.timelineScore,
-        budget_notes: values.budgetNotes,
-        authority_notes: values.authorityNotes,
-        need_notes: values.needNotes,
-        timeline_notes: values.timelineNotes,
-      };
-      
-      // Check if we should recommend status change to qualified
-      let statusUpdateMessage = "";
-      let previousStatus = lead.status;
-      
-      // Only suggest changing to 'qualified' if current status is 'new' and score is high enough
-      if (lead.status === 'new' && shouldQualifyLead(totalScore)) {
-        // Add status to update data if user confirms
-        if (window.confirm(t("leadQualificationConfirm"))) {
-          updateData.status = 'qualified';
-          statusUpdateMessage = t("leadStatusUpdated");
-        }
+      if (onScoreUpdate) {
+        onScoreUpdate(score);
       }
       
-      // Update lead
-      await updateLead(lead.id, updateData);
-      
-      // Create notification if status changed
-      if (updateData.status && updateData.status !== previousStatus) {
-        await createLeadStatusChangeNotification({
-          ...lead,
-          status: updateData.status
-        }, previousStatus);
-      }
-      
-      // Show success message
-      toast({
-        title: t("leadScoreUpdated"),
-        description: statusUpdateMessage ? `${t("leadScoreUpdatedMessage")} ${statusUpdateMessage}` : t("leadScoreUpdatedMessage")
-      });
-      
-      // Close dialog and refresh
       onOpenChange(false);
-      if (onLeadScored) onLeadScored();
       
+      // Remove the notification call since it doesn't exist in useNotificationService
+      // We'll handle notifications separately if needed
     } catch (error) {
-      console.error("Error updating lead score:", error);
-      toast({
-        title: t("errorUpdatingLeadScore"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error updating lead score:', error);
+      toast.error(t("leadScoreUpdateFailed"));
     }
+  };
+  
+  const getScoreLabel = () => {
+    if (score >= 80) return t("excellent");
+    if (score >= 60) return t("good");
+    if (score >= 40) return t("average");
+    if (score >= 20) return t("poor");
+    return t("veryPoor");
+  };
+  
+  const getScoreColor = () => {
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-emerald-600";
+    if (score >= 40) return "text-yellow-600";
+    if (score >= 20) return "text-orange-600";
+    return "text-red-600";
   };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("scoreLead")}</DialogTitle>
-          <DialogDescription>
-            {t("scoreLeadDescription")}
-          </DialogDescription>
+          <DialogTitle>{t("updateLeadScore")}</DialogTitle>
         </DialogHeader>
         
-        <div className="flex items-center justify-between mb-4 bg-muted/20 p-2 rounded">
-          <div>
-            <p className="font-medium">{lead.name}</p>
-            {lead.company_name && <p className="text-sm text-muted-foreground">{lead.company_name}</p>}
+        <div className="py-6">
+          <div className="flex justify-between items-center mb-6">
+            <span>{t("score")}:</span>
+            <span className={`text-2xl font-bold ${getScoreColor()}`}>
+              {score} - {getScoreLabel()}
+            </span>
           </div>
           
-          <Badge variant={lead.status === 'new' ? 'default' : lead.status === 'qualified' ? 'secondary' : lead.status === 'converted' ? 'success' : 'outline'}>
-            {t(lead.status)}
-          </Badge>
+          <Slider
+            value={[score]}
+            min={0}
+            max={100}
+            step={1}
+            onValueChange={handleSliderChange}
+            className="w-full"
+          />
+          
+          <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+            <span>{t("veryPoor")}</span>
+            <span>{t("poor")}</span>
+            <span>{t("average")}</span>
+            <span>{t("good")}</span>
+            <span>{t("excellent")}</span>
+          </div>
         </div>
         
-        {lead.status === 'lost' && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>
-              {t("lostLeadScoringWarning")}
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        <LeadScoringForm lead={lead} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t("cancel")}
+          </Button>
+          <Button onClick={handleSave} disabled={isUpdating}>
+            {isUpdating ? t("saving") : t("saveScore")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
