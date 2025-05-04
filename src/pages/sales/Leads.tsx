@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import BANTCriteriaList from "@/components/sales/leads/BANTCriteriaList";
-
+import { Lead } from "@/types/sales/leads";
 import { 
   Select,
   SelectContent,
@@ -44,6 +43,16 @@ const Leads = () => {
   
   // Handle lead creation
   const handleLeadCreated = () => {
+    refresh();
+  };
+
+  // Handle lead deletion
+  const handleLeadDeleted = () => {
+    refresh();
+  };
+
+  // Handle lead editing
+  const handleLeadUpdated = (updatedLead: Lead) => {
     refresh();
   };
 
@@ -188,7 +197,12 @@ const Leads = () => {
               <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
             </div>
           ) : leads && leads.length > 0 ? (
-            <LeadsTable leads={leads} onRefresh={refresh} />
+            <LeadsTable 
+              leads={leads} 
+              onRefresh={refresh} 
+              onDelete={handleLeadDeleted}
+              onEdit={handleLeadUpdated}
+            />
           ) : (
             <EmptyState
               title={t("noLeadsFound")}

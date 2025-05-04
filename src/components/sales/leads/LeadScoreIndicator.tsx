@@ -9,12 +9,14 @@ interface LeadScoreIndicatorProps {
   score: number;
   size?: 'sm' | 'md' | 'lg';
   showTooltip?: boolean;
+  onClick?: () => void; // Added onClick prop
 }
 
 const LeadScoreIndicator: React.FC<LeadScoreIndicatorProps> = ({ 
   score, 
   size = 'md',
-  showTooltip = true
+  showTooltip = true,
+  onClick
 }) => {
   const { t } = useLanguage();
   const { getQualificationLevel } = useLeadScoring();
@@ -29,7 +31,11 @@ const LeadScoreIndicator: React.FC<LeadScoreIndicatorProps> = ({
   };
   
   const scoreDisplay = (
-    <div className="flex flex-col items-center">
+    <div 
+      className="flex flex-col items-center"
+      onClick={onClick}
+      style={onClick ? { cursor: 'pointer' } : undefined}
+    >
       <div 
         className={`rounded-full ${sizingClasses[size]} ${qualificationInfo.color} text-white flex items-center justify-center font-medium`}
       >

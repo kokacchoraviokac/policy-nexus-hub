@@ -37,9 +37,11 @@ import LeadScoringDialog from "./LeadScoringDialog";
 import LeadScoreIndicator from "./LeadScoreIndicator";
 
 // Define props for the LeadsTable component
-interface LeadsTableProps {
+export interface LeadsTableProps {
   leads: Lead[];
   onRefresh: () => void;
+  onDelete?: (id: string) => void;
+  onEdit?: (updatedLead: Lead) => void;
 }
 
 // Status badge component
@@ -47,6 +49,7 @@ const StatusBadge = ({ status }: { status: LeadStatus }) => {
   const getVariant = () => {
     switch (status) {
       case "new": return "default";
+      case "contacted": return "outline";
       case "qualified": return "secondary";
       case "converted": return "success";
       case "lost": return "destructive";
@@ -68,7 +71,7 @@ const formatDate = (dateString: string) => {
   }
 };
 
-const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
+const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh, onDelete, onEdit }) => {
   const { t } = useLanguage();
   const [leadToEdit, setLeadToEdit] = React.useState<Lead | null>(null);
   const [leadToView, setLeadToView] = React.useState<Lead | null>(null);
@@ -108,7 +111,7 @@ const LeadsTable: React.FC<LeadsTableProps> = ({ leads, onRefresh }) => {
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   {lead.score !== undefined ? (
-                    <LeadScoreIndicator score={lead.score} size="sm" />
+                    <LeadScoreIndicator score={lead.score} size="sm" onClick={() => setLeadToScore(lead)} />
                   ) : (
                     <span className="text-sm text-muted-foreground">-</span>
                   )}

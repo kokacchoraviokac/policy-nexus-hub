@@ -30,13 +30,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Lead } from "@/types/sales/leads";
+import { Lead, LeadStatus } from "@/types/sales/leads";
+import { useLeads } from "@/hooks/sales/useLeads";
 
 interface EditLeadDialogProps {
   lead: Lead;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLeadUpdated: () => void;
+  onSave?: (updatedLead: Lead) => void; // Added to support existing code
 }
 
 // Form schema
@@ -48,7 +50,7 @@ const formSchema = z.object({
   source: z.string().optional(),
   notes: z.string().optional(),
   assigned_to: z.string().optional(),
-  status: z.enum(["new", "qualified", "converted", "lost"]),
+  status: z.enum(["new", "contacted", "qualified", "converted", "lost"]),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -58,8 +60,10 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
   open,
   onOpenChange,
   onLeadUpdated,
+  onSave,
 }) => {
   const { t } = useLanguage();
+  const { updateLead } = useLeads();
   
   // Initialize form
   const form = useForm<FormValues>({
@@ -79,16 +83,16 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
   // Handle form submission
   const onSubmit = async (values: FormValues) => {
     // In a real application, this would make an API call to update a lead
-    console.log("Updating lead:", values);
+    const updatedLead = await updateLead(lead.id, values);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Call callback function
-    onLeadUpdated();
-    
-    // Close dialog
-    onOpenChange(false);
+    if (updatedLead) {
+      // Call callback functions
+      onLeadUpdated();
+      if (onSave) onSave(updatedLead);
+      
+      // Close dialog
+      onOpenChange(false);
+    }
   };
 
   return (
@@ -225,6 +229,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="new">{t("newLeads")}</SelectItem>
+                      <SelectItem value="contacted">{t("contactedLeads")}</SelectItem>
                       <SelectItem value="qualified">{t("qualifiedLeads")}</SelectItem>
                       <SelectItem value="converted">{t("convertedLeads")}</SelectItem>
                       <SelectItem value="lost">{t("lostLeads")}</SelectItem>

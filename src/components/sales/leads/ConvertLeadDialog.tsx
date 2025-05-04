@@ -36,6 +36,7 @@ interface ConvertLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLeadConverted: () => void;
+  onConvert?: (lead: Lead) => void; // Added to support existing code
 }
 
 // Form schema
@@ -51,6 +52,7 @@ const ConvertLeadDialog: React.FC<ConvertLeadDialogProps> = ({
   open,
   onOpenChange,
   onLeadConverted,
+  onConvert,
 }) => {
   const { t } = useLanguage();
   
@@ -71,8 +73,9 @@ const ConvertLeadDialog: React.FC<ConvertLeadDialogProps> = ({
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Call callback function
+    // Call callback functions
     onLeadConverted();
+    if (onConvert) onConvert(lead);
     
     // Reset form and close dialog
     form.reset();

@@ -27,7 +27,7 @@ export interface Lead {
   timeline_notes?: string;
 }
 
-export type LeadStatus = 'new' | 'qualified' | 'converted' | 'lost';
+export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
 
 export type LeadSource = 'website' | 'referral' | 'email' | 'social_media' | 'phone' | 'event' | 'other';
 

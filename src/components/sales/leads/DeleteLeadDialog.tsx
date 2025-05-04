@@ -13,12 +13,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useLeads } from "@/hooks/sales/useLeads";
 
 interface DeleteLeadDialogProps {
   lead: Lead;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLeadDeleted: () => void;
+  onConfirm?: () => void; // Added to support existing code
 }
 
 const DeleteLeadDialog: React.FC<DeleteLeadDialogProps> = ({
@@ -26,21 +28,23 @@ const DeleteLeadDialog: React.FC<DeleteLeadDialogProps> = ({
   open,
   onOpenChange,
   onLeadDeleted,
+  onConfirm
 }) => {
   const { t } = useLanguage();
+  const { deleteLead } = useLeads();
 
   const handleDelete = async () => {
     // In a real application, this would make an API call to delete a lead
-    console.log("Deleting lead:", lead.id);
+    const success = await deleteLead(lead.id);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Call callback function
-    onLeadDeleted();
-    
-    // Close dialog
-    onOpenChange(false);
+    if (success) {
+      // Call callback functions
+      if (onLeadDeleted) onLeadDeleted();
+      if (onConfirm) onConfirm();
+      
+      // Close dialog
+      onOpenChange(false);
+    }
   };
 
   return (

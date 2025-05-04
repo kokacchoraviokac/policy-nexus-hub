@@ -39,7 +39,8 @@ export const useLeads = (searchQuery: string = "", statusFilter: string = "all")
         throw error;
       }
       
-      setLeads(data as Lead[]);
+      // Use type assertion to convert database records to Lead type
+      setLeads(data as unknown as Lead[]);
     } catch (err) {
       console.error("Error fetching leads:", err);
       setError(err as Error);
@@ -75,7 +76,8 @@ export const useLeads = (searchQuery: string = "", statusFilter: string = "all")
         description: t("leadCreatedDescription", { name: leadData.name })
       });
       
-      return data as Lead;
+      // Use type assertion to convert database record to Lead type
+      return data as unknown as Lead;
     } catch (err) {
       console.error("Error creating lead:", err);
       toast.error(t("errorCreatingLead"));
@@ -103,7 +105,8 @@ export const useLeads = (searchQuery: string = "", statusFilter: string = "all")
         description: t("leadUpdatedDescription")
       });
       
-      return data as Lead;
+      // Use type assertion to convert database record to Lead type
+      return data as unknown as Lead;
     } catch (err) {
       console.error("Error updating lead:", err);
       toast.error(t("errorUpdatingLead"));
@@ -147,6 +150,7 @@ export const useLeads = (searchQuery: string = "", statusFilter: string = "all")
     return {
       total: leads.length,
       new: stats.new || 0,
+      contacted: stats.contacted || 0,
       qualified: stats.qualified || 0,
       converted: stats.converted || 0,
       lost: stats.lost || 0
