@@ -6,6 +6,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import Settings from "@/pages/Settings";
 import UserManagement from "@/pages/UserManagement";
 import PrivilegeTestPage from "@/pages/PrivilegeTestPage";
+import EmployeesPage from "@/pages/settings/EmployeesPage";
 import NotFound from "@/pages/NotFound";
 
 export const SettingsRoutes = [
@@ -35,6 +36,19 @@ export const SettingsRoutes = [
     }
   />,
   
+  // Employees Management
+  <Route 
+    key="settings-employees"
+    path="/settings/employees" 
+    element={
+      <ProtectedRoute requiredPrivilege="settings:view">
+        <AppLayout>
+          <EmployeesPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
   // Privilege Test Page
   <Route 
     key="privilege-test"
@@ -49,18 +63,6 @@ export const SettingsRoutes = [
   />,
   
   // Additional Settings Routes (currently pointing to NotFound until implemented)
-  <Route 
-    key="settings-employees"
-    path="/settings/employees" 
-    element={
-      <ProtectedRoute requiredPrivilege="settings:view">
-        <AppLayout>
-          <NotFound />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
   <Route 
     key="settings-privileges"
     path="/settings/privileges" 
