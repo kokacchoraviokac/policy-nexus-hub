@@ -7,6 +7,7 @@ import Settings from "@/pages/Settings";
 import UserManagement from "@/pages/UserManagement";
 import PrivilegeTestPage from "@/pages/PrivilegeTestPage";
 import EmployeesPage from "@/pages/settings/EmployeesPage";
+import CompanyDataPage from "@/pages/settings/CompanyDataPage";
 import NotFound from "@/pages/NotFound";
 
 export const SettingsRoutes = [
@@ -49,6 +50,19 @@ export const SettingsRoutes = [
     }
   />,
   
+  // Company Data Management
+  <Route 
+    key="settings-company"
+    path="/settings/company" 
+    element={
+      <ProtectedRoute requiredPrivilege="settings:view">
+        <AppLayout>
+          <CompanyDataPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
   // Privilege Test Page
   <Route 
     key="privilege-test"
@@ -66,18 +80,6 @@ export const SettingsRoutes = [
   <Route 
     key="settings-privileges"
     path="/settings/privileges" 
-    element={
-      <ProtectedRoute requiredPrivilege="settings:view">
-        <AppLayout>
-          <NotFound />
-        </AppLayout>
-      </ProtectedRoute>
-    }
-  />,
-  
-  <Route 
-    key="settings-company"
-    path="/settings/company" 
     element={
       <ProtectedRoute requiredPrivilege="settings:view">
         <AppLayout>

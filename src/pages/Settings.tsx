@@ -73,8 +73,8 @@ const Settings = () => {
             <p className="text-sm text-muted-foreground mb-4">
               {t("companyDataDescription")}
             </p>
-            <Button variant="outline" className="w-full" disabled>
-              {t("editCompanyData")}
+            <Button variant="outline" className="w-full" asChild>
+              <Link to="/settings/company">{t("editCompanyData")}</Link>
             </Button>
           </CardContent>
         </Card>
