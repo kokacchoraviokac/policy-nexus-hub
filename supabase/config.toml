@@ -3,3 +3,6 @@ project_id = "lvqmmjdqrxtsxmwbrmqb"
 
 [functions.check-activity-reminders]
 verify_jwt = true
+
+[functions.send-lead-email]
+verify_jwt = true

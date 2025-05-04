@@ -1,126 +1,130 @@
 
-import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/auth/AuthContext';
-import { NotificationType } from '@/types/notifications';
-import { SalesActivity } from '@/types/sales/activities';
-import { Lead } from '@/types/sales/leads';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { format } from 'date-fns';
+import { useAuth } from "@/contexts/AuthContext";
+import { useSupabaseClient } from "./useSupabaseClient";
+import { toast } from "sonner";
 
-export function useNotificationService() {
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  status: 'read' | 'unread';
+  related_entity_id?: string;
+  related_entity_type?: string;
+  created_at: string;
+}
+
+export const useNotificationService = () => {
   const { user } = useAuth();
-  const { t } = useLanguage();
-  
-  const createNotification = useCallback(async ({
+  const supabase = useSupabaseClient();
+
+  const createNotification = async ({
     title,
     message,
     type,
-    relatedEntityType,
     relatedEntityId,
-    dueDate
+    relatedEntityType
   }: {
-    title: string,
-    message: string,
-    type: NotificationType,
-    relatedEntityType?: string,
-    relatedEntityId?: string,
-    dueDate?: Date | string
+    title: string;
+    message: string;
+    type: string;
+    relatedEntityId?: string;
+    relatedEntityType?: string;
   }) => {
-    if (!user?.id || !user.companyId) return null;
-    
+    if (!user?.id || !user?.companyId) return null;
+
     try {
       const { data, error } = await supabase
         .from('notifications')
         .insert({
+          user_id: user.id,
+          company_id: user.companyId,
           title,
           message,
           type,
-          user_id: user.id,
-          company_id: user.companyId,
-          related_entity_type: relatedEntityType,
+          status: 'unread',
           related_entity_id: relatedEntityId,
-          due_date: dueDate ? new Date(dueDate).toISOString() : null,
-          status: 'unread'
+          related_entity_type: relatedEntityType
         })
         .select()
         .single();
-      
+
       if (error) throw error;
-      
       return data;
     } catch (error) {
       console.error('Error creating notification:', error);
       return null;
     }
-  }, [user]);
-  
-  const createActivityDueNotification = useCallback(async (activity: SalesActivity) => {
-    if (!activity.due_date) return null;
-    
-    const formattedDate = format(new Date(activity.due_date), 'PPp');
-    const title = t('activityDueReminder');
-    const message = t('activityDueMessage', { 
-      type: t(activity.activity_type), 
-      date: formattedDate 
-    });
+  };
+
+  const createActivityDueNotification = async (activity: any) => {
+    if (!activity.due_date || !user?.id) return null;
+
+    const dueDate = new Date(activity.due_date);
+    const activityType = activity.activity_type || 'activity';
     
     return createNotification({
-      title,
-      message,
-      type: 'activity_due',
-      relatedEntityType: 'sales_activity',
+      title: `Upcoming ${activityType}`,
+      message: `You have a ${activityType} scheduled on ${dueDate.toLocaleDateString()}`,
+      type: 'activity_reminder',
       relatedEntityId: activity.id,
-      dueDate: activity.due_date
+      relatedEntityType: 'sales_activity'
     });
-  }, [createNotification, t]);
-  
-  const createActivityOverdueNotification = useCallback(async (activity: SalesActivity) => {
-    if (!activity.due_date) return null;
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ status: 'read' })
+        .eq('id', notificationId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      return false;
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user?.id) return false;
     
-    const formattedDate = format(new Date(activity.due_date), 'PPp');
-    const title = t('activityOverdueAlert');
-    const message = t('activityOverdueMessage', { 
-      type: t(activity.activity_type), 
-      date: formattedDate 
-    });
-    
-    return createNotification({
-      title,
-      message,
-      type: 'activity_overdue',
-      relatedEntityType: 'sales_activity',
-      relatedEntityId: activity.id,
-      dueDate: activity.due_date
-    });
-  }, [createNotification, t]);
-  
-  const createLeadStatusChangeNotification = useCallback(async (lead: Lead, previousStatus?: string) => {
-    const title = t('leadStatusChanged');
-    const message = previousStatus 
-      ? t('leadStatusChangedFromTo', { 
-          name: lead.name, 
-          from: t(previousStatus), 
-          to: t(lead.status) 
-        })
-      : t('leadStatusChangedTo', { 
-          name: lead.name, 
-          status: t(lead.status) 
-        });
-    
-    return createNotification({
-      title,
-      message,
-      type: 'lead_status_change',
-      relatedEntityType: 'lead',
-      relatedEntityId: lead.id
-    });
-  }, [createNotification, t]);
-  
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ status: 'read' })
+        .eq('user_id', user.id)
+        .eq('status', 'unread');
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      return false;
+    }
+  };
+
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+      return false;
+    }
+  };
+
   return {
     createNotification,
     createActivityDueNotification,
-    createActivityOverdueNotification,
-    createLeadStatusChangeNotification
+    markAsRead,
+    markAllAsRead,
+    deleteNotification
   };
-}
+};
