@@ -7,7 +7,7 @@ import { Insurer } from "@/types/codebook";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Column } from "@/components/ui/data-table";
 
-export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id: string) => void): Column<Insurer>[] => {
+export const useInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id: string) => void): Column<Insurer>[] => {
   const { t } = useLanguage();
   
   return [
@@ -82,4 +82,4 @@ export const getInsurerColumns = (onEdit?: (id: string) => void, onDelete?: (id:
   ];
 };
 
-export default getInsurerColumns;
+export default useInsurerColumns;

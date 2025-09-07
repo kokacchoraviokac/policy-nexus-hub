@@ -18,19 +18,19 @@ export const useInvitationVerification = (
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const token = queryParams.get('token');
-    
+
     if (token) {
       setVerifyingInvitation(true);
       form.setValue('invitationToken', token);
       form.setValue('companyOption', 'invitation');
-      
+
       checkInvitation(token).then(invitationData => {
         if (invitationData) {
           setInvitation(invitationData);
           form.setValue('email', invitationData.email);
           form.setValue('role', invitationData.role as UserRole);
           form.setValue('companyId', invitationData.company_id);
-          
+
           // Remove token from URL without refreshing
           const url = new URL(window.location.href);
           url.searchParams.delete('token');
@@ -41,7 +41,7 @@ export const useInvitationVerification = (
         setVerifyingInvitation(false);
       });
     }
-  }, [location.search]);
+  }, [location.search, checkInvitation, form]);
 
   return {
     invitation,

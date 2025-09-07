@@ -1,6 +1,7 @@
 
 import Papa from 'papaparse';
 import { Policy } from '@/types/policies';
+import { parseExcelFile, isValidExcelFile } from './excelParser';
 
 interface ValidationError {
   field: string;
@@ -8,9 +9,27 @@ interface ValidationError {
 }
 
 /**
+ * Parse a file (CSV or Excel) with policy data
+ */
+export const parsePolicyFile = async (file: File): Promise<{ data: any[]; headers: string[] }> => {
+  if (isValidExcelFile(file)) {
+    // Handle Excel files
+    const excelResult = await parseExcelFile(file);
+    return {
+      data: excelResult.data,
+      headers: excelResult.headers
+    };
+  } else {
+    // Handle CSV files
+    const text = await file.text();
+    return parsePolicyCSV(text);
+  }
+};
+
+/**
  * Parse a CSV file with policy data
  */
-export const parsePolicyCSV = (csvText: string): any[] => {
+export const parsePolicyCSV = (csvText: string): { data: any[]; headers: string[] } => {
   const results = Papa.parse(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -20,8 +39,32 @@ export const parsePolicyCSV = (csvText: string): any[] => {
       return value;
     }
   });
-  
-  return results.data;
+
+  return {
+    data: results.data as any[],
+    headers: results.meta.fields || []
+  };
+};
+
+/**
+ * Apply column mapping to parsed data
+ */
+export const applyColumnMapping = (
+  data: any[],
+  columnMapping: Record<string, string>
+): any[] => {
+  return data.map(row => {
+    const mappedRow: any = {};
+
+    // Apply mappings
+    Object.entries(columnMapping).forEach(([sourceColumn, targetField]) => {
+      if (targetField && row[sourceColumn] !== undefined) {
+        mappedRow[targetField] = row[sourceColumn];
+      }
+    });
+
+    return mappedRow;
+  });
 };
 
 /**
@@ -84,6 +127,38 @@ export const validateImportedPolicies = (policies: any[]): {
 };
 
 /**
+ * Check for duplicate policy numbers in existing database
+ */
+export const checkDuplicatePolicies = async (
+  policyNumbers: string[],
+  supabase: any
+): Promise<{ duplicates: string[]; available: string[] }> => {
+  if (policyNumbers.length === 0) {
+    return { duplicates: [], available: [] };
+  }
+
+  try {
+    const { data: existingPolicies } = await supabase
+      .from('policies')
+      .select('policy_number')
+      .in('policy_number', policyNumbers);
+
+    const existingNumbers = new Set(
+      existingPolicies?.map(p => p.policy_number) || []
+    );
+
+    const duplicates = policyNumbers.filter(num => existingNumbers.has(num));
+    const available = policyNumbers.filter(num => !existingNumbers.has(num));
+
+    return { duplicates, available };
+  } catch (error) {
+    console.error('Error checking for duplicate policies:', error);
+    // Return empty results on error to avoid blocking import
+    return { duplicates: [], available: policyNumbers };
+  }
+};
+
+/**
  * Generate a downloadable template CSV for policy import
  */
 export const generatePolicyImportTemplate = (): string => {
@@ -106,6 +181,6 @@ export const generatePolicyImportTemplate = (): string => {
       notes: 'Example policy'
     }
   ];
-  
+
   return Papa.unparse(templateData);
 };

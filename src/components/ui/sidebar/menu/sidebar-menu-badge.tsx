@@ -2,9 +2,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export interface SidebarMenuBadgeProps extends React.ComponentProps<"div"> {}
-
-export const SidebarMenuBadge = React.forwardRef<HTMLDivElement, SidebarMenuBadgeProps>(
+export const SidebarMenuBadge = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}

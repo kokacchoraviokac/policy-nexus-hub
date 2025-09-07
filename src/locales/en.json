@@ -333,5 +333,16 @@
   "importErrors": "Import Errors",
   "andMoreErrors": "And {count} more errors...",
   "importedPoliciesInDraft": "All imported policies are in 'Draft' status. Review them in the Policy Processing section.",
-  "done": "Done"
+  "done": "Done",
+  
+  "clientAdded": "Client Added",
+  "clientAddedSuccess": "The client has been added successfully",
+  "errorAddingClient": "Error Adding Client",
+  "clientUpdated": "Client Updated",
+  "clientUpdatedSuccess": "The client has been updated successfully",
+  "errorUpdatingClient": "Error Updating Client",
+  "clientDeactivated": "Client Deactivated",
+  "clientDeactivatedSuccess": "The client has been deactivated successfully",
+  "errorDeactivatingClient": "Error Deactivating Client",
+  "errorFetchingClients": "Error Fetching Clients"
 }

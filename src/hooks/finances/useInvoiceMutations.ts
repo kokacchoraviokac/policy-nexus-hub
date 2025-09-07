@@ -37,11 +37,8 @@ interface UpdateInvoiceStatusParams {
 }
 
 // Function to create an invoice
-const createInvoiceFn = async (params: CreateInvoiceParams) => {
+const createInvoiceFn = async (params: CreateInvoiceParams, user: any) => {
   try {
-    // Get user context
-    const authContext = useContext(AuthContext);
-    const user = authContext?.user;
     const companyId = user?.companyId;
 
     if (!companyId) {
@@ -105,7 +102,7 @@ export const useInvoiceMutations = () => {
 
   // Mutation to create an invoice
   const createInvoiceMutation = useMutation({
-    mutationFn: createInvoiceFn,
+    mutationFn: (params: CreateInvoiceParams) => createInvoiceFn(params, user),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
       toast({
@@ -170,7 +167,7 @@ export const useInvoiceMutations = () => {
           ]
         };
         
-        return await createInvoiceFn(invoiceParams);
+        return await createInvoiceFn(invoiceParams, user);
       } catch (error) {
         console.error("Error creating invoice from commission:", error);
         throw error;

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,33 +24,25 @@ const EmployeesPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showForm, setShowForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  
-  useEffect(() => {
-    fetchEmployees();
-  }, [user]);
-  
-  useEffect(() => {
-    applyFilters();
-  }, [employees, searchQuery, statusFilter]);
-  
-  const fetchEmployees = async () => {
+
+  const fetchEmployees = useCallback(async () => {
     setIsLoading(true);
     try {
       // Only fetch profiles that belong to the same company as the current user
       let query = supabase
         .from('profiles')
         .select('*');
-      
+
       if (user?.companyId) {
         query = query.eq('company_id', user.companyId);
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) {
         throw error;
       }
-      
+
       if (data) {
         // Transform the data to match the Employee interface
         const transformedData: Employee[] = data.map(profile => ({
@@ -72,33 +64,41 @@ const EmployeesPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.companyId]);
   
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...employees];
-    
+
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        emp => 
-          emp.name?.toLowerCase().includes(query) || 
+        emp =>
+          emp.name?.toLowerCase().includes(query) ||
           emp.email?.toLowerCase().includes(query) ||
           emp.role?.toLowerCase().includes(query) ||
           emp.department?.toLowerCase().includes(query) ||
           emp.position?.toLowerCase().includes(query)
       );
     }
-    
+
     // Apply status filter
     if (statusFilter !== "all") {
       const isActive = statusFilter === "active";
       filtered = filtered.filter(emp => emp.is_active === isActive);
     }
-    
+
     setFilteredEmployees(filtered);
-  };
-  
+  }, [employees, searchQuery, statusFilter]);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
   const handleAddEmployee = () => {
     setEditingEmployee(null);
     setShowForm(true);

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Policy } from "@/types/policies";
 import { useToast } from "@/hooks/use-toast";
@@ -21,16 +21,16 @@ export const usePoliciesWorkflow = () => {
 
   useEffect(() => {
     fetchPolicies();
-  }, [activeTab, searchTerm, currentPage, statusFilter]);
+  }, [fetchPolicies]);
 
-  const fetchPolicies = async () => {
+  const fetchPolicies = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Determine which workflow statuses to fetch based on active tab
       let workflowStatuses: string[] = [];
-      
+
       if (activeTab === "draft") {
         workflowStatuses = ["draft", "in_review"];
       } else if (activeTab === "ready") {
@@ -38,47 +38,47 @@ export const usePoliciesWorkflow = () => {
       } else if (activeTab === "complete") {
         workflowStatuses = ["complete"];
       }
-      
+
       // If statusFilter is not 'all', override with the specific filter
       if (statusFilter !== "all") {
         workflowStatuses = [statusFilter];
       }
-      
+
       // Calculate pagination
       const from = (currentPage - 1) * pageSize;
       const to = from + pageSize - 1;
-      
+
       // Build query
       let query = supabase
         .from("policies")
         .select("*", { count: "exact" });
-      
+
       // Apply workflow status filter
       if (workflowStatuses.length > 0) {
         query = query.in("workflow_status", workflowStatuses);
       }
-      
+
       // Apply search filter if provided
       if (searchTerm) {
         query = query.or(
           `policy_number.ilike.%${searchTerm}%,policyholder_name.ilike.%${searchTerm}%,insurer_name.ilike.%${searchTerm}%`
         );
       }
-      
+
       // Apply pagination
       query = query.range(from, to).order("created_at", { ascending: false });
-      
+
       // Execute query
       const { data, error, count } = await query;
-      
+
       if (error) throw error;
-      
+
       setPolicies(data || []);
       setTotalCount(count || 0);
     } catch (err) {
       console.error("Error fetching policies:", err);
       setError(err instanceof Error ? err : new Error("Unknown error fetching policies"));
-      
+
       toast({
         title: t("error"),
         description: t("errorLoadingPolicies"),
@@ -87,7 +87,7 @@ export const usePoliciesWorkflow = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab, searchTerm, currentPage, statusFilter, pageSize, t, toast]);
 
   const handleRefresh = () => {
     fetchPolicies();

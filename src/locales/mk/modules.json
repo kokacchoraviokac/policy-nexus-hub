@@ -93,5 +93,17 @@
   "selectLeadOrProcess": "Изберете потенцијален клиент или продажен процес",
   "assignResponsibilityDescription": "Доделете одговорен вработен на потенцијален клиент или продажен процес.",
   "responsibilityAssigned": "Одговорноста е доделена",
-  "responsibilityAssignedDescription": "{employee} сега е одговорен за {lead}."
+  "responsibilityAssignedDescription": "{employee} сега е одговорен за {lead}.",
+  
+  "leadCreated": "Потенцијален клиент креиран",
+  "leadCreatedDescription": "{name} е успешно додаден како нов потенцијален клиент",
+  "errorCreatingLead": "Грешка при креирање на потенцијален клиент",
+  "leadUpdated": "Потенцијален клиент ажуриран",
+  "leadUpdatedDescription": "Информациите за потенцијалниот клиент се успешно ажурирани",
+  "errorUpdatingLead": "Грешка при ажурирање на потенцијален клиент",
+  "leadDeleted": "Потенцијален клиент избришан",
+  "leadDeletedDescription": "Потенцијалниот клиент е успешно избришан",
+  "errorDeletingLead": "Грешка при бришење на потенцијален клиент",
+  "errorFetchingLeads": "Грешка при преземање на потенцијални клиенти",
+  "leadConverted": "Потенцијален клиент конвертиран"
 }

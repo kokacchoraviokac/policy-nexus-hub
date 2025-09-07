@@ -53,7 +53,7 @@ const LeadScoringDialog: React.FC<LeadScoringDialogProps> = ({
       
       // Check if we should recommend status change to qualified
       let statusUpdateMessage = "";
-      let previousStatus = lead.status;
+      const previousStatus = lead.status;
       
       // Only suggest changing to 'qualified' if current status is 'new' and score is high enough
       if (lead.status === 'new' && shouldQualifyLead(totalScore)) {

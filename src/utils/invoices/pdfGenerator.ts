@@ -80,8 +80,8 @@ export const generateInvoicePdf = async (
     },
     didDrawPage: (data) => {
       // Footer section
-      let footerText = options?.customFooter || 'Thank you for your business!';
-      let nPages = (doc as any).internal.getNumberOfPages();
+      const footerText = options?.customFooter || 'Thank you for your business!';
+      const nPages = (doc as any).internal.getNumberOfPages();
       
       for (let i = 1; i <= nPages; i++) {
         if (i > 1) {

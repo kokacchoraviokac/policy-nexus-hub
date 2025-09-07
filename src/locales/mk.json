@@ -148,5 +148,16 @@
   "contextBasedPermissionCheck": "Проверка на привилегии базирана на контекст",
   "contextBasedPermissionCheckDescription": "Овозможете \"Користи контекстни податоци\" за тестирање на дозволи кои зависат од сопственост на ресурси или други атрибути.",
   "examplePermissionsToTest": "Примери на привилегии за тестирање",
-  "deleteConfirmation": "Дали сте сигурни дека сакате да го избришете <span class=\"font-medium\">{0}</span>? Оваа акција не може да се поништи."
+  "deleteConfirmation": "Дали сте сигурни дека сакате да го избришете <span class=\"font-medium\">{0}</span>? Оваа акција не може да се поништи.",
+  
+  "clientAdded": "Клиентот е додаден",
+  "clientAddedSuccess": "Клиентот е успешно додаден",
+  "errorAddingClient": "Грешка при додавање на клиент",
+  "clientUpdated": "Клиентот е ажуриран",
+  "clientUpdatedSuccess": "Клиентот е успешно ажуриран",
+  "errorUpdatingClient": "Грешка при ажурирање на клиент",
+  "clientDeactivated": "Клиентот е деактивиран",
+  "clientDeactivatedSuccess": "Клиентот е успешно деактивиран",
+  "errorDeactivatingClient": "Грешка при деактивирање на клиент",
+  "errorFetchingClients": "Грешка при преземање на клиенти"
 }

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -46,13 +46,7 @@ const CompanyDataPage = () => {
   const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.companyId) {
-      fetchCompanyData();
-    }
-  }, [user]);
-
-  const fetchCompanyData = async () => {
+  const fetchCompanyData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch company details
@@ -86,7 +80,13 @@ const CompanyDataPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.companyId, t]);
+
+  useEffect(() => {
+    if (user?.companyId) {
+      fetchCompanyData();
+    }
+  }, [user, fetchCompanyData]);
 
   const handleCompanyDetailsUpdate = async (updatedData: Partial<CompanyData>) => {
     if (!companyData?.id) return;

@@ -7,7 +7,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSimpleSavedFilters } from "@/hooks/useSimpleSavedFilters";
 import DataTable from "@/components/ui/data-table";
-import getInsurerColumns from "@/components/codebook/insurers/InsurersColumns";
+import { useInsurerColumns } from "@/components/codebook/insurers/InsurersColumns";
 import InsurersFilters from "@/components/codebook/insurers/InsurersFilters";
 import InsurersActionButtons from "@/components/codebook/insurers/InsurersActionButtons";
 import InsurerFormDialog from "@/components/codebook/dialogs/InsurerFormDialog";
@@ -133,7 +133,7 @@ const InsurersDirectory: React.FC = () => {
       
       <DataTable
         data={insurers}
-        columns={getInsurerColumns((id) => handleViewDetails(id))}
+        columns={useInsurerColumns((id) => handleViewDetails(id))}
         isLoading={isLoading}
         emptyState={{
           title: t("noInsurersFound"),

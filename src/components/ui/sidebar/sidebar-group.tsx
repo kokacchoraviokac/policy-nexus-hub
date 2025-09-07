@@ -3,9 +3,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Slot } from "@radix-ui/react-slot";
 
-export interface SidebarGroupProps extends React.ComponentProps<"div"> {}
-
-export const SidebarGroup = React.forwardRef<HTMLDivElement, SidebarGroupProps>(
+export const SidebarGroup = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
   ({ className, ...props }, ref) => {
     return (
       <div
@@ -69,9 +67,7 @@ export const SidebarGroupAction = React.forwardRef<HTMLButtonElement, SidebarGro
 );
 SidebarGroupAction.displayName = "SidebarGroupAction";
 
-export interface SidebarGroupContentProps extends React.ComponentProps<"div"> {}
-
-export const SidebarGroupContent = React.forwardRef<HTMLDivElement, SidebarGroupContentProps>(
+export const SidebarGroupContent = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}

@@ -1,10 +1,10 @@
 
 import React from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { FileText, FileUp, FileSearch, Loader2, CheckCircle } from "lucide-react";
+import { FileText, FileUp, FileSearch, Loader2, CheckCircle, ArrowRightLeft } from "lucide-react";
 
 interface ImportStepIndicatorProps {
-  activeStep: "instructions" | "upload" | "review" | "importing" | "complete";
+  activeStep: "instructions" | "upload" | "mapping" | "review" | "importing" | "complete";
 }
 
 const ImportStepIndicator: React.FC<ImportStepIndicatorProps> = ({ activeStep }) => {
@@ -13,6 +13,7 @@ const ImportStepIndicator: React.FC<ImportStepIndicatorProps> = ({ activeStep })
   const steps = [
     { id: "instructions", label: t("importInstructions"), icon: FileText },
     { id: "upload", label: t("upload"), icon: FileUp },
+    { id: "mapping", label: t("mapColumns"), icon: ArrowRightLeft },
     { id: "review", label: t("review"), icon: FileSearch },
     { id: "importing", label: t("importing"), icon: Loader2 },
     { id: "complete", label: t("done"), icon: CheckCircle }

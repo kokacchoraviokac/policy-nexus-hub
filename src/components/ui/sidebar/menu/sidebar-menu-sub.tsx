@@ -3,9 +3,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Slot } from "@radix-ui/react-slot";
 
-export interface SidebarMenuSubProps extends React.ComponentProps<"ul"> {}
-
-export const SidebarMenuSub = React.forwardRef<HTMLUListElement, SidebarMenuSubProps>(
+export const SidebarMenuSub = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
   ({ className, ...props }, ref) => (
     <ul
       ref={ref}
@@ -21,9 +19,7 @@ export const SidebarMenuSub = React.forwardRef<HTMLUListElement, SidebarMenuSubP
 );
 SidebarMenuSub.displayName = "SidebarMenuSub";
 
-export interface SidebarMenuSubItemProps extends React.ComponentProps<"li"> {}
-
-export const SidebarMenuSubItem = React.forwardRef<HTMLLIElement, SidebarMenuSubItemProps>(
+export const SidebarMenuSubItem = React.forwardRef<HTMLLIElement, React.ComponentProps<"li">>(
   ({ ...props }, ref) => <li ref={ref} {...props} />
 );
 SidebarMenuSubItem.displayName = "SidebarMenuSubItem";

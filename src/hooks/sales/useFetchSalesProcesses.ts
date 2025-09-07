@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesProcess } from "@/types/sales/salesProcesses";
 import { toast } from "sonner";
@@ -12,41 +12,41 @@ export const useFetchSalesProcesses = (searchQuery: string = "", stageFilter: st
   const [error, setError] = useState<Error | null>(null);
   const { t } = useLanguage();
 
-  const fetchSalesProcesses = async () => {
+  const fetchSalesProcesses = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       let query = supabase
         .from('sales_processes')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       // Apply stage filter if not "all"
       if (stageFilter !== "all") {
         query = query.eq('current_step', stageFilter); // Map stage to current_step in DB
       }
-      
+
       // Apply status filter if not "all"
       if (statusFilter !== "all") {
         query = query.eq('status', statusFilter);
       }
-      
+
       // Apply search query if provided
       if (searchQuery) {
         query = query.or(`sales_number.ilike.%${searchQuery}%`);
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) {
         throw error;
       }
-      
+
       // Map the data to our type
       const mappedData = data ? data.map(row => mapDbToSalesProcess(row as DbSalesProcess)) : [];
       setSalesProcesses(mappedData);
-      
+
     } catch (err) {
       console.error("Error fetching sales processes:", err);
       setError(err as Error);
@@ -54,7 +54,7 @@ export const useFetchSalesProcesses = (searchQuery: string = "", stageFilter: st
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchQuery, stageFilter, statusFilter, t]);
 
   // Calculate sales process statistics by stage
   const calculateProcessStats = () => {
@@ -78,7 +78,7 @@ export const useFetchSalesProcesses = (searchQuery: string = "", stageFilter: st
   // Initial load
   useEffect(() => {
     fetchSalesProcesses();
-  }, [searchQuery, stageFilter, statusFilter]);
+  }, [fetchSalesProcesses]);
 
   return {
     salesProcesses,

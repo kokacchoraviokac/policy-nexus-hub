@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
 import { useActivityLogger, fetchActivityLogs } from "@/utils/activityLogger";
+import { exportToCSV } from "@/utils/csv";
 
 export interface ActivityItem {
   id: string;
@@ -96,10 +97,11 @@ export function useInsurerDetail() {
       });
       navigate('/codebook/companies');
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
       toast({
         title: t('errorDeletingInsurer'),
-        description: err.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     }
@@ -113,7 +115,6 @@ export function useInsurerDetail() {
     try {
       if (!insurer) return;
       
-      const { exportToCSV } = require('@/utils/csv');
       exportToCSV([insurer], `insurer_${insurer.id}_${new Date().toISOString().split('T')[0]}.csv`);
       
       // Log export activity using 'update' action since 'export' is not in the allowed types
@@ -128,10 +129,11 @@ export function useInsurerDetail() {
         title: t('exportSuccessful'),
         description: t('insurerDataExported'),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       toast({
         title: t('exportFailed'),
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     }

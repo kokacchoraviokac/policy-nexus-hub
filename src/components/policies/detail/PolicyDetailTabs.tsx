@@ -9,6 +9,7 @@ import PolicyDocumentsTab from "./PolicyDocumentsTab";
 import PolicyAddendaTab from "./PolicyAddendaTab";
 import PolicyActivityTab from "./PolicyActivityTab";
 import PolicyPaymentsTab from "./PolicyPaymentsTab";
+import PolicySignatureWorkflow from "../signature/PolicySignatureWorkflow";
 
 interface PolicyDetailTabsProps {
   policy: any;
@@ -25,13 +26,14 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
       onValueChange={setActiveTab}
       className="space-y-4"
     >
-      <TabsList className="grid grid-cols-7 w-full">
+      <TabsList className="grid grid-cols-8 w-full">
         <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
         <TabsTrigger value="claims">{t("claims")}</TabsTrigger>
         <TabsTrigger value="financials">{t("financials")}</TabsTrigger>
         <TabsTrigger value="payments">{t("payments")}</TabsTrigger>
         <TabsTrigger value="documents">{t("documents")}</TabsTrigger>
         <TabsTrigger value="addenda" data-value="addenda">{t("addenda")}</TabsTrigger>
+        <TabsTrigger value="signature">{t("signature")}</TabsTrigger>
         <TabsTrigger value="activity">{t("activity")}</TabsTrigger>
       </TabsList>
       
@@ -58,7 +60,16 @@ const PolicyDetailTabs: React.FC<PolicyDetailTabsProps> = ({ policy }) => {
       <TabsContent value="addenda" className="space-y-4">
         <PolicyAddendaTab policyId={policy.id} />
       </TabsContent>
-      
+
+      <TabsContent value="signature" className="space-y-4">
+        <PolicySignatureWorkflow
+          policy={policy}
+          onSignatureComplete={() => {
+            console.log("Signature workflow completed for policy:", policy.id);
+          }}
+        />
+      </TabsContent>
+
       <TabsContent value="activity" className="space-y-4">
         <PolicyActivityTab policyId={policy.id} />
       </TabsContent>

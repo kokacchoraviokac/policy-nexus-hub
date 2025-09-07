@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -40,14 +40,23 @@ export const useInvoiceTemplates = () => {
   const companyId = user?.companyId;
   const { fetchTemplates } = useTemplateApi();
 
-  const loadTemplates = async () => {
+  // Set up specialized hooks first
+  const { createDefaultTemplate } = useCreateDefaultTemplate(
+    companyId,
+    (template) => {
+      setSelectedTemplate(template);
+      setTemplates([template]);
+    }
+  );
+
+  const loadTemplates = useCallback(async () => {
     if (!companyId) return;
-    
+
     setIsLoading(true);
     try {
       const typedData = await fetchTemplates(companyId);
       setTemplates(typedData);
-      
+
       // If there are no templates, create a default one
       if (typedData.length === 0) {
         await createDefaultTemplate();
@@ -70,16 +79,7 @@ export const useInvoiceTemplates = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Set up specialized hooks
-  const { createDefaultTemplate } = useCreateDefaultTemplate(
-    companyId, 
-    (template) => {
-      setSelectedTemplate(template);
-      setTemplates([template]);
-    }
-  );
+  }, [companyId, fetchTemplates, createDefaultTemplate, t, toast]);
 
   const { handleDeleteTemplate } = useDeleteTemplate(
     templates, 
@@ -107,7 +107,7 @@ export const useInvoiceTemplates = () => {
     if (companyId) {
       loadTemplates();
     }
-  }, [companyId]);
+  }, [companyId, loadTemplates]);
 
   return {
     templates,

@@ -272,5 +272,16 @@
   "editSeatAllocation": "Uredi dodelu sedišta",
   "setMaximumNumberOfUserAccounts": "Postavi maksimalan broj korisničkih naloga za",
   "seatLimitCannotBeLessThanCurrentUsage": "Ograničenje sedišta ne može biti manje od trenutne upotrebe",
-  "saveChanges": "Sačuvaj promene"
+  "saveChanges": "Sačuvaj promene",
+  
+  "clientAdded": "Klijent je dodat",
+  "clientAddedSuccess": "Klijent je uspešno dodat",
+  "errorAddingClient": "Greška pri dodavanju klijenta",
+  "clientUpdated": "Klijent je ažuriran",
+  "clientUpdatedSuccess": "Klijent je uspešno ažuriran",
+  "errorUpdatingClient": "Greška pri ažuriranju klijenta",
+  "clientDeactivated": "Klijent je deaktiviran",
+  "clientDeactivatedSuccess": "Klijent je uspešno deaktiviran",
+  "errorDeactivatingClient": "Greška pri deaktiviranju klijenta",
+  "errorFetchingClients": "Greška pri preuzimanju klijenata"
 }

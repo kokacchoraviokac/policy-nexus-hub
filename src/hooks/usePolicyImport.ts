@@ -7,11 +7,16 @@ import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { useLocation } from "react-router-dom";
 
+interface SalesProcessData {
+  id: string;
+  policy: Partial<Policy>;
+}
+
 export const usePolicyImport = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [importedPolicies, setImportedPolicies] = useState<Partial<Policy>[]>([]);
   const [invalidPolicies, setInvalidPolicies] = useState<{ policy: Partial<Policy>; errors: string[] }[]>([]);
-  const [salesProcessData, setSalesProcessData] = useState<any>(null);
+  const [salesProcessData, setSalesProcessData] = useState<SalesProcessData | null>(null);
   const supabase = useSupabaseClient();
   const location = useLocation();
 
@@ -57,9 +62,10 @@ export const usePolicyImport = () => {
         toast.success("Sales process data loaded successfully", {
           description: "Ready to import policy from sales process"
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error fetching sales process data:", error);
-        toast.error(`Error loading sales process data: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        toast.error(`Error loading sales process data: ${errorMessage}`);
       } finally {
         setIsImporting(false);
       }
@@ -94,9 +100,10 @@ export const usePolicyImport = () => {
       } else {
         toast.error("No valid policies found in the file.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error parsing CSV:", error);
-      toast.error(`Error parsing file: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error(`Error parsing file: ${errorMessage}`);
     } finally {
       setIsImporting(false);
     }
@@ -176,7 +183,7 @@ export const usePolicyImport = () => {
       // Insert policies into database one by one to avoid batch issues
       let successCount = 0;
       let errorCount = 0;
-      let errors: string[] = [];
+      const errors: string[] = [];
       
       for (const policy of policiesToInsert) {
         const { data, error } = await supabase
@@ -222,9 +229,10 @@ export const usePolicyImport = () => {
         toast.error("Failed to import any policies.");
         return false;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving policies:", error);
-      toast.error(`Error saving policies: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error(`Error saving policies: ${errorMessage}`);
       return false;
     } finally {
       setIsImporting(false);

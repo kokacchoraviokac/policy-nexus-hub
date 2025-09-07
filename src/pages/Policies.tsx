@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FilePlus, FileBox, Workflow, FileArchive, FileImage } from "lucide-react";
+import { FilePlus, FileBox, Workflow, FileArchive, FileImage, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -48,9 +48,9 @@ const Policies = () => {
     navigate(`/policies/${policyId}/edit`);
   };
   
-  const handleCreatePolicy = () => {
-    // Navigate to policy creation page
-    navigate("/policies/new");
+  const handleStartSalesProcess = () => {
+    // Navigate to sales processes to start the quote workflow
+    navigate("/sales/processes");
   };
 
   const policyModules = [
@@ -86,14 +86,14 @@ const Policies = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t("policies")}</h1>
           <p className="text-muted-foreground">
-            {t("policyManagement")}
+            {t("policiesFromSalesProcess")}
           </p>
         </div>
         
         <div className="flex items-center gap-2">
-          <Button onClick={handleCreatePolicy}>
-            <FilePlus className="mr-2 h-4 w-4" />
-            {t("newPolicy")}
+          <Button onClick={handleStartSalesProcess}>
+            <Users className="mr-2 h-4 w-4" />
+            {t("startSalesProcess")}
           </Button>
         </div>
       </div>

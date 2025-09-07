@@ -42,7 +42,7 @@ const InvitationManagement = () => {
         setSelectedCompanyId(user.companyId);
       }
     }
-  }, [user]);
+  }, [user, getInvitations, isSuperAdmin]);
   
   // Set company_id when super admin selects a company
   useEffect(() => {
@@ -51,7 +51,7 @@ const InvitationManagement = () => {
     } else if (isSuperAdmin && !selectedCompanyId) {
       getInvitations();
     }
-  }, [selectedCompanyId]);
+  }, [selectedCompanyId, getInvitations, isSuperAdmin]);
   
   const handleCreateInvitation = async (values: z.infer<ReturnType<typeof createInviteFormSchema>>) => {
     setIsSubmitting(true);

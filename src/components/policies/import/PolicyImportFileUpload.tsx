@@ -30,8 +30,9 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
     onDrop,
     accept: {
       'text/csv': ['.csv'],
-      'application/vnd.ms-excel': ['.csv'],
-      'text/plain': ['.csv', '.txt']
+      'application/vnd.ms-excel': ['.csv', '.xls', '.xlsm', '.xlsb'],
+      'text/plain': ['.csv', '.txt'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
     },
     multiple: false,
     disabled: isUploading
@@ -67,7 +68,7 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
               <input {...getInputProps()} />
               <FileUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h4 className="text-lg font-medium mb-2">{t("dragAndDropOrClick")}</h4>
-              <p className="text-sm text-muted-foreground mb-2">{t("supportedFormatCSV")}</p>
+              <p className="text-sm text-muted-foreground mb-2">{t("supportedFormatCSVExcel")}</p>
               
               <Button 
                 type="button"
@@ -91,7 +92,7 @@ const PolicyImportFileUpload: React.FC<PolicyImportFileUploadProps> = ({
               <input
                 id="file-input"
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx,.xls,.xlsm,.xlsb"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {

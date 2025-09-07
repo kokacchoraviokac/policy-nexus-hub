@@ -3,11 +3,9 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSidebar } from "./context";
+import { useSidebar } from "./sidebar-hooks";
 
-export interface SidebarTriggerProps extends React.ComponentProps<typeof Button> {}
-
-export const SidebarTrigger = React.forwardRef<HTMLButtonElement, SidebarTriggerProps>(
+export const SidebarTrigger = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
   ({ className, onClick, ...props }, ref) => {
     const { toggleSidebar } = useSidebar();
 

@@ -14,6 +14,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import NotFound from '@/pages/NotFound';
 import Login from '@/pages/Login';
 import ResetPassword from '@/pages/ResetPassword';
+import DebugDatabase from '@/components/DebugDatabase';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -51,7 +52,17 @@ const AppRoutes: React.FC = () => {
       
       {/* Settings Routes */}
       {SettingsRoutes}
-      
+
+      {/* Debug Routes */}
+      <Route
+        path="/debug/database"
+        element={
+          <AppLayout>
+            <DebugDatabase />
+          </AppLayout>
+        }
+      />
+
       {/* 404 */}
       <Route
         path="*"

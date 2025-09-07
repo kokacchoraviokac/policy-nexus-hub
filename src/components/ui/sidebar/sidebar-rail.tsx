@@ -2,9 +2,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export interface SidebarRailProps extends React.ComponentProps<"button"> {}
-
-export const SidebarRail = React.forwardRef<HTMLButtonElement, SidebarRailProps>(
+export const SidebarRail = React.forwardRef<HTMLButtonElement, React.ComponentProps<"button">>(
   ({ className, ...props }, ref) => {
     return (
       <button

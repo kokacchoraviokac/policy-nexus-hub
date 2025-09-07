@@ -2,9 +2,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export interface SidebarInsetProps extends React.ComponentProps<"main"> {}
-
-export const SidebarInset = React.forwardRef<HTMLElement, SidebarInsetProps>(
+export const SidebarInset = React.forwardRef<HTMLElement, React.ComponentProps<"main">>(
   ({ className, ...props }, ref) => {
     return (
       <main

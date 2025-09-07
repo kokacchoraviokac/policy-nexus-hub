@@ -70,5 +70,17 @@
   "assignResponsibility": "Asignar Responsabilidad",
   "searchAssignments": "Buscar asignaciones...",
   "noAssignmentsFound": "No se encontraron asignaciones",
-  "createYourFirstAssignment": "Cree su primera asignación para comenzar"
+  "createYourFirstAssignment": "Cree su primera asignación para comenzar",
+  
+  "leadCreated": "Prospecto Creado",
+  "leadCreatedDescription": "{name} ha sido añadido exitosamente como nuevo prospecto",
+  "errorCreatingLead": "Error al crear prospecto",
+  "leadUpdated": "Prospecto Actualizado",
+  "leadUpdatedDescription": "La información del prospecto ha sido actualizada exitosamente",
+  "errorUpdatingLead": "Error al actualizar prospecto",
+  "leadDeleted": "Prospecto Eliminado",
+  "leadDeletedDescription": "El prospecto ha sido eliminado exitosamente",
+  "errorDeletingLead": "Error al eliminar prospecto",
+  "errorFetchingLeads": "Error al obtener prospectos",
+  "leadConverted": "Prospecto Convertido"
 }

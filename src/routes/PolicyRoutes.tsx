@@ -5,7 +5,6 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Policies from "@/pages/Policies";
 import AllPolicies from "@/pages/policies/AllPolicies";
-import NewPolicy from "@/pages/policies/NewPolicy";
 import PolicyDetail from "@/pages/policies/PolicyDetail";
 import PolicyWorkflow from "@/pages/policies/PolicyWorkflow";
 import PolicyAddendums from "@/pages/policies/PolicyAddendums";
@@ -40,17 +39,6 @@ export const PolicyRoutes = [
       </ProtectedRoute>
     }
     index
-  />,
-  <Route
-    key="policies-new"
-    path="/policies/new"
-    element={
-      <ProtectedRoute>
-        <AppLayout>
-          <NewPolicy />
-        </AppLayout>
-      </ProtectedRoute>
-    }
   />,
   <Route
     key="policies-detail"

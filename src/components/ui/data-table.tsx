@@ -45,40 +45,22 @@ interface DataTableProps<T> {
   };
 }
 
-function DataTable<T>({ 
-  data, 
-  columns, 
-  isLoading, 
+function DataTable<T>({
+  data,
+  columns,
+  isLoading,
   emptyState,
-  pagination 
+  pagination
 }: DataTableProps<T>) {
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!data?.length && emptyState) {
-    return (
-      <EmptyState
-        title={emptyState.title}
-        description={emptyState.description}
-        action={emptyState.action}
-      />
-    );
-  }
-
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
-    
+
     if (sortConfig && sortConfig.key === key) {
       direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
     }
-    
+
     setSortConfig({ key, direction });
   };
 
@@ -99,6 +81,24 @@ function DataTable<T>({
       return 0;
     });
   }, [data, sortConfig]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!data?.length && emptyState) {
+    return (
+      <EmptyState
+        title={emptyState.title}
+        description={emptyState.description}
+        action={emptyState.action}
+      />
+    );
+  }
 
   const getSortIcon = (columnKey: string) => {
     if (!sortConfig || sortConfig.key !== columnKey) {

@@ -1,10 +1,30 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Lead, CreateLeadRequest, UpdateLeadRequest } from "@/types/sales/leads";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/auth/AuthContext";
+
+// Mock data for development
+const MOCK_LEADS: Lead[] = [
+  {
+    id: "lead-1",
+    name: "Demo Lead 1",
+    company_name: "Demo Company",
+    email: "demo@lead1.com",
+    phone: "+1234567890",
+    source: "website",
+    status: "new",
+    notes: "Demo lead for testing",
+    company_id: "550e8400-e29b-41d4-a716-446655440000",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    assigned_to: null
+  }
+];
+
+let mockLeadStorage = [...MOCK_LEADS];
 
 export const useLeads = (searchQuery: string = "", statusFilter: string = "all") => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -13,32 +33,61 @@ export const useLeads = (searchQuery: string = "", statusFilter: string = "all")
   const { t } = useLanguage();
   const { user } = useAuth();
 
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
+      // Check if we're using mock authentication
+      const isMockUser = user?.email?.includes('@policyhub.com') || user?.id === "1";
+      
+      if (isMockUser) {
+        // Return mock data for mock users
+        console.log("Using mock lead data");
+        let filteredLeads = [...mockLeadStorage];
+        
+        // Apply status filter if not "all"
+        if (statusFilter !== "all") {
+          filteredLeads = filteredLeads.filter(lead => lead.status === statusFilter);
+        }
+        
+        // Apply search query if provided
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          filteredLeads = filteredLeads.filter(lead =>
+            lead.name.toLowerCase().includes(query) ||
+            (lead.company_name && lead.company_name.toLowerCase().includes(query)) ||
+            (lead.email && lead.email.toLowerCase().includes(query)) ||
+            (lead.phone && lead.phone.toLowerCase().includes(query))
+          );
+        }
+        
+        setLeads(filteredLeads);
+        setIsLoading(false);
+        return;
+      }
+
       let query = supabase
         .from('leads')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       // Apply status filter if not "all"
       if (statusFilter !== "all") {
         query = query.eq('status', statusFilter);
       }
-      
+
       // Apply search query if provided
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,phone.ilike.%${searchQuery}%`);
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) {
         throw error;
       }
-      
+
       // Use type assertion to convert database records to Lead type
       setLeads(data as unknown as Lead[]);
     } catch (err) {
@@ -48,10 +97,36 @@ export const useLeads = (searchQuery: string = "", statusFilter: string = "all")
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [searchQuery, statusFilter, t, user]);
 
   const createLead = async (leadData: CreateLeadRequest): Promise<Lead | null> => {
     try {
+      // Check if we're using mock authentication
+      const isMockUser = user?.email?.includes('@policyhub.com') || user?.id === "1";
+      
+      if (isMockUser) {
+        // Mock lead creation
+        const newLead: Lead = {
+          ...leadData,
+          id: `lead-${Date.now()}`,
+          company_id: user?.companyId || "550e8400-e29b-41d4-a716-446655440000",
+          status: 'new',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        mockLeadStorage.push(newLead);
+        console.log("Mock lead created:", newLead);
+        
+        // Refresh the leads list
+        fetchLeads();
+        
+        toast.success(t("leadCreated"), {
+          description: t("leadCreatedDescription", { name: leadData.name })
+        });
+        
+        return newLead;
+      }
+      
       // Make sure we include the company_id and default status
       const dataWithCompany = {
         ...leadData,
@@ -160,7 +235,7 @@ export const useLeads = (searchQuery: string = "", statusFilter: string = "all")
   // Initial load
   useEffect(() => {
     fetchLeads();
-  }, [searchQuery, statusFilter]);
+  }, [fetchLeads]);
 
   return {
     leads,

@@ -30,11 +30,31 @@ interface ValidationError {
   message: string;
 }
 
+interface SalesProcessData {
+  id: string;
+  policy: Partial<Policy>;
+  salesProcess: {
+    id: string;
+    sales_number: string;
+    lead_id: string;
+    leads: {
+      name: string;
+      company_name: string;
+      contact_person: string;
+      email: string;
+      phone: string;
+    } | null;
+    current_step: string;
+    status: string;
+    estimated_value: number;
+  };
+}
+
 export const usePolicyImport = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [importedPolicies, setImportedPolicies] = useState<Partial<Policy>[]>([]);
   const [invalidPolicies, setInvalidPolicies] = useState<{ policy: Partial<Policy>; errors: ValidationError[] }[]>([]);
-  const [salesProcessData, setSalesProcessData] = useState<any>(null);
+  const [salesProcessData, setSalesProcessData] = useState<SalesProcessData | null>(null);
   const { toast } = useToast();
   const location = useLocation();
 
@@ -100,11 +120,12 @@ export const usePolicyImport = () => {
             description: "Ready to import policy from sales process"
           });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error fetching sales process data:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         toast({
           title: "Error loading sales process data",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
       } finally {
@@ -178,11 +199,12 @@ export const usePolicyImport = () => {
           setIsImporting(false);
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error parsing CSV:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       toast({
         title: "Error parsing file",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
       setIsImporting(false);
@@ -330,7 +352,7 @@ export const usePolicyImport = () => {
       // Insert policies into database
       let successCount = 0;
       let errorCount = 0;
-      let errors: string[] = [];
+      const errors: string[] = [];
       
       for (const policy of policiesToInsert) {
         const { data, error } = await supabase
@@ -386,11 +408,12 @@ export const usePolicyImport = () => {
         });
         return false;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving policies:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
       toast({
         title: "Error saving policies",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
       return false;

@@ -6,6 +6,30 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AuthContext } from "@/contexts/auth/AuthContext";
 
+// Mock data for development
+const MOCK_CLIENTS: Client[] = [
+  {
+    id: "client-1",
+    name: "Demo Client 1",
+    contact_person: "John Doe",
+    email: "john@democlient1.com",
+    phone: "+1234567890",
+    address: "123 Main St",
+    city: "New York",
+    postal_code: "10001",
+    country: "USA",
+    tax_id: "TAX123456",
+    registration_number: "REG123456",
+    is_active: true,
+    notes: "Demo client for testing",
+    company_id: "550e8400-e29b-41d4-a716-446655440000",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+let mockClientStorage = [...MOCK_CLIENTS];
+
 export interface Client {
   id: string;
   name: string;
@@ -37,6 +61,15 @@ export const useClients = () => {
   const fetchClients = async () => {
     if (!companyId) {
       return [];
+    }
+
+    // Check if we're using mock authentication
+    const isMockUser = user?.email?.includes('@policyhub.com') || user?.id === "1";
+    
+    if (isMockUser) {
+      // Return mock data for mock users
+      console.log("Using mock client data");
+      return mockClientStorage.filter(client => client.company_id === companyId && client.is_active);
     }
 
     try {
@@ -73,6 +106,23 @@ export const useClients = () => {
   const addClientMutation = useMutation({
     mutationFn: async (clientData: Omit<Client, 'id' | 'created_at' | 'updated_at'>) => {
       if (!companyId) throw new Error("Company ID is required");
+      
+      // Check if we're using mock authentication
+      const isMockUser = user?.email?.includes('@policyhub.com') || user?.id === "1";
+      
+      if (isMockUser) {
+        // Mock client creation
+        const newClient: Client = {
+          ...clientData,
+          id: `client-${Date.now()}`,
+          company_id: companyId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        mockClientStorage.push(newClient);
+        console.log("Mock client created:", newClient);
+        return newClient;
+      }
       
       const { data, error } = await supabase
         .from("clients")

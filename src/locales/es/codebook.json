@@ -94,5 +94,14 @@
   "status": "Estado",
   "actions": "Acciones",
   "active": "Activo",
-  "inactive": "Inactivo"
+  "inactive": "Inactivo",
+  
+  "clientAdded": "Cliente Añadido",
+  "clientAddedSuccess": "El cliente ha sido añadido exitosamente",
+  "errorAddingClient": "Error al Añadir Cliente",
+  "errorUpdatingClient": "Error al Actualizar Cliente",
+  "clientDeactivated": "Cliente Desactivado",
+  "clientDeactivatedSuccess": "El cliente ha sido desactivado exitosamente",
+  "errorDeactivatingClient": "Error al Desactivar Cliente",
+  "errorFetchingClients": "Error al Obtener Clientes"
 }

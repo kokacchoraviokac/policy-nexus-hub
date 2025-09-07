@@ -3,9 +3,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
-export interface SidebarSeparatorProps extends React.ComponentProps<typeof Separator> {}
-
-export const SidebarSeparator = React.forwardRef<HTMLDivElement, SidebarSeparatorProps>(
+export const SidebarSeparator = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof Separator>>(
   ({ className, ...props }, ref) => {
     return (
       <Separator

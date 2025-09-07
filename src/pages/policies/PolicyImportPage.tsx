@@ -8,10 +8,13 @@ import { ArrowLeft, FileSpreadsheet, Import } from "lucide-react";
 import PolicyImportFileUpload from "@/components/policies/import/PolicyImportFileUpload";
 import PolicyImportReview from "@/components/policies/import/PolicyImportReview";
 import PolicyImportInstructions from "@/components/policies/import/PolicyImportInstructions";
+import PolicyImportColumnMapping from "@/components/policies/import/PolicyImportColumnMapping";
 import ImportStepIndicator from "@/components/policies/import/ImportStepIndicator";
 import ImportingStep from "@/components/policies/import/ImportingStep";
 import CompleteStep from "@/components/policies/import/CompleteStep";
 import { usePolicyImport } from "@/hooks/usePolicyImport";
+import { parsePolicyFile, applyColumnMapping, validateImportedPolicies } from "@/utils/policies/importUtils";
+import { createSampleFile } from "@/utils/policies/testDataGenerator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const PolicyImportPage = () => {
@@ -19,8 +22,12 @@ const PolicyImportPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [activeStep, setActiveStep] = useState<"instructions" | "upload" | "review" | "importing" | "complete">("instructions");
+  const [activeStep, setActiveStep] = useState<"instructions" | "upload" | "mapping" | "review" | "importing" | "complete">("instructions");
   const [importProgress, setImportProgress] = useState(0);
+  const [parsedData, setParsedData] = useState<any[]>([]);
+  const [parsedHeaders, setParsedHeaders] = useState<string[]>([]);
+  const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   const { 
     isImporting, 
@@ -43,10 +50,69 @@ const PolicyImportPage = () => {
   };
   
   const handleFileUpload = async (file: File) => {
-    await parseCSVFile(file);
-    if (importedPolicies.length > 0) {
-      setActiveStep("review");
+    try {
+      console.log("Starting file upload for:", file.name, "Type:", file.type, "Size:", file.size);
+
+      // Clear any previous error
+      setUploadError(null);
+
+      const result = await parsePolicyFile(file);
+      console.log("Parse result:", result);
+
+      if (!result.data || result.data.length === 0) {
+        console.error("No data found in file");
+        const errorMessage = t("noDataFoundInFile") || "No data found in the uploaded file. Please ensure your file contains policy data rows.";
+        setUploadError(errorMessage);
+        toast({
+          title: t("error"),
+          description: errorMessage,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!result.headers || result.headers.length === 0) {
+        console.error("No headers found in file");
+        const errorMessage = t("noHeadersFoundInFile") || "No headers found in the uploaded file. Please ensure your file has column headers.";
+        setUploadError(errorMessage);
+        toast({
+          title: t("error"),
+          description: errorMessage,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setParsedData(result.data);
+      setParsedHeaders(result.headers);
+
+      console.log("Moving to mapping step with data:", result.data.length, "rows and", result.headers.length, "headers");
+      setActiveStep("mapping");
+
+    } catch (error) {
+      console.error("Error parsing file:", error);
+      const errorMessage = `${t("errorParsingFile") || "Error parsing file"}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      setUploadError(errorMessage);
+      toast({
+        title: t("error"),
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
+  };
+
+  const handleMappingComplete = (mapping: Record<string, string>) => {
+    setColumnMapping(mapping);
+
+    // Apply column mapping to the data
+    const mappedData = applyColumnMapping(parsedData, mapping);
+
+    // Validate the mapped data
+    const { valid, invalid } = validateImportedPolicies(mappedData);
+
+    // Update the imported policies state (this will be used by the hook)
+    // For now, we'll set the state directly, but ideally this should go through the hook
+    setActiveStep("review");
   };
   
   const handleImportComplete = async () => {
@@ -83,12 +149,17 @@ const PolicyImportPage = () => {
   };
   
   const handleBack = () => {
+    // Clear any upload errors when navigating
+    setUploadError(null);
+
     if (activeStep === "review") {
       if (salesProcessData) {
         navigate(`/sales/processes`);
       } else {
-        setActiveStep("upload");
+        setActiveStep("mapping");
       }
+    } else if (activeStep === "mapping") {
+      setActiveStep("upload");
     } else if (activeStep === "upload") {
       setActiveStep("instructions");
     } else if (activeStep === "complete") {
@@ -112,13 +183,51 @@ const PolicyImportPage = () => {
         
       case "upload":
         return (
-          <PolicyImportFileUpload 
-            onFileUpload={handleFileUpload} 
-            isUploading={isImporting}
+          <div className="space-y-4">
+            {uploadError && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertTitle className="text-red-700">
+                  {t("uploadError") || "Upload Error"}
+                </AlertTitle>
+                <AlertDescription className="text-red-600">
+                  {uploadError}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <PolicyImportFileUpload
+              onFileUpload={handleFileUpload}
+              isUploading={isImporting}
+              onBack={handleBack}
+            />
+
+            {/* Test button for debugging */}
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const sampleFile = createSampleFile();
+                  handleFileUpload(sampleFile);
+                }}
+                disabled={isImporting}
+              >
+                Test with Sample Excel File
+              </Button>
+            </div>
+          </div>
+        );
+
+      case "mapping":
+        console.log("Rendering mapping step with:", { parsedHeaders, parsedData });
+        return (
+          <PolicyImportColumnMapping
+            headers={parsedHeaders}
+            sampleData={parsedData.slice(0, 3)} // Show first 3 rows as sample
+            onMappingComplete={handleMappingComplete}
             onBack={handleBack}
           />
         );
-        
+
       case "review":
         return (
           <>

@@ -56,7 +56,7 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
 
     // Create document record in database with appropriate field names
     // based on the entity type
-    let documentData: any = {
+    const documentData: any = {
       document_name: documentName,
       document_type: documentType,
       file_path: filePath,

@@ -2,9 +2,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export interface SidebarMenuProps extends React.ComponentProps<"ul"> {}
-
-export const SidebarMenu = React.forwardRef<HTMLUListElement, SidebarMenuProps>(
+export const SidebarMenu = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
   ({ className, ...props }, ref) => (
     <ul
       ref={ref}
@@ -16,9 +14,7 @@ export const SidebarMenu = React.forwardRef<HTMLUListElement, SidebarMenuProps>(
 );
 SidebarMenu.displayName = "SidebarMenu";
 
-export interface SidebarMenuItemProps extends React.ComponentProps<"li"> {}
-
-export const SidebarMenuItem = React.forwardRef<HTMLLIElement, SidebarMenuItemProps>(
+export const SidebarMenuItem = React.forwardRef<HTMLLIElement, React.ComponentProps<"li">>(
   ({ className, ...props }, ref) => (
     <li
       ref={ref}
