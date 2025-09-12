@@ -8,6 +8,9 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import App from './App.tsx'
 import './index.css'
 
+// Initialize Web Vitals monitoring
+import './utils/performance/webVitals'
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

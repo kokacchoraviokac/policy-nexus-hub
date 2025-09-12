@@ -15,35 +15,37 @@ export const useCreateSalesProcess = () => {
   const createSalesProcess = async (processData: CreateSalesProcessRequest): Promise<SalesProcess | null> => {
     setIsCreating(true);
     try {
-      // Make sure we include the company_id and default values
-      const dataWithDefaults = {
-        sales_number: processData.title, // Map title to sales_number
-        company_id: user?.companyId,
-        current_step: 'quote', // Map stage to current_step in DB
-        status: 'active',
+      // Use mock data for testing - simulate successful creation
+      console.log("Creating sales process with mock data:", processData);
+      
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const newSalesProcess: SalesProcess = {
+        id: `sp-${Date.now()}`,
+        title: processData.title,
+        client_name: processData.client_name || "Unknown Client",
+        company: processData.company,
+        stage: "quote",
+        status: "active",
+        insurance_type: processData.insurance_type,
         estimated_value: processData.estimated_value,
         expected_close_date: processData.expected_close_date,
+        company_id: user?.companyId || 'default-company',
         lead_id: processData.lead_id,
-        assigned_to: processData.assigned_to,
-        notes: processData.notes // Pass notes to the database
+        assigned_to: processData.assigned_to || user?.id,
+        notes: processData.notes,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
-      const { data, error } = await supabase
-        .from('sales_processes')
-        .insert([dataWithDefaults])
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
       toast.success(t("salesProcessCreated"), {
-        description: t("salesProcessCreatedDescription", { title: processData.title })
+        description: `Sales process "${processData.title}" created successfully`
       });
       
-      // Map the response to our type
-      return mapDbToSalesProcess(data as DbSalesProcess);
+      console.log("Mock sales process created:", newSalesProcess);
+      return newSalesProcess;
+      
     } catch (err) {
       console.error("Error creating sales process:", err);
       toast.error(t("errorCreatingSalesProcess"));

@@ -14,7 +14,7 @@ import { findConsistencyIssues } from './consistencyAnalyzer';
 
 // Expose the analyzer globally in development
 if (process.env.NODE_ENV !== 'production') {
-  // @ts-ignore
+  // @ts-expect-error
   window.__analyzeTranslations = analyzeTranslations;
   console.log('Translation analyzer tool available. Run window.__analyzeTranslations() to use it.');
 }

@@ -15,58 +15,116 @@ export const usePayoutDetails = (payoutId: string) => {
   const companyId = user?.companyId;
 
   const fetchPayoutDetails = async () => {
-    if (!companyId || !payoutId) {
+    if (!payoutId) {
       return null;
     }
 
-    try {
-      // Fetch payout details
-      const { data: payoutData, error: payoutError } = await supabase
-        .from("agent_payouts")
-        .select(`
-          *,
-          agents(name)
-        `)
-        .eq("id", payoutId)
-        .eq("company_id", companyId)
-        .single();
+    console.log("Using mock payout details data for:", payoutId);
 
-      if (payoutError) throw payoutError;
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Fetch payout items
-      const { data: itemsData, error: itemsError } = await supabase
-        .from("payout_items")
-        .select(`
-          *,
-          policies(policy_number, policyholder_name)
-        `)
-        .eq("payout_id", payoutId);
+    // Check localStorage for finalized payouts first
+    const storedPayouts = JSON.parse(localStorage.getItem('mockPayouts') || '[]');
+    const storedPayout = storedPayouts.find((p: any) => p.id === payoutId);
 
-      if (itemsError) throw itemsError;
-
-      // Transform items data
-      const transformedItems = itemsData.map(item => ({
-        policy_id: item.policy_id,
-        policy_number: item.policies?.policy_number || "Unknown",
-        policyholder_name: item.policies?.policyholder_name || "Unknown",
-        amount: item.amount
-      }));
-
-      // Return combined data
+    if (storedPayout) {
+      // Return stored payout with mock items
       return {
-        ...payoutData,
-        agent_name: payoutData.agents?.name || "Unknown",
-        items: transformedItems
+        ...storedPayout,
+        agent_name: storedPayout.agent_id === "agent-1" ? "John Anderson" :
+                   storedPayout.agent_id === "agent-2" ? "Sarah Wilson" :
+                   storedPayout.agent_id === "agent-3" ? "Michael Brown" : "Unknown Agent",
+        items: [
+          {
+            policy_id: "pol-1",
+            policy_number: "POL-2024-001",
+            policyholder_name: "John Smith",
+            amount: 187.50
+          },
+          {
+            policy_id: "pol-2",
+            policy_number: "POL-2024-002",
+            policyholder_name: "Jane Doe",
+            amount: 252.00
+          }
+        ]
       };
-    } catch (error) {
-      console.error("Error fetching payout details:", error);
-      toast({
-        title: t("errorFetchingPayoutDetails"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive",
-      });
-      throw error;
     }
+
+    // Mock payout details for historical records
+    const mockPayoutDetails = {
+      "payout-1": {
+        id: "payout-1",
+        agent_id: "agent-1",
+        agent_name: "John Anderson",
+        period_start: "2024-01-01",
+        period_end: "2024-01-31",
+        total_amount: 1249.50,
+        status: "paid",
+        payment_date: "2024-02-05",
+        payment_reference: "PAY-2024-001",
+        calculated_by: "admin",
+        company_id: "default-company",
+        created_at: "2024-02-01T10:00:00Z",
+        items: [
+          {
+            policy_id: "pol-1",
+            policy_number: "POL-2024-001",
+            policyholder_name: "John Smith",
+            amount: 187.50
+          },
+          {
+            policy_id: "pol-2",
+            policy_number: "POL-2024-002",
+            policyholder_name: "Jane Doe",
+            amount: 252.00
+          },
+          {
+            policy_id: "pol-3",
+            policy_number: "POL-2024-003",
+            policyholder_name: "Smith Industries Ltd",
+            amount: 630.00
+          },
+          {
+            policy_id: "pol-4",
+            policy_number: "POL-2024-004",
+            policyholder_name: "ABC Corporation",
+            amount: 180.00
+          }
+        ]
+      },
+      "payout-2": {
+        id: "payout-2",
+        agent_id: "agent-2",
+        agent_name: "Sarah Wilson",
+        period_start: "2024-01-01",
+        period_end: "2024-01-31",
+        total_amount: 439.00,
+        status: "pending",
+        payment_date: null,
+        payment_reference: null,
+        calculated_by: "admin",
+        company_id: "default-company",
+        created_at: "2024-02-01T11:00:00Z",
+        items: [
+          {
+            policy_id: "pol-5",
+            policy_number: "POL-2024-005",
+            policyholder_name: "Wilson Corp",
+            amount: 219.00
+          },
+          {
+            policy_id: "pol-6",
+            policy_number: "POL-2024-006",
+            policyholder_name: "Tech Solutions Inc",
+            amount: 220.00
+          }
+        ]
+      }
+    };
+
+    return mockPayoutDetails[payoutId as keyof typeof mockPayoutDetails] || null;
   };
 
   const { data, isLoading, isError, error } = useQuery({

@@ -40,10 +40,36 @@ const PolicyImportPage = () => {
   } = usePolicyImport();
   
   useEffect(() => {
-    if (salesProcessData && importedPolicies.length > 0) {
+    // Check if we're coming from a quote selection
+    const state = location.state as any;
+    if (state?.fromQuote && state?.salesProcessId) {
+      console.log("Importing policy from quote selection:", state);
+      
+      // Simulate receiving policy data from insurer after quote acceptance
+      // In a real app, this would be actual policy data sent by the insurer
+      const mockPolicyData = {
+        salesProcessId: state.salesProcessId,
+        policyNumber: `POL-${Date.now()}`,
+        insurerName: "Selected Insurance Company",
+        premium: 1250.00,
+        currency: "EUR",
+        startDate: new Date().toISOString(),
+        expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        coverageDetails: "Comprehensive coverage as per selected quote",
+        status: "imported_from_quote"
+      };
+      
+      // Skip to review step with pre-filled data
+      setActiveStep("review");
+      
+      toast({
+        title: t("policyReceivedFromInsurer"),
+        description: t("reviewPolicyBeforeImporting"),
+      });
+    } else if (salesProcessData && importedPolicies.length > 0) {
       setActiveStep("review");
     }
-  }, [salesProcessData, importedPolicies]);
+  }, [salesProcessData, importedPolicies, location.state, t, toast]);
   
   const handleBackToWorkflow = () => {
     navigate("/policies/workflow");

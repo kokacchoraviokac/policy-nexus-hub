@@ -28,7 +28,7 @@ const MOCK_CLIENTS: Client[] = [
   }
 ];
 
-let mockClientStorage = [...MOCK_CLIENTS];
+const mockClientStorage = [...MOCK_CLIENTS];
 
 export interface Client {
   id: string;

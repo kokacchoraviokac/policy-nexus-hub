@@ -45,60 +45,65 @@ export const useCalculatePayouts = () => {
   // Calculate payout preview mutation
   const calculatePreviewMutation = useMutation({
     mutationFn: async (params: PayoutPreviewParams) => {
-      if (!companyId) {
-        throw new Error("User not authenticated");
-      }
-
+      console.log("Calculating payout preview with mock data:", params);
+      
       setIsLoading(true);
       
       try {
-        // This would be a more sophisticated calculation in a real app
-        // For now, we'll simulate it by retrieving policies with commission data for the agent
-        const { data: policyData, error: policyError } = await supabase
-          .from("policies")
-          .select(`
-            id,
-            policy_number,
-            policyholder_name,
-            premium,
-            commission_percentage
-          `)
-          .eq("company_id", companyId)
-          .eq("assigned_to", params.agentId)
-          .gte("start_date", params.periodStart)
-          .lte("start_date", params.periodEnd);
-
-        if (policyError) throw policyError;
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Check for manual commission overrides
-        const { data: manualCommissions, error: manualError } = await supabase
-          .from("manual_commissions")
-          .select("policy_id, rate")
-          .eq("agent_id", params.agentId);
-          
-        if (manualError) throw manualError;
+        // Mock commission data for the selected agent
+        const mockCommissionData = [
+          {
+            policy_id: "pol-1",
+            policy_number: "POL-2024-001",
+            policyholder_name: "John Smith",
+            premium: 1250.00,
+            commission_percentage: 15,
+            amount: 187.50
+          },
+          {
+            policy_id: "pol-2",
+            policy_number: "POL-2024-002",
+            policyholder_name: "Jane Doe",
+            premium: 2100.00,
+            commission_percentage: 12,
+            amount: 252.00
+          },
+          {
+            policy_id: "pol-3",
+            policy_number: "POL-2024-003",
+            policyholder_name: "Smith Industries Ltd",
+            premium: 3500.00,
+            commission_percentage: 18,
+            amount: 630.00
+          },
+          {
+            policy_id: "pol-4",
+            policy_number: "POL-2024-004",
+            policyholder_name: "ABC Corporation",
+            premium: 1800.00,
+            commission_percentage: 10,
+            amount: 180.00
+          }
+        ];
         
-        // Create a map of policy_id to manual commission rate
-        const manualRates = manualCommissions.reduce((acc: Record<string, number>, curr) => {
-          acc[curr.policy_id] = curr.rate;
-          return acc;
-        }, {});
+        // Filter data based on selected agent (different agents get different data)
+        const agentSpecificData = params.agentId === "agent-1" ? mockCommissionData :
+                                 params.agentId === "agent-2" ? mockCommissionData.slice(0, 2) :
+                                 mockCommissionData.slice(0, 3);
         
-        // Calculate amounts for each policy
-        const items = policyData.map((policy) => {
-          const rate = manualRates[policy.id] || policy.commission_percentage || 0;
-          const amount = (policy.premium * rate) / 100;
-          
-          return {
-            policy_id: policy.id,
-            policy_number: policy.policy_number,
-            policyholder_name: policy.policyholder_name,
-            amount
-          };
-        });
+        const items = agentSpecificData.map(data => ({
+          policy_id: data.policy_id,
+          policy_number: data.policy_number,
+          policyholder_name: data.policyholder_name,
+          amount: data.amount
+        }));
         
-        // Calculate total amount
         const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+        
+        console.log("Mock payout calculation result:", { totalAmount, items });
         
         return { totalAmount, items };
       } finally {
@@ -125,42 +130,36 @@ export const useCalculatePayouts = () => {
   // Finalize payout mutation
   const finalizePayoutMutation = useMutation({
     mutationFn: async (params: FinalizePayoutsParams) => {
-      if (!companyId || !user?.id) {
-        throw new Error("User not authenticated");
-      }
-
-      // Create the agent payout record
-      const { data: payoutData, error: payoutError } = await supabase
-        .from("agent_payouts")
-        .insert({
-          agent_id: params.agentId,
-          period_start: params.periodStart,
-          period_end: params.periodEnd,
-          total_amount: params.items.reduce((sum, item) => sum + item.amount, 0),
-          status: "pending",
-          calculated_by: user.id,
-          company_id: companyId
-        })
-        .select()
-        .single();
-
-      if (payoutError) throw payoutError;
+      console.log("Finalizing payout with mock data:", params);
       
-      // Create payout items for each policy
-      const payoutItems = params.items.map(item => ({
-        payout_id: payoutData.id,
-        policy_id: item.policy_id,
-        amount: item.amount,
-        company_id: companyId
-      }));
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const { error: itemsError } = await supabase
-        .from("payout_items")
-        .insert(payoutItems);
-        
-      if (itemsError) throw itemsError;
+      const totalAmount = params.items.reduce((sum, item) => sum + item.amount, 0);
       
-      return payoutData;
+      // Mock payout record
+      const mockPayoutData = {
+        id: `payout-${Date.now()}`,
+        agent_id: params.agentId,
+        period_start: params.periodStart,
+        period_end: params.periodEnd,
+        total_amount: totalAmount,
+        status: "pending",
+        calculated_by: user?.id || "mock-user",
+        company_id: companyId || "default-company",
+        created_at: new Date().toISOString(),
+        payment_date: null,
+        payment_reference: null
+      };
+      
+      console.log("Mock payout finalized:", mockPayoutData);
+      
+      // Store in localStorage for persistence in mock environment
+      const existingPayouts = JSON.parse(localStorage.getItem('mockPayouts') || '[]');
+      existingPayouts.push(mockPayoutData);
+      localStorage.setItem('mockPayouts', JSON.stringify(existingPayouts));
+      
+      return mockPayoutData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agent-payouts'] });

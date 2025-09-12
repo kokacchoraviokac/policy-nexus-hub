@@ -24,32 +24,43 @@ export const useAgents = () => {
   const companyId = user?.companyId;
 
   const fetchAgents = async () => {
-    if (!companyId) {
-      return [];
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("agents")
-        .select("*")
-        .eq("company_id", companyId)
-        .eq("status", "active")
-        .order("name");
-
-      if (error) {
-        throw error;
+    // Use mock data for testing agent payout system
+    console.log("Using mock agents data for testing");
+    
+    const mockAgents: Agent[] = [
+      {
+        id: "agent-1",
+        name: "John Anderson",
+        email: "john.anderson@example.com",
+        phone: "+1-555-0101",
+        status: "active",
+        tax_id: "TAX001",
+        bank_account: "ACC-001-123456"
+      },
+      {
+        id: "agent-2",
+        name: "Sarah Wilson",
+        email: "sarah.wilson@example.com",
+        phone: "+1-555-0102",
+        status: "active",
+        tax_id: "TAX002",
+        bank_account: "ACC-002-789012"
+      },
+      {
+        id: "agent-3",
+        name: "Michael Brown",
+        email: "michael.brown@example.com",
+        phone: "+1-555-0103",
+        status: "active",
+        tax_id: "TAX003",
+        bank_account: "ACC-003-345678"
       }
+    ];
 
-      return data as Agent[];
-    } catch (error) {
-      console.error("Error fetching agents:", error);
-      toast({
-        title: t("errorFetchingAgents"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive",
-      });
-      throw error;
-    }
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    return mockAgents;
   };
 
   const { data, isLoading, isError, error, refetch } = useQuery({

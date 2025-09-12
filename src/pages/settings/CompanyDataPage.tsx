@@ -48,39 +48,50 @@ const CompanyDataPage = () => {
 
   const fetchCompanyData = useCallback(async () => {
     setIsLoading(true);
+    console.log("Using mock company data for testing");
+    
     try {
-      // Fetch company details
-      const { data: companyData, error: companyError } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('id', user?.companyId)
-        .single();
-
-      if (companyError) throw companyError;
-      setCompanyData(companyData);
-
-      // Fetch company settings
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('company_settings')
-        .select('*')
-        .eq('company_id', user?.companyId)
-        .single();
-
-      if (settingsError && settingsError.code !== 'PGRST116') {
-        // PGRST116 means no rows returned, which might be valid for new companies
-        throw settingsError;
-      }
-
-      if (settingsData) {
-        setCompanySettings(settingsData);
-      }
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Mock company data
+      const mockCompanyData: CompanyData = {
+        id: "company-1",
+        name: "Policy Hub Demo Company",
+        address: "123 Insurance Street",
+        city: "Belgrade",
+        postal_code: "11000",
+        country: "Serbia",
+        phone: "+381 11 123 4567",
+        registration_number: "REG123456789",
+        tax_id: "TAX987654321",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: new Date().toISOString()
+      };
+      
+      // Mock company settings
+      const mockCompanySettings: CompanySettings = {
+        id: "settings-1",
+        company_id: "company-1",
+        default_language: "en",
+        default_currency: "EUR",
+        date_format: "DD/MM/YYYY",
+        fiscal_year_start: "01-01",
+        enable_notifications: true,
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: new Date().toISOString()
+      };
+      
+      setCompanyData(mockCompanyData);
+      setCompanySettings(mockCompanySettings);
+      
     } catch (error: any) {
       console.error('Error fetching company data:', error);
       toast.error(t("failedToLoadCompanyData"));
     } finally {
       setIsLoading(false);
     }
-  }, [user?.companyId, t]);
+  }, [t]);
 
   useEffect(() => {
     if (user?.companyId) {
@@ -91,16 +102,24 @@ const CompanyDataPage = () => {
   const handleCompanyDetailsUpdate = async (updatedData: Partial<CompanyData>) => {
     if (!companyData?.id) return;
 
+    console.log("Updating company details with mock data:", updatedData);
+    
     try {
-      const { error } = await supabase
-        .from('companies')
-        .update(updatedData)
-        .eq('id', companyData.id);
-
-      if (error) throw error;
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Update local state with new data
-      setCompanyData({ ...companyData, ...updatedData });
+      const updatedCompanyData = {
+        ...companyData,
+        ...updatedData,
+        updated_at: new Date().toISOString()
+      };
+      
+      setCompanyData(updatedCompanyData);
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('mockCompanyData', JSON.stringify(updatedCompanyData));
+      
       toast.success(t("companyDetailsUpdated"));
     } catch (error: any) {
       console.error('Error updating company details:', error);
@@ -109,36 +128,32 @@ const CompanyDataPage = () => {
   };
 
   const handleRegionalSettingsUpdate = async (updatedSettings: Partial<CompanySettings>) => {
-    if (!user?.companyId) return;
-
+    console.log("Updating regional settings with mock data:", updatedSettings);
+    
     try {
-      if (companySettings?.id) {
-        // Update existing settings
-        const { error } = await supabase
-          .from('company_settings')
-          .update(updatedSettings)
-          .eq('id', companySettings.id);
-
-        if (error) throw error;
-      } else {
-        // Create new settings if they don't exist
-        const { error } = await supabase
-          .from('company_settings')
-          .insert({
-            company_id: user.companyId,
-            ...updatedSettings
-          });
-
-        if (error) throw error;
-        
-        // Refresh settings after creation
-        fetchCompanyData();
-      }
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Update local state
-      if (companySettings) {
-        setCompanySettings({ ...companySettings, ...updatedSettings });
-      }
+      const updatedCompanySettings = companySettings ?
+        { ...companySettings, ...updatedSettings, updated_at: new Date().toISOString() } :
+        {
+          id: "settings-1",
+          company_id: "company-1",
+          default_language: "en",
+          default_currency: "EUR",
+          date_format: "DD/MM/YYYY",
+          fiscal_year_start: "01-01",
+          enable_notifications: true,
+          ...updatedSettings,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      
+      setCompanySettings(updatedCompanySettings);
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('mockCompanySettings', JSON.stringify(updatedCompanySettings));
       
       toast.success(t("regionalSettingsUpdated"));
     } catch (error: any) {

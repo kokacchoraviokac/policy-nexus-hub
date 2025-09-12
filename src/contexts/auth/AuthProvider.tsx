@@ -19,10 +19,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Setup auth listener on initial load
   useEffect(() => {
+    // Check for mock session first
+    const checkMockSession = () => {
+      const mockSession = localStorage.getItem('mockAuthSession');
+      if (mockSession) {
+        try {
+          const user = JSON.parse(mockSession);
+          console.log("Found existing mock session:", user);
+          setAuthState({
+            user,
+            isAuthenticated: true,
+            isLoading: false
+          });
+          return true;
+        } catch (e) {
+          localStorage.removeItem('mockAuthSession');
+        }
+      }
+      return false;
+    };
+
+    // Check mock session first
+    if (checkMockSession()) {
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event);
       
       if (event === 'SIGNED_OUT') {
+        localStorage.removeItem('mockAuthSession');
         setAuthState({
           user: null,
           isAuthenticated: false,

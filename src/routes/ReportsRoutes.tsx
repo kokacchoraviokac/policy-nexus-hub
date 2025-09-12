@@ -9,6 +9,8 @@ import ClientsReport from "@/pages/reports/ClientsReport";
 import AgentsReport from "@/pages/reports/AgentsReport";
 import ClaimsReport from "@/pages/reports/ClaimsReport";
 import FinancialReport from "@/pages/reports/FinancialReport";
+import SavedReportsPage from "@/pages/reports/SavedReportsPage";
+import ReportSchedulesPage from "@/pages/reports/ReportSchedulesPage";
 
 export const ReportsRoutes = [
   <Route
@@ -73,6 +75,28 @@ export const ReportsRoutes = [
       <ProtectedRoute>
         <AppLayout>
           <FinancialReport />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="saved-reports"
+    path="/reports/saved"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <SavedReportsPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="report-schedules"
+    path="/reports/schedules"
+    element={
+      <ProtectedRoute>
+        <AppLayout>
+          <ReportSchedulesPage />
         </AppLayout>
       </ProtectedRoute>
     }

@@ -24,7 +24,7 @@ const MOCK_LEADS: Lead[] = [
   }
 ];
 
-let mockLeadStorage = [...MOCK_LEADS];
+const mockLeadStorage = [...MOCK_LEADS];
 
 export const useLeads = (searchQuery: string = "", statusFilter: string = "all") => {
   const [leads, setLeads] = useState<Lead[]>([]);

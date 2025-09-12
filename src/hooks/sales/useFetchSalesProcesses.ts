@@ -17,35 +17,61 @@ export const useFetchSalesProcesses = (searchQuery: string = "", stageFilter: st
     setError(null);
 
     try {
-      let query = supabase
-        .from('sales_processes')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Use mock data for testing quote management workflow
+      console.log("Using mock sales processes data for testing");
+      
+      const mockSalesProcesses: SalesProcess[] = [
+        {
+          id: "sp-1",
+          title: "Test Quote Management Process",
+          client_name: "John Smith",
+          company: "Smith Industries Ltd",
+          stage: "quote",
+          status: "active",
+          insurance_type: "auto",
+          estimated_value: 1500,
+          expected_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          company_id: "default-company",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          notes: "Testing quote management workflow"
+        },
+        {
+          id: "sp-2",
+          title: "Property Insurance Process",
+          client_name: "Jane Doe",
+          company: "Doe Enterprises",
+          stage: "authorization",
+          status: "active",
+          insurance_type: "property",
+          estimated_value: 2500,
+          expected_close_date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+          company_id: "default-company",
+          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          notes: "Property insurance for commercial building"
+        }
+      ];
 
-      // Apply stage filter if not "all"
+      // Apply filters to mock data
+      let filteredProcesses = mockSalesProcesses;
+
       if (stageFilter !== "all") {
-        query = query.eq('current_step', stageFilter); // Map stage to current_step in DB
+        filteredProcesses = filteredProcesses.filter(process => process.stage === stageFilter);
       }
 
-      // Apply status filter if not "all"
-      if (statusFilter !== "all") {
-        query = query.eq('status', statusFilter);
-      }
-
-      // Apply search query if provided
       if (searchQuery) {
-        query = query.or(`sales_number.ilike.%${searchQuery}%`);
+        filteredProcesses = filteredProcesses.filter(process =>
+          process.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          process.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (process.company && process.company.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
       }
 
-      const { data, error } = await query;
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (error) {
-        throw error;
-      }
-
-      // Map the data to our type
-      const mappedData = data ? data.map(row => mapDbToSalesProcess(row as DbSalesProcess)) : [];
-      setSalesProcesses(mappedData);
+      setSalesProcesses(filteredProcesses);
 
     } catch (err) {
       console.error("Error fetching sales processes:", err);

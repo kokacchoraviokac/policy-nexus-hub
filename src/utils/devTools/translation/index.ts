@@ -22,7 +22,7 @@ import {
 
 // Create a global access point for the translation manager in development
 if (process.env.NODE_ENV !== 'production') {
-  // @ts-ignore
+  // @ts-expect-error
   window.__translationManager = {
     exportMissingTranslations,
     generateTranslationWorkflow,

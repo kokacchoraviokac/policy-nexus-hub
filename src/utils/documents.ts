@@ -56,12 +56,13 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
 
     // Create document record in database with appropriate field names
     // based on the entity type
-    const documentData: any = {
+    // Create base document data
+    const baseDocumentData = {
       document_name: documentName,
       document_type: documentType,
       file_path: filePath,
       uploaded_by: user.id,
-      company_id: user?.user_metadata?.company_id,
+      company_id: user?.user_metadata?.['company_id'] as string,
       category: category || "other",
       version: version,
       is_latest_version: true,
@@ -69,13 +70,16 @@ export const uploadDocument = async (options: DocumentUploadOptions) => {
       original_document_id: originalDocumentId || null
     };
 
-    // Set the appropriate entity ID field based on the table
+    // Create typed document data based on table type
+    let documentData: any;
     if (tableName === "policy_documents") {
-      documentData.policy_id = entityId;
+      documentData = { ...baseDocumentData, policy_id: entityId };
     } else if (tableName === "claim_documents") {
-      documentData.claim_id = entityId;
+      documentData = { ...baseDocumentData, claim_id: entityId };
     } else if (tableName === "sales_documents") {
-      documentData.sales_process_id = entityId;
+      documentData = { ...baseDocumentData, sales_process_id: entityId };
+    } else {
+      documentData = baseDocumentData;
     }
 
     // Insert the document record using the resolved table name

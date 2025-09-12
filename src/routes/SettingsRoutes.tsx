@@ -8,6 +8,8 @@ import UserManagement from "@/pages/UserManagement";
 import PrivilegeTestPage from "@/pages/PrivilegeTestPage";
 import EmployeesPage from "@/pages/settings/EmployeesPage";
 import CompanyDataPage from "@/pages/settings/CompanyDataPage";
+import InstructionsPage from "@/pages/settings/InstructionsPage";
+import EmailTemplatesPage from "@/pages/settings/EmailTemplatesPage";
 import NotFound from "@/pages/NotFound";
 
 export const SettingsRoutes = [
@@ -89,13 +91,26 @@ export const SettingsRoutes = [
     }
   />,
   
-  <Route 
+  <Route
     key="settings-instructions"
-    path="/settings/instructions" 
+    path="/settings/instructions"
     element={
       <ProtectedRoute requiredPrivilege="settings:view">
         <AppLayout>
-          <NotFound />
+          <InstructionsPage />
+        </AppLayout>
+      </ProtectedRoute>
+    }
+  />,
+  
+  // Email Templates Management
+  <Route
+    key="settings-email-templates"
+    path="/settings/email-templates"
+    element={
+      <ProtectedRoute requiredPrivilege="settings:view">
+        <AppLayout>
+          <EmailTemplatesPage />
         </AppLayout>
       </ProtectedRoute>
     }

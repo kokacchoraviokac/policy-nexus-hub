@@ -135,7 +135,7 @@ export const runTranslationTests = () => {
 
 // Expose test runner globally in development
 if (process.env.NODE_ENV !== 'production') {
-  // @ts-ignore
+  // @ts-expect-error
   window.__runTranslationTests = runTranslationTests;
   console.log('Translation test utility available. Run window.__runTranslationTests() to use it.');
 }

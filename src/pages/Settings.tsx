@@ -93,8 +93,8 @@ const Settings = () => {
             <p className="text-sm text-muted-foreground mb-4">
               {t("instructionsDescription")}
             </p>
-            <Button variant="outline" className="w-full" disabled>
-              {t("manageInstructions")}
+            <Button variant="outline" className="w-full" asChild>
+              <Link to="/settings/instructions">{t("manageInstructions")}</Link>
             </Button>
           </CardContent>
         </Card>
@@ -103,18 +103,18 @@ const Settings = () => {
           <CardHeader className="pb-3">
             <div className="flex items-center space-x-2">
               <Mail className="h-5 w-5 text-primary" />
-              <CardTitle>{t("emailSettings")}</CardTitle>
+              <CardTitle>{t("emailTemplates")}</CardTitle>
             </div>
             <CardDescription>
-              {t("emailSettingsDescription")}
+              {t("emailTemplatesDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              {t("emailSettingsDescription")}
+              {t("emailTemplatesDescription")}
             </p>
-            <Button variant="outline" className="w-full" disabled>
-              {t("configureEmail")}
+            <Button variant="outline" className="w-full" asChild>
+              <Link to="/settings/email-templates">{t("manageEmailTemplates")}</Link>
             </Button>
           </CardContent>
         </Card>

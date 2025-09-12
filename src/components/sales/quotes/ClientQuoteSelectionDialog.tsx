@@ -51,16 +51,29 @@ const ClientQuoteSelectionDialog: React.FC<ClientQuoteSelectionDialogProps> = ({
       // Simulate processing the client selection
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      const selectedQuote = quotes.find(q => q.id === selectedQuoteId);
+      
       console.log("Client selected quote:", {
         salesProcessId,
         selectedQuoteId,
+        selectedQuote,
         clientFeedback,
         selectionReason,
+      });
+
+      // Simulate notifying the insurer about client selection
+      console.log("Notifying insurer about client selection:", {
+        insurer: selectedQuote?.insurer_name,
+        quoteNumber: selectedQuote?.quote_number,
+        clientDecision: "accepted"
       });
 
       toast.success(t("quoteSelectedSuccessfully"), {
         description: t("policyCreationWillBegin"),
       });
+
+      // Trigger policy import process
+      console.log("Triggering policy import process for selected quote:", selectedQuoteId);
 
       onQuoteSelected(selectedQuoteId);
       onOpenChange(false);

@@ -20,6 +20,8 @@ export const useAuthOperations = (
       
       if (mockUser) {
         console.log("Using mock user login");
+        // Store mock session in localStorage for persistence
+        localStorage.setItem('mockAuthSession', JSON.stringify(mockUser));
         setAuthState({
           user: mockUser,
           isAuthenticated: true,
@@ -51,6 +53,10 @@ export const useAuthOperations = (
   const logout = async () => {
     try {
       setAuthState({ ...authState, isLoading: true });
+      
+      // Clear mock session
+      localStorage.removeItem('mockAuthSession');
+      
       await supabase.auth.signOut();
       
       // Auth state will be updated by the onAuthStateChange listener
@@ -65,6 +71,7 @@ export const useAuthOperations = (
     } catch (error) {
       console.error("Logout error:", error);
       // Force logout anyway
+      localStorage.removeItem('mockAuthSession');
       setAuthState({
         user: null,
         isAuthenticated: false,

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface AuditLogEntry {
   id: string;
@@ -9,7 +10,7 @@ export interface AuditLogEntry {
   entity_id: string;
   user_id: string;
   company_id: string;
-  details: Record<string, any>;
+  details: Json;
   created_at: string;
   ip_address?: string;
   user_agent?: string;
@@ -95,7 +96,7 @@ export const useAuditTrail = () => {
       entity_type: string;
       entity_id: string;
       company_id: string;
-      details?: Record<string, any>;
+      details?: Json;
       ip_address?: string;
       user_agent?: string;
     }) => {
@@ -137,7 +138,7 @@ export const useAuditTrail = () => {
   });
 
   // Helper functions for common audit actions
-  const logPolicyAction = (action: string, policyId: string, companyId: string, details: Record<string, any> = {}) => {
+  const logPolicyAction = (action: string, policyId: string, companyId: string, details: Json = {}) => {
     return createAuditLog.mutate({
       action,
       entity_type: 'policy',
@@ -147,7 +148,7 @@ export const useAuditTrail = () => {
     });
   };
 
-  const logSalesAction = (action: string, salesProcessId: string, companyId: string, details: Record<string, any> = {}) => {
+  const logSalesAction = (action: string, salesProcessId: string, companyId: string, details: Json = {}) => {
     return createAuditLog.mutate({
       action,
       entity_type: 'sales_process',
@@ -157,7 +158,7 @@ export const useAuditTrail = () => {
     });
   };
 
-  const logQuoteAction = (action: string, quoteId: string, companyId: string, details: Record<string, any> = {}) => {
+  const logQuoteAction = (action: string, quoteId: string, companyId: string, details: Json = {}) => {
     return createAuditLog.mutate({
       action,
       entity_type: 'sales_quote',
@@ -167,7 +168,7 @@ export const useAuditTrail = () => {
     });
   };
 
-  const logDocumentAction = (action: string, documentId: string, companyId: string, details: Record<string, any> = {}) => {
+  const logDocumentAction = (action: string, documentId: string, companyId: string, details: Json = {}) => {
     return createAuditLog.mutate({
       action,
       entity_type: 'document',
@@ -177,7 +178,7 @@ export const useAuditTrail = () => {
     });
   };
 
-  const logSignatureAction = (action: string, policyId: string, companyId: string, details: Record<string, any> = {}) => {
+  const logSignatureAction = (action: string, policyId: string, companyId: string, details: Json = {}) => {
     return createAuditLog.mutate({
       action: `signature_${action}`,
       entity_type: 'policy_signature',

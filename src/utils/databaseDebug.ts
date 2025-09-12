@@ -83,7 +83,7 @@ export const validateRequiredTables = async () => {
     'documents'
   ];
 
-  const results: { [key: string]: { exists: boolean; error?: any } } = {};
+  const results: { [key: string]: { exists: boolean; error?: Error | null } } = {};
 
   for (const table of requiredTables) {
     try {

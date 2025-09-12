@@ -19,7 +19,7 @@ export const isPolicyComplete = (policy: Policy): boolean => {
   ];
   
   return requiredFields.every(field => {
-    // @ts-ignore - we're using string indexing
+    // @ts-expect-error - we're using string indexing
     return !!policy[field];
   });
 };
@@ -41,7 +41,7 @@ export const getMissingFields = (policy: Policy): string[] => {
   
   return requiredFields
     .filter(field => {
-      // @ts-ignore - we're using string indexing
+      // @ts-expect-error - we're using string indexing
       return !policy[field.key];
     })
     .map(field => field.name);

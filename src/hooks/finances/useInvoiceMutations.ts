@@ -37,7 +37,7 @@ interface UpdateInvoiceStatusParams {
 }
 
 // Function to create an invoice
-const createInvoiceFn = async (params: CreateInvoiceParams, user: any) => {
+const createInvoiceFn = async (params: CreateInvoiceParams, user: { companyId?: string } | null) => {
   try {
     const companyId = user?.companyId;
 

@@ -21,47 +21,75 @@ export const usePayoutReports = () => {
   const companyId = user?.companyId;
 
   const fetchPayouts = async () => {
-    if (!companyId) {
-      return { data: [], totalCount: 0 };
-    }
-
-    try {
-      const from = pagination.pageIndex * pagination.pageSize;
-      const to = from + pagination.pageSize - 1;
-
-      const { data, error, count } = await supabase
-        .from("agent_payouts")
-        .select(`
-          *,
-          agents(name)
-        `, { count: 'exact' })
-        .eq("company_id", companyId)
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (error) {
-        throw error;
-      }
-
-      // Transform data to include agent name
-      const transformedData = data.map((payout) => ({
+    console.log("Using mock payout reports data for testing");
+    
+    // Get stored payouts from localStorage (from finalized payouts)
+    const storedPayouts = JSON.parse(localStorage.getItem('mockPayouts') || '[]');
+    
+    // Create comprehensive mock payout history
+    const mockPayouts = [
+      {
+        id: "payout-1",
+        agent_id: "agent-1",
+        agent_name: "John Anderson",
+        period_start: "2024-01-01",
+        period_end: "2024-01-31",
+        total_amount: 1249.50,
+        status: "paid",
+        payment_date: "2024-02-05",
+        payment_reference: "PAY-2024-001",
+        calculated_by: "admin",
+        company_id: "default-company",
+        created_at: "2024-02-01T10:00:00Z"
+      },
+      {
+        id: "payout-2",
+        agent_id: "agent-2",
+        agent_name: "Sarah Wilson",
+        period_start: "2024-01-01",
+        period_end: "2024-01-31",
+        total_amount: 439.00,
+        status: "pending",
+        payment_date: null,
+        payment_reference: null,
+        calculated_by: "admin",
+        company_id: "default-company",
+        created_at: "2024-02-01T11:00:00Z"
+      },
+      {
+        id: "payout-3",
+        agent_id: "agent-1",
+        agent_name: "John Anderson",
+        period_start: "2024-02-01",
+        period_end: "2024-02-29",
+        total_amount: 1069.50,
+        status: "pending",
+        payment_date: null,
+        payment_reference: null,
+        calculated_by: "admin",
+        company_id: "default-company",
+        created_at: "2024-03-01T09:00:00Z"
+      },
+      ...storedPayouts.map(payout => ({
         ...payout,
-        agent_name: payout.agents?.name || "Unknown"
-      }));
+        agent_name: payout.agent_id === "agent-1" ? "John Anderson" :
+                   payout.agent_id === "agent-2" ? "Sarah Wilson" :
+                   payout.agent_id === "agent-3" ? "Michael Brown" : "Unknown Agent"
+      }))
+    ];
 
-      return { 
-        data: transformedData, 
-        totalCount: count || 0 
-      };
-    } catch (error) {
-      console.error("Error fetching payouts:", error);
-      toast({
-        title: t("errorFetchingPayouts"),
-        description: error instanceof Error ? error.message : t("unknownError"),
-        variant: "destructive",
-      });
-      throw error;
-    }
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Apply pagination
+    const from = pagination.pageIndex * pagination.pageSize;
+    const to = from + pagination.pageSize;
+    const paginatedData = mockPayouts.slice(from, to);
+
+    return {
+      data: paginatedData,
+      totalCount: mockPayouts.length
+    };
   };
 
   const { data, isLoading, isError, error, refetch } = useQuery({
